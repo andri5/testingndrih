@@ -219,3 +219,4 @@ status:
 # ============================================================================
 
 .PHONY: all dev prod report guide status
+git status
