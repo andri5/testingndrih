@@ -1,0 +1,25 @@
+{
+  "id": "1773050245338-26ydaro01",
+  "name": "Login Test Template",
+  "description": "Template for testing login flow",
+  "steps": [
+    {
+      "type": "NAVIGATE",
+      "description": "Go to login page",
+      "selector": "https://example.com/login"
+    },
+    {
+      "type": "FILL",
+      "description": "Enter credentials",
+      "selector": "input[name=\"email\"]",
+      "value": "test@example.com"
+    },
+    {
+      "type": "CLICK",
+      "description": "Click submit",
+      "selector": "button[type=\"submit\"]"
+    }
+  ],
+  "createdAt": "2026-03-09T09:57:25.338Z",
+  "version": "1.0"
+}

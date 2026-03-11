@@ -1,0 +1,14 @@
+# Playwright E2E Tests
+.playwright/
+test-results/
+playwright-report/
+blob-report/
+playwright/.auth/
+
+# Test artifacts
+screenshots/
+video/
+traces/
+
+# Node
+node_modules/

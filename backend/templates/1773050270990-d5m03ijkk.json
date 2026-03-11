@@ -1,0 +1,17 @@
+{
+  "id": "1773050270990-d5m03ijkk",
+  "name": "Checkout Template",
+  "description": "E-commerce checkout flow",
+  "steps": [
+    {
+      "type": "NAVIGATE",
+      "description": "Go to cart"
+    },
+    {
+      "type": "CLICK",
+      "description": "Click checkout"
+    }
+  ],
+  "createdAt": "2026-03-09T09:57:50.990Z",
+  "version": "1.0"
+}

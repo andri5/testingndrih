@@ -1,0 +1,67 @@
+# Dependencies
+node_modules/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+.env.test
+
+# Build outputs
+dist/
+build/
+out/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.sublime-workspace
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Testing
+coverage/
+.nyc_output/
+junit.xml
+
+# Screenshot & uploads
+backend/screenshots/
+backend/uploads/
+backend/logs/
+
+# Database
+*.db
+*.sqlite
+docker-compose.override.yml
+
+# Prisma
+backend/prisma/dev.db
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Temporary
+tmp/
+temp/
+*.tmp
+
+# Build artifacts
+*.tsbuildinfo
+
+# Cache
+.eslintcache
+.prettierignore

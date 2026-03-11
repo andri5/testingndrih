@@ -1,0 +1,38 @@
+{
+  "name": "testingndrih",
+  "version": "1.0.0",
+  "description": "Automated Web Testing Platform — Create, execute, and manage test scenarios with AI",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=backend & npm run dev --workspace=frontend",
+    "dev:backend": "npm run dev --workspace=backend",
+    "dev:frontend": "npm run dev --workspace=frontend",
+    "build": "npm run build --workspaces",
+    "build:backend": "npm run build --workspace=backend",
+    "build:frontend": "npm run build --workspace=frontend",
+    "test": "npm run test --workspaces",
+    "test:backend": "npm run test --workspace=backend",
+    "test:frontend": "npm run test --workspace=frontend",
+    "test:ci": "npm run test:ci --workspaces",
+    "lint": "npm run lint --workspaces",
+    "lint:fix": "npm run lint:fix --workspaces",
+    "format:check": "npm run format:check --workspaces",
+    "start": "npm run start --workspace=backend"
+  },
+  "keywords": [
+    "testing",
+    "automation",
+    "qa",
+    "e2e",
+    "api-testing"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

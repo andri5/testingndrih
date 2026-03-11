@@ -1,0 +1,17 @@
+{
+  "id": "1773050271000-68eiwngij",
+  "name": "Search Template",
+  "description": "Search functionality test",
+  "steps": [
+    {
+      "type": "NAVIGATE",
+      "description": "Go to search"
+    },
+    {
+      "type": "FILL",
+      "description": "Enter search term"
+    }
+  ],
+  "createdAt": "2026-03-09T09:57:51.000Z",
+  "version": "1.0"
+}

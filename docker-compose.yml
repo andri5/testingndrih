@@ -1,0 +1,30 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: testingndrih-db
+    environment:
+      POSTGRES_USER: ${DB_USER:-testuser}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-testpass123}
+      POSTGRES_DB: ${DB_NAME:-testingndrih}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8"
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-testuser} -d ${DB_NAME:-testingndrih}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    restart: unless-stopped
+    networks:
+      - testingndrih-network
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  testingndrih-network:
+    driver: bridge
