@@ -15,10 +15,16 @@ test.describe('Search & Filter E2E Tests', () => {
     
     try {
       await page.goto('http://localhost:3000/register', { waitUntil: 'networkidle' })
-      await page.fill('input[type="email"]', email)
-      await page.fill('input[type="password"]', password)
-      await page.fill('input[placeholder*="name" i]', 'Test User')
-      await page.click('button:has-text("Register")')
+      const emailInput = page.locator('#email')
+      await emailInput.waitFor({ state: 'visible', timeout: 5000 })
+      await emailInput.fill(email)
+      const passwordInput = page.locator('#password')
+      await passwordInput.waitFor({ state: 'visible', timeout: 5000 })
+      await passwordInput.fill(password)
+      const nameInput = page.locator('#name')
+      await nameInput.waitFor({ state: 'visible', timeout: 5000 })
+      await nameInput.fill('Test User')
+      await page.click('button:has-text("Create Account")')
       
       try {
         await page.waitForURL('**/dashboard', { timeout: 15000 })
@@ -84,18 +90,20 @@ test.describe('Search & Filter E2E Tests', () => {
   test('User can search scenarios by name', async ({ page }) => {
     // Get search input
     const searchInput = page.locator('input[placeholder*="search" i]').first()
+    await searchInput.waitFor({ state: 'visible', timeout: 5000 })
     
     // Search for specific scenario
     await searchInput.fill('Login')
     await page.waitForTimeout(500) // Wait for debounce
 
     // Verify results
-    await expect(page.locator('text=/Login Test/i')).toBeVisible()
+    await page.locator('text=/Login Test/i').waitFor({ state: 'visible', timeout: 5000 })
   })
 
   test('User can clear search results', async ({ page }) => {
     // Search
     const searchInput = page.locator('input[placeholder*="search" i]').first()
+    await searchInput.waitFor({ state: 'visible', timeout: 5000 })
     await searchInput.fill('Login')
     await page.waitForTimeout(500)
 
@@ -103,18 +111,20 @@ test.describe('Search & Filter E2E Tests', () => {
     await searchInput.clear()
     await page.waitForTimeout(500)
 
-    // All scenarios should be visible
+    // All scenarios should be visible or no error shown
     const scenarioNames = ['Login Test', 'Checkout Flow', 'Search Feature']
     for (const name of scenarioNames) {
-      await expect(page.locator(`text=${name}`)).toBeVisible().catch(() => {
+      try {
+        await page.locator(`text=${name}`).waitFor({ state: 'visible', timeout: 3000 })
+      } catch (e) {
         // Scenario might exist from previous tests
-      })
+      }
     }
   })
 
   test('User can filter by scenario type', async ({ page }) => {
     // Look for filter options
-    const filterButton = page.locator('button:has-text(/filter|advanced/i)')
+    const filterButton = page.locator('button:has-text(/filter|advanced/i)').first()
     if (await filterButton.isVisible()) {
       await filterButton.click()
 
@@ -126,7 +136,8 @@ test.describe('Search & Filter E2E Tests', () => {
 
         // Verify filtered
         const results = page.locator('table tbody tr, .scenario-item')
-        expect(await results.count()).toBeGreaterThan(0)
+        const count = await results.count()
+        expect(count).toBeGreaterThan(0)
       }
     }
   })
@@ -141,29 +152,31 @@ test.describe('Search & Filter E2E Tests', () => {
 
       // Verify order
       const firstScenario = page.locator('table tbody tr').first()
-      await expect(firstScenario).toBeVisible()
+      await firstScenario.waitFor({ state: 'visible', timeout: 5000 })
     }
   })
 
   test('Search displays no results message', async ({ page }) => {
     // Search for non-existent scenario
     const searchInput = page.locator('input[placeholder*="search" i]').first()
+    await searchInput.waitFor({ state: 'visible', timeout: 5000 })
     await searchInput.fill('xyznonexistent123')
     await page.waitForTimeout(500)
 
     // Verify no results message
     const noResults = page.locator('text=/no.*results|no.*scenarios/i')
-    await expect(noResults).toBeVisible()
+    await noResults.waitFor({ state: 'visible', timeout: 5000 })
   })
 
   test('User can search across multiple fields', async ({ page }) => {
     // Advanced search if available
-    const advancedButton = page.locator('button:has-text(/advanced.*search/i)')
+    const advancedButton = page.locator('button:has-text(/advanced.*search/i)').first()
     if (await advancedButton.isVisible()) {
       await advancedButton.click()
 
       // Fill search criteria
       const nameInput = page.locator('input[placeholder*="name" i]')
+      await nameInput.waitFor({ state: 'visible', timeout: 5000 })
       await nameInput.fill('Test')
 
       const urlInput = page.locator('input[placeholder*="url" i]')
@@ -172,11 +185,12 @@ test.describe('Search & Filter E2E Tests', () => {
       }
 
       // Search
-      await page.click('button:has-text("Search")')
+      const searchBtn = page.locator('button:has-text("Search")').last()
+      await searchBtn.click()
       await page.waitForTimeout(500)
 
       // Verify results
-      await expect(page.locator('table tbody tr').first()).toBeVisible()
+      await page.locator('table tbody tr').first().waitFor({ state: 'visible', timeout: 5000 })
     }
   })
 
@@ -204,6 +218,7 @@ test.describe('Search & Filter E2E Tests', () => {
   test('Search suggestions appear', async ({ page }) => {
     // Type in search
     const searchInput = page.locator('input[placeholder*="search" i]').first()
+    await searchInput.waitFor({ state: 'visible', timeout: 5000 })
     await searchInput.focus()
     await searchInput.type('Log')
     await page.waitForTimeout(500)
@@ -212,18 +227,18 @@ test.describe('Search & Filter E2E Tests', () => {
     const suggestionsList = page.locator('ul[role="listbox"], .suggestions, [role="option"]')
     if (await suggestionsList.isVisible()) {
       // Verify suggestions
-      await expect(page.locator('text=/login|log/i')).toBeVisible()
+      await page.locator('text=/login|log/i').waitFor({ state: 'visible', timeout: 5000 })
     }
   })
 
   test('Recent scenarios displayed on dashboard', async ({ page }) => {
-    await page.goto('/dashboard')
+    await page.goto('http://localhost:3000/dashboard', { waitUntil: 'networkidle' })
 
     // Look for recent scenarios section
     const recentSection = page.locator('text=/recent|latest/i')
     if (await recentSection.isVisible()) {
       // Verify scenarios in list
-      await expect(page.locator('table tbody tr').first()).toBeVisible()
+      await page.locator('table tbody tr').first().waitFor({ state: 'visible', timeout: 5000 })
     }
   })
 })

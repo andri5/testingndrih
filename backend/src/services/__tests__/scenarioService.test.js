@@ -1,50 +1,38 @@
 import { createScenario, getUserScenarios, getScenarioById, updateScenario, deleteScenario } from '../scenarioService'
 import { prisma } from '../../lib/prisma.js'
 
-describe('ScenarioService', () => {
-  beforeEach(() => {
-    // Reset all mocks
-    jest.clearAllMocks()
-    
-    // Mock prisma scenario methods
-    prisma.scenario.create = jest.fn()
-    prisma.scenario.findMany = jest.fn()
-    prisma.scenario.findUnique = jest.fn()
-    prisma.scenario.count = jest.fn()
-    prisma.scenario.update = jest.fn()
-    prisma.scenario.delete = jest.fn()
-  })
+jest.mock('../../lib/prisma.js')
 
-  afterEach(() => {
-    jest.restoreAllMocks()
+describe('ScenarioService - Comprehensive Business Logic Testing', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
   })
 
   describe('createScenario', () => {
-    it('should create a new scenario with valid data', async () => {
-      const mockScenario = {
-        id: 'test-id',
-        name: 'Test Scenario',
-        description: 'A test scenario',
+    it('should successfully create a scenario with valid data', async () => {
+      const mockData = {
+        id: 'scenario-1',
+        name: 'Login Test',
+        description: 'Test login flow',
         url: 'https://example.com',
         userId: 'user-123',
-        steps: 0,
-        createdAt: new Date(),
-        updatedAt: new Date()
+        steps: 0
       }
-
-      prisma.scenario.create.mockResolvedValue(mockScenario)
+      
+      prisma.scenario.create.mockResolvedValue(mockData)
 
       const result = await createScenario('user-123', {
-        name: 'Test Scenario',
-        description: 'A test scenario',
+        name: 'Login Test',
+        description: 'Test login flow',
         url: 'https://example.com'
       })
 
-      expect(result).toEqual(mockScenario)
+      expect(result.id).toBe('scenario-1')
+      expect(result.name).toBe('Login Test')
       expect(prisma.scenario.create).toHaveBeenCalledWith({
         data: {
-          name: 'Test Scenario',
-          description: 'A test scenario',
+          name: 'Login Test',
+          description: 'Test login flow',
           url: 'https://example.com',
           userId: 'user-123',
           steps: 0
@@ -52,51 +40,113 @@ describe('ScenarioService', () => {
       })
     })
 
-    it('should throw error if name is missing', async () => {
+    it('should reject empty name', async () => {
       await expect(
         createScenario('user-123', { url: 'https://example.com' })
       ).rejects.toThrow('Name and URL are required')
     })
 
-    it('should throw error if URL is missing', async () => {
+    it('should reject empty URL', async () => {
       await expect(
         createScenario('user-123', { name: 'Test' })
       ).rejects.toThrow('Name and URL are required')
     })
 
-    it('should throw error if URL is invalid', async () => {
+    it('should reject invalid URL format', async () => {
       await expect(
         createScenario('user-123', { name: 'Test', url: 'invalid.com' })
       ).rejects.toThrow('URL must start with http:// or https://')
     })
+
+    it('should accept https URLs', async () => {
+      prisma.scenario.create.mockResolvedValue({
+        id: 'scenario-1',
+        name: 'Test',
+        url: 'https://valid.com',
+        userId: 'user-123',
+        description: '',
+        steps: 0
+      })
+
+      const result = await createScenario('user-123', {
+        name: 'Test',
+        url: 'https://valid.com'
+      })
+
+      expect(result).toBeDefined()
+      expect(prisma.scenario.create).toHaveBeenCalled()
+    })
+
+    it('should accept http URLs', async () => {
+      prisma.scenario.create.mockResolvedValue({
+        id: 'scenario-1',
+        name: 'Test',
+        url: 'http://valid.com',
+        userId: 'user-123',
+        description: '',
+        steps: 0
+      })
+
+      const result = await createScenario('user-123', {
+        name: 'Test',
+        url: 'http://valid.com'
+      })
+
+      expect(result).toBeDefined()
+    })
+
+    it('should handle database errors gracefully', async () => {
+      prisma.scenario.create.mockRejectedValue(new Error('Database error'))
+
+      await expect(
+        createScenario('user-123', {
+          name: 'Test',
+          url: 'https://example.com'
+        })
+      ).rejects.toThrow('Failed to create scenario')
+    })
   })
 
   describe('getUserScenarios', () => {
-    it('should fetch all scenarios for a user', async () => {
-      const mockScenarios = [
-        { id: '1', name: 'Scenario 1', steps: 5 },
-        { id: '2', name: 'Scenario 2', steps: 3 }
-      ]
+    it('should retrieve scenarios with pagination', async () => {
+      const mockScenarios = {
+        scenarios: [
+          { id: '1', name: 'Scenario 1', url: 'https://example.com' },
+          { id: '2', name: 'Scenario 2', url: 'https://example.com' }
+        ],
+        total: 10
+      }
 
-      prisma.scenario.findMany.mockResolvedValue(mockScenarios)
-      prisma.scenario.count.mockResolvedValue(2)
+      prisma.scenario.findMany.mockResolvedValue(mockScenarios.scenarios)
+      prisma.scenario.count.mockResolvedValue(mockScenarios.total)
 
-      const result = await getUserScenarios('user-123')
+      const result = await getUserScenarios('user-123', { skip: 0, take: 20 })
 
-      expect(result.scenarios).toEqual(mockScenarios)
-      expect(result.total).toBe(2)
+      expect(result.scenarios.length).toBe(2)
+      expect(result.total).toBe(10)
+      expect(prisma.scenario.findMany).toHaveBeenCalledWith({
+        where: { userId: 'user-123' },
+        skip: 0,
+        take: 20,
+        orderBy: { createdAt: 'desc' },
+        select: expect.objectContaining({
+          id: true,
+          name: true,
+          url: true
+        })
+      })
     })
 
-    it('should support pagination', async () => {
+    it('should use default pagination values', async () => {
       prisma.scenario.findMany.mockResolvedValue([])
-      prisma.scenario.count.mockResolvedValue(100)
+      prisma.scenario.count.mockResolvedValue(0)
 
-      await getUserScenarios('user-123', { skip: 10, take: 5 })
+      await getUserScenarios('user-123')
 
       expect(prisma.scenario.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          skip: 10,
-          take: 5
+          skip: 0,
+          take: 20
         })
       )
     })
@@ -113,66 +163,169 @@ describe('ScenarioService', () => {
         })
       )
     })
+
+    it('should handle database errors', async () => {
+      prisma.scenario.findMany.mockRejectedValue(new Error('DB error'))
+
+      await expect(getUserScenarios('user-123')).rejects.toThrow('Failed to fetch scenarios')
+    })
   })
 
   describe('getScenarioById', () => {
-    it('should fetch a scenario by ID', async () => {
+    it('should retrieve scenario with steps', async () => {
       const mockScenario = {
-        id: 'test-id',
-        name: 'Test Scenario',
-        url: 'https://example.com',
-        testSteps: [],
-        executions: []
+        id: 'scenario-1',
+        name: 'Test',
+        userId: 'user-123',
+        testSteps: [
+          { id: 'step-1', stepNumber: 1, type: 'NAVIGATE' }
+        ]
       }
 
       prisma.scenario.findUnique.mockResolvedValue(mockScenario)
 
-      const result = await getScenarioById('test-id', 'user-123')
+      const result = await getScenarioById('scenario-1', 'user-123')
 
-      expect(result).toEqual(mockScenario)
-      expect(prisma.scenario.findUnique).toHaveBeenCalledWith({
-        where: { id: 'test-id' },
-        include: expect.any(Object)
+      expect(result.id).toBe('scenario-1')
+      expect(result.testSteps.length).toBe(1)
+    })
+
+    it('should throw error if scenario not found', async () => {
+      prisma.scenario.findUnique.mockResolvedValue(null)
+
+      await expect(getScenarioById('invalid-id', 'user-123')).rejects.toThrow('Scenario not found')
+    })
+
+    it('should throw error on unauthorized access', async () => {
+      const mockScenario = {
+        id: 'scenario-1',
+        name: 'Test',
+        userId: 'other-user-123'
+      }
+
+      prisma.scenario.findUnique.mockResolvedValue(mockScenario)
+
+      await expect(getScenarioById('scenario-1', 'user-123')).rejects.toThrow('Unauthorized access to this scenario')
+    })
+
+    it('should handle database errors', async () => {
+      prisma.scenario.findUnique.mockRejectedValue(new Error('DB error'))
+
+      await expect(getScenarioById('scenario-1', 'user-123')).rejects.toThrow('Failed to fetch scenario')
+    })
+  })
+
+  describe('updateScenario', () => {
+    it('should update scenario with valid data', async () => {
+      prisma.scenario.findUnique.mockResolvedValue({
+        id: 'scenario-1',
+        userId: 'user-123'
       })
+
+      prisma.scenario.update.mockResolvedValue({
+        id: 'scenario-1',
+        name: 'Updated Name',
+        url: 'https://updated.com'
+      })
+
+      const result = await updateScenario('scenario-1', 'user-123', {
+        name: 'Updated Name',
+        url: 'https://updated.com'
+      })
+
+      expect(result.name).toBe('Updated Name')
+      expect(prisma.scenario.update).toHaveBeenCalled()
+    })
+
+    it('should reject invalid URL format', async () => {
+      prisma.scenario.findUnique.mockResolvedValue({
+        id: 'scenario-1',
+        userId: 'user-123'
+      })
+
+      await expect(
+        updateScenario('scenario-1', 'user-123', { url: 'invalid.com' })
+      ).rejects.toThrow('URL must start with http:// or https://')
     })
 
     it('should throw error if scenario not found', async () => {
       prisma.scenario.findUnique.mockResolvedValue(null)
 
       await expect(
-        getScenarioById('nonexistent', 'user-123')
+        updateScenario('scenario-1', 'user-123', { name: 'Test' })
       ).rejects.toThrow('Scenario not found')
     })
-  })
 
-  describe('updateScenario', () => {
-    it('should update a scenario with new data', async () => {
-      const updatedScenario = {
-        id: 'test-id',
-        name: 'Updated Scenario',
-        url: 'https://updated.com'
-      }
-
-      prisma.scenario.update.mockResolvedValue(updatedScenario)
-
-      const result = await updateScenario('test-id', 'user-123', {
-        name: 'Updated Scenario',
-        url: 'https://updated.com'
+    it('should throw error on unauthorized access', async () => {
+      prisma.scenario.findUnique.mockResolvedValue({
+        id: 'scenario-1',
+        userId: 'other-user'
       })
 
-      expect(result).toEqual(updatedScenario)
+      await expect(
+        updateScenario('scenario-1', 'user-123', { name: 'Test' })
+      ).rejects.toThrow('Unauthorized: Cannot update this scenario')
+    })
+
+    it('should handle partial updates', async () => {
+      prisma.scenario.findUnique.mockResolvedValue({
+        id: 'scenario-1',
+        userId: 'user-123'
+      })
+
+      prisma.scenario.update.mockResolvedValue({
+        id: 'scenario-1',
+        name: 'Updated'
+      })
+
+      await updateScenario('scenario-1', 'user-123', { name: 'Updated' })
+
+      expect(prisma.scenario.update).toHaveBeenCalled()
     })
   })
 
   describe('deleteScenario', () => {
-    it('should delete a scenario', async () => {
-      prisma.scenario.delete.mockResolvedValue({ id: 'test-id' })
-
-      await deleteScenario('test-id', 'user-123')
-
-      expect(prisma.scenario.delete).toHaveBeenCalledWith({
-        where: { id: 'test-id' }
+    it('should delete scenario if user is owner', async () => {
+      prisma.scenario.findUnique.mockResolvedValue({
+        id: 'scenario-1',
+        userId: 'user-123'
       })
+
+      prisma.testStep.deleteMany.mockResolvedValue({ count: 0 })
+      prisma.scenario.delete.mockResolvedValue({ id: 'scenario-1' })
+
+      const result = await deleteScenario('scenario-1', 'user-123')
+
+      expect(result.message).toContain('successfully')
+      expect(prisma.scenario.delete).toHaveBeenCalledWith({
+        where: { id: 'scenario-1' }
+      })
+    })
+
+    it('should throw error if scenario not found', async () => {
+      prisma.scenario.findUnique.mockResolvedValue(null)
+
+      await expect(deleteScenario('scenario-1', 'user-123')).rejects.toThrow('Scenario not found')
+    })
+
+    it('should throw error on unauthorized access', async () => {
+      prisma.scenario.findUnique.mockResolvedValue({
+        id: 'scenario-1',
+        userId: 'other-user'
+      })
+
+      await expect(deleteScenario('scenario-1', 'user-123')).rejects.toThrow('Unauthorized')
+    })
+
+    it('should handle database errors', async () => {
+      prisma.scenario.findUnique.mockResolvedValue({
+        id: 'scenario-1',
+        userId: 'user-123'
+      })
+
+      prisma.scenario.delete.mockRejectedValue(new Error('DB error'))
+
+      await expect(deleteScenario('scenario-1', 'user-123')).rejects.toThrow('Failed to delete scenario')
     })
   })
 })

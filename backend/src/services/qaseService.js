@@ -324,5 +324,102 @@ export const qaseService = {
     })
 
     return { message: 'Qase integration disconnected' }
+  },
+
+  /**
+   * Sync test cases from Qase (alias for syncCasesFromQase)
+   */
+  async syncTestCasesFromQase(userId) {
+    return this.syncCasesFromQase(userId)
+  },
+
+  /**
+   * Sync scenario to Qase
+   */
+  async syncScenarioToQase(userId, scenarioId) {
+    const scenario = await prisma.scenario.findFirst({
+      where: { id: scenarioId, userId },
+      include: { testSteps: { orderBy: { stepNumber: 'asc' } } }
+    })
+
+    if (!scenario) {
+      throw new Error('Scenario not found')
+    }
+
+    const integration = await prisma.qaseIntegration.findUnique({
+      where: { userId }
+    })
+
+    if (!integration) {
+      throw new Error('Qase integration not configured')
+    }
+
+    try {
+      // Prepare test case payload
+      const testCasePayload = {
+        title: scenario.name,
+        description: scenario.description,
+        type: 'automated',
+        priority: 'medium',
+        steps: scenario.testSteps.map(step => ({
+          action: step.description,
+          expected_result: step.selector || 'Step completed',
+          data: step.value
+        }))
+      }
+
+      // Create test case in Qase
+      const response = await fetch(
+        `${QASE_API_BASE}/case/${integration.projectCode}`,
+        {
+          method: 'POST',
+          headers: {
+            'Token': integration.apiKey,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(testCasePayload)
+        }
+      )
+
+      if (!response.ok) {
+        throw new Error(`Qase API error: ${response.statusText}`)
+      }
+
+      const data = await response.json()
+      const qaseCaseId = data.result?.id
+
+      if (qaseCaseId) {
+        // Link scenario to Qase case
+        await prisma.qaseTestCase.upsert({
+          where: {
+            qaseId_userId: {
+              qaseId: qaseCaseId,
+              userId
+            }
+          },
+          update: {
+            scenarioId,
+            caseTitle: scenario.name,
+            caseDescription: scenario.description
+          },
+          create: {
+            userId,
+            scenarioId,
+            qaseId: qaseCaseId,
+            caseTitle: scenario.name,
+            caseDescription: scenario.description,
+            qaseStatus: 'draft'
+          }
+        })
+      }
+
+      return {
+        message: 'Scenario synced to Qase',
+        qaseCaseId,
+        scenarioId
+      }
+    } catch (error) {
+      throw new Error(`Failed to sync scenario to Qase: ${error.message}`)
+    }
   }
 }

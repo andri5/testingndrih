@@ -2,6 +2,7 @@ export default {
   testEnvironment: 'node',
   roots: ['<rootDir>/src'],
   testMatch: ['**/__tests__/**/*.js', '**/?(*.)+(spec|test).js'],
+  setupFilesAfterEnv: ['<rootDir>/jest-setup.js'],
   transform: {
     '^.+\\.js$': ['babel-jest', { presets: ['@babel/preset-env'] }]
   },

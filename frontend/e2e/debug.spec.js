@@ -21,13 +21,25 @@ test('Debug: Check API error on registration', async ({ page }) => {
   const name = 'Test User'
 
   // Fill the form
-  await page.locator('#name').fill(name)
-  await page.locator('#email').fill(email)
-  await page.locator('#password').fill(password)
-  await page.locator('#confirmPassword').fill(password)
+  const nameInput = page.locator('#name')
+  await nameInput.waitFor({ state: 'visible', timeout: 5000 })
+  await nameInput.fill(name)
+
+  const emailInput = page.locator('#email')
+  await emailInput.waitFor({ state: 'visible', timeout: 5000 })
+  await emailInput.fill(email)
+
+  const passwordInput = page.locator('#password')
+  await passwordInput.waitFor({ state: 'visible', timeout: 5000 })
+  await passwordInput.fill(password)
+
+  const confirmInput = page.locator('#confirmPassword')
+  await confirmInput.waitFor({ state: 'visible', timeout: 5000 })
+  await confirmInput.fill(password)
 
   // Click submit and wait for API response
-  await page.locator('button:has-text("Create Account")').click()
+  const submitButton = page.locator('button:has-text("Create Account")')
+  await submitButton.click()
   
   // Wait a bit for API response
   await page.waitForTimeout(5000)
@@ -39,6 +51,12 @@ test('Debug: Check API error on registration', async ({ page }) => {
   console.log('Current URL:', page.url())
   
   // Check for error message
-  const errorMsg = await page.locator('[role="alert"], .error, [class*="error"]').first().textContent().catch(() => null)
-  console.log('Error message on page:', errorMsg)
+  const errorElement = page.locator('[role="alert"], .error, [class*="error"]').first()
+  try {
+    await errorElement.waitFor({ state: 'visible', timeout: 3000 })
+    const errorMsg = await errorElement.textContent()
+    console.log('Error message on page:', errorMsg)
+  } catch (e) {
+    console.log('No error message displayed')
+  }
 })

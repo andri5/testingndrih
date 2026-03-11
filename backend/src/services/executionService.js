@@ -445,5 +445,19 @@ export const executionService = {
       averageDuration: Math.round(avgDuration),
       totalSteps: executions.reduce((sum, e) => sum + (e.passedSteps + e.failedSteps), 0)
     }
+  },
+
+  /**
+   * Get single execution (alias for getExecutionDetails)
+   */
+  async getExecution(userId, executionId) {
+    return this.getExecutionDetails(userId, executionId)
+  },
+
+  /**
+   * Get multiple executions (alias for getExecutionHistory)
+   */
+  async getExecutions(userId, scenarioId = null, limit = 20, offset = 0) {
+    return this.getExecutionHistory(userId, scenarioId, limit, offset)
   }
 }

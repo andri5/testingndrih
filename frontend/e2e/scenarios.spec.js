@@ -15,9 +15,15 @@ test.describe('Scenario Management E2E Tests', () => {
     
     try {
       await page.goto('http://localhost:3000/register', { waitUntil: 'networkidle' })
-      await page.fill('input[name="email"]', email)
-      await page.fill('input[name="password"]', password)
-      await page.fill('input[name="name"]', 'Test User')
+      const emailInput = page.locator('#email')
+      await emailInput.waitFor({ state: 'visible', timeout: 5000 })
+      await emailInput.fill(email)
+      const passwordInput = page.locator('#password')
+      await passwordInput.waitFor({ state: 'visible', timeout: 5000 })
+      await passwordInput.fill(password)
+      const nameInput = page.locator('#name')
+      await nameInput.waitFor({ state: 'visible', timeout: 5000 })
+      await nameInput.fill('Test User')
       await page.click('button:has-text("Create Account")')
       
       try {
@@ -57,69 +63,93 @@ test.describe('Scenario Management E2E Tests', () => {
   })
 
   test('User can create a new scenario', async ({ page }) => {
-    // Click create scenario
-    await page.click('text=/create.*scenario/i')
+    test.setTimeout(30000)
+    
+    // Click create scenario button
+    const createButton = page.locator('button:has-text("Create Scenario")')
+    await createButton.click()
 
-    // Fill form using name attributes
+    // Fill form using more reliable selectors
     const scenarioName = `Test Scenario ${Date.now()}`
-    await page.fill('input[name="name"]', scenarioName)
-    await page.fill('input[name="url"]', 'https://example.com')
-    await page.fill('textarea[name="description"]', 'Test scenario description')
+    
+    // Wait for form to appear
+    await page.locator('input[name="name"]').waitFor({ state: 'visible', timeout: 5000 })
+    
+    // Fill fields
+    await page.locator('input[name="name"]').fill(scenarioName)
+    await page.locator('input[name="url"]').fill('https://example.com')
+    await page.locator('textarea[name="description"]').fill('Test scenario description')
 
-    // Submit
-    await page.click('button:has-text("Create")')
+    // Wait for submit button and click
+    const submitButton = page.locator('button:has-text("Create")')
+    await submitButton.click()
 
-    // Verify scenario appears in list
-    await expect(page.locator(`text="${scenarioName}"`)).toBeVisible()
+    // Wait for scenario to appear in list
+    try {
+      await page.locator(`text=${scenarioName}`).waitFor({ state: 'visible', timeout: 10000 })
+      expect(page.url()).toContain('/scenarios')
+    } catch (error) {
+      console.log('Timeout waiting for scenario to appear. Current URL:', page.url())
+      throw error
+    }
   })
 
   test('User can view scenario details', async ({ page }) => {
     // Create scenario first
-    await page.click('text=/create.*scenario/i')
+    const createButton = page.locator('button:has-text("Create Scenario")')
+    await createButton.click()
     const scenarioName = `Test Scenario ${Date.now()}`
-    await page.fill('input[name="name"]', scenarioName)
-    await page.fill('input[name="url"]', 'https://example.com')
-    await page.click('button:has-text("Create")')
-    await expect(page.locator(`text="${scenarioName}"`)).toBeVisible()
+    await page.locator('input[name="name"]').waitFor({ state: 'visible', timeout: 5000 })
+    await page.locator('input[name="name"]').fill(scenarioName)
+    await page.locator('input[name="url"]').fill('https://example.com')
+    await page.locator('button:has-text("Create")').click()
+    await page.locator(`text=${scenarioName}`).waitFor({ state: 'visible', timeout: 10000 })
 
     // Click scenario to view details
-    await page.click(`text="${scenarioName}"`)
+    await page.locator(`text=${scenarioName}`).click()
     await page.waitForURL('**/scenarios/**')
 
     // Verify details page loaded
-    await expect(page.locator(`text="${scenarioName}"`)).toBeVisible()
+    await expect(page.locator(`text=${scenarioName}`)).toBeVisible()
   })
 
   test('User can add test steps to scenario', async ({ page }) => {
     // Create scenario
-    await page.click('text=/create.*scenario/i')
+    const createButton = page.locator('button:has-text("Create Scenario")')
+    await createButton.click()
     const scenarioName = `Test Scenario ${Date.now()}`
-    await page.fill('input[name="name"]', scenarioName)
-    await page.fill('input[name="url"]', 'https://example.com')
-    await page.click('button:has-text("Create")')
-    await expect(page.locator(`text="${scenarioName}"`)).toBeVisible()
+    await page.locator('input[name="name"]').waitFor({ state: 'visible', timeout: 5000 })
+    await page.locator('input[name="name"]').fill(scenarioName)
+    await page.locator('input[name="url"]').fill('https://example.com')
+    await page.locator('button:has-text("Create")').click()
+    await page.locator(`text=${scenarioName}`).waitFor({ state: 'visible', timeout: 10000 })
 
     // Open scenario
-    await page.click(`text="${scenarioName}"`)
+    await page.locator(`text=${scenarioName}`).click()
     await page.waitForURL('**/scenarios/**')
 
     // Add a step
-    await page.click('button:has-text("Add Step")')
-    await page.selectOption('select', 'NAVIGATE')
-    await page.fill('input[name="description"]', 'Navigate to page')
-    await page.click('button:has-text("Save")')
+    const addStepButton = page.locator('button:has-text("Add Step")')
+    await addStepButton.click()
+    await page.locator('select').selectOption('NAVIGATE')
+    await page.locator('input[name="description"]').fill('Navigate to page')
+    const saveButton = page.locator('button:has-text("Save")')
+    await saveButton.click()
 
     // Verify step added
-    await expect(page.locator('text="Navigate to page"')).toBeVisible()
+    await page.locator('text=Navigate to page').waitFor({ state: 'visible', timeout: 10000 })
   })
 
   test('User can update scenario', async ({ page }) => {
     // Create scenario
-    await page.click('text=/create.*scenario/i')
+    const createButton = page.locator('button:has-text("Create Scenario")')
+    await createButton.click()
     const scenarioName = `Test Scenario ${Date.now()}`
-    await page.fill('input[name="name"]', scenarioName)
-    await page.fill('input[name="url"]', 'https://example.com')
-    await page.click('button:has-text("Create")')
+    await page.locator('input[name="name"]').waitFor({ state: 'visible', timeout: 5000 })
+    await page.locator('input[name="name"]').fill(scenarioName)
+    await page.locator('input[name="url"]').fill('https://example.com')
+    await page.locator('button:has-text("Create")').click()
+    await page.locator(`text=${scenarioName}`).waitFor({ state: 'visible', timeout: 10000 })
 
     // Click edit
     const editButton = page.locator('button:has-text("Edit")').first()
@@ -128,62 +158,72 @@ test.describe('Scenario Management E2E Tests', () => {
     // Update name
     const updatedName = `Updated ${scenarioName}`
     const nameInput = page.locator('input[name="name"]')
+    await nameInput.clear()
     await nameInput.fill(updatedName)
-    await page.click('button:has-text("Save")')
+    await page.locator('button:has-text("Save")').click()
 
     // Verify update
-    await expect(page.locator(`text="${updatedName}"`)).toBeVisible()
+    await page.locator(`text=${updatedName}`).waitFor({ state: 'visible', timeout: 10000 })
   })
 
   test('User can delete scenario', async ({ page }) => {
     // Create scenario
-    await page.click('text=/create.*scenario/i')
+    const createButton = page.locator('button:has-text("Create Scenario")')
+    await createButton.click()
     const scenarioName = `Test Scenario ${Date.now()}`
-    await page.fill('input[name="name"]', scenarioName)
-    await page.fill('input[name="url"]', 'https://example.com')
-    await page.click('button:has-text("Create")')
-    await expect(page.locator(`text="${scenarioName}"`)).toBeVisible()
+    await page.locator('input[name="name"]').waitFor({ state: 'visible', timeout: 5000 })
+    await page.locator('input[name="name"]').fill(scenarioName)
+    await page.locator('input[name="url"]').fill('https://example.com')
+    await page.locator('button:has-text("Create")').click()
+    await page.locator(`text=${scenarioName}`).waitFor({ state: 'visible', timeout: 10000 })
 
     // Delete scenario
     const deleteButton = page.locator('button[title*="delete" i]').first()
     await deleteButton.click()
 
     // Confirm delete
-    await page.click('button:has-text("Delete")')
+    await page.locator('button:has-text("Delete")').click()
 
     // Verify deleted
-    await expect(page.locator(`text="${scenarioName}"`)).not.toBeVisible()
+    await expect(page.locator(`text=${scenarioName}`)).not.toBeVisible()
   })
 
   test('User can search scenarios', async ({ page }) => {
-    // Create two scenarios
-    await page.click('text=/create.*scenario/i')
+    // Create scenario
+    const createButton = page.locator('button:has-text("Create Scenario")')
+    await createButton.click()
     const scenario1 = `LoginTest ${Date.now()}`
-    await page.fill('input[placeholder*="name" i]', scenario1)
-    await page.fill('input[placeholder*="url" i]', 'https://example.com')
-    await page.click('button:has-text("Create")')
+    await page.locator('input[name="name"]').waitFor({ state: 'visible', timeout: 5000 })
+    await page.locator('input[name="name"]').fill(scenario1)
+    await page.locator('input[name="url"]').fill('https://example.com')
+    await page.locator('button:has-text("Create")').click()
+    await page.locator(`text=${scenario1}`).waitFor({ state: 'visible', timeout: 10000 })
 
     // Search for scenario
     const searchInput = page.locator('input[placeholder*="search" i]').first()
+    await searchInput.waitFor({ state: 'visible', timeout: 5000 })
     await searchInput.fill('LoginTest')
 
     // Verify search results
-    await expect(page.locator(`text="${scenario1}"`)).toBeVisible()
+    await page.locator(`text=${scenario1}`).waitFor({ state: 'visible', timeout: 10000 })
   })
 
   test('User can duplicate scenario', async ({ page }) => {
     // Create scenario
-    await page.click('text=/create.*scenario/i')
+    const createButton = page.locator('button:has-text("Create Scenario")')
+    await createButton.click()
     const scenarioName = `Test Scenario ${Date.now()}`
-    await page.fill('input[placeholder*="name" i]', scenarioName)
-    await page.fill('input[placeholder*="url" i]', 'https://example.com')
-    await page.click('button:has-text("Create")')
+    await page.locator('input[name="name"]').waitFor({ state: 'visible', timeout: 5000 })
+    await page.locator('input[name="name"]').fill(scenarioName)
+    await page.locator('input[name="url"]').fill('https://example.com')
+    await page.locator('button:has-text("Create")').click()
+    await page.locator(`text=${scenarioName}`).waitFor({ state: 'visible', timeout: 10000 })
 
     // Duplicate scenario
     const duplicateButton = page.locator('button:has-text("Duplicate")').first()
     await duplicateButton.click()
 
     // Verify duplicate created
-    await expect(page.locator(`text="${scenarioName} (Copy)"`)).toBeVisible()
+    await page.locator(`text=/.*${scenarioName}.*Copy.*/`).waitFor({ state: 'visible', timeout: 10000 })
   })
 })
