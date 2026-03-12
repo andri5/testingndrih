@@ -55,7 +55,9 @@ describe('JWT Utils', () => {
     })
 
     it('should return null for invalid token', () => {
-      jwt.verify.mockThrowValue(new Error('Invalid token'))
+      jwt.verify.mockImplementationOnce(() => {
+        throw new Error('Invalid token')
+      })
 
       const result = verifyToken('bad-token')
 
@@ -63,7 +65,9 @@ describe('JWT Utils', () => {
     })
 
     it('should return null for expired token', () => {
-      jwt.verify.mockThrowValue(new Error('Token expired'))
+      jwt.verify.mockImplementationOnce(() => {
+        throw new Error('Token expired')
+      })
 
       const result = verifyToken('expired-token')
 
@@ -93,7 +97,9 @@ describe('JWT Utils', () => {
     })
 
     it('should return null for invalid token', () => {
-      jwt.decode.mockThrowValue(new Error('Decode error'))
+      jwt.decode.mockImplementationOnce(() => {
+        throw new Error('Decode error')
+      })
 
       const result = decodeToken('bad-token')
 

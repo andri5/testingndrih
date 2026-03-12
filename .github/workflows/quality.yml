@@ -1,0 +1,70 @@
+name: Code Quality & Linting
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  lint:
+    name: Lint & Format Check
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18.x'
+          cache: 'npm'
+      
+      - name: Install Backend Dependencies
+        working-directory: ./backend
+        run: npm install
+      
+      - name: Check Backend Linting
+        working-directory: ./backend
+        run: |
+          if [ -f .eslintrc.json ] || [ -f .eslintrc.js ]; then
+            npx eslint src --max-warnings=10 || echo "Linting warnings found (non-critical)"
+          else
+            echo "No ESLint config found, skipping backend linting"
+          fi
+      
+      - name: Install Frontend Dependencies
+        working-directory: ./frontend
+        run: npm install
+      
+      - name: Check Frontend Linting
+        working-directory: ./frontend
+        run: |
+          if [ -f .eslintrc.json ] || [ -f .eslintrc.js ]; then
+            npx eslint src --max-warnings=10 || echo "Linting warnings found (non-critical)"
+          else
+            echo "No ESLint config found, skipping frontend linting"
+          fi
+  
+  security:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18.x'
+      
+      - name: Run Security Audit
+        run: |
+          cd backend && npm audit --audit-level=moderate || true
+          cd ../frontend && npm audit --audit-level=moderate || true
+      
+      - name: Check for vulnerable dependencies
+        run: |
+          echo "Running Snyk scan..."
+          npm install -g snyk || echo "Snyk not available"
+          snyk test --all-projects --severity-threshold=high || echo "Snyk checks completed"

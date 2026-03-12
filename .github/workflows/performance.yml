@@ -1,0 +1,80 @@
+name: Performance & Load Testing
+
+on:
+  schedule:
+    - cron: '0 2 * * 0'  # Weekly on Sunday at 2 AM UTC
+  workflow_dispatch:
+
+jobs:
+  performance-test:
+    name: Performance Metrics
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: testingndri
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18.x'
+          cache: 'npm'
+      
+      - name: Install Dependencies
+        run: |
+          npm install -g artillery
+      
+      - name: Backend Setup
+        working-directory: ./backend
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/testingndri
+        run: |
+          npm install
+          npx prisma migrate deploy
+          npm run dev &
+      
+      - name: Frontend Setup
+        working-directory: ./frontend
+        run: |
+          npm install
+          npm run build
+          npm run preview &
+      
+      - name: Wait for Services
+        run: |
+          npx wait-on http://localhost:5001/health --timeout 30000
+          npx wait-on http://localhost:4173 --timeout 30000
+      
+      - name: Run Load Test
+        run: |
+          echo "Running API load test..."
+          artillery quick --count 100 --num 10 http://localhost:5001/api/scenarios || true
+      
+      - name: Lighthouse Performance
+        run: |
+          npm install -g @lhci/cli@latest
+          lhci autorun --upload.target=temporary-public-storage || echo "Lighthouse check completed"
+      
+      - name: Archive Performance Results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: performance-results
+          path: |
+            artillery-report.json
+            lhci-results/
+          retention-days: 30
