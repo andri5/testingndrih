@@ -1,54 +1,42 @@
 import { test, expect } from '@playwright/test'
 
 test.describe('Search & Filter E2E Tests', () => {
-  let email, password, authToken
+  let email, password, authToken, userData
 
-  test.beforeAll(async ({ browser }) => {
+  test.beforeAll(async ({ request }) => {
     test.setTimeout(120000)
-    
-    // Create user
+
     email = `user_${Date.now()}@test.com`
     password = 'TestPassword123!'
 
-    const context = await browser.newContext()
-    const page = await context.newPage()
-    
+    // Register via API directly
     try {
-      await page.goto('http://localhost:3000/register', { waitUntil: 'networkidle' })
-      const emailInput = page.locator('#email')
-      await emailInput.waitFor({ state: 'visible', timeout: 5000 })
-      await emailInput.fill(email)
-      const passwordInput = page.locator('#password')
-      await passwordInput.waitFor({ state: 'visible', timeout: 5000 })
-      await passwordInput.fill(password)
-      const nameInput = page.locator('#name')
-      await nameInput.waitFor({ state: 'visible', timeout: 5000 })
-      await nameInput.fill('Test User')
-      await page.click('button:has-text("Create Account")')
-      
-      try {
-        await page.waitForURL('**/dashboard', { timeout: 15000 })
-        const cookies = await context.cookies()
-        const tokenCookie = cookies.find(c => c.name === 'authToken' || c.name === 'token')
-        authToken = tokenCookie?.value || `test_token_${Date.now()}`
-      } catch (e) {
-        console.log('Registration navigation timeout')
-        const cookies = await context.cookies()
-        const tokenCookie = cookies.find(c => c.name === 'authToken' || c.name === 'token')
-        authToken = tokenCookie?.value || `test_token_${Date.now()}`
+      const response = await request.post('http://localhost:5001/api/auth/register', {
+        headers: { 'Content-Type': 'application/json' },
+        data: { email, password, name: 'Test User' }
+      })
+      if (response.ok()) {
+        const data = await response.json()
+        authToken = data.token
+        userData = JSON.stringify(data.user)
+      } else {
+        console.log('Registration failed:', response.status())
       }
+    } catch (e) {
+      console.log('Registration error:', e.message)
+    }
 
-      // Create test scenarios via API
-      const scenarios = [
+    // Create test scenarios via API
+    if (authToken) {
+      const scenariosToCreate = [
         { name: 'Login Test 001', url: 'https://example.com/login' },
         { name: 'Checkout Flow 001', url: 'https://example.com/checkout' },
         { name: 'Search Feature 001', url: 'https://example.com/search' }
       ]
-
-      for (const scenario of scenarios) {
+      for (const scenario of scenariosToCreate) {
         try {
-          await page.request.post('http://localhost:5001/api/scenarios', {
-            headers: { 
+          await request.post('http://localhost:5001/api/scenarios', {
+            headers: {
               'Authorization': `Bearer ${authToken}`,
               'Content-Type': 'application/json'
             },
@@ -62,28 +50,20 @@ test.describe('Search & Filter E2E Tests', () => {
           console.log('Error creating test scenario:', e.message)
         }
       }
-    } catch (e) {
-      console.log('BeforeAll error:', e.message)
-      authToken = `test_token_${Date.now()}`
     }
-
-    await context.close()
   })
 
-  test.beforeEach(async ({ page, context }) => {
+  test.beforeEach(async ({ page }) => {
     test.setTimeout(60000)
-    
-    // Set auth via cookies
+
+    // Set auth via localStorage - must set BOTH authToken AND user (ProtectedRoute checks both)
     if (authToken) {
-      await context.addCookies([
-        {
-          name: 'authToken',
-          value: authToken,
-          url: 'http://localhost:3000'
-        }
-      ])
+      await page.addInitScript(({ token, user }) => {
+        localStorage.setItem('authToken', token)
+        localStorage.setItem('user', user)
+      }, { token: authToken, user: userData })
     }
-    
+
     await page.goto('http://localhost:3000/scenarios', { waitUntil: 'networkidle' })
   })
 

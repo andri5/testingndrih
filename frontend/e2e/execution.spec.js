@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 
 test.describe('Test Execution E2E Tests', () => {
-  let email, password, authToken, scenarioId
+  let email, password, authToken, userData, scenarioId
 
   test.beforeAll(async ({ request }) => {
     test.setTimeout(120000)
@@ -18,6 +18,7 @@ test.describe('Test Execution E2E Tests', () => {
       if (regResponse.ok()) {
         const data = await regResponse.json()
         authToken = data.token
+        userData = JSON.stringify(data.user)
       } else {
         console.log('Registration failed:', regResponse.status())
       }
@@ -54,15 +55,15 @@ test.describe('Test Execution E2E Tests', () => {
 
   test.beforeEach(async ({ page }) => {
     test.setTimeout(60000)
-    
-    // Navigate to app origin first, then set localStorage auth token (app uses localStorage, not cookies)
-    await page.goto('http://localhost:3000', { waitUntil: 'domcontentloaded' })
+
+    // Set auth via addInitScript before navigation (sets BOTH authToken AND user)
     if (authToken) {
-      await page.evaluate((token) => {
+      await page.addInitScript(({ token, user }) => {
         localStorage.setItem('authToken', token)
-      }, authToken)
+        localStorage.setItem('user', user)
+      }, { token: authToken, user: userData })
     }
-    
+
     await page.goto('http://localhost:3000/execution', { waitUntil: 'networkidle' })
   })
 
