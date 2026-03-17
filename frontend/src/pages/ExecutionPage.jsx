@@ -1,11 +1,13 @@
-import { useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { Card, Button, Badge, Spinner, Alert } from '../components/ui'
 import { useExecutionStore } from '../store/executionStore'
+import { useScenarioStore } from '../store/scenarioStore'
 
 export default function ExecutionPage() {
   const navigate = useNavigate()
+  const [selectedScenarioId, setSelectedScenarioId] = useState('')
   const {
     executions,
     currentExecution,
@@ -16,14 +18,18 @@ export default function ExecutionPage() {
     pagination,
     fetchExecutions,
     fetchExecutionStats,
+    executeScenario,
     getExecutionDetails,
     clearError
   } = useExecutionStore()
 
-  // Load executions on mount
+  const { scenarios, fetchScenarios } = useScenarioStore()
+
+  // Load executions and scenarios on mount
   useEffect(() => {
     fetchExecutions()
     fetchExecutionStats()
+    fetchScenarios(0, 100)
   }, [])
 
   const handleViewDetails = async (executionId) => {
@@ -83,6 +89,41 @@ export default function ExecutionPage() {
             onClose={clearError}
           />
         )}
+
+        {/* Run New Execution */}
+        <Card>
+          <h2 className="text-xl font-bold text-gray-900 mb-4">Run New Execution</h2>
+          <div className="flex gap-3 items-end">
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Select Scenario
+              </label>
+              <select
+                value={selectedScenarioId}
+                onChange={(e) => setSelectedScenarioId(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              >
+                <option value="">-- Select a scenario --</option>
+                {scenarios.map((scenario) => (
+                  <option key={scenario.id} value={scenario.id}>
+                    {scenario.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <Button
+              variant="primary"
+              onClick={() => selectedScenarioId && executeScenario(selectedScenarioId)}
+              disabled={!selectedScenarioId || isRunning}
+            >
+              {isRunning ? (
+                <><Spinner size="sm" /> Running...</>
+              ) : (
+                'Execute'
+              )}
+            </Button>
+          </div>
+        </Card>
 
         {/* Stats Cards */}
         {Object.keys(stats).length > 0 && (

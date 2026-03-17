@@ -3,68 +3,32 @@ import { test, expect } from '@playwright/test'
 test.describe('Test Execution E2E Tests', () => {
   let email, password, authToken, scenarioId
 
-  test.beforeAll(async ({ browser }) => {
+  test.beforeAll(async ({ request }) => {
     test.setTimeout(120000)
     
-    // Create user via registration
     email = `user_${Date.now()}@test.com`
     password = 'TestPassword123!'
 
-    const context = await browser.newContext()
-    const page = await context.newPage()
-    
+    // Register via direct API call to reliably get token (app stores token in localStorage, not cookies)
     try {
-      await page.goto('http://localhost:3000/register', { waitUntil: 'networkidle' })
-      const emailInput = page.locator('#email')
-      await emailInput.waitFor({ state: 'visible', timeout: 5000 })
-      await emailInput.fill(email)
-      const passwordInput = page.locator('#password')
-      await passwordInput.waitFor({ state: 'visible', timeout: 5000 })
-      await passwordInput.fill(password)
-      const nameInput = page.locator('#name')
-      await nameInput.waitFor({ state: 'visible', timeout: 5000 })
-      await nameInput.fill('Test User')
-      
-      // Listen for successful registration (API response)
-      let tokenFromStorage = null
-      page.on('loader', async (loader) => {
-        try {
-          // Extract token from any successful API response
-          const cookies = await context.cookies()
-          const tokenCookie = cookies.find(c => c.name === 'authToken' || c.name === 'token')
-          if (tokenCookie) {
-            tokenFromStorage = tokenCookie.value
-          }
-        } catch (e) {
-          console.log('Error extracting token:', e.message)
-        }
+      const regResponse = await request.post('http://localhost:5001/api/auth/register', {
+        headers: { 'Content-Type': 'application/json' },
+        data: { email, password, name: 'Test User' }
       })
-      
-      await page.click('button:has-text("Create Account")')
-      
-      // Wait for dashboard or successful auth
-      try {
-        await page.waitForURL('**/dashboard', { timeout: 15000 })
-        
-        // Get token from cookies if available
-        const cookies = await context.cookies()
-        const tokenCookie = cookies.find(c => c.name === 'authToken' || c.name === 'token')
-        if (tokenCookie) {
-          authToken = tokenCookie.value
-        } else {
-          console.log('No auth token found in cookies, will retry')
-          authToken = `test_token_${Date.now()}`
-        }
-      } catch (e) {
-        console.log('Registration may have succeeded but navigation timeout')
-        const cookies = await context.cookies()
-        const tokenCookie = cookies.find(c => c.name === 'authToken' || c.name === 'token')
-        authToken = tokenCookie?.value || `test_token_${Date.now()}`
+      if (regResponse.ok()) {
+        const data = await regResponse.json()
+        authToken = data.token
+      } else {
+        console.log('Registration failed:', regResponse.status())
       }
+    } catch (e) {
+      console.log('Registration error:', e.message)
+    }
 
-      // Create scenario via API with auth headers
+    // Create scenario via API with auth token
+    if (authToken) {
       try {
-        const response = await page.request.post('http://localhost:5001/api/scenarios', {
+        const response = await request.post('http://localhost:5001/api/scenarios', {
           headers: { 
             'Authorization': `Bearer ${authToken}`,
             'Content-Type': 'application/json'
@@ -81,34 +45,22 @@ test.describe('Test Execution E2E Tests', () => {
           scenarioId = data.scenario?.id || data.id
         } else {
           console.log('Failed to create scenario:', response.status())
-          scenarioId = 'test-scenario-1'
         }
       } catch (e) {
         console.log('Error creating scenario:', e.message)
-        scenarioId = 'test-scenario-1'
       }
-
-      await context.close()
-    } catch (e) {
-      console.log('BeforeAll error:', e.message)
-      await context.close()
-      authToken = `test_token_${Date.now()}`
-      scenarioId = 'test-scenario-1'
     }
   })
 
-  test.beforeEach(async ({ page, context }) => {
+  test.beforeEach(async ({ page }) => {
     test.setTimeout(60000)
     
-    // Set up auth context properly
+    // Navigate to app origin first, then set localStorage auth token (app uses localStorage, not cookies)
+    await page.goto('http://localhost:3000', { waitUntil: 'domcontentloaded' })
     if (authToken) {
-      await context.addCookies([
-        {
-          name: 'authToken',
-          value: authToken,
-          url: 'http://localhost:3000'
-        }
-      ])
+      await page.evaluate((token) => {
+        localStorage.setItem('authToken', token)
+      }, authToken)
     }
     
     await page.goto('http://localhost:3000/execution', { waitUntil: 'networkidle' })
