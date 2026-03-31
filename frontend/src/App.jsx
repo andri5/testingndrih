@@ -3,6 +3,7 @@ import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import DashboardPage from './pages/DashboardPage'
 import ScenariosPage from './pages/ScenariosPage'
+import ScenarioDetailPage from './pages/ScenarioDetailPage'
 import ExecutionPage from './pages/ExecutionPage'
 import QaseSettingsPage from './pages/QaseSettingsPage'
 import ProtectedRoute from './components/ProtectedRoute'
@@ -38,6 +39,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <ScenariosPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/scenarios/:id"
+          element={
+            <ProtectedRoute>
+              <ScenarioDetailPage />
             </ProtectedRoute>
           }
         />

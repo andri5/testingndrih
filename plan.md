@@ -1,7 +1,7 @@
-# PLAN - testingndrih Testing Validation Phase
+﻿# PLAN - testingndrih Testing Validation Phase
 > Aplikasi Web Testing Otomatis - Platform all-in-one untuk membuat, mengelola, dan mengeksekusi skenario testing secara otomatis, lengkap dengan laporan, screenshot, dan integrasi AI.
-**Last Updated**: March 31, 2026 - Session 5 (Feature Gap Analysis)
-**Current Phase**: Feature Gap Analysis Complete - Priorities 1-3 DONE
+**Last Updated**: March 31, 2026 - Session 6 (Test Step Management UI)
+**Current Phase**: Feature Development - Test Step Management Built
 ---
 ## Ringkasan Proyek
 | Item | Detail |
@@ -21,9 +21,9 @@
 - Unit Tests: 250/250 PASS (100%) - Coverage 49.1%/59.6%/58.59%/48.57%
 - E2E Tests: 86/86 PASS (100%) - 12 spec files, Chromium
 - Auth E2E: 13/13 PASS
-### Feature Completeness: ~60%
+### Feature Completeness: ~65%
 ```
-Feature Development    [==================............] 60%
+Feature Development    [====================..........] 65%
 Testing Validation     [==============================] 100% DONE
 CI/CD Setup            [..............................] 0% Pending
 ```
@@ -37,12 +37,23 @@ CI/CD Setup            [..............................] 0% Pending
 ### PRIORITY 3: Full E2E Test Suite - 86/86 PASS (100%)
 - Progression: 22/86 (25.6%) -> 37 -> 60 -> 74 -> 83 -> 85 -> 86/86 (100%)
 - 7 rounds of fixes across 12 spec files
+
+### Session 6 - Test Step Management UI (March 31, 2026)
+- Created ScenarioDetailPage.jsx (/scenarios/:id) with full test step editor
+- Add/edit/delete/reorder test steps with type-specific form fields (7 step types)
+- Execution button with per-step result viewer (pass/fail/error per step)
+- Per-step screenshot capture: setiap step otomatis di-screenshot dan disimpan ke DB (Screenshot model)
+- Screenshot viewer: thumbnail di hasil eksekusi, klik untuk memperbesar (modal fullscreen)
+- Screenshots juga tersedia di ExecutionPage saat View execution details
+- Fixed reorder API payload mismatch (frontend sent `steps`, backend expected `stepOrders`)
+- Enhanced ExecutionPage with per-step breakdown in current execution details
+- Added OWASP password validation (register) + Login UX improvements (eye toggle, Indonesian messages)
 ---
 ## FEATURE GAP ANALYSIS (Priority 4)
 ### Frontend - Missing Pages/Routes
 | Feature | Status | Detail |
 |---------|--------|--------|
-| Scenario Detail Page (/scenarios/:id) | MISSING | ScenariosPage navigates to /scenarios/ID but route+page don't exist. Redirects to dashboard. |
+| Scenario Detail Page (/scenarios/:id) | DONE | ScenarioDetailPage.jsx created with step editor, execution, result viewer |
 | Reports Page (/reports) | MISSING | Sidebar link exists in Layout.jsx but no ReportsPage component or route |
 | Settings Page (/settings) | MISSING | Sidebar link exists in Layout.jsx but no SettingsPage component or route |
 | Import Page | MISSING | Backend has full CSV import/export, API client has methods, but no frontend UI |
@@ -51,8 +62,8 @@ CI/CD Setup            [..............................] 0% Pending
 | Feature | Status | Detail |
 |---------|--------|--------|
 | Dashboard Stats | PARTIAL | Shows hardcoded zeros. Backend has /api/executions/stats/summary and /api/scenarios/stats but dashboard never calls them |
-| Test Step Editor | MISSING | Backend has full CRUD+reorder API, frontend api.js has methods, but NO UI component for step management |
-| Execution Results Viewer | PARTIAL | Shows aggregate summary (pass/fail/total) but NO per-step breakdown, NO screenshot viewer, NO detailed error display. Backend returns stepResults+screenshots but frontend ignores them |
+| Test Step Editor | DONE | Integrated into ScenarioDetailPage - add/edit/delete/reorder steps with type-specific fields |
+| Execution Results Viewer | DONE | Per-step pass/fail/error details in both ScenarioDetailPage and ExecutionPage |
 ### Backend - Unimplemented Models
 | Model | Service | Controller | Route | Status |
 |-------|---------|------------|-------|--------|
@@ -72,9 +83,9 @@ CI/CD Setup            [..............................] 0% Pending
 | 3 | Scenario Search | COMPLETE | Yes | Yes |
 | 4 | Test Execution | COMPLETE | Yes | Yes (basic) |
 | 5 | Qase.io Integration | COMPLETE | Yes | Yes |
-| 6 | Scenario Detail Page | MISSING | N/A | No route/page |
-| 7 | Test Step Editor UI | MISSING | Yes (API ready) | No component |
-| 8 | Execution Detail Viewer | PARTIAL | Yes (returns data) | Only summary shown |
+| 6 | Scenario Detail Page | DONE | N/A | ScenarioDetailPage.jsx |
+| 7 | Test Step Editor UI | DONE | Yes (API ready) | Integrated in detail page |
+| 8 | Execution Detail Viewer | DONE | Yes (returns data) | Per-step results shown |
 | 9 | Dashboard Stats | PARTIAL | Yes (endpoints exist) | Hardcoded zeros |
 | 10 | Reports Page | MISSING | No endpoint | No page |
 | 11 | Settings Page | MISSING | No endpoint | No page |
@@ -129,4 +140,4 @@ cd frontend && npx playwright test --project=chromium --workers=1
 # Custom test runner (avoids OOM)
 node run-tests.js
 node run-tests.js search.spec.js
-```
+```   

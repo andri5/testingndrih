@@ -1,5 +1,7 @@
 import { chromium } from 'playwright'
 import { prisma } from '../lib/prisma.js'
+import fs from 'fs'
+import path from 'path'
 
 /**
  * Comprehensive execution service using Playwright
@@ -100,7 +102,7 @@ export const executionService = {
 
         // Record step result
         const stepDuration = Date.now() - stepStartTime
-        await prisma.stepResult.create({
+        const stepResult = await prisma.stepResult.create({
           data: {
             executionId: execution.id,
             testStepId: step.id,
@@ -109,6 +111,29 @@ export const executionService = {
             duration: stepDuration
           }
         })
+
+        // Capture screenshot after every step (except WAIT and API_CALL which have no page state change worth capturing)
+        if (page && step.type !== 'API_CALL') {
+          try {
+            const screenshotDir = path.resolve('./uploads/screenshots')
+            if (!fs.existsSync(screenshotDir)) {
+              fs.mkdirSync(screenshotDir, { recursive: true })
+            }
+            const filename = `exec-${execution.id}-step-${step.stepNumber}.png`
+            const filepath = path.join(screenshotDir, filename)
+            await page.screenshot({ path: filepath, fullPage: false })
+
+            await prisma.screenshot.create({
+              data: {
+                url: `/api/screenshots/${filename}`,
+                executionId: execution.id,
+                stepResultId: stepResult.id
+              }
+            })
+          } catch (screenshotErr) {
+            console.error(`Screenshot capture failed for step ${step.stepNumber}:`, screenshotErr.message)
+          }
+        }
 
         // Stop execution if step failed
         if (stepStatus === 'FAILED') {
@@ -327,7 +352,10 @@ export const executionService = {
       where,
       include: {
         scenario: { select: { name: true } },
-        stepResults: true
+        stepResults: {
+          include: { screenshot: true, testStep: true },
+          orderBy: { testStep: { stepNumber: 'asc' } }
+        }
       },
       orderBy: { createdAt: 'desc' },
       take: limit,
@@ -354,7 +382,8 @@ export const executionService = {
       include: {
         scenario: { select: { name: true, url: true } },
         stepResults: {
-          include: { testStep: true }
+          include: { testStep: true, screenshot: true },
+          orderBy: { testStep: { stepNumber: 'asc' } }
         }
       }
     })

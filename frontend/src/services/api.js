@@ -27,9 +27,13 @@ apiClient.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       // Token expired/invalid - clear auth
+      // Don't redirect if already on login or register page
+      const isAuthPage = window.location.pathname === '/login' || window.location.pathname === '/register'
       localStorage.removeItem('authToken')
       localStorage.removeItem('user')
-      window.location.href = '/login'
+      if (!isAuthPage) {
+        window.location.href = '/login'
+      }
     }
     return Promise.reject(error)
   }
@@ -94,8 +98,8 @@ export const scenarioAPI = {
   deleteStep: (scenarioId, stepId) =>
     apiClient.delete(`/scenarios/${scenarioId}/steps/${stepId}`),
   
-  reorderSteps: (scenarioId, steps) =>
-    apiClient.post(`/scenarios/${scenarioId}/steps/reorder`, { steps }),
+  reorderSteps: (scenarioId, stepOrders) =>
+    apiClient.put(`/scenarios/${scenarioId}/steps/reorder`, { stepOrders }),
   
   getStepTypes: () =>
     apiClient.get('/step-types'),

@@ -21,10 +21,19 @@ export async function registerUser(req, res, next) {
       })
     }
 
-    if (password.length < 6) {
+    // OWASP password validation
+    const passwordErrors = []
+    if (password.length < 8) passwordErrors.push('Minimal 8 karakter')
+    if (password.length > 64) passwordErrors.push('Maksimal 64 karakter')
+    if (!/[A-Z]/.test(password)) passwordErrors.push('Minimal 1 huruf besar')
+    if (!/[a-z]/.test(password)) passwordErrors.push('Minimal 1 huruf kecil')
+    if (!/[0-9]/.test(password)) passwordErrors.push('Minimal 1 angka')
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) passwordErrors.push('Minimal 1 karakter spesial (!@#$%^&*)')
+
+    if (passwordErrors.length > 0) {
       return res.status(400).json({
         success: false,
-        message: 'Password must be at least 6 characters'
+        message: 'Password tidak memenuhi syarat: ' + passwordErrors.join(', ')
       })
     }
 
@@ -97,7 +106,7 @@ export async function loginUser(req, res, next) {
     if (!user) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid email or password'
+        message: 'Password atau email nya salah'
       })
     }
 
@@ -107,7 +116,7 @@ export async function loginUser(req, res, next) {
     if (!isPasswordValid) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid email or password'
+        message: 'Password atau email nya salah'
       })
     }
 

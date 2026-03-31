@@ -36,6 +36,10 @@ lerna-debug.log*
 coverage/
 .nyc_output/
 junit.xml
+test-results.json
+test-results/
+playwright-report/
+blob-report/
 
 # Screenshot & uploads
 backend/screenshots/

@@ -10,6 +10,7 @@ export default function ExecutionPage() {
   const navigate = useNavigate()
   const [selectedScenarioId, setSelectedScenarioId] = useState(null)
   const [selectedScenarioName, setSelectedScenarioName] = useState('')
+  const [screenshotModal, setScreenshotModal] = useState(null)
   
   const {
     executions,
@@ -273,6 +274,57 @@ export default function ExecutionPage() {
                     )}
                   </div>
                 )}
+
+                {/* Per-Step Results */}
+                {currentExecution.stepResults && currentExecution.stepResults.length > 0 && (
+                  <div className="mt-4">
+                    <h3 className="font-semibold text-gray-900 mb-2">Detail Per-Step</h3>
+                    <div className="space-y-2">
+                      {currentExecution.stepResults.map((result, idx) => (
+                        <div
+                          key={result.id || idx}
+                          className={`flex items-center gap-3 p-2 rounded border ${
+                            result.status === 'PASSED'
+                              ? 'bg-green-50 border-green-200'
+                              : 'bg-red-50 border-red-200'
+                          }`}
+                        >
+                          <span className={`text-sm ${result.status === 'PASSED' ? 'text-green-600' : 'text-red-600'}`}>
+                            {result.status === 'PASSED' ? '✓' : '✗'}
+                          </span>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-gray-900 truncate">
+                              Step {result.testStep?.stepNumber || idx + 1}: {result.testStep?.description || '-'}
+                            </p>
+                            {result.errorMessage && (
+                              <p className="text-xs text-red-600 truncate">{result.errorMessage}</p>
+                            )}
+                          </div>
+                          {result.screenshot && (
+                            <button
+                              onClick={() => setScreenshotModal({
+                                url: result.screenshot.url,
+                                stepNumber: result.testStep?.stepNumber || idx + 1,
+                                description: result.testStep?.description || ''
+                              })}
+                              className="flex-shrink-0 border-2 border-gray-300 rounded overflow-hidden hover:border-indigo-500 transition cursor-pointer"
+                              title="Lihat screenshot"
+                            >
+                              <img
+                                src={result.screenshot.url}
+                                alt={`Step ${result.testStep?.stepNumber || idx + 1}`}
+                                className="w-20 h-14 object-cover"
+                              />
+                            </button>
+                          )}
+                          <span className="text-xs text-gray-500">
+                            {result.duration ? `${result.duration}ms` : ''}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {isRunning && (
@@ -380,6 +432,51 @@ export default function ExecutionPage() {
             </div>
           )}
         </Card>
+
+        {/* Screenshot Modal */}
+        {screenshotModal && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
+            onClick={() => setScreenshotModal(null)}
+          >
+            <div
+              className="bg-white rounded-lg max-w-5xl w-full max-h-[90vh] overflow-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between p-4 border-b">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  📸 Step {screenshotModal.stepNumber}: {screenshotModal.description}
+                </h3>
+                <button
+                  onClick={() => setScreenshotModal(null)}
+                  className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
+                >
+                  ✕
+                </button>
+              </div>
+              <div className="p-4">
+                <img
+                  src={screenshotModal.url}
+                  alt={`Screenshot step ${screenshotModal.stepNumber}`}
+                  className="w-full rounded-lg border border-gray-200"
+                />
+              </div>
+              <div className="flex justify-end p-4 border-t">
+                <a
+                  href={screenshotModal.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-indigo-600 hover:text-indigo-800 text-sm font-medium mr-4"
+                >
+                  Buka di tab baru ↗
+                </a>
+                <Button variant="secondary" onClick={() => setScreenshotModal(null)}>
+                  Tutup
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </Layout>
   )

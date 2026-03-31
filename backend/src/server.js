@@ -3,6 +3,8 @@ import cors from 'cors'
 import helmet from 'helmet'
 import rateLimit from 'express-rate-limit'
 import dotenv from 'dotenv'
+import path from 'path'
+import { fileURLToPath } from 'url'
 import authRoutes from './routes/authRoutes.js'
 import scenarioRoutes from './routes/scenarioRoutes.js'
 import searchRoutes from './routes/searchRoutes.js'
@@ -67,6 +69,11 @@ app.use('/api/files', fileRoutes)
 app.use('/api/import', importRoutes)
 app.use('/api/executions', executionRoutes)
 app.use('/api/qase', qaseRoutes)
+
+// Serve screenshot files
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+app.use('/api/screenshots', express.static(path.resolve(__dirname, '../uploads/screenshots')))
 
 // 404 handler
 app.use((req, res) => {
