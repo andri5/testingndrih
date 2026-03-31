@@ -1,7 +1,5 @@
-import { PrismaClient } from '@prisma/client'
+import { prisma } from '../lib/prisma.js'
 import fs from 'fs'
-
-const prisma = new PrismaClient()
 
 /**
  * Simple CSV parser (no external dependency)

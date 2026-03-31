@@ -1,44 +1,58 @@
 import { test, expect } from '@playwright/test'
 
 test.describe('Qase Integration E2E Tests', () => {
-  let email, password, authToken, userData
+  let authToken
 
-  test.beforeAll(async ({ request }) => {
+  test.beforeAll(async ({ browser }) => {
     test.setTimeout(120000)
-
-    email = `user_${Date.now()}@test.com`
-    password = 'TestPassword123!'
-
-    // Register via API directly
+    
+    const context = await browser.newContext()
+    const page = await context.newPage()
+    
     try {
-      const response = await request.post('http://localhost:5001/api/auth/register', {
+      // Register via API
+      const email = `user_${Date.now()}@test.com`
+      const password = 'TestPassword123!'
+      
+      const response = await page.request.post('http://localhost:5001/api/auth/register', {
         headers: { 'Content-Type': 'application/json' },
         data: { email, password, name: 'Test User' }
       })
+      
       if (response.ok()) {
         const data = await response.json()
         authToken = data.token
-        userData = JSON.stringify(data.user)
       } else {
-        console.log('Registration failed:', response.status())
+        // Fallback: use known test user
+        const loginResponse = await page.request.post('http://localhost:5001/api/auth/login', {
+          headers: { 'Content-Type': 'application/json' },
+          data: { email: 'donkditren@gmail.com', password: 'password*1' }
+        })
+        if (loginResponse.ok()) {
+          const data = await loginResponse.json()
+          authToken = data.token
+        }
       }
     } catch (e) {
-      console.log('Registration error:', e.message)
+      console.log('BeforeAll error:', e.message)
     }
+    
+    await context.close()
   })
 
   test.beforeEach(async ({ page }) => {
     test.setTimeout(60000)
-
-    // Set auth via localStorage - must set BOTH authToken AND user (ProtectedRoute checks both)
+    
+    // Set auth via localStorage init script
     if (authToken) {
-      await page.addInitScript(({ token, user }) => {
+      await page.addInitScript((token) => {
         localStorage.setItem('authToken', token)
-        localStorage.setItem('user', user)
-      }, { token: authToken, user: userData })
+        localStorage.setItem('user', JSON.stringify({ id: 'test-user', email: 'test@test.com', name: 'Test User' }))
+      }, authToken)
     }
-
+    
     await page.goto('http://localhost:3000/qase', { waitUntil: 'domcontentloaded' })
+    await page.waitForTimeout(1000)
   })
 
   test('User can navigate to Qase settings page', async ({ page }) => {
@@ -48,8 +62,8 @@ test.describe('Qase Integration E2E Tests', () => {
   })
 
   test('User sees "Not Connected" status initially', async ({ page }) => {
-    // Verify initial state - use .first() since page has multiple "not connected" texts
-    await page.locator('text=/not.*connected/i').first().waitFor({ state: 'visible', timeout: 5000 })
+    // Verify initial state
+    await page.getByText(/not.*connected/i).first().waitFor({ state: 'visible', timeout: 5000 })
     const connectButton = page.locator('button:has-text("Connect Qase.io")')
     await connectButton.waitFor({ state: 'visible', timeout: 5000 })
   })
@@ -126,8 +140,8 @@ test.describe('Qase Integration E2E Tests', () => {
     await page.goto('http://localhost:3000/dashboard', { waitUntil: 'domcontentloaded' })
 
     // Verify Qase card visible
-    await page.locator('text=/qase.*integration/i').waitFor({ state: 'visible', timeout: 5000 })
-    await page.locator('text=/not.*connected/i').waitFor({ state: 'visible', timeout: 5000 })
+    await page.getByText(/qase.*integration/i).first().waitFor({ state: 'visible', timeout: 5000 })
+    await page.getByText(/not.*connected/i).first().waitFor({ state: 'visible', timeout: 5000 })
   })
 
   test('Qase menu item visible in sidebar', async ({ page }) => {

@@ -1,13 +1,16 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { Card, Button, Badge, Spinner, Alert } from '../components/ui'
 import { useExecutionStore } from '../store/executionStore'
 import { useScenarioStore } from '../store/scenarioStore'
+import { ExecuteScenarioButton } from '../components/ExecuteScenarioButton'
 
 export default function ExecutionPage() {
   const navigate = useNavigate()
-  const [selectedScenarioId, setSelectedScenarioId] = useState('')
+  const [selectedScenarioId, setSelectedScenarioId] = useState(null)
+  const [selectedScenarioName, setSelectedScenarioName] = useState('')
+  
   const {
     executions,
     currentExecution,
@@ -18,9 +21,9 @@ export default function ExecutionPage() {
     pagination,
     fetchExecutions,
     fetchExecutionStats,
-    executeScenario,
     getExecutionDetails,
-    clearError
+    clearError,
+    executeScenario
   } = useExecutionStore()
 
   const { scenarios, fetchScenarios } = useScenarioStore()
@@ -29,8 +32,19 @@ export default function ExecutionPage() {
   useEffect(() => {
     fetchExecutions()
     fetchExecutionStats()
-    fetchScenarios(0, 100)
+    fetchScenarios()
   }, [])
+
+  // Refresh executions when execution completes
+  useEffect(() => {
+    if (!isRunning && currentExecution) {
+      const timer = setTimeout(() => {
+        fetchExecutions()
+        fetchExecutionStats()
+      }, 1000)
+      return () => clearTimeout(timer)
+    }
+  }, [isRunning, currentExecution])
 
   const handleViewDetails = async (executionId) => {
     try {
@@ -90,38 +104,79 @@ export default function ExecutionPage() {
           />
         )}
 
-        {/* Run New Execution */}
+        {/* Execution Control Panel */}
         <Card>
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Run New Execution</h2>
-          <div className="flex gap-3 items-end">
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+          <h2 className="text-xl font-bold text-gray-900 mb-4">Run Scenario</h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Scenario Selector */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Select Scenario
               </label>
               <select
-                value={selectedScenarioId}
-                onChange={(e) => setSelectedScenarioId(e.target.value)}
+                value={selectedScenarioId || ''}
+                onChange={(e) => {
+                  const scenarioId = e.target.value
+                  const scenario = scenarios.find(s => s.id === scenarioId)
+                  setSelectedScenarioId(scenarioId)
+                  setSelectedScenarioName(scenario?.name || '')
+                }}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
-                <option value="">-- Select a scenario --</option>
-                {scenarios.map((scenario) => (
+                <option value="">Choose a scenario...</option>
+                {scenarios && scenarios.map((scenario) => (
                   <option key={scenario.id} value={scenario.id}>
-                    {scenario.name}
+                    {scenario.name} ({scenario.testSteps?.length || 0} steps)
                   </option>
                 ))}
               </select>
             </div>
-            <Button
-              variant="primary"
-              onClick={() => selectedScenarioId && executeScenario(selectedScenarioId)}
-              disabled={!selectedScenarioId || isRunning}
-            >
-              {isRunning ? (
-                <><Spinner size="sm" /> Running...</>
+
+            {/* Status Info */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Status
+              </label>
+              <div className="px-3 py-2 bg-gray-100 rounded-lg">
+                {isRunning ? (
+                  <div className="flex items-center gap-2 text-blue-600">
+                    <Spinner size="sm" />
+                    <span>Running...</span>
+                  </div>
+                ) : (
+                  <span className="text-gray-600">Ready</span>
+                )}
+              </div>
+            </div>
+
+            {/* Execute Button */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Action
+              </label>
+              {selectedScenarioId ? (
+                <ExecuteScenarioButton 
+                  scenarioId={selectedScenarioId}
+                  scenarioName={selectedScenarioName}
+                  onExecutionStart={() => {
+                    // Refresh executions and stats after execution starts
+                    setTimeout(() => {
+                      fetchExecutions()
+                      fetchExecutionStats()
+                    }, 2000)
+                  }}
+                />
               ) : (
-                'Execute'
+                <Button 
+                  variant="secondary" 
+                  disabled
+                  className="w-full"
+                >
+                  Select a scenario first
+                </Button>
               )}
-            </Button>
+            </div>
           </div>
         </Card>
 

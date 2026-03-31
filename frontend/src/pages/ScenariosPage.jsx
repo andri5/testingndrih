@@ -132,6 +132,7 @@ export default function ScenariosPage() {
               onClick={() => setShowCreateForm(true)}
               variant="primary"
               size="lg"
+              data-testid="create-scenario-btn"
             >
               + Create Scenario
             </Button>
