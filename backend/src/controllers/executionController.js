@@ -28,9 +28,19 @@ export const executionController = {
       })
     } catch (error) {
       console.error('Execution error:', error)
+
+      // Try to fetch execution details so the frontend can show step-level info
+      let executionDetail = null
+      try {
+        if (error.executionId) {
+          executionDetail = await executionService.getExecutionDetails(userId, error.executionId)
+        }
+      } catch (_) {}
+
       res.status(400).json({
         success: false,
-        message: error.message || 'Execution failed'
+        message: error.message || 'Execution failed',
+        execution: executionDetail
       })
     }
   },

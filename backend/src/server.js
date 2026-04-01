@@ -13,6 +13,7 @@ import fileRoutes from './routes/fileRoutes.js'
 import importRoutes from './routes/importRoutes.js'
 import executionRoutes from './routes/executionRoutes.js'
 import qaseRoutes from './routes/qaseRoutes.js'
+import recorderRoutes from './routes/recorderRoutes.js'
 import { errorHandler } from './middleware/auth.js'
 
 dotenv.config()
@@ -69,6 +70,7 @@ app.use('/api/files', fileRoutes)
 app.use('/api/import', importRoutes)
 app.use('/api/executions', executionRoutes)
 app.use('/api/qase', qaseRoutes)
+app.use('/api/recorder', recorderRoutes)
 
 // Serve screenshot files
 const __filename = fileURLToPath(import.meta.url)

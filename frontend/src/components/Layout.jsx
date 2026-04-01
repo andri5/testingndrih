@@ -19,6 +19,7 @@ export default function Layout({ children }) {
     { name: 'Scenarios', path: '/scenarios', icon: '🧪' },
     { name: 'Execution', path: '/execution', icon: '▶️' },
     { name: 'Reports', path: '/reports', icon: '📈' },
+    { name: 'Import/Export', path: '/import', icon: '📦' },
     { name: 'Qase.io', path: '/qase', icon: '🔗' },
     { name: 'Settings', path: '/settings', icon: '⚙️' }
   ]

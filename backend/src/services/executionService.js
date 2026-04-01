@@ -44,10 +44,58 @@ export const executionService = {
     let page = null
 
     try {
-      // Launch browser
-      browser = await chromium.launch()
-      context = await browser.newContext()
+      // Launch browser in headed mode so user can watch execution in real-time
+      browser = await chromium.launch({
+        headless: false,
+        args: ['--start-maximized'],
+        slowMo: 400  // slow down actions so user can follow each step
+      })
+      context = await browser.newContext({ viewport: null })
       page = await context.newPage()
+
+      // ═══ DIALOG HANDLING — auto-accept alert/confirm/prompt ═══
+      page.on('dialog', async (dialog) => {
+        try {
+          const type = dialog.type() // 'alert', 'confirm', 'prompt', 'beforeunload'
+          if (type === 'prompt') {
+            await dialog.accept('') // Accept with empty string
+          } else {
+            await dialog.accept()
+          }
+        } catch { /* dialog may already be dismissed */ }
+      })
+
+      // ═══ NEW TAB/POPUP HANDLING — track pages opened via target="_blank" or window.open ═══
+      const allPages = [page]
+      context.on('page', async (newPage) => {
+        allPages.push(newPage)
+        // Auto-dismiss dialogs on new tabs too
+        newPage.on('dialog', async (dialog) => {
+          try { await dialog.accept() } catch {}
+        })
+      })
+
+      // Collect page console errors for diagnostics
+      const pageErrors = []
+      page.on('pageerror', (err) => {
+        pageErrors.push({ type: 'PAGE_ERROR', message: err.message, timestamp: new Date().toISOString() })
+      })
+      page.on('console', (msg) => {
+        if (msg.type() === 'error') {
+          pageErrors.push({ type: 'CONSOLE_ERROR', message: msg.text(), timestamp: new Date().toISOString() })
+        }
+      })
+
+      // Collect failed network requests for diagnostics
+      const failedRequests = []
+      page.on('requestfailed', (request) => {
+        failedRequests.push({
+          url: request.url(),
+          method: request.method(),
+          failure: request.failure()?.errorText || 'unknown',
+          timestamp: new Date().toISOString()
+        })
+      })
 
       let passedSteps = 0
       let failedSteps = 0
@@ -57,6 +105,10 @@ export const executionService = {
         const stepStartTime = Date.now()
         let stepStatus = 'PASSED'
         let errorMessage = null
+
+        // Clear per-step diagnostics
+        pageErrors.length = 0
+        failedRequests.length = 0
 
         try {
           // Execute step based on type
@@ -96,7 +148,28 @@ export const executionService = {
           passedSteps++
         } catch (error) {
           stepStatus = 'FAILED'
-          errorMessage = error.message
+
+          // Build rich error detail
+          let currentUrl = ''
+          try { currentUrl = page.url() } catch (_) {}
+
+          const errorDetail = {
+            message: error.message,
+            step: {
+              number: step.stepNumber,
+              type: step.type,
+              selector: step.selector || null,
+              value: step.type === 'FILL' ? step.value : (step.type === 'NAVIGATE' ? step.value : null),
+              description: step.description
+            },
+            page: {
+              url: currentUrl
+            },
+            consoleErrors: pageErrors.slice(-5),
+            failedRequests: failedRequests.slice(-5)
+          }
+
+          errorMessage = JSON.stringify(errorDetail)
           failedSteps++
         }
 
@@ -179,6 +252,7 @@ export const executionService = {
         }
       })
 
+      error.executionId = execution.id
       throw error
     } finally {
       // Cleanup
@@ -195,7 +269,7 @@ export const executionService = {
   },
 
   /**
-   * Execute NAVIGATE step - Navigate to URL
+   * Execute NAVIGATE step - Navigate to URL with smart wait
    */
   async executeNavigate(page, step) {
     if (!step.value) {
@@ -208,34 +282,114 @@ export const executionService = {
       throw new Error(`Invalid URL: ${step.value}`)
     }
 
-    await page.goto(step.value, { waitUntil: 'networkidle' })
+    await page.goto(step.value, { waitUntil: 'domcontentloaded', timeout: 30000 })
+    // Smart wait: wait for load + networkidle (with fallback timeout)
+    await page.waitForLoadState('load').catch(() => {})
+    await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {})
+    // Extra: wait for any SPA framework to finish rendering
+    await page.waitForTimeout(300)
   },
 
   /**
-   * Execute CLICK step - Click on element
+   * Execute CLICK step - Click on element with smart wait and retry
    */
   async executeClick(page, step) {
     if (!step.selector) {
       throw new Error('CLICK step requires a selector')
     }
 
-    // Wait for element and click
-    await page.locator(step.selector).click()
+    const locator = this.resolveLocator(page, step.selector)
+
+    // Smart wait: try visible first, fallback to attached (for off-screen elements)
+    try {
+      await locator.waitFor({ state: 'visible', timeout: 10000 })
+    } catch {
+      // Element might exist but not be visible yet — wait for it to attach, then scroll
+      await locator.waitFor({ state: 'attached', timeout: 5000 })
+      await locator.scrollIntoViewIfNeeded({ timeout: 3000 }).catch(() => {})
+    }
+
+    // Retry click once on failure (handles detached element / re-render race)
+    try {
+      await locator.click({ timeout: 10000 })
+    } catch (firstErr) {
+      // Wait a beat for any re-render to settle, then retry
+      await page.waitForTimeout(500)
+      await locator.click({ timeout: 10000 })
+    }
+
+    // After click: wait for potential navigation or network activity to settle
+    await page.waitForLoadState('networkidle', { timeout: 3000 }).catch(() => {})
   },
 
   /**
    * Execute FILL step - Fill input field
+   * Handles checkbox/radio, contenteditable, and select elements
    */
   async executeFill(page, step) {
     if (!step.selector) {
       throw new Error('FILL step requires a selector')
     }
-    if (!step.value) {
-      throw new Error('FILL step requires a value')
+
+    const value = step.value ?? ''
+    const locator = this.resolveLocator(page, step.selector)
+
+    // Smart wait: try visible, fallback to attached
+    try {
+      await locator.waitFor({ state: 'visible', timeout: 10000 })
+    } catch {
+      await locator.waitFor({ state: 'attached', timeout: 5000 })
+      await locator.scrollIntoViewIfNeeded({ timeout: 3000 }).catch(() => {})
     }
 
-    // Clear and fill input
-    await page.locator(step.selector).fill(step.value)
+    // Detect element properties
+    const tagName = await locator.evaluate(el => el.tagName.toLowerCase()).catch(() => '')
+    const inputType = await locator.getAttribute('type').catch(() => null)
+    const isEditable = await locator.evaluate(el => el.isContentEditable).catch(() => false)
+
+    // Checkbox
+    if (inputType === 'checkbox') {
+      const isChecked = await locator.isChecked()
+      if (value === 'false' || value === 'uncheck') {
+        if (isChecked) await locator.uncheck({ timeout: 10000 })
+      } else {
+        if (!isChecked) await locator.check({ timeout: 10000 })
+      }
+      return
+    }
+
+    // Radio
+    if (inputType === 'radio') {
+      await locator.check({ timeout: 10000 })
+      return
+    }
+
+    // Select dropdown
+    if (tagName === 'select') {
+      await locator.selectOption(value, { timeout: 10000 })
+      return
+    }
+
+    // Contenteditable (rich text editors: CKEditor, Quill, ProseMirror, etc.)
+    if (isEditable) {
+      await locator.click({ timeout: 5000 }) // Focus the editor
+      await locator.evaluate((el, val) => {
+        el.innerHTML = ''
+        el.focus()
+      }, value)
+      await page.keyboard.type(value, { delay: 30 })
+      return
+    }
+
+    // Standard input/textarea — try fill, fallback to type
+    try {
+      await locator.fill(value, { timeout: 10000 })
+    } catch (fillErr) {
+      // Some custom input components block .fill() — fallback to click + keyboard
+      await locator.click({ timeout: 5000 })
+      await locator.evaluate(el => { if (el.select) el.select(); }) // Select all existing text
+      await page.keyboard.type(value, { delay: 30 })
+    }
   },
 
   /**
@@ -265,7 +419,7 @@ export const executionService = {
 
     // If selector is provided, check if element exists
     if (step.selector) {
-      const element = await page.locator(step.selector)
+      const element = this.resolveLocator(page, step.selector)
       const count = await element.count()
 
       if (count === 0) {
@@ -337,6 +491,60 @@ export const executionService = {
     } catch (error) {
       throw new Error(`API call failed: ${error.message}`)
     }
+  },
+
+  /**
+   * Resolve a selector string into a Playwright locator.
+   * Handles: Shadow DOM (>>>), XPath, :has-text, CSS selectors
+   */
+  resolveLocator(page, selector) {
+    if (!selector) throw new Error('Selector is empty')
+
+    // Handle Shadow DOM piercing with >>> combinator
+    if (selector.includes(' >>> ')) {
+      const segments = selector.split(' >>> ')
+      let locator = page.locator(segments[0])
+      for (let i = 1; i < segments.length; i++) {
+        locator = locator.locator(segments[i])
+      }
+      return locator
+    }
+
+    // Handle XPath selectors (starts with / or //)
+    if (selector.startsWith('/') || selector.startsWith('//')) {
+      return page.locator(`xpath=${selector}`)
+    }
+
+    // Handle explicit xpath= prefix
+    if (selector.startsWith('xpath=')) {
+      return page.locator(selector)
+    }
+
+    // Handle button:has-text("text") or a:has-text("text")
+    const hasTextMatch = selector.match(/^(\w+):has-text\("(.+)"\)$/)
+    if (hasTextMatch) {
+      const [, tag, text] = hasTextMatch
+      if (tag === 'button') {
+        return page.getByRole('button', { name: text, exact: true })
+      }
+      if (tag === 'a') {
+        return page.getByRole('link', { name: text, exact: true })
+      }
+      return page.locator(tag, { hasText: text })
+    }
+
+    // Handle generic :has-text("text") anywhere in selector
+    if (selector.includes(':has-text(')) {
+      const parts = selector.match(/^(.*):has-text\("(.+)"\)$/)
+      if (parts) {
+        const [, base, text] = parts
+        const baseSelector = base.trim() || '*'
+        return page.locator(baseSelector, { hasText: text })
+      }
+    }
+
+    // Standard CSS selector
+    return page.locator(selector)
   },
 
   /**

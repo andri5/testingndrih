@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { Card, Button, Badge, Spinner, Alert } from '../components/ui'
+import StepErrorDetail from '../components/StepErrorDetail'
 import { useExecutionStore } from '../store/executionStore'
 import { useScenarioStore } from '../store/scenarioStore'
 import { ExecuteScenarioButton } from '../components/ExecuteScenarioButton'
@@ -262,7 +263,8 @@ export default function ExecutionPage() {
 
                 {currentExecution.errorMessage && (
                   <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
-                    <strong>Error:</strong> {currentExecution.errorMessage}
+                    <strong>Error:</strong>
+                    <StepErrorDetail errorMessage={currentExecution.errorMessage} size="small" />
                   </div>
                 )}
 
@@ -292,12 +294,15 @@ export default function ExecutionPage() {
                           <span className={`text-sm ${result.status === 'PASSED' ? 'text-green-600' : 'text-red-600'}`}>
                             {result.status === 'PASSED' ? '✓' : '✗'}
                           </span>
-                          <div className="flex-1 min-w-0">
+                          <div className="flex-1">
                             <p className="text-sm font-medium text-gray-900 truncate">
-                              Step {result.testStep?.stepNumber || idx + 1}: {result.testStep?.description || '-'}
+                              Step {result.testStep?.stepNumber || idx + 1}: {result.testStep?.type || ''} — {result.testStep?.description || '-'}
                             </p>
+                            {result.testStep?.selector && (
+                              <p className="text-xs text-gray-500 truncate font-mono">Selector: {result.testStep.selector}</p>
+                            )}
                             {result.errorMessage && (
-                              <p className="text-xs text-red-600 truncate">{result.errorMessage}</p>
+                              <StepErrorDetail errorMessage={result.errorMessage} size="small" />
                             )}
                           </div>
                           {result.screenshot && (

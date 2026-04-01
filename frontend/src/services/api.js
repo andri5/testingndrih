@@ -98,6 +98,9 @@ export const scenarioAPI = {
   deleteStep: (scenarioId, stepId) =>
     apiClient.delete(`/scenarios/${scenarioId}/steps/${stepId}`),
   
+  bulkDeleteSteps: (scenarioId, stepIds) =>
+    apiClient.post(`/scenarios/${scenarioId}/steps/bulk-delete`, { stepIds }),
+  
   reorderSteps: (scenarioId, stepOrders) =>
     apiClient.put(`/scenarios/${scenarioId}/steps/reorder`, { stepOrders }),
   
@@ -145,9 +148,13 @@ export const scenarioAPI = {
 }
 
 export const executionAPI = {
-  // Execute scenario
+  // Execute scenario (long timeout: execution can take minutes for many steps)
   executeScenario: (scenarioId) =>
-    apiClient.post(`/executions/scenarios/${scenarioId}`),
+    apiClient.post(`/executions/scenarios/${scenarioId}`, {}, { timeout: 300000 }),
+
+  // Get execution details (may include heavy step results)
+  getDetails: (executionId) =>
+    apiClient.get(`/executions/${executionId}`, { timeout: 30000 }),
   
   // Get execution history
   getHistory: (scenarioId = null, limit = 20, offset = 0) => {
@@ -158,9 +165,7 @@ export const executionAPI = {
     return apiClient.get('/executions', { params })
   },
   
-  // Get execution details
-  getDetails: (executionId) =>
-    apiClient.get(`/executions/${executionId}`),
+
   
   // Cancel execution
   cancel: (executionId) =>
@@ -178,6 +183,20 @@ export const executionAPI = {
     }
     return apiClient.get('/executions/stats/summary', { params })
   }
+}
+
+export const recorderAPI = {
+  start: (scenarioId, url) =>
+    apiClient.post('/recorder/start', { scenarioId, url }),
+
+  stop: (scenarioId) =>
+    apiClient.post('/recorder/stop', { scenarioId }),
+
+  status: (scenarioId) =>
+    apiClient.get(`/recorder/status/${scenarioId}`),
+
+  save: (scenarioId, steps) =>
+    apiClient.post(`/recorder/save/${scenarioId}`, { steps })
 }
 
 export default apiClient

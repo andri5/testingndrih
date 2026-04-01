@@ -4,6 +4,7 @@ import {
   getTestStep,
   updateTestStep,
   deleteTestStep,
+  bulkDeleteTestSteps,
   reorderSteps,
   getStepTypes,
   validateStep
@@ -114,6 +115,27 @@ export async function deleteTestStepHandler(req, res, next) {
     const { stepId } = req.params
 
     const result = await deleteTestStep(stepId, userId)
+    res.json(result)
+  } catch (error) {
+    next(error)
+  }
+}
+
+/**
+ * Bulk delete test steps
+ * POST /api/scenarios/:scenarioId/steps/bulk-delete
+ */
+export async function bulkDeleteStepsHandler(req, res, next) {
+  try {
+    const userId = req.user.id
+    const { scenarioId } = req.params
+    const { stepIds } = req.body
+
+    if (!Array.isArray(stepIds) || stepIds.length === 0) {
+      return res.status(400).json({ error: 'stepIds array is required' })
+    }
+
+    const result = await bulkDeleteTestSteps(scenarioId, stepIds, userId)
     res.json(result)
   } catch (error) {
     next(error)

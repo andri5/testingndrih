@@ -1,16 +1,17 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { Card, Button, Badge, Spinner, Alert } from '../components/ui'
-import { scenarioAPI, executionAPI } from '../services/api'
+import StepErrorDetail from '../components/StepErrorDetail'
+import { scenarioAPI, executionAPI, recorderAPI } from '../services/api'
 
 const STEP_TYPES = [
   { value: 'NAVIGATE', label: 'Navigate', icon: '🌐', fields: ['value'], placeholder: { value: 'https://example.com' } },
-  { value: 'CLICK', label: 'Click', icon: '👆', fields: ['selector'], placeholder: { selector: '#button-id or .class-name' } },
-  { value: 'FILL', label: 'Fill', icon: '✏️', fields: ['selector', 'value'], placeholder: { selector: '#input-id', value: 'Text to type' } },
+  { value: 'CLICK', label: 'Click', icon: '👆', fields: ['selector'], placeholder: { selector: '#button-id, .class-name, atau //xpath' } },
+  { value: 'FILL', label: 'Fill', icon: '✏️', fields: ['selector', 'value'], placeholder: { selector: '#input-id atau //xpath', value: 'Text to type' } },
   { value: 'SCREENSHOT', label: 'Screenshot', icon: '📸', fields: [], placeholder: {} },
   { value: 'WAIT', label: 'Wait', icon: '⏱️', fields: ['value'], placeholder: { value: '1000 (ms)' } },
-  { value: 'ASSERTION', label: 'Assertion', icon: '✅', fields: ['selector', 'value'], placeholder: { selector: '#element', value: 'Expected text (optional)' } },
+  { value: 'ASSERTION', label: 'Assertion', icon: '✅', fields: ['selector', 'value'], placeholder: { selector: '#element atau //xpath', value: 'Expected text (optional)' } },
   { value: 'API_CALL', label: 'API Call', icon: '📡', fields: ['value', 'metadata'], placeholder: { value: 'https://api.example.com/endpoint', metadata: '{"method":"GET","headers":{}}' } },
 ]
 
@@ -38,6 +39,21 @@ export default function ScenarioDetailPage() {
 
   // Screenshot modal state
   const [screenshotModal, setScreenshotModal] = useState(null)
+
+  // Recording state
+  const [isRecording, setIsRecording] = useState(false)
+  const [recordingSteps, setRecordingSteps] = useState([])
+  const [recordingUrl, setRecordingUrl] = useState('')
+  const [isStartingRecording, setIsStartingRecording] = useState(false)
+  const [isStoppingRecording, setIsStoppingRecording] = useState(false)
+  const [isSavingRecording, setIsSavingRecording] = useState(false)
+  const [showRecordingPanel, setShowRecordingPanel] = useState(false)
+  const pollingRef = useRef(null)
+  const stepFormRef = useRef(null)
+
+  // Checkbox selection state
+  const [selectedStepIds, setSelectedStepIds] = useState(new Set())
+  const [isDeletingBulk, setIsDeletingBulk] = useState(false)
 
   const showSuccess = (msg) => {
     setSuccessMsg(msg)
@@ -79,6 +95,9 @@ export default function ScenarioDetailPage() {
     setEditingStep(null)
     setStepForm({ ...emptyStep })
     setShowStepForm(true)
+    setTimeout(() => {
+      stepFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 100)
   }
 
   const openEditForm = (step) => {
@@ -91,6 +110,9 @@ export default function ScenarioDetailPage() {
       metadata: step.metadata || ''
     })
     setShowStepForm(true)
+    setTimeout(() => {
+      stepFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 100)
   }
 
   const cancelForm = () => {
@@ -158,9 +180,50 @@ export default function ScenarioDetailPage() {
     try {
       await scenarioAPI.deleteStep(id, stepId)
       showSuccess('Step berhasil dihapus')
+      setSelectedStepIds(prev => { const next = new Set(prev); next.delete(stepId); return next })
       await loadSteps()
     } catch (err) {
       setError(err.response?.data?.error || 'Gagal menghapus step')
+    }
+  }
+
+  const toggleStepSelection = (stepId) => {
+    setSelectedStepIds(prev => {
+      const next = new Set(prev)
+      if (next.has(stepId)) next.delete(stepId)
+      else next.add(stepId)
+      return next
+    })
+  }
+
+  const toggleSelectAll = () => {
+    if (selectedStepIds.size === steps.length) {
+      setSelectedStepIds(new Set())
+    } else {
+      setSelectedStepIds(new Set(steps.map(s => s.id)))
+    }
+  }
+
+  const handleBulkDelete = async () => {
+    const count = selectedStepIds.size
+    if (count === 0) return
+
+    const confirmMsg = count === steps.length
+      ? `Hapus SEMUA ${count} step?`
+      : `Hapus ${count} step yang dipilih?`
+
+    if (!window.confirm(confirmMsg)) return
+
+    setIsDeletingBulk(true)
+    try {
+      await scenarioAPI.bulkDeleteSteps(id, Array.from(selectedStepIds))
+      showSuccess(`${count} step berhasil dihapus`)
+      setSelectedStepIds(new Set())
+      await loadSteps()
+    } catch (err) {
+      setError(err.response?.data?.error || 'Gagal menghapus steps')
+    } finally {
+      setIsDeletingBulk(false)
     }
   }
 
@@ -187,6 +250,8 @@ export default function ScenarioDetailPage() {
     }
   }
 
+  const executionResultRef = useRef(null)
+
   const handleExecute = async () => {
     if (steps.length === 0) {
       setError('Tambahkan minimal 1 step sebelum menjalankan skenario')
@@ -205,13 +270,146 @@ export default function ScenarioDetailPage() {
 
       // Load execution details to get step results
       const detailRes = await executionAPI.getDetails(execution.id)
-      setExecutionResult(detailRes.data.execution || detailRes.data)
-      showSuccess(`Eksekusi selesai - Status: ${execution.status}`)
+      const result = detailRes.data.execution || detailRes.data
+      setExecutionResult(result)
+
+      if (result.status === 'FAILED') {
+        setError(`Eksekusi selesai dengan status FAILED (${result.failedSteps} step gagal)`)
+      } else {
+        showSuccess(`Eksekusi selesai - Status: ${execution.status}`)
+      }
+
+      // Auto-scroll to results
+      setTimeout(() => {
+        executionResultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }, 100)
     } catch (err) {
-      setError(err.response?.data?.message || 'Eksekusi gagal')
+      const errData = err.response?.data
+      let errMsg = errData?.message || 'Eksekusi gagal'
+
+      // Detect timeout
+      if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
+        errMsg = 'Request timeout — eksekusi mungkin masih berjalan di server. Cek halaman Execution untuk hasilnya.'
+      }
+
+      setError(errMsg)
+
+      // If backend returned execution details on failure, show them
+      if (errData?.execution) {
+        setExecutionResult(errData.execution)
+        setTimeout(() => {
+          executionResultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }, 100)
+      }
     } finally {
       setIsExecuting(false)
     }
+  }
+
+  // ── Recording handlers ──
+  const startPollingSteps = useCallback(() => {
+    if (pollingRef.current) clearInterval(pollingRef.current)
+    pollingRef.current = setInterval(async () => {
+      try {
+        const res = await recorderAPI.status(id)
+        if (res.data.status === 'recording') {
+          setRecordingSteps(res.data.steps || [])
+        } else if (res.data.status === 'stopped' || res.data.status === 'idle') {
+          setIsRecording(false)
+          clearInterval(pollingRef.current)
+          pollingRef.current = null
+        }
+      } catch {
+        // ignore polling errors
+      }
+    }, 1500)
+  }, [id])
+
+  const stopPolling = useCallback(() => {
+    if (pollingRef.current) {
+      clearInterval(pollingRef.current)
+      pollingRef.current = null
+    }
+  }, [])
+
+  // Cleanup polling on unmount
+  useEffect(() => {
+    return () => stopPolling()
+  }, [stopPolling])
+
+  // Check for existing recording session on load
+  useEffect(() => {
+    if (!id) return
+    recorderAPI.status(id).then(res => {
+      if (res.data.status === 'recording') {
+        setIsRecording(true)
+        setRecordingSteps(res.data.steps || [])
+        setShowRecordingPanel(true)
+        startPollingSteps()
+      }
+    }).catch(() => {})
+  }, [id, startPollingSteps])
+
+  const handleStartRecording = async () => {
+    const url = recordingUrl.trim() || scenario?.url || ''
+    if (!url) {
+      setError('Masukkan URL target untuk recording')
+      return
+    }
+    setIsStartingRecording(true)
+    setError(null)
+    try {
+      await recorderAPI.start(id, url)
+      setIsRecording(true)
+      setRecordingSteps([])
+      setShowRecordingPanel(true)
+      showSuccess('Recording dimulai — browser Chromium terbuka. Silakan berinteraksi dengan halaman.')
+      startPollingSteps()
+    } catch (err) {
+      setError(err.response?.data?.error || 'Gagal memulai recording')
+    } finally {
+      setIsStartingRecording(false)
+    }
+  }
+
+  const handleStopRecording = async () => {
+    setIsStoppingRecording(true)
+    try {
+      const res = await recorderAPI.stop(id)
+      setRecordingSteps(res.data.steps || [])
+      setIsRecording(false)
+      stopPolling()
+      showSuccess(res.data.message || 'Recording selesai')
+    } catch (err) {
+      setError(err.response?.data?.error || 'Gagal menghentikan recording')
+    } finally {
+      setIsStoppingRecording(false)
+    }
+  }
+
+  const handleSaveRecordedSteps = async () => {
+    if (recordingSteps.length === 0) {
+      setError('Tidak ada steps yang tercatat untuk disimpan')
+      return
+    }
+    setIsSavingRecording(true)
+    try {
+      const res = await recorderAPI.save(id, recordingSteps)
+      showSuccess(res.data.message || `${recordingSteps.length} steps berhasil disimpan`)
+      setRecordingSteps([])
+      setShowRecordingPanel(false)
+      await loadSteps()
+    } catch (err) {
+      setError(err.response?.data?.error || 'Gagal menyimpan recorded steps')
+    } finally {
+      setIsSavingRecording(false)
+    }
+  }
+
+  const handleDiscardRecording = () => {
+    if (recordingSteps.length > 0 && !window.confirm(`Buang ${recordingSteps.length} recorded steps?`)) return
+    setRecordingSteps([])
+    setShowRecordingPanel(false)
   }
 
   if (isLoading) {
@@ -262,11 +460,35 @@ export default function ScenarioDetailPage() {
           </div>
 
           <div className="flex gap-2">
+            {!isRecording ? (
+              <Button
+                variant="secondary"
+                size="lg"
+                onClick={() => {
+                  setRecordingUrl(scenario.url || '')
+                  setShowRecordingPanel(true)
+                }}
+                disabled={isExecuting}
+              >
+                🔴 Record
+              </Button>
+            ) : (
+              <Button
+                variant="danger"
+                size="lg"
+                onClick={handleStopRecording}
+                disabled={isStoppingRecording}
+              >
+                {isStoppingRecording ? (
+                  <span className="flex items-center gap-2"><Spinner size="sm" /> Stopping...</span>
+                ) : '⏹ Stop Recording'}
+              </Button>
+            )}
             <Button
               variant="primary"
               size="lg"
               onClick={handleExecute}
-              disabled={isExecuting || steps.length === 0}
+              disabled={isExecuting || steps.length === 0 || isRecording}
             >
               {isExecuting ? (
                 <span className="flex items-center gap-2">
@@ -283,20 +505,138 @@ export default function ScenarioDetailPage() {
         {error && <Alert type="error" message={error} onClose={() => setError(null)} />}
         {successMsg && <Alert type="success" message={successMsg} />}
 
+        {/* Recording Panel */}
+        {showRecordingPanel && (
+          <Card>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                {isRecording && <span className="inline-block w-3 h-3 bg-red-500 rounded-full animate-pulse" />}
+                🎬 {isRecording ? 'Recording Aktif...' : 'Mode Recording'}
+              </h2>
+              {!isRecording && recordingSteps.length === 0 && (
+                <button
+                  onClick={() => setShowRecordingPanel(false)}
+                  className="text-gray-400 hover:text-gray-600 text-xl leading-none"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+
+            {/* Start recording controls */}
+            {!isRecording && recordingSteps.length === 0 && (
+              <div className="space-y-4">
+                <p className="text-gray-600 text-sm">
+                  Mulai recording untuk merekam interaksi Anda di browser. Browser Chromium akan terbuka secara otomatis —
+                  setiap klik, isian form, dan navigasi akan tercatat sebagai test steps.
+                </p>
+                <div className="flex items-end gap-3">
+                  <div className="flex-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">URL Target</label>
+                    <input
+                      type="url"
+                      value={recordingUrl}
+                      onChange={(e) => setRecordingUrl(e.target.value)}
+                      placeholder="https://example.com"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    />
+                  </div>
+                  <Button
+                    variant="primary"
+                    onClick={handleStartRecording}
+                    disabled={isStartingRecording}
+                  >
+                    {isStartingRecording ? (
+                      <span className="flex items-center gap-2"><Spinner size="sm" /> Membuka Browser...</span>
+                    ) : '🔴 Mulai Recording'}
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Live recorded steps */}
+            {(isRecording || recordingSteps.length > 0) && (
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-sm text-gray-500">
+                    {recordingSteps.length} step{recordingSteps.length !== 1 ? 's' : ''} tercatat
+                    {isRecording && ' — berinteraksilah dengan browser...'}
+                  </p>
+                  {!isRecording && recordingSteps.length > 0 && (
+                    <div className="flex gap-2">
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        onClick={handleSaveRecordedSteps}
+                        disabled={isSavingRecording}
+                      >
+                        {isSavingRecording ? 'Menyimpan...' : `💾 Simpan ${recordingSteps.length} Steps`}
+                      </Button>
+                      <Button variant="secondary" size="sm" onClick={handleDiscardRecording}>
+                        Buang
+                      </Button>
+                    </div>
+                  )}
+                </div>
+                <div className="max-h-64 overflow-y-auto space-y-1">
+                  {recordingSteps.map((step, idx) => {
+                    const config = getStepTypeConfig(step.type)
+                    return (
+                      <div
+                        key={idx}
+                        className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded text-sm border border-gray-100"
+                      >
+                        <span className="flex-shrink-0 w-6 h-6 bg-indigo-100 text-indigo-700 rounded-full flex items-center justify-center text-xs font-bold">
+                          {idx + 1}
+                        </span>
+                        <Badge variant="primary">{config.icon} {config.label}</Badge>
+                        <span className="text-gray-700 truncate flex-1">{step.description}</span>
+                        {step.selector && (
+                          <code className="text-xs bg-gray-200 px-1 rounded text-gray-600 truncate max-w-[200px]">
+                            {step.selector}
+                          </code>
+                        )}
+                      </div>
+                    )
+                  })}
+                  {recordingSteps.length === 0 && isRecording && (
+                    <div className="text-center py-6 text-gray-400 text-sm">
+                      Menunggu interaksi... Klik, isi form, atau navigasi di browser yang terbuka.
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </Card>
+        )}
+
         {/* Test Steps */}
         <Card>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-gray-900">Test Steps</h2>
-            {!showStepForm && (
-              <Button variant="primary" onClick={openAddForm}>
-                + Tambah Step
-              </Button>
-            )}
+            <div className="flex items-center gap-2">
+              {/* Bulk delete controls */}
+              {selectedStepIds.size > 0 && (
+                <Button
+                  variant="danger"
+                  size="sm"
+                  onClick={handleBulkDelete}
+                  disabled={isDeletingBulk}
+                >
+                  {isDeletingBulk ? 'Menghapus...' : `Hapus ${selectedStepIds.size} Step`}
+                </Button>
+              )}
+              {!showStepForm && (
+                <Button variant="primary" onClick={openAddForm}>
+                  + Tambah Step
+                </Button>
+              )}
+            </div>
           </div>
 
           {/* Step Form */}
           {showStepForm && (
-            <div className="mb-6 p-4 border-2 border-indigo-200 rounded-lg bg-indigo-50">
+            <div ref={stepFormRef} className="mb-6 p-4 border-2 border-indigo-200 rounded-lg bg-indigo-50">
               <h3 className="text-lg font-semibold text-gray-900 mb-3">
                 {editingStep ? 'Edit Step' : 'Tambah Step Baru'}
               </h3>
@@ -384,8 +724,8 @@ export default function ScenarioDetailPage() {
               {/* Type hint */}
               <div className="mt-3 text-sm text-gray-500">
                 {stepForm.type === 'NAVIGATE' && '💡 Masukkan URL tujuan di field Value'}
-                {stepForm.type === 'CLICK' && '💡 Masukkan CSS selector elemen yang akan di-klik'}
-                {stepForm.type === 'FILL' && '💡 Masukkan CSS selector input dan text yang akan diketik'}
+                {stepForm.type === 'CLICK' && '💡 Masukkan CSS selector atau XPath elemen yang akan di-klik'}
+                {stepForm.type === 'FILL' && '💡 Masukkan CSS selector atau XPath input dan text yang akan diketik'}
                 {stepForm.type === 'SCREENSHOT' && '💡 Akan mengambil screenshot halaman saat ini'}
                 {stepForm.type === 'WAIT' && '💡 Masukkan waktu tunggu dalam milidetik (contoh: 1000 = 1 detik)'}
                 {stepForm.type === 'ASSERTION' && '💡 Verifikasi elemen ada di halaman, dengan opsi pengecekan teks'}
@@ -411,13 +751,39 @@ export default function ScenarioDetailPage() {
             </div>
           ) : (
             <div className="space-y-2">
+              {/* Select All */}
+              <div className="flex items-center gap-3 px-3 py-2 border-b border-gray-200">
+                <input
+                  type="checkbox"
+                  checked={selectedStepIds.size === steps.length && steps.length > 0}
+                  onChange={toggleSelectAll}
+                  className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                />
+                <span className="text-sm text-gray-500">
+                  {selectedStepIds.size === 0
+                    ? 'Pilih semua'
+                    : selectedStepIds.size === steps.length
+                      ? 'Batal pilih semua'
+                      : `${selectedStepIds.size} dari ${steps.length} dipilih`}
+                </span>
+              </div>
+
               {steps.map((step, index) => {
                 const config = getStepTypeConfig(step.type)
                 return (
                   <div
                     key={step.id}
-                    className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition"
+                    className={`flex items-center gap-3 p-3 border rounded-lg hover:bg-gray-50 transition ${
+                      selectedStepIds.has(step.id) ? 'border-indigo-300 bg-indigo-50' : 'border-gray-200'
+                    }`}
                   >
+                    {/* Checkbox */}
+                    <input
+                      type="checkbox"
+                      checked={selectedStepIds.has(step.id)}
+                      onChange={() => toggleStepSelection(step.id)}
+                      className="w-4 h-4 flex-shrink-0 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                    />
                     {/* Step Number */}
                     <div className="flex-shrink-0 w-8 h-8 bg-indigo-100 text-indigo-700 rounded-full flex items-center justify-center font-bold text-sm">
                       {step.stepNumber || index + 1}
@@ -477,6 +843,7 @@ export default function ScenarioDetailPage() {
 
         {/* Execution Result */}
         {executionResult && (
+          <div ref={executionResultRef}>
           <Card>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-gray-900">Hasil Eksekusi</h2>
@@ -508,7 +875,8 @@ export default function ScenarioDetailPage() {
 
             {executionResult.errorMessage && (
               <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm mb-4">
-                <strong>Error:</strong> {executionResult.errorMessage}
+                <strong>Error:</strong>
+                <StepErrorDetail errorMessage={executionResult.errorMessage} onRetest={handleExecute} />
               </div>
             )}
 
@@ -532,14 +900,15 @@ export default function ScenarioDetailPage() {
                         </span>
                         <div className="flex-1">
                           <p className="font-medium text-gray-900">
-                            Step {result.testStep?.stepNumber || idx + 1}: {result.testStep?.description || result.description || '-'}
+                            Step {result.testStep?.stepNumber || idx + 1}: {result.testStep?.type || result.type} — {result.testStep?.description || result.description || '-'}
                           </p>
                           <p className="text-xs text-gray-500">
                             {result.testStep?.type || result.type} 
+                            {result.testStep?.selector ? ` • ${result.testStep.selector}` : ''}
                             {result.duration ? ` • ${result.duration}ms` : ''}
                           </p>
                           {result.errorMessage && (
-                            <p className="text-sm text-red-600 mt-1">{result.errorMessage}</p>
+                            <StepErrorDetail errorMessage={result.errorMessage} onRetest={handleExecute} />
                           )}
                         </div>
                         {/* Screenshot thumbnail */}
@@ -567,6 +936,7 @@ export default function ScenarioDetailPage() {
               </div>
             )}
           </Card>
+          </div>
         )}
 
         {/* Screenshot Modal */}

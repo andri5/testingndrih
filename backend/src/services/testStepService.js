@@ -200,6 +200,54 @@ export async function deleteTestStep(stepId, userId) {
 }
 
 /**
+ * Bulk delete test steps
+ */
+export async function bulkDeleteTestSteps(scenarioId, stepIds, userId) {
+  try {
+    const scenario = await prisma.scenario.findUnique({
+      where: { id: scenarioId }
+    })
+
+    if (!scenario || scenario.userId !== userId) {
+      throw new Error('Scenario not found or unauthorized')
+    }
+
+    // Delete all specified steps that belong to this scenario
+    const result = await prisma.testStep.deleteMany({
+      where: {
+        id: { in: stepIds },
+        scenarioId
+      }
+    })
+
+    // Reorder remaining steps
+    const remainingSteps = await prisma.testStep.findMany({
+      where: { scenarioId },
+      orderBy: { stepNumber: 'asc' }
+    })
+
+    for (let i = 0; i < remainingSteps.length; i++) {
+      if (remainingSteps[i].stepNumber !== i + 1) {
+        await prisma.testStep.update({
+          where: { id: remainingSteps[i].id },
+          data: { stepNumber: i + 1 }
+        })
+      }
+    }
+
+    // Update scenario steps count
+    await prisma.scenario.update({
+      where: { id: scenarioId },
+      data: { steps: remainingSteps.length }
+    })
+
+    return { message: `${result.count} step(s) deleted successfully`, deleted: result.count }
+  } catch (error) {
+    throw new Error(`Failed to bulk delete steps: ${error.message}`)
+  }
+}
+
+/**
  * Reorder test steps within a scenario
  */
 export async function reorderSteps(scenarioId, userId, stepOrders) {

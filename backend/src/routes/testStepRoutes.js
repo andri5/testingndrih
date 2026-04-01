@@ -6,6 +6,7 @@ import {
   getTestStepHandler,
   updateTestStepHandler,
   deleteTestStepHandler,
+  bulkDeleteStepsHandler,
   reorderStepsHandler,
   getStepTypesHandler,
   validateStepHandler
@@ -33,6 +34,12 @@ router.get('/', getTestStepsHandler)
  * PUT /api/scenarios/:scenarioId/steps/reorder
  */
 router.put('/reorder', reorderStepsHandler)
+
+/**
+ * Bulk delete test steps
+ * POST /api/scenarios/:scenarioId/steps/bulk-delete
+ */
+router.post('/bulk-delete', bulkDeleteStepsHandler)
 
 /**
  * Get a single test step
