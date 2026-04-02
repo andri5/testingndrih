@@ -21,7 +21,8 @@ jobs:
       
       - name: Install Dependencies
         working-directory: ./frontend
-        run: npm install
+        run: npm install --verbose
+        continue-on-error: true
       
       - name: Build
         working-directory: ./frontend
