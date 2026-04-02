@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import AISuggestionPanel from './AISuggestionPanel'
+import SmartSuggestionPanel from './SmartSuggestionPanel'
 
 function parseErrorDetail(errorMessage) {
   if (!errorMessage) return null
@@ -160,7 +162,7 @@ function getSuggestions(detail) {
   return suggestions
 }
 
-export default function StepErrorDetail({ errorMessage, onRetest, size = 'normal' }) {
+export default function StepErrorDetail({ errorMessage, onRetest, size = 'normal', step = null, pageUrl = '', onApplyAIFix = null }) {
   const [expanded, setExpanded] = useState(false)
   const detail = parseErrorDetail(errorMessage)
   const textSize = size === 'small' ? 'text-xs' : 'text-sm'
@@ -257,6 +259,26 @@ export default function StepErrorDetail({ errorMessage, onRetest, size = 'normal
             )}
           </div>
         </div>
+      )}
+
+      {/* Smart Locator Suggestions — DOM-based, no AI needed */}
+      {detail && detail.locatorSuggestions && detail.locatorSuggestions.length > 0 && (
+        <SmartSuggestionPanel
+          suggestions={detail.locatorSuggestions}
+          currentSelector={detail.step?.selector}
+          onApply={onApplyAIFix}
+        />
+      )}
+
+      {/* AI Suggestion Panel - Fallback when no smart suggestions available */}
+      {detail && step && (!detail.locatorSuggestions || detail.locatorSuggestions.length === 0) && (
+        <AISuggestionPanel
+          step={step}
+          errorMessage={detail.message}
+          pageUrl={pageUrl}
+          onApply={onApplyAIFix}
+          onDismiss={null}
+        />
       )}
     </div>
   )

@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { Card, Button, Badge, Spinner, Alert } from '../components/ui'
 import StepErrorDetail from '../components/StepErrorDetail'
+import TestStepList from '../components/TestStepList'
 import { scenarioAPI, executionAPI, recorderAPI } from '../services/api'
 
 const STEP_TYPES = [
@@ -36,6 +37,7 @@ export default function ScenarioDetailPage() {
   // Execution state
   const [isExecuting, setIsExecuting] = useState(false)
   const [executionResult, setExecutionResult] = useState(null)
+  const [currentStepIndex, setCurrentStepIndex] = useState(null)
 
   // Screenshot modal state
   const [screenshotModal, setScreenshotModal] = useState(null)
@@ -262,27 +264,60 @@ export default function ScenarioDetailPage() {
 
     setIsExecuting(true)
     setExecutionResult(null)
+    setCurrentStepIndex(null)
     setError(null)
 
     try {
       const res = await executionAPI.executeScenario(id)
       const execution = res.data.execution
 
-      // Load execution details to get step results
-      const detailRes = await executionAPI.getDetails(execution.id)
-      const result = detailRes.data.execution || detailRes.data
-      setExecutionResult(result)
+      // Poll execution details to track progress
+      const pollExecution = async () => {
+        try {
+          const detailRes = await executionAPI.getDetails(execution.id)
+          const result = detailRes.data.execution || detailRes.data
+          setExecutionResult(result)
 
-      if (result.status === 'FAILED') {
-        setError(`Eksekusi selesai dengan status FAILED (${result.failedSteps} step gagal)`)
-      } else {
-        showSuccess(`Eksekusi selesai - Status: ${execution.status}`)
+          // Track current step index based on completed steps
+          if (result.stepResults && Array.isArray(result.stepResults)) {
+            const completedCount = result.stepResults.filter(sr => sr && sr.status).length
+            const currentIndex = Math.min(completedCount, steps.length - 1)
+            
+            // Only update if there are completed steps
+            if (completedCount > 0) {
+              setCurrentStepIndex(currentIndex)
+            }
+          }
+
+          // If execution is still running, continue polling
+          if (result.status === 'RUNNING' || result.status === 'PENDING') {
+            setTimeout(pollExecution, 500)
+          } else {
+            // Execution finished
+            setCurrentStepIndex(null)
+            
+            if (result.status === 'FAILED') {
+              setError(`Eksekusi selesai dengan status FAILED (${result.failedSteps} step gagal)`)
+            } else {
+              showSuccess(`Eksekusi selesai - Status: ${result.status}`)
+            }
+
+            // Auto-scroll to results
+            setTimeout(() => {
+              executionResultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+            }, 100)
+          }
+        } catch (pollErr) {
+          // Ignore polling errors but log them
+          if (pollingRef.current) {
+            console.debug('Polling error (execution may still be running):', pollErr.message)
+            setTimeout(pollExecution, 1000)
+          }
+        }
       }
 
-      // Auto-scroll to results
-      setTimeout(() => {
-        executionResultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-      }, 100)
+      // Start polling
+      pollExecution()
     } catch (err) {
       const errData = err.response?.data
       let errMsg = errData?.message || 'Eksekusi gagal'
@@ -303,6 +338,22 @@ export default function ScenarioDetailPage() {
       }
     } finally {
       setIsExecuting(false)
+    }
+  }
+
+  // Handle applying AI fix to a step
+  const handleApplyAIFix = (stepId, suggestedLocator) => {
+    // Find the step and update its selector
+    const stepIndex = steps.findIndex(s => s.id === stepId)
+    if (stepIndex !== -1) {
+      const updatedStep = { ...steps[stepIndex], selector: suggestedLocator }
+      
+      // Show approval modal
+      if (window.confirm(`Apply this fix?\n\nOld: ${steps[stepIndex].selector || '(none)'}\nNew: ${suggestedLocator}\n\nStep will be updated and saved.`)) {
+        // Update step in database
+        handleSaveStep(updatedStep, stepIndex)
+        showSuccess('Locator updated! Ready to run again.')
+      }
     }
   }
 
@@ -744,101 +795,19 @@ export default function ScenarioDetailPage() {
           )}
 
           {/* Steps List */}
-          {steps.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              <p className="text-lg mb-2">Belum ada test steps</p>
-              <p className="text-sm">Klik "Tambah Step" untuk mulai membuat langkah-langkah test</p>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {/* Select All */}
-              <div className="flex items-center gap-3 px-3 py-2 border-b border-gray-200">
-                <input
-                  type="checkbox"
-                  checked={selectedStepIds.size === steps.length && steps.length > 0}
-                  onChange={toggleSelectAll}
-                  className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
-                />
-                <span className="text-sm text-gray-500">
-                  {selectedStepIds.size === 0
-                    ? 'Pilih semua'
-                    : selectedStepIds.size === steps.length
-                      ? 'Batal pilih semua'
-                      : `${selectedStepIds.size} dari ${steps.length} dipilih`}
-                </span>
-              </div>
-
-              {steps.map((step, index) => {
-                const config = getStepTypeConfig(step.type)
-                return (
-                  <div
-                    key={step.id}
-                    className={`flex items-center gap-3 p-3 border rounded-lg hover:bg-gray-50 transition ${
-                      selectedStepIds.has(step.id) ? 'border-indigo-300 bg-indigo-50' : 'border-gray-200'
-                    }`}
-                  >
-                    {/* Checkbox */}
-                    <input
-                      type="checkbox"
-                      checked={selectedStepIds.has(step.id)}
-                      onChange={() => toggleStepSelection(step.id)}
-                      className="w-4 h-4 flex-shrink-0 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
-                    />
-                    {/* Step Number */}
-                    <div className="flex-shrink-0 w-8 h-8 bg-indigo-100 text-indigo-700 rounded-full flex items-center justify-center font-bold text-sm">
-                      {step.stepNumber || index + 1}
-                    </div>
-
-                    {/* Step Icon & Type */}
-                    <div className="flex-shrink-0">
-                      <Badge variant="primary">
-                        {config.icon} {config.label}
-                      </Badge>
-                    </div>
-
-                    {/* Step Details */}
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-gray-900 truncate">{step.description}</p>
-                      <div className="flex gap-3 text-xs text-gray-500 mt-1">
-                        {step.selector && <span>Selector: <code className="bg-gray-100 px-1 rounded">{step.selector}</code></span>}
-                        {step.value && <span>Value: <code className="bg-gray-100 px-1 rounded">{step.value}</code></span>}
-                      </div>
-                    </div>
-
-                    {/* Reorder Buttons */}
-                    <div className="flex flex-col gap-1 flex-shrink-0">
-                      <button
-                        onClick={() => handleMoveStep(index, -1)}
-                        disabled={index === 0}
-                        className="text-gray-400 hover:text-gray-700 disabled:opacity-30 text-sm px-1"
-                        title="Pindah ke atas"
-                      >
-                        ▲
-                      </button>
-                      <button
-                        onClick={() => handleMoveStep(index, 1)}
-                        disabled={index === steps.length - 1}
-                        className="text-gray-400 hover:text-gray-700 disabled:opacity-30 text-sm px-1"
-                        title="Pindah ke bawah"
-                      >
-                        ▼
-                      </button>
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="flex gap-1 flex-shrink-0">
-                      <Button variant="secondary" size="sm" onClick={() => openEditForm(step)}>
-                        Edit
-                      </Button>
-                      <Button variant="danger" size="sm" onClick={() => handleDeleteStep(step.id)}>
-                        Hapus
-                      </Button>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          )}
+          <TestStepList
+            steps={steps}
+            onMoveStep={handleMoveStep}
+            onEditStep={openEditForm}
+            onDeleteStep={handleDeleteStep}
+            onToggleSelection={toggleStepSelection}
+            onToggleSelectAll={toggleSelectAll}
+            selectedStepIds={selectedStepIds}
+            executionResult={executionResult}
+            currentStepIndex={currentStepIndex}
+            STEP_TYPES={STEP_TYPES}
+            isDeletingBulk={isDeletingBulk}
+          />
         </Card>
 
         {/* Execution Result */}
@@ -876,7 +845,13 @@ export default function ScenarioDetailPage() {
             {executionResult.errorMessage && (
               <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm mb-4">
                 <strong>Error:</strong>
-                <StepErrorDetail errorMessage={executionResult.errorMessage} onRetest={handleExecute} />
+                <StepErrorDetail 
+                  errorMessage={executionResult.errorMessage} 
+                  onRetest={handleExecute}
+                  step={executionResult.failedStepIndex !== undefined ? steps[executionResult.failedStepIndex] : null}
+                  pageUrl={scenario?.url}
+                  onApplyAIFix={executionResult.failedStepIndex !== undefined ? (locator) => handleApplyAIFix(steps[executionResult.failedStepIndex]?.id, locator) : null}
+                />
               </div>
             )}
 
@@ -908,7 +883,13 @@ export default function ScenarioDetailPage() {
                             {result.duration ? ` • ${result.duration}ms` : ''}
                           </p>
                           {result.errorMessage && (
-                            <StepErrorDetail errorMessage={result.errorMessage} onRetest={handleExecute} />
+                            <StepErrorDetail 
+                              errorMessage={result.errorMessage} 
+                              onRetest={handleExecute}
+                              step={result.testStep}
+                              pageUrl={scenario?.url}
+                              onApplyAIFix={result.testStep ? (locator) => handleApplyAIFix(result.testStep.id, locator) : null}
+                            />
                           )}
                         </div>
                         {/* Screenshot thumbnail */}
