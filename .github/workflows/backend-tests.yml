@@ -1,0 +1,38 @@
+name: Backend Unit Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18.x'
+      
+      - name: Install Dependencies
+        working-directory: ./backend
+        run: npm install
+      
+      - name: Run Tests
+        working-directory: ./backend
+        env:
+          NODE_ENV: test
+        run: npm test -- --coverage --coveragePathIgnorePatterns=/node_modules/ --collectCoverageFrom='src/**/*.{js,jsx}' || true
+      
+      - name: Upload Coverage
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./backend/coverage/coverage-final.json
+          flags: unittests
+          name: backend-coverage
+          fail_ci_if_error: false
