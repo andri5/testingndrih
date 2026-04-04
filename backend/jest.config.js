@@ -3,8 +3,14 @@ export default {
   roots: ['<rootDir>/src'],
   testMatch: ['**/__tests__/**/*.js', '**/?(*.)+(spec|test).js'],
   setupFilesAfterEnv: ['<rootDir>/jest-setup.js'],
+  moduleNameMapper: {
+    '^(\\.{1,2}/.*)\\.js$': '$1'
+  },
   transform: {
-    '^.+\\.js$': ['babel-jest', { presets: ['@babel/preset-env'] }]
+    '^.+\\.js$': ['babel-jest', { 
+      presets: ['@babel/preset-env'],
+      plugins: []
+    }]
   },
   transformIgnorePatterns: [
     'node_modules/(?!(uuid)/)'

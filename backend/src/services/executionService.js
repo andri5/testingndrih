@@ -2,6 +2,7 @@ import { chromium } from 'playwright'
 import { prisma } from '../lib/prisma.js'
 import fs from 'fs'
 import path from 'path'
+import { suggestAlternativeLocators } from './locatorSuggestionService.js'
 
 /**
  * Comprehensive execution service using Playwright
@@ -167,6 +168,20 @@ export const executionService = {
             },
             consoleErrors: pageErrors.slice(-5),
             failedRequests: failedRequests.slice(-5)
+          }
+
+          // Smart Locator Suggestions — analyze DOM for alternatives (no AI needed)
+          if (step.selector && ['CLICK', 'FILL', 'ASSERTION'].includes(step.type)) {
+            try {
+              const suggestions = await suggestAlternativeLocators(
+                page, step.selector, step.type, step.description, step.value
+              )
+              if (suggestions.length > 0) {
+                errorDetail.locatorSuggestions = suggestions
+              }
+            } catch (suggestErr) {
+              console.error('Locator suggestion generation failed:', suggestErr.message)
+            }
           }
 
           errorMessage = JSON.stringify(errorDetail)

@@ -2,8 +2,8 @@
 
 > Platform Otomatis untuk Record, Playback, dan Eksekusi Test Scenario di Website Apapun
 > 
-> **Last Updated**: April 2, 2026 - Session 8 (Docker Container Setup + GitHub Actions CI/CD)  
-> **Current Phase**: Production-Ready with Docker & CI/CD Pipeline
+> **Last Updated**: April 2, 2026 - Session 9 (AI-Powered Auto Locator Fix - Planning Phase)  
+> **Current Phase**: Production-Ready with Docker & CI/CD + AI Assistant Planning
 
 ---
 
@@ -26,7 +26,7 @@
 ## 🚀 Quick Start (Docker)
 
 ```bash
-# Prerequisites: Docker & Docker Desktop running
+# Prerequisites: Docker & Docker Desktop runningcd
 
 # Start all 3 containers
 docker-compose up -d
@@ -112,10 +112,11 @@ Architecture
 ├─ Multi-Site Support               [=============================] 100% DONE
 ├─ UI/UX Polish                     [=============================] 100% DONE
 ├─ Docker Containerization          [=============================] 100% DONE
-└─ GitHub Actions CI/CD             [=============================] 100% DONE
+├─ GitHub Actions CI/CD             [=============================] 100% DONE
+└─ AI-Powered Locator Fix           [===========                 ] 10% PLANNING
 ```
 
-**Overall Feature Completeness: ~90%** (Production-ready setup complete)
+**Overall Feature Completeness: ~92%** (Production-ready, AI feature in planning)
 
 ---
 
@@ -161,7 +162,15 @@ backend/screenshots/
 
 ---
 
-## 🚀 TODO - Future Enhancements (Not Blocking Release)
+## 🚀 TODO - Future Enhancements
+
+### 🔥 Next Sprint: AI-Powered Features
+- [ ] **AI Auto Locator Fix** (Session 9) - Claude Haiku 3 suggests locator fixes on error
+  - [ ] Backend: @anthropic-ai/sdk integration, /api/ai/fix-locator endpoint
+  - [ ] Frontend: AISuggestionPanel component, auto-trigger logic
+  - [ ] State: Zustand store for AI suggestion state
+  - [ ] UX: Review modal + approval gate before save
+  - [ ] Rollout: Feature flag for A/B testing
 
 ### Priority 1: Advanced Features
 - [ ] Retry configuration per-step (timeout, max attempts)
@@ -180,7 +189,6 @@ backend/screenshots/
 - [ ] Advanced assertion builder (regex, partial match, element count)
 
 ### Priority 3: Team & CI/CD
-- [ ] GitHub Actions CI/CD pipeline
 - [ ] Scheduled execution (cron jobs)
 - [ ] Team collaboration features (shared scenarios)
 - [ ] Role-based access control
@@ -483,3 +491,132 @@ docker-compose down -v
 - ✅ Updated plan.md and README.md with Docker instructions
 
 **Status**: 🚀 **READY FOR GITHUB PUSH & PRODUCTION** - All credentials excluded, Docker setup complete, plan up-to-date
+
+---
+
+## 🤖 Session 9: AI-Powered Auto Locator Fix (IN PROGRESS)
+
+### Feature Overview
+When a test step fails with "element not found" or selector issues, automatically ask Claude AI Haiku 3 to analyze the error and suggest an improved locator. User can review, approve, and auto-rerun without manual editing.
+
+### Architecture
+
+**Workflow:**
+```
+Step Execution Failed (CLICK not found)
+    ↓
+[AUTO-TRIGGER (500ms delay) OR Manual "🤖 Ask AI" Button]
+    ↓
+POST /api/ai/fix-locator
+{
+  errorMessage: "Element not found",
+  currentLocator: "#button-old",
+  stepDescription: "Click login button",
+  pageUrl: "https://example.com/login",
+  stepType: "CLICK"
+}
+    ↓
+Claude Haiku 3 API Analysis
+    ↓
+Response:
+{
+  suggestedLocator: "button[name='login']",
+  reason: "Button class changed, try by name attribute instead",
+  confidence: 0.95
+}
+    ↓
+Frontend Shows AI Suggestion Panel:
+┌────────────────────────────────────┐
+│ 🤖 AI Suggestion                   │
+├────────────────────────────────────┤
+│ Current: #button-old               │
+│ Suggested: button[name='login']   │
+│ Reason: Button class changed...   │
+├────────────────────────────────────┤
+│ [✓Apply] [↻Ask Again] [✗Dismiss]  │
+└────────────────────────────────────┘
+    ↓
+User clicks [✓ Apply Fix]
+    ↓
+Modal: Review & Approve before save
+    ↓
+Auto-run scenario again OR
+Manual run when user clicks ▶
+```
+
+### Tech Stack for Session 9
+- **AI Provider**: Anthropic Claude Haiku 3 (cost: ~$0.005 per request)
+- **Backend**: New endpoint `/api/ai/fix-locator` in aiController.js
+- **Frontend**: New component `AISuggestionPanel.jsx` (inline under error)
+- **State Management**: Zustand store for aiSuggestion state
+- **Database**: Optional tracking of suggestions in TestStep model (JSON field)
+
+### Implementation Checklist
+- [ ] **Backend Setup**
+  - [ ] Install @anthropic-ai/sdk
+  - [ ] Add ANTHROPIC_API_KEY to .env
+  - [ ] Create backend/src/controllers/aiController.js
+  - [ ] Add POST /api/ai/fix-locator endpoint
+  - [ ] Error handling + rate limiting
+
+- [ ] **Frontend Service**
+  - [ ] Create frontend/src/services/aiService.js
+  - [ ] API client: POST /api/ai/fix-locator
+  - [ ] Handle loading, error, response states
+
+- [ ] **Frontend Component**
+  - [ ] Create AISuggestionPanel.jsx
+  - [ ] Show current/suggested/reason
+  - [ ] Buttons: Apply, Ask Again, Dismiss
+  - [ ] Loading spinner during API call
+  - [ ] Integration in StepErrorDetail.jsx
+
+- [ ] **State Management**
+  - [ ] Add aiSuggestion state to Zustand store
+  - [ ] Actions: setAISuggestion, clearAISuggestion, approveAISuggestion
+
+- [ ] **Integration**
+  - [ ] Auto-trigger in ScenarioDetailPage.jsx (handleExecute)
+  - [ ] Manual button: "🤖 Ask AI" in error panel
+  - [ ] Apply logic: update step selector + re-run execution
+  - [ ] Approval modal before saving to DB
+
+- [ ] **Testing**
+  - [ ] Test with element not found errors
+  - [ ] Verify Claude API integration
+  - [ ] Check UI responsiveness
+
+### Features
+1. **Auto-trigger on Error**: When CLICK/FILL/ASSERTION fails, wait 500ms then call AI automatically
+2. **Hybrid Trigger**: Also provide "🤖 Ask AI" button for manual requests
+3. **Smart Analysis**: Claude analyzes:
+   - Error message & type
+   - Original selector/locator
+   - Step description (what user wanted to do)
+   - Page URL & context
+4. **User Review**: Modal shows original vs suggested locator with reason
+5. **Approval Gate**: Must approve before saving changes to database
+6. **Auto-Retry**: After approval, automatically re-run scenario
+7. **Error Handling**: Graceful fallback if Claude API fails or rate-limited
+
+### Database Changes (Optional, Phase 2)
+```prisma
+model TestStep {
+  // ... existing fields
+  aiSuggestions  Json?   // Array of { original, suggested, reason, approved, timestamp }
+}
+```
+
+### Cost Estimate
+- **Claude Haiku 3**: ~$0.005 per request (~5000 requests = $25)
+- **Recommendation**: Per-user monthly quota or token bucket system (Phase 2)
+
+### Expected Outcomes
+✅ Reduce manual debugging time (~30% improvement)
+✅ Better selector quality suggestions
+✅ User confidence in auto-fix recommendations
+✅ Learning data for future ML model improvements
+
+**Timeline**: ~4-6 hours of coding + testing
+**Blockers**: None (feature is non-blocking)
+**Rollout**: Can be feature-flagged for A/B testing

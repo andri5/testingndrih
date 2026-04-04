@@ -1,0 +1,14 @@
+node_modules
+dist
+.env
+.env.test
+.git
+.gitignore
+.vscode
+.idea
+*.log
+uploads
+screenshots
+coverage
+.nyc_output
+playwright-report
