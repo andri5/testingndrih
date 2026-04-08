@@ -6,7 +6,8 @@ import {
   importTemplateHandler,
   validateCSVHandler,
   exportScenarioHandler,
-  bulkImportHandler
+  bulkImportHandler,
+  listTemplatesHandler
 } from '../controllers/importController.js'
 
 const router = express.Router()
@@ -45,6 +46,12 @@ router.post('/csv', csvUpload.single('file'), importCSVHandler)
  * POST /api/import/validate
  */
 router.post('/validate', csvUpload.single('file'), validateCSVHandler)
+
+/**
+ * List available templates
+ * GET /api/import/templates
+ */
+router.get('/templates', listTemplatesHandler)
 
 /**
  * Import scenario from template

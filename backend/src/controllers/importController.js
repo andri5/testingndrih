@@ -3,7 +3,8 @@ import {
   importScenarioFromTemplate,
   validateCSVFormat,
   exportScenarioToCSV,
-  bulkImportScenarios
+  bulkImportScenarios,
+  listTemplates
 } from '../services/importService.js'
 
 /**
@@ -71,12 +72,13 @@ export async function importTemplateHandler(req, res, next) {
     const { templateId } = req.params
     const { scenarioName } = req.body
 
-    const scenario = await importScenarioFromTemplate(templateId, userId, scenarioName)
+    const result = await importScenarioFromTemplate(templateId, userId, scenarioName)
 
     res.status(201).json({
       success: true,
       message: 'Scenario imported from template successfully',
-      scenario
+      scenario: result.scenario,
+      stepsCreated: result.stepsCreated
     })
   } catch (error) {
     next(error)
@@ -156,6 +158,19 @@ export async function bulkImportHandler(req, res, next) {
       } catch {}
       throw error
     }
+  } catch (error) {
+    next(error)
+  }
+}
+
+/**
+ * List available templates
+ * GET /api/import/templates
+ */
+export async function listTemplatesHandler(req, res, next) {
+  try {
+    const templates = listTemplates()
+    res.json({ templates })
   } catch (error) {
     next(error)
   }

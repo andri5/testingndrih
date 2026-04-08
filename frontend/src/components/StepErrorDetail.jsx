@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import AISuggestionPanel from './AISuggestionPanel'
 import SmartSuggestionPanel from './SmartSuggestionPanel'
 
 function parseErrorDetail(errorMessage) {
@@ -270,16 +269,7 @@ export default function StepErrorDetail({ errorMessage, onRetest, size = 'normal
         />
       )}
 
-      {/* AI Suggestion Panel - Fallback when no smart suggestions available */}
-      {detail && step && (!detail.locatorSuggestions || detail.locatorSuggestions.length === 0) && (
-        <AISuggestionPanel
-          step={step}
-          errorMessage={detail.message}
-          pageUrl={pageUrl}
-          onApply={onApplyAIFix}
-          onDismiss={null}
-        />
-      )}
+
     </div>
   )
 }

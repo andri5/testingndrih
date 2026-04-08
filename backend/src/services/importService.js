@@ -1,5 +1,8 @@
 import { prisma } from '../lib/prisma.js'
 import fs from 'fs'
+import path from 'path'
+
+const TEMPLATES_DIR = path.resolve(process.cwd(), 'templates')
 
 /**
  * Simple CSV parser (no external dependency)
@@ -80,26 +83,64 @@ export async function importScenarioFromCSV(filePath, userId, scenarioData = {})
 }
 
 /**
- * Import from JSON template file
+ * Import from CSV template file in backend/templates/ folder
  */
 export async function importScenarioFromTemplate(templateId, userId, scenarioName = null) {
   try {
-    // In real scenario, this would load from file system or template storage
-    // For now, we'll create a basic import
-    const scenario = await prisma.scenario.create({
-      data: {
-        name: scenarioName || `Template Import - ${templateId}`,
-        description: `Imported from template ${templateId}`,
-        url: 'https://example.com',
-        userId,
-        steps: 0
-      }
+    // Map template IDs to files
+    const templateMap = {
+      'login-test': 'login-test.csv',
+      'form-test': 'form-test.csv',
+      'ecommerce-flow': 'ecommerce-flow.csv',
+      'basic-navigation': 'basic-navigation.csv',
+    }
+
+    const filename = templateMap[templateId]
+    if (!filename) {
+      throw new Error(`Template "${templateId}" not found. Available: ${Object.keys(templateMap).join(', ')}`)
+    }
+
+    const filePath = path.join(TEMPLATES_DIR, filename)
+    if (!fs.existsSync(filePath)) {
+      throw new Error(`Template file not found: ${filename}`)
+    }
+
+    // Derive scenario name from template if not provided
+    const names = {
+      'login-test': 'Login Form Test (Template)',
+      'form-test': 'Form Filling Test (Template)',
+      'ecommerce-flow': 'E-Commerce Flow Test (Template)',
+      'basic-navigation': 'Basic Navigation Test (Template)',
+    }
+
+    const result = await importScenarioFromCSV(filePath, userId, {
+      name: scenarioName || names[templateId] || `Template - ${templateId}`,
+      description: `Imported from template: ${templateId}`,
+      url: 'https://example.com'
     })
 
-    return scenario
+    return result
   } catch (error) {
     throw new Error(`Failed to import from template: ${error.message}`)
   }
+}
+
+/**
+ * List available templates
+ */
+export function listTemplates() {
+  const templates = [
+    { id: 'login-test', name: 'Login Form Test', description: 'Login flow on the-internet.herokuapp.com', steps: 7, website: 'the-internet.herokuapp.com' },
+    { id: 'form-test', name: 'Form Filling Test', description: 'Practice form on demoqa.com', steps: 7, website: 'demoqa.com' },
+    { id: 'ecommerce-flow', name: 'E-Commerce Flow', description: 'Full shopping flow on saucedemo.com', steps: 14, website: 'saucedemo.com' },
+    { id: 'basic-navigation', name: 'Basic Navigation', description: 'Search and navigate on wikipedia.org', steps: 6, website: 'wikipedia.org' },
+  ]
+
+  // Check which template files actually exist
+  return templates.map(t => ({
+    ...t,
+    available: fs.existsSync(path.join(TEMPLATES_DIR, `${t.id}.csv`))
+  }))
 }
 
 /**

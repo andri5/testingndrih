@@ -1,0 +1,15 @@
+stepnumber,type,description,selector,value,notes,expectedresult
+1,NAVIGATE,Open SauceDemo,,https://www.saucedemo.com,E-commerce test site,Page loads
+2,FILL,Enter username,#user-name,standard_user,Valid credential,Field populated
+3,FILL,Enter password,#password,secret_sauce,Valid credential,Field populated
+4,CLICK,Click Login,#login-button,,Submit login form,Redirect to inventory
+5,WAIT,Wait for inventory page,,1500,Allow page load,Inventory visible
+6,ASSERTION,Verify inventory page,,Products,Check page title,Products heading shown
+7,CLICK,Add Backpack to cart,#add-to-cart-sauce-labs-backpack,,First product,Added to cart
+8,ASSERTION,Verify cart badge,".shopping_cart_badge",1,Badge counter,Shows 1 item
+9,CLICK,Add Bike Light to cart,#add-to-cart-sauce-labs-bike-light,,Second product,Added to cart
+10,ASSERTION,Verify cart badge updated,".shopping_cart_badge",2,Badge counter updated,Shows 2 items
+11,CLICK,Open cart,.shopping_cart_link,,Navigate to cart,Cart page opens
+12,WAIT,Wait for cart page,,1000,Allow page load,Cart page ready
+13,ASSERTION,Verify cart page,,Your Cart,Check page heading,Cart heading visible
+14,SCREENSHOT,Capture cart contents,,,Save final state,Screenshot saved

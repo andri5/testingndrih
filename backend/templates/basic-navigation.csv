@@ -1,0 +1,7 @@
+stepnumber,type,description,selector,value,notes,expectedresult
+1,NAVIGATE,Open Wikipedia,,https://www.wikipedia.org,Wikipedia homepage,Page loads
+2,ASSERTION,Verify Wikipedia loaded,,Wikipedia,Check branding text,Wikipedia text visible
+3,FILL,Type search query,#searchInput,Playwright testing,Search term,Field populated
+4,CLICK,Click search button,button[type="submit"],,Submit search,Results page loads
+5,WAIT,Wait for results,,2000,Network request time,Results loaded
+6,SCREENSHOT,Capture search results,,,Save visual proof,Screenshot saved

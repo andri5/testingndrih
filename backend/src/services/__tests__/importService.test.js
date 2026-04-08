@@ -8,7 +8,8 @@ import {
 
 // Mock fs module
 jest.mock('fs', () => ({
-  readFileSync: jest.fn()
+  readFileSync: jest.fn(),
+  existsSync: jest.fn()
 }))
 
 import fs from 'fs'
@@ -107,36 +108,44 @@ describe('ImportService', () => {
   })
 
   describe('importScenarioFromTemplate', () => {
-    it('should import scenario from template', async () => {
+    it('should import scenario from a valid template', async () => {
+      const csvContent = 'stepnumber,type,description,selector,value,notes,expectedresult\n1,NAVIGATE,Open login page,,https://the-internet.herokuapp.com/login,Target: HerokuApp login,Page loads successfully'
+      fs.existsSync.mockReturnValue(true)
+      fs.readFileSync.mockReturnValue(csvContent)
+
       prisma.scenario.create.mockResolvedValue({
-        id: 'scenario-1', name: 'From Template'
+        id: 'scenario-1', name: 'Login Form Test (Template)', steps: 1
       })
+      prisma.testStep.create.mockResolvedValue({ id: 'step-1', stepNumber: 1 })
 
-      const result = await importScenarioFromTemplate('template-1', userId, 'From Template')
+      const result = await importScenarioFromTemplate('login-test', userId, 'Login Form Test (Template)')
 
-      expect(result.id).toBe('scenario-1')
+      expect(result.scenario.id).toBe('scenario-1')
       expect(prisma.scenario.create).toHaveBeenCalled()
     })
 
-    it('should use default name if not provided', async () => {
-      prisma.scenario.create.mockResolvedValue({ id: 'scenario-1' })
+    it('should throw for unknown template ID', async () => {
+      await expect(
+        importScenarioFromTemplate('non-existent', userId)
+      ).rejects.toThrow('Template "non-existent" not found')
+    })
 
-      await importScenarioFromTemplate('template-1', userId)
+    it('should throw if template file is missing', async () => {
+      fs.existsSync.mockReturnValue(false)
 
-      expect(prisma.scenario.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: expect.objectContaining({
-            name: expect.stringContaining('Template Import')
-          })
-        })
-      )
+      await expect(
+        importScenarioFromTemplate('login-test', userId)
+      ).rejects.toThrow('Template file not found')
     })
 
     it('should throw on database error', async () => {
+      const csvContent = 'stepnumber,type,description,selector,value,notes,expectedresult\n1,NAVIGATE,Open,,https://example.com,,Loads'
+      fs.existsSync.mockReturnValue(true)
+      fs.readFileSync.mockReturnValue(csvContent)
       prisma.scenario.create.mockRejectedValue(new Error('DB error'))
 
       await expect(
-        importScenarioFromTemplate('template-1', userId)
+        importScenarioFromTemplate('login-test', userId)
       ).rejects.toThrow('Failed to import from template')
     })
   })

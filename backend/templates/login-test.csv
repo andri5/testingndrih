@@ -1,0 +1,8 @@
+stepnumber,type,description,selector,value,notes,expectedresult
+1,NAVIGATE,Open login page,,https://the-internet.herokuapp.com/login,Target: HerokuApp login,Page loads successfully
+2,FILL,Enter username,#username,tomsmith,Valid test credential,Field populated
+3,FILL,Enter password,#password,SuperSecretPassword!,Valid test credential,Field populated
+4,CLICK,Click Login button,button[type="submit"],,Submit the form,Redirect to secure area
+5,WAIT,Wait for redirect,,1500,Allow page transition,Page loaded
+6,ASSERTION,Verify login success,,Secure Area,Check welcome text,Text visible on page
+7,SCREENSHOT,Capture result,,,Save visual proof,Screenshot saved

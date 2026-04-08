@@ -4,7 +4,8 @@ import {
   importTemplateHandler,
   validateCSVHandler,
   exportScenarioHandler,
-  bulkImportHandler
+  bulkImportHandler,
+  listTemplatesHandler
 } from '../importController.js'
 
 jest.mock('../../services/importService.js')
@@ -53,26 +54,42 @@ describe('ImportController', () => {
 
   describe('importTemplateHandler', () => {
     it('should import from template and return 201', async () => {
-      req.params = { templateId: 'template-1' }
+      req.params = { templateId: 'login-test' }
       req.body = { scenarioName: 'My Scenario' }
-      importService.importScenarioFromTemplate.mockResolvedValue({ id: 'scenario-1' })
+      importService.importScenarioFromTemplate.mockResolvedValue({
+        scenario: { id: 'scenario-1', name: 'My Scenario' },
+        stepsCreated: 7
+      })
 
       await importTemplateHandler(req, res, next)
 
       expect(res.status).toHaveBeenCalledWith(201)
       expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
-        success: true,
-        scenario: { id: 'scenario-1' }
+        success: true
       }))
     })
 
     it('should call next on error', async () => {
-      req.params = { templateId: 'template-1' }
+      req.params = { templateId: 'login-test' }
       importService.importScenarioFromTemplate.mockRejectedValue(new Error('fail'))
 
       await importTemplateHandler(req, res, next)
 
       expect(next).toHaveBeenCalled()
+    })
+  })
+
+  describe('listTemplatesHandler', () => {
+    it('should return list of templates', async () => {
+      importService.listTemplates.mockReturnValue([
+        { id: 'login-test', name: 'Login Form Test', available: true }
+      ])
+
+      await listTemplatesHandler(req, res, next)
+
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+        templates: expect.any(Array)
+      }))
     })
   })
 

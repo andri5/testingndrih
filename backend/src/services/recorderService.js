@@ -477,10 +477,11 @@ export const recorderService = {
 
     const url = startUrl || scenario.url || 'about:blank'
 
-    // Launch headed browser (user can see and interact)
+    // Use headless in Docker/CI (no display), headed locally so user can see and interact
+    const isHeadless = process.env.HEADLESS === 'true' || (!process.env.DISPLAY && process.platform === 'linux')
     const browser = await chromium.launch({
-      headless: false,
-      args: ['--start-maximized'],
+      headless: isHeadless,
+      args: ['--start-maximized', '--no-sandbox'],
       ...(process.env.PLAYWRIGHT_CHROMIUM_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_PATH } : {})
     })
 
@@ -533,10 +534,12 @@ export const recorderService = {
     // ALSO re-inject on every navigation via evaluate (redundant but reliable)
     const injectScript = async (targetPage) => {
       try {
+        if (session.status === 'stopped') return
         await targetPage.evaluate(getRecorderScript())
-      } catch { /* page might not be ready */ }
+      } catch { /* page might not be ready or detached */ }
       // Also inject into all current iframes
       try {
+        if (session.status === 'stopped') return
         const frames = targetPage.frames()
         for (const frame of frames) {
           if (frame === targetPage.mainFrame()) continue
@@ -546,16 +549,16 @@ export const recorderService = {
     }
 
     page.on('load', () => {
-      setTimeout(() => injectScript(page), 300)
+      setTimeout(() => injectScript(page).catch(() => {}), 300)
     })
     page.on('domcontentloaded', () => {
-      setTimeout(() => injectScript(page), 100)
+      setTimeout(() => injectScript(page).catch(() => {}), 100)
     })
 
     // Listen for new iframes appearing and inject recorder into them
     page.on('frameattached', (frame) => {
-      frame.waitForLoadState('domcontentloaded').then(() => {
-        try { frame.evaluate(getRecorderScript()) } catch { /* may be cross-origin */ }
+      frame.waitForLoadState('domcontentloaded').then(async () => {
+        try { await frame.evaluate(getRecorderScript()) } catch { /* may be cross-origin or detached */ }
       }).catch(() => {})
     })
 
@@ -593,27 +596,41 @@ export const recorderService = {
       // Debounce rapid navigations (redirects chain)
       if (navDebounceTimer) clearTimeout(navDebounceTimer)
       navDebounceTimer = setTimeout(() => {
-        // Re-check: get the actual current URL after debounce
-        const currentUrl = frame.url()
-        if (!currentUrl || currentUrl === 'about:blank') return
-        const lastStepNow = session.steps[session.steps.length - 1]
-        if (lastStepNow && lastStepNow.type === 'NAVIGATE' && lastStepNow.value === currentUrl) return
+        try {
+          if (session.status === 'stopped') return
+          // Re-check: get the actual current URL after debounce
+          const currentUrl = frame.url()
+          if (!currentUrl || currentUrl === 'about:blank') return
+          const lastStepNow = session.steps[session.steps.length - 1]
+          if (lastStepNow && lastStepNow.type === 'NAVIGATE' && lastStepNow.value === currentUrl) return
 
-        session.steps.push({
-          type: 'NAVIGATE',
-          selector: '',
-          value: currentUrl,
-          description: 'Navigate to ' + currentUrl,
-          tagName: '',
-          timestamp: Date.now(),
-          stepNumber: session.steps.length + 1
-        })
-        lastNavUrl = currentUrl
+          session.steps.push({
+            type: 'NAVIGATE',
+            selector: '',
+            value: currentUrl,
+            description: 'Navigate to ' + currentUrl,
+            tagName: '',
+            timestamp: Date.now(),
+            stepNumber: session.steps.length + 1
+          })
+          lastNavUrl = currentUrl
+        } catch { /* frame may be detached */ }
       }, 500)
     })
 
-    // When browser is closed manually by user, mark session stopped
+    // When browser is closed manually by user, clean up session
     browser.on('disconnected', () => {
+      session.status = 'stopped'
+      // Clean up session from map after browser disconnects
+      sessions.delete(key)
+    })
+
+    // Handle page crash / close gracefully
+    page.on('crash', () => {
+      console.error('Page crashed during recording')
+      session.status = 'stopped'
+    })
+    page.on('close', () => {
       session.status = 'stopped'
     })
 

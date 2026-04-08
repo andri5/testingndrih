@@ -14,7 +14,6 @@ import importRoutes from './routes/importRoutes.js'
 import executionRoutes from './routes/executionRoutes.js'
 import qaseRoutes from './routes/qaseRoutes.js'
 import recorderRoutes from './routes/recorderRoutes.js'
-import aiRoutes from './routes/aiRoutes.js'
 import { errorHandler } from './middleware/auth.js'
 
 dotenv.config()
@@ -72,7 +71,6 @@ app.use('/api/import', importRoutes)
 app.use('/api/executions', executionRoutes)
 app.use('/api/qase', qaseRoutes)
 app.use('/api/recorder', recorderRoutes)
-app.use('/api/ai', aiRoutes)
 
 // Serve screenshot files
 const __filename = fileURLToPath(import.meta.url)
@@ -95,6 +93,16 @@ app.use((err, req, res, next) => {
     error: err.message || 'Internal Server Error',
     status: err.status || 500
   })
+})
+
+// Global error handlers — prevent unhandled rejections from crashing the process
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('⚠️ Unhandled Rejection:', reason?.message || reason)
+})
+process.on('uncaughtException', (err) => {
+  console.error('⚠️ Uncaught Exception:', err.message)
+  // Don't exit — keep server running for non-fatal errors
+  // Only truly fatal errors (OOM, etc.) should kill the process
 })
 
 // Start server

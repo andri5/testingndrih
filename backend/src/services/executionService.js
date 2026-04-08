@@ -45,11 +45,12 @@ export const executionService = {
     let page = null
 
     try {
-      // Launch browser in headed mode so user can watch execution in real-time
+      // Use headless in Docker/CI (no display), headed locally so user can watch
+      const isHeadless = process.env.HEADLESS === 'true' || (!process.env.DISPLAY && process.platform === 'linux')
       browser = await chromium.launch({
-        headless: false,
-        args: ['--start-maximized'],
-        slowMo: 400  // slow down actions so user can follow each step
+        headless: isHeadless,
+        args: ['--start-maximized', '--no-sandbox'],
+        slowMo: isHeadless ? 0 : 400  // no slowdown in headless mode
       })
       context = await browser.newContext({ viewport: null })
       page = await context.newPage()

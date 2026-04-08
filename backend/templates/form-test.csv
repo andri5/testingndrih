@@ -1,0 +1,8 @@
+stepnumber,type,description,selector,value,notes,expectedresult
+1,NAVIGATE,Open practice form,,https://demoqa.com/automation-practice-form,DemoQA form page,Page loads
+2,FILL,Enter first name,#firstName,John,Text input,Field populated
+3,FILL,Enter last name,#lastName,Doe,Text input,Field populated
+4,FILL,Enter email,#userEmail,john.doe@test.com,Email field,Valid email entered
+5,CLICK,Select Male gender,label[for="gender-radio-1"],,Radio button via label,Gender selected
+6,FILL,Enter mobile number,#userNumber,1234567890,10-digit number,Phone entered
+7,SCREENSHOT,Capture filled form,,,Save state before submit,Screenshot saved
