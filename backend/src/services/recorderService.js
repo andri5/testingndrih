@@ -406,6 +406,40 @@ export function getRecorderScript() {
   }, true);
 
   /* ══════════════════════════════════════════════════
+   * DRAG RECORDING — captures drag-and-drop interactions
+   * Records source element on dragstart, emits DRAG step on drop/dragend
+   * ══════════════════════════════════════════════════ */
+  var dragSource = null;
+  var dragSourceSel = '';
+
+  document.addEventListener('dragstart', function(e) {
+    var el = (e.composedPath && e.composedPath().length > 0) ? e.composedPath()[0] : e.target;
+    if (!el || !el.tagName) return;
+    dragSource = el;
+    dragSourceSel = buildSelector(el);
+  }, true);
+
+  document.addEventListener('drop', function(e) {
+    var target = (e.composedPath && e.composedPath().length > 0) ? e.composedPath()[0] : e.target;
+    if (!target || !dragSource || !dragSourceSel) return;
+    var targetSel = buildSelector(target);
+    // Skip if source and target are the same element
+    if (!targetSel || targetSel === dragSourceSel) {
+      dragSource = null; dragSourceSel = '';
+      return;
+    }
+    var srcText = (dragSource.textContent || dragSource.getAttribute('aria-label') || dragSource.getAttribute('title') || '').trim().substring(0, 40);
+    var desc = 'Drag "' + srcText + '" onto ' + targetSel.substring(0, 50);
+    sendStep({ type: 'DRAG', selector: dragSourceSel, value: targetSel, description: desc, tagName: dragSource.tagName.toLowerCase(), timestamp: Date.now() });
+    dragSource = null; dragSourceSel = '';
+  }, true);
+
+  document.addEventListener('dragend', function() {
+    // Clear source if drop did not fire (e.g., dropped outside a droppable)
+    dragSource = null; dragSourceSel = '';
+  }, true);
+
+  /* ══════════════════════════════════════════════════
    * SPA ROUTE DETECTION — catches pushState / replaceState navigation
    * ══════════════════════════════════════════════════ */
   var lastSpaUrl = location.href;

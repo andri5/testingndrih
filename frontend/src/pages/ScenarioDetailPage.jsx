@@ -13,6 +13,8 @@ const STEP_TYPES = [
   { value: 'HOVER', label: 'Hover', icon: '🖱️', fields: ['selector', 'metadata'], placeholder: { selector: '#element atau //xpath', metadata: '{"maxRetries":1} (optional)' } },
   { value: 'SCROLL', label: 'Scroll', icon: '↕️', fields: ['selector', 'value'], placeholder: { selector: '#container (optional)', value: '300 (px, positif=bawah, negatif=atas)' } },
   { value: 'FILE_UPLOAD', label: 'File Upload', icon: '📁', fields: ['selector', 'value'], placeholder: { selector: 'input[type="file"]', value: '/path/to/file.pdf (pipe-separated for multiple)' } },
+  { value: 'DRAG', label: 'Drag', icon: '🖱️', fields: ['selector', 'value', 'metadata'], placeholder: { selector: '#source-element (draggable)', value: '#target-element (drop zone)', metadata: '{"maxRetries":1} (optional)' } },
+  { value: 'MOCK_ROUTE', label: 'Mock Route', icon: '🔀', fields: ['value', 'metadata'], placeholder: { value: '**/api/users* (URL glob pattern)', metadata: '{"status":200,"body":{"ok":true},"contentType":"application/json"}' } },
   { value: 'SCREENSHOT', label: 'Screenshot', icon: '📸', fields: [], placeholder: {} },
   { value: 'WAIT', label: 'Wait', icon: '⏱️', fields: ['value'], placeholder: { value: '1000 (ms)' } },
   { value: 'ASSERTION', label: 'Assertion', icon: '✅', fields: ['selector', 'value', 'metadata'], placeholder: { selector: '#element atau //xpath', value: 'Expected text, regex:/pattern/, count:3, visible, not-exists', metadata: '{"maxRetries":2} (optional)' } },

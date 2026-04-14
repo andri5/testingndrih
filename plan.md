@@ -168,14 +168,14 @@ backend/screenshots/
 
 ## 🚀 TODO - Future Enhancements
 
-### ✅ Priority 2: Advanced Selectors & Debugging (IN PROGRESS)
+### ✅ Priority 2: Advanced Selectors & Debugging (COMPLETE)
 - [x] Record file upload interactions (`input[type="file"]`) → FILE_UPLOAD step
 - [x] Hover gesture recording → HOVER step
 - [x] Scroll gesture recording → SCROLL step
 - [x] Video recording of execution (Playwright `recordVideo`)
 - [x] Advanced assertion builder (regex, partial match, element count, visibility)
-- [ ] Network request mocking/interception (MOCK_ROUTE step) — future
-- [ ] Drag gesture recording — future
+- [x] Network request mocking/interception (MOCK_ROUTE step)
+- [x] Drag gesture recording → DRAG step
 
 ### Priority 3: Execution Options & Reporting (IN PROGRESS)
 - [x] Headless mode option (configurable per-run)

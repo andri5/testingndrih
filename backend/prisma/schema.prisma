@@ -29,6 +29,8 @@ enum StepType {
   HOVER
   SCROLL
   FILE_UPLOAD
+  DRAG
+  MOCK_ROUTE
 }
 
 enum ApiMethod {

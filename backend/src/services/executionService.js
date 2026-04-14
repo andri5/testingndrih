@@ -186,6 +186,14 @@ export const executionService = {
               await this.executeFileUpload(page, step)
               break
 
+            case 'DRAG':
+              await this.executeDrag(page, step)
+              break
+
+            case 'MOCK_ROUTE':
+              await this.executeMockRoute(page, step)
+              break
+
             default:
               throw new Error(`Unknown step type: ${step.type}`)
           }
@@ -738,6 +746,56 @@ export const executionService = {
     }
 
     await locator.setInputFiles(existingFiles, { timeout: 10000 })
+  },
+
+  /**
+   * Execute a DRAG step: drag source element onto target element using Playwright's dragTo API.
+   * step.selector = source CSS/XPath selector
+   * step.value    = target CSS/XPath selector
+   */
+  async executeDrag(page, step) {
+    if (!step.selector || !step.value) {
+      throw new Error('DRAG step requires a source selector and a target selector in the value field')
+    }
+    const source = this.resolveLocator(page, step.selector)
+    const target = this.resolveLocator(page, step.value)
+    await source.waitFor({ state: 'visible', timeout: 10000 })
+    await target.waitFor({ state: 'visible', timeout: 10000 })
+    await source.dragTo(target, { timeout: 15000 })
+    await page.waitForTimeout(300)
+  },
+
+  /**
+   * Execute a MOCK_ROUTE step: intercept network requests matching a URL glob/regex.
+   * step.value    = URL glob pattern (e.g. "**/api/users*")
+   * step.metadata = JSON string with override options:
+   *   { status, body, contentType, headers, passthrough }
+   *   passthrough:true → forward to real server unchanged
+   */
+  async executeMockRoute(page, step) {
+    if (!step.value) {
+      throw new Error('MOCK_ROUTE step requires a URL pattern in the value field')
+    }
+    let meta = {}
+    if (step.metadata) {
+      try { meta = JSON.parse(step.metadata) } catch { meta = {} }
+    }
+    const status = meta.status ?? 200
+    const body   = meta.body ?? {}
+    const contentType = meta.contentType || 'application/json'
+    const headers     = meta.headers     || {}
+    await page.route(step.value, async (route) => {
+      if (meta.passthrough) {
+        await route.continue()
+        return
+      }
+      await route.fulfill({
+        status,
+        contentType,
+        headers,
+        body: typeof body === 'string' ? body : JSON.stringify(body)
+      })
+    })
   },
 
   /**
