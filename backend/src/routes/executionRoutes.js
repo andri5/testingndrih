@@ -8,38 +8,133 @@ const executionRoutes = Router()
 executionRoutes.use(authenticateToken)
 
 /**
- * Execute a scenario
- * POST /api/executions/scenarios/:scenarioId
+ * @swagger
+ * /api/executions/scenarios/{scenarioId}:
+ *   post:
+ *     summary: Execute a test scenario
+ *     tags: [Execution]
+ *     parameters:
+ *       - in: path
+ *         name: scenarioId
+ *         required: true
+ *         schema: { type: string }
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               browser:
+ *                 type: string
+ *                 enum: [chromium, firefox, webkit]
+ *                 default: chromium
+ *               headless:
+ *                 type: boolean
+ *                 default: false
+ *     responses:
+ *       200:
+ *         description: Execution completed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean }
+ *                 execution:
+ *                   $ref: '#/components/schemas/Execution'
+ *       400:
+ *         description: Execution failed
+ *       404:
+ *         description: Scenario not found
  */
 executionRoutes.post('/scenarios/:scenarioId', executionController.executeScenario)
 
 /**
- * Get execution history
- * GET /api/executions?scenarioId=xxx&limit=20&offset=0
+ * @swagger
+ * /api/executions:
+ *   get:
+ *     summary: Get execution history
+ *     tags: [Execution]
+ *     parameters:
+ *       - in: query
+ *         name: scenarioId
+ *         schema: { type: string }
+ *       - in: query
+ *         name: limit
+ *         schema: { type: integer, default: 20 }
+ *       - in: query
+ *         name: offset
+ *         schema: { type: integer, default: 0 }
+ *     responses:
+ *       200:
+ *         description: List of executions
  */
 executionRoutes.get('/', executionController.getExecutionHistory)
 
 /**
- * Get execution statistics
- * GET /api/executions/stats/summary?scenarioId=xxx
+ * @swagger
+ * /api/executions/stats/summary:
+ *   get:
+ *     summary: Get execution statistics
+ *     tags: [Execution]
+ *     parameters:
+ *       - in: query
+ *         name: scenarioId
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: Aggregated stats (total, passed, failed, successRate)
  */
 executionRoutes.get('/stats/summary', executionController.getExecutionStats)
 
 /**
- * Get execution details
- * GET /api/executions/:executionId
+ * @swagger
+ * /api/executions/{executionId}:
+ *   get:
+ *     summary: Get execution details with step results
+ *     tags: [Execution]
+ *     parameters:
+ *       - in: path
+ *         name: executionId
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: Execution with step results and screenshots
  */
 executionRoutes.get('/:executionId', executionController.getExecutionDetails)
 
 /**
- * Cancel execution
- * POST /api/executions/:executionId/cancel
+ * @swagger
+ * /api/executions/{executionId}/cancel:
+ *   post:
+ *     summary: Cancel a running execution
+ *     tags: [Execution]
+ *     parameters:
+ *       - in: path
+ *         name: executionId
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: Execution cancelled
  */
 executionRoutes.post('/:executionId/cancel', executionController.cancelExecution)
 
 /**
- * Delete execution
- * DELETE /api/executions/:executionId
+ * @swagger
+ * /api/executions/{executionId}:
+ *   delete:
+ *     summary: Delete an execution record
+ *     tags: [Execution]
+ *     parameters:
+ *       - in: path
+ *         name: executionId
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: Execution deleted
  */
 executionRoutes.delete('/:executionId', executionController.deleteExecution)
 

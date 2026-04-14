@@ -5,6 +5,7 @@ import rateLimit from 'express-rate-limit'
 import dotenv from 'dotenv'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import swaggerUi from 'swagger-ui-express'
 import authRoutes from './routes/authRoutes.js'
 import scenarioRoutes from './routes/scenarioRoutes.js'
 import searchRoutes from './routes/searchRoutes.js'
@@ -15,6 +16,7 @@ import executionRoutes from './routes/executionRoutes.js'
 import qaseRoutes from './routes/qaseRoutes.js'
 import recorderRoutes from './routes/recorderRoutes.js'
 import { errorHandler } from './middleware/auth.js'
+import { swaggerSpec } from './lib/swagger.js'
 
 dotenv.config()
 
@@ -72,10 +74,21 @@ app.use('/api/executions', executionRoutes)
 app.use('/api/qase', qaseRoutes)
 app.use('/api/recorder', recorderRoutes)
 
+// Swagger API docs — available at /api/docs
+app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+  customSiteTitle: 'testingndrih API Docs',
+  swaggerOptions: { persistAuthorization: true }
+}))
+app.get('/api/docs.json', (req, res) => {
+  res.setHeader('Content-Type', 'application/json')
+  res.send(swaggerSpec)
+})
+
 // Serve screenshot files
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 app.use('/api/screenshots', express.static(path.resolve(__dirname, '../uploads/screenshots')))
+app.use('/api/videos', express.static(path.resolve(__dirname, '../uploads/videos')))
 
 // 404 handler
 app.use((req, res) => {
@@ -108,7 +121,7 @@ process.on('uncaughtException', (err) => {
 // Start server
 app.listen(PORT, () => {
   console.log(`\n✅ Backend server running on http://localhost:${PORT}`)
-  console.log(`📡 API documentation: http://localhost:${PORT}/`)
+  console.log(`� API docs (Swagger): http://localhost:${PORT}/api/docs`)
   console.log(`🏥 Health check: http://localhost:${PORT}/health\n`)
 })
 

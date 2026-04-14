@@ -149,8 +149,8 @@ export const scenarioAPI = {
 
 export const executionAPI = {
   // Execute scenario (long timeout: execution can take minutes for many steps)
-  executeScenario: (scenarioId) =>
-    apiClient.post(`/executions/scenarios/${scenarioId}`, {}, { timeout: 300000 }),
+  executeScenario: (scenarioId, options = {}) =>
+    apiClient.post(`/executions/scenarios/${scenarioId}`, options, { timeout: 300000 }),
 
   // Get execution details (may include heavy step results)
   getDetails: (executionId) =>

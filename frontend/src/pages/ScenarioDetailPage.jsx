@@ -8,11 +8,14 @@ import { scenarioAPI, executionAPI, recorderAPI } from '../services/api'
 
 const STEP_TYPES = [
   { value: 'NAVIGATE', label: 'Navigate', icon: '🌐', fields: ['value'], placeholder: { value: 'https://example.com' } },
-  { value: 'CLICK', label: 'Click', icon: '👆', fields: ['selector'], placeholder: { selector: '#button-id, .class-name, atau //xpath' } },
-  { value: 'FILL', label: 'Fill', icon: '✏️', fields: ['selector', 'value'], placeholder: { selector: '#input-id atau //xpath', value: 'Text to type' } },
+  { value: 'CLICK', label: 'Click', icon: '👆', fields: ['selector', 'metadata'], placeholder: { selector: '#button-id, .class-name, atau //xpath', metadata: '{"maxRetries":2} (optional)' } },
+  { value: 'FILL', label: 'Fill', icon: '✏️', fields: ['selector', 'value', 'metadata'], placeholder: { selector: '#input-id atau //xpath', value: 'Text to type', metadata: '{"maxRetries":2} (optional)' } },
+  { value: 'HOVER', label: 'Hover', icon: '🖱️', fields: ['selector', 'metadata'], placeholder: { selector: '#element atau //xpath', metadata: '{"maxRetries":1} (optional)' } },
+  { value: 'SCROLL', label: 'Scroll', icon: '↕️', fields: ['selector', 'value'], placeholder: { selector: '#container (optional)', value: '300 (px, positif=bawah, negatif=atas)' } },
+  { value: 'FILE_UPLOAD', label: 'File Upload', icon: '📁', fields: ['selector', 'value'], placeholder: { selector: 'input[type="file"]', value: '/path/to/file.pdf (pipe-separated for multiple)' } },
   { value: 'SCREENSHOT', label: 'Screenshot', icon: '📸', fields: [], placeholder: {} },
   { value: 'WAIT', label: 'Wait', icon: '⏱️', fields: ['value'], placeholder: { value: '1000 (ms)' } },
-  { value: 'ASSERTION', label: 'Assertion', icon: '✅', fields: ['selector', 'value'], placeholder: { selector: '#element atau //xpath', value: 'Expected text (optional)' } },
+  { value: 'ASSERTION', label: 'Assertion', icon: '✅', fields: ['selector', 'value', 'metadata'], placeholder: { selector: '#element atau //xpath', value: 'Expected text, regex:/pattern/, count:3, visible, not-exists', metadata: '{"maxRetries":2} (optional)' } },
   { value: 'API_CALL', label: 'API Call', icon: '📡', fields: ['value', 'metadata'], placeholder: { value: 'https://api.example.com/endpoint', metadata: '{"method":"GET","headers":{}}' } },
 ]
 

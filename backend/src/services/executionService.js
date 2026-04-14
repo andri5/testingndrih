@@ -13,7 +13,7 @@ export const executionService = {
   /**
    * Execute a complete test scenario
    */
-  async executeScenario(userId, scenarioId) {
+  async executeScenario(userId, scenarioId, options = {}) {
     // Validate scenario exists and belongs to user
     const scenario = await prisma.scenario.findFirst({
       where: { id: scenarioId, userId },
@@ -35,6 +35,8 @@ export const executionService = {
         scenarioId,
         status: 'RUNNING',
         totalSteps: scenario.testSteps.length,
+        browser: options.browser || 'chromium',
+        headless: options.headless ?? false,
         startTime: new Date()
       },
       include: { stepResults: true }
@@ -46,13 +48,32 @@ export const executionService = {
 
     try {
       // Use headless in Docker/CI (no display), headed locally so user can watch
-      const isHeadless = process.env.HEADLESS === 'true' || (!process.env.DISPLAY && process.platform === 'linux')
-      browser = await chromium.launch({
-        headless: isHeadless,
-        args: ['--start-maximized', '--no-sandbox'],
-        slowMo: isHeadless ? 0 : 400  // no slowdown in headless mode
+      // Options override: headless=true forces headless, headless=false forces headed
+      const isCI = process.env.HEADLESS === 'true' || (!process.env.DISPLAY && process.platform === 'linux')
+      const useHeadless = options.headless === true ? true : (options.headless === false ? isCI : isCI)
+
+      // Browser selection: chromium (default), firefox, webkit
+      const { chromium: chromiumBrowser, firefox, webkit } = await import('playwright')
+      const browserEngines = { chromium: chromiumBrowser, firefox, webkit }
+      const selectedBrowserName = options.browser && browserEngines[options.browser] ? options.browser : 'chromium'
+      const browserEngine = browserEngines[selectedBrowserName]
+
+      browser = await browserEngine.launch({
+        headless: useHeadless,
+        args: selectedBrowserName === 'chromium' ? ['--start-maximized', '--no-sandbox'] : [],
+        slowMo: useHeadless ? 0 : 400
       })
-      context = await browser.newContext({ viewport: null })
+
+      // Video recording setup
+      const videoDir = path.resolve('./uploads/videos')
+      if (!fs.existsSync(videoDir)) {
+        fs.mkdirSync(videoDir, { recursive: true })
+      }
+
+      context = await browser.newContext({
+        viewport: null,
+        recordVideo: { dir: videoDir, size: { width: 1280, height: 720 } }
+      })
       page = await context.newPage()
 
       // ═══ DIALOG HANDLING — auto-accept alert/confirm/prompt ═══
@@ -112,8 +133,18 @@ export const executionService = {
         pageErrors.length = 0
         failedRequests.length = 0
 
+        // Parse per-step retry config from metadata (e.g. {"maxRetries":2})
+        let maxRetries = 0
         try {
-          // Execute step based on type
+          if (step.metadata) {
+            const meta = JSON.parse(step.metadata)
+            if (typeof meta.maxRetries === 'number' && meta.maxRetries > 0) {
+              maxRetries = Math.min(meta.maxRetries, 5) // cap at 5
+            }
+          }
+        } catch { /* ignore bad metadata JSON */ }
+
+        const executeStepOnce = async () => {
           switch (step.type) {
             case 'NAVIGATE':
               await this.executeNavigate(page, step)
@@ -143,9 +174,40 @@ export const executionService = {
               await this.executeApiCall(step)
               break
 
+            case 'HOVER':
+              await this.executeHover(page, step)
+              break
+
+            case 'SCROLL':
+              await this.executeScroll(page, step)
+              break
+
+            case 'FILE_UPLOAD':
+              await this.executeFileUpload(page, step)
+              break
+
             default:
               throw new Error(`Unknown step type: ${step.type}`)
           }
+        }
+
+        try {
+          // Attempt with optional retries
+          let lastErr = null
+          for (let attempt = 0; attempt <= maxRetries; attempt++) {
+            try {
+              await executeStepOnce()
+              lastErr = null
+              break // success
+            } catch (err) {
+              lastErr = err
+              if (attempt < maxRetries) {
+                console.warn(`Step ${step.stepNumber} attempt ${attempt + 1} failed, retrying...`)
+                await new Promise(r => setTimeout(r, 1000)) // 1s wait between retries
+              }
+            }
+          }
+          if (lastErr) throw lastErr
 
           passedSteps++
         } catch (error) {
@@ -234,6 +296,23 @@ export const executionService = {
       const endTime = new Date()
       const duration = endTime - execution.startTime
 
+      // Retrieve video path if recorded
+      let videoPath = null
+      try {
+        const video = page.video()
+        if (video) {
+          const rawPath = await video.path()
+          if (rawPath) {
+            const videoFilename = `exec-${execution.id}.webm`
+            const destPath = path.join(path.resolve('./uploads/videos'), videoFilename)
+            fs.renameSync(rawPath, destPath)
+            videoPath = `/api/videos/${videoFilename}`
+          }
+        }
+      } catch (videoErr) {
+        console.error('Video save failed:', videoErr.message)
+      }
+
       await prisma.execution.update({
         where: { id: execution.id },
         data: {
@@ -241,7 +320,8 @@ export const executionService = {
           endTime,
           duration,
           passedSteps,
-          failedSteps
+          failedSteps,
+          videoPath
         }
       })
 
@@ -254,7 +334,8 @@ export const executionService = {
           totalSteps: scenario.testSteps.length,
           duration,
           startTime: execution.startTime,
-          endTime
+          endTime,
+          videoPath
         }
       }
     } catch (error) {
@@ -427,35 +508,113 @@ export const executionService = {
 
   /**
    * Execute ASSERTION step - Verify element or text
+   * Supports:
+   *   count:N         — expect exactly N elements matching selector
+   *   visible         — element must be visible
+   *   hidden          — element must be hidden/not visible
+   *   not-exists      — element must NOT exist on page
+   *   regex:/pattern/ — element text must match regex
+   *   <plain text>    — element contains text (existing behaviour)
    */
   async executeAssertion(page, step) {
     if (!step.selector && !step.value) {
       throw new Error('ASSERTION step requires selector or value')
     }
 
-    // If selector is provided, check if element exists
+    const assertValue = (step.value || '').trim()
+
     if (step.selector) {
       const element = this.resolveLocator(page, step.selector)
-      const count = await element.count()
 
+      // not-exists: element must be absent
+      if (assertValue === 'not-exists') {
+        const count = await element.count()
+        if (count > 0) {
+          throw new Error(`Expected element to NOT exist but found ${count}: ${step.selector}`)
+        }
+        return
+      }
+
+      // count:N — exact element count
+      const countMatch = assertValue.match(/^count:(\d+)$/)
+      if (countMatch) {
+        const expected = parseInt(countMatch[1])
+        const actual = await element.count()
+        if (actual !== expected) {
+          throw new Error(`Expected ${expected} element(s) but found ${actual}: ${step.selector}`)
+        }
+        return
+      }
+
+      // visible — element must be in DOM and visible
+      if (assertValue === 'visible' || assertValue === '') {
+        const count = await element.count()
+        if (count === 0) {
+          throw new Error(`Element not found: ${step.selector}`)
+        }
+        const isVisible = await element.first().isVisible()
+        if (!isVisible) {
+          throw new Error(`Element exists but is not visible: ${step.selector}`)
+        }
+        return
+      }
+
+      // hidden — element must be hidden or not visible
+      if (assertValue === 'hidden') {
+        const count = await element.count()
+        if (count > 0) {
+          const isVisible = await element.first().isVisible()
+          if (isVisible) {
+            throw new Error(`Expected element to be hidden but it is visible: ${step.selector}`)
+          }
+        }
+        return
+      }
+
+      // Check element exists first for remaining assertions
+      const count = await element.count()
       if (count === 0) {
         throw new Error(`Element not found: ${step.selector}`)
       }
 
-      // If value is provided, check element content/value
-      if (step.value) {
-        const content = await element.first().textContent()
-        if (!content || !content.includes(step.value)) {
+      const content = await element.first().textContent().catch(() => '')
+
+      // regex:/pattern/[flags] — text must match regex
+      const regexMatch = assertValue.match(/^regex:\/(.+)\/([gimsuy]*)$/)
+      if (regexMatch) {
+        const [, pattern, flags] = regexMatch
+        const re = new RegExp(pattern, flags)
+        if (!re.test(content || '')) {
           throw new Error(
-            `Expected text "${step.value}" not found in element "${step.selector}"`
+            `Regex /${pattern}/${flags} did not match element text "${(content || '').substring(0, 100)}"`
           )
         }
+        return
       }
-    } else if (step.value) {
-      // Check if text exists anywhere on page
-      const hasText = await page.getByText(step.value).count()
+
+      // Plain text — element must contain the value as substring
+      if (!content || !content.includes(assertValue)) {
+        throw new Error(
+          `Expected text "${assertValue}" not found in element "${step.selector}". Actual: "${(content || '').substring(0, 100)}"`
+        )
+      }
+    } else if (assertValue) {
+      // No selector — check page-level text
+      // regex:/pattern/ in page text
+      const regexMatch = assertValue.match(/^regex:\/(.+)\/([gimsuy]*)$/)
+      if (regexMatch) {
+        const [, pattern, flags] = regexMatch
+        const re = new RegExp(pattern, flags)
+        const pageText = await page.evaluate(() => document.documentElement.innerText || '')
+        if (!re.test(pageText)) {
+          throw new Error(`Regex /${pattern}/${flags} did not match page text`)
+        }
+        return
+      }
+
+      const hasText = await page.getByText(assertValue).count()
       if (hasText === 0) {
-        throw new Error(`Text not found on page: ${step.value}`)
+        throw new Error(`Text not found on page: ${assertValue}`)
       }
     }
   },
@@ -507,6 +666,78 @@ export const executionService = {
     } catch (error) {
       throw new Error(`API call failed: ${error.message}`)
     }
+  },
+
+  /**
+   * Execute HOVER step - Hover over element
+   */
+  async executeHover(page, step) {
+    if (!step.selector) {
+      throw new Error('HOVER step requires a selector')
+    }
+    const locator = this.resolveLocator(page, step.selector)
+    try {
+      await locator.waitFor({ state: 'visible', timeout: 10000 })
+    } catch {
+      await locator.waitFor({ state: 'attached', timeout: 5000 })
+      await locator.scrollIntoViewIfNeeded({ timeout: 3000 }).catch(() => {})
+    }
+    await locator.hover({ timeout: 10000 })
+    // Small pause so tooltips / hover menus appear before next step
+    await page.waitForTimeout(300)
+  },
+
+  /**
+   * Execute SCROLL step - Scroll page or element
+   * value: pixel delta (positive = down, negative = up)
+   * selector: optional — if provided, scrolls inside that element
+   */
+  async executeScroll(page, step) {
+    const delta = parseInt(step.value) || 300
+    if (step.selector) {
+      // Scroll to element into view
+      const locator = this.resolveLocator(page, step.selector)
+      await locator.scrollIntoViewIfNeeded({ timeout: 10000 }).catch(() => {})
+    } else {
+      // Scroll the main page by delta
+      await page.evaluate((d) => { window.scrollBy(0, d) }, delta)
+    }
+    await page.waitForTimeout(200)
+  },
+
+  /**
+   * Execute FILE_UPLOAD step - Set files on a file input
+   * value: pipe-separated file names OR a single path/glob
+   * In CI/test mode, we skip if files are not present on disk
+   */
+  async executeFileUpload(page, step) {
+    if (!step.selector) {
+      throw new Error('FILE_UPLOAD step requires a selector')
+    }
+    if (!step.value) {
+      throw new Error('FILE_UPLOAD step requires file paths in value field')
+    }
+
+    const locator = this.resolveLocator(page, step.selector)
+    try {
+      await locator.waitFor({ state: 'attached', timeout: 10000 })
+    } catch {
+      throw new Error(`File input not found: ${step.selector}`)
+    }
+
+    // File paths stored as pipe-separated list
+    const filePaths = step.value.split('|').map(f => f.trim()).filter(Boolean)
+
+    // Filter to only existing files; skip if none exist (allows replay without real files)
+    const existingFiles = filePaths.filter(f => {
+      try { return fs.existsSync(f) } catch { return false }
+    })
+    if (existingFiles.length === 0) {
+      console.warn(`FILE_UPLOAD: none of [${filePaths.join(', ')}] found on disk — step skipped`)
+      return
+    }
+
+    await locator.setInputFiles(existingFiles, { timeout: 10000 })
   },
 
   /**

@@ -12,25 +12,27 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v4
       
       - name: Setup Node.js
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v4
         with:
           node-version: '18.x'
+          cache: 'npm'
       
       - name: Install Dependencies
-        working-directory: ./backend
         run: npm install
       
       - name: Run Tests
         working-directory: ./backend
         env:
           NODE_ENV: test
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/testdb
+          JWT_SECRET: ci-test-secret-key-minimum-32-chars
         run: npm test -- --coverage --coveragePathIgnorePatterns=/node_modules/ --collectCoverageFrom='src/**/*.{js,jsx}'
       
       - name: Upload Coverage
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v4
         with:
           files: ./backend/coverage/coverage-final.json
           flags: unittests

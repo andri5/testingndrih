@@ -23,10 +23,10 @@ export const useExecutionStore = create((set, get) => ({
   },
 
   // Actions
-  executeScenario: async (scenarioId) => {
+  executeScenario: async (scenarioId, options = {}) => {
     set({ isRunning: true, error: null })
     try {
-      const response = await executionAPI.executeScenario(scenarioId)
+      const response = await executionAPI.executeScenario(scenarioId, options)
       const execution = response.data.execution
 
       set({ currentExecution: execution, isRunning: false })

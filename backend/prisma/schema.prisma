@@ -26,6 +26,9 @@ enum StepType {
   WAIT
   ASSERTION
   API_CALL
+  HOVER
+  SCROLL
+  FILE_UPLOAD
 }
 
 enum ApiMethod {
@@ -117,6 +120,9 @@ model Execution {
   passedSteps  Int               @default(0)
   failedSteps  Int               @default(0)
   totalSteps   Int
+  videoPath    String?           // path to execution video file
+  browser      String?           @default("chromium") // chromium | firefox | webkit
+  headless     Boolean?          @default(false)
   createdAt    DateTime          @default(now())
   updatedAt    DateTime          @updatedAt
   userId       String

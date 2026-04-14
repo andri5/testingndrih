@@ -334,6 +334,77 @@ export function getRecorderScript() {
   /* ── Form submit ── */
   document.addEventListener('submit', function() { flushAll(); }, true);
 
+  /* ── File Upload ── */
+  document.addEventListener('change', function(e) {
+    var el = e.target;
+    if (e.composedPath && e.composedPath().length > 0) el = e.composedPath()[0];
+    if (!el || el.tagName !== 'INPUT' || el.type !== 'file') return;
+    var files = el.files || [];
+    if (!files.length) return;
+    var fileNames = [];
+    for (var i = 0; i < files.length; i++) { fileNames.push(files[i].name); }
+    var selector = buildSelector(el);
+    var label = ((el.labels && el.labels[0]) ? el.labels[0].textContent.trim() : '') || el.name || 'file';
+    var desc = 'Upload file "' + fileNames.join(', ').substring(0, 50) + '" to "' + label.substring(0, 30) + '"';
+    sendStep({ type: 'FILE_UPLOAD', selector: selector, value: fileNames.join('|'), description: desc, tagName: 'input', timestamp: Date.now() });
+  }, true);
+
+  /* ══════════════════════════════════════════════════
+   * HOVER RECORDING — captures intentional hover (500ms dwell)
+   * Only records hover on interactive or meaningful elements
+   * ══════════════════════════════════════════════════ */
+  var hoverTimer = null;
+  var lastHoveredSel = '';
+  document.addEventListener('mouseover', function(e) {
+    var el = e.target;
+    if (e.composedPath && e.composedPath().length > 0) el = e.composedPath()[0];
+    if (!el || !el.tagName) return;
+    var tag = el.tagName.toLowerCase();
+    // Only hover on interactive/meaningful elements
+    if (!/^(button|a|[data-tooltip]|[title])$/.test(tag) &&
+        !el.getAttribute('title') && !el.getAttribute('data-tooltip') &&
+        !el.getAttribute('aria-label') && tag !== 'button' && tag !== 'a' &&
+        !(el.getAttribute('role') === 'button') && !(el.getAttribute('role') === 'menuitem') &&
+        !(el.getAttribute('role') === 'tooltip')) return;
+    if (hoverTimer) clearTimeout(hoverTimer);
+    hoverTimer = setTimeout(function() {
+      var selector = buildSelector(el);
+      if (!selector || selector === lastHoveredSel) return;
+      lastHoveredSel = selector;
+      var text = (el.textContent || el.getAttribute('title') || el.getAttribute('aria-label') || '').trim().substring(0, 40);
+      var desc = 'Hover over ' + tag + (text ? ' "' + text + '"' : '');
+      sendStep({ type: 'HOVER', selector: selector, value: '', description: desc, tagName: tag, timestamp: Date.now() });
+    }, 500);
+  }, true);
+  document.addEventListener('mouseout', function() {
+    if (hoverTimer) { clearTimeout(hoverTimer); hoverTimer = null; }
+  }, true);
+
+  /* ══════════════════════════════════════════════════
+   * SCROLL RECORDING — captures significant scroll actions (debounced)
+   * Only emits when scroll distance > 100px from last recorded scroll
+   * ══════════════════════════════════════════════════ */
+  var scrollTimer = null;
+  var lastScrollY = 0;
+  var lastScrollEl = null;
+  window.addEventListener('scroll', function(e) {
+    var el = e.target === document ? document.documentElement : e.target;
+    var curScrollY = el.scrollTop || window.scrollY || 0;
+    if (scrollTimer) clearTimeout(scrollTimer);
+    scrollTimer = setTimeout(function() {
+      var delta = curScrollY - lastScrollY;
+      if (Math.abs(delta) < 100) return; // ignore tiny scrolls
+      var selector = '';
+      if (el !== document.documentElement) {
+        selector = buildSelector(el);
+      }
+      var dirLabel = delta > 0 ? 'down' : 'up';
+      var desc = 'Scroll ' + dirLabel + ' by ' + Math.abs(delta) + 'px' + (selector ? ' in "' + selector + '"' : '');
+      lastScrollY = curScrollY;
+      sendStep({ type: 'SCROLL', selector: selector, value: String(delta), description: desc, tagName: '', timestamp: Date.now() });
+    }, 400);
+  }, true);
+
   /* ══════════════════════════════════════════════════
    * SPA ROUTE DETECTION — catches pushState / replaceState navigation
    * ══════════════════════════════════════════════════ */

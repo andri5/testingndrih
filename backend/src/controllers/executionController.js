@@ -14,12 +14,16 @@ export const executionController = {
     try {
       const { scenarioId } = req.params
       const userId = req.user.id
+      const { browser, headless } = req.body
 
       if (!scenarioId) {
         return res.status(400).json({ message: 'Scenario ID is required' })
       }
 
-      const result = await executionService.executeScenario(userId, scenarioId)
+      const result = await executionService.executeScenario(userId, scenarioId, {
+        browser: browser || 'chromium',
+        headless: headless === true || headless === 'true'
+      })
 
       res.status(200).json({
         success: true,

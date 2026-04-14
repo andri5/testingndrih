@@ -1,9 +1,74 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { Card, Button, Badge, Spinner, Alert } from '../components/ui'
 import { executionAPI } from '../services/api'
 import apiClient from '../services/api'
+
+/** Pure SVG stacked bar chart for pass/fail trend */
+function TrendChart({ data }) {
+  const chartH = 120
+  const barW = 24
+  const gap = 8
+  const labelH = 30
+  const svgW = data.length * (barW + gap)
+  const maxVal = Math.max(1, ...data.map(d => d.passed + d.failed))
+
+  return (
+    <div className="overflow-x-auto">
+      <svg width={svgW} height={chartH + labelH} className="block min-w-full">
+        {data.map((d, i) => {
+          const total = d.passed + d.failed
+          const passH = Math.round((d.passed / maxVal) * chartH)
+          const failH = Math.round((d.failed / maxVal) * chartH)
+          const x = i * (barW + gap)
+          return (
+            <g key={d.label}>
+              {/* fail bar (bottom) */}
+              {failH > 0 && (
+                <rect
+                  x={x} y={chartH - failH - passH}
+                  width={barW} height={failH}
+                  fill="#ef4444" rx="2"
+                >
+                  <title>{d.label}: {d.failed} failed</title>
+                </rect>
+              )}
+              {/* pass bar (top of fail) */}
+              {passH > 0 && (
+                <rect
+                  x={x} y={chartH - passH}
+                  width={barW} height={passH}
+                  fill="#22c55e" rx="2"
+                >
+                  <title>{d.label}: {d.passed} passed</title>
+                </rect>
+              )}
+              {/* empty bar placeholder */}
+              {total === 0 && (
+                <rect x={x} y={chartH - 4} width={barW} height={4} fill="#e5e7eb" rx="2" />
+              )}
+              {/* date label */}
+              <text
+                x={x + barW / 2} y={chartH + 18}
+                textAnchor="middle"
+                fontSize="9"
+                fill="#6b7280"
+                transform={`rotate(-35,${x + barW / 2},${chartH + 18})`}
+              >
+                {d.label}
+              </text>
+            </g>
+          )
+        })}
+      </svg>
+      <div className="flex gap-4 mt-2 text-xs text-gray-500">
+        <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 bg-green-500 rounded" /> Passed</span>
+        <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 bg-red-500 rounded" /> Failed</span>
+      </div>
+    </div>
+  )
+}
 
 export default function ReportsPage() {
   const navigate = useNavigate()
@@ -16,6 +81,28 @@ export default function ReportsPage() {
   const [page, setPage] = useState(0)
   const [total, setTotal] = useState(0)
   const LIMIT = 10
+
+  // Compute last-14-day trend from loaded executions (grouped by local date)
+  const trendData = useMemo(() => {
+    const days = 14
+    const buckets = {}
+    const now = new Date()
+    for (let i = days - 1; i >= 0; i--) {
+      const d = new Date(now)
+      d.setDate(d.getDate() - i)
+      const key = d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })
+      buckets[key] = { label: key, passed: 0, failed: 0 }
+    }
+    executions.forEach(e => {
+      if (!e.startTime) return
+      const key = new Date(e.startTime).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })
+      if (buckets[key]) {
+        if (e.status === 'PASSED') buckets[key].passed++
+        else if (e.status === 'FAILED') buckets[key].failed++
+      }
+    })
+    return Object.values(buckets)
+  }, [executions])
 
   useEffect(() => {
     loadReportData()
@@ -167,6 +254,14 @@ export default function ReportsPage() {
                   <span>❌ {stats.failed} failed</span>
                   <span>⏱️ Avg: {formatDuration(stats.averageDuration)}</span>
                 </div>
+              </Card>
+            )}
+
+            {/* Trend Chart — last 14 days */}
+            {trendData.some(d => d.passed + d.failed > 0) && (
+              <Card>
+                <h3 className="font-semibold text-gray-900 mb-4">📊 Pass/Fail Trend (14 hari terakhir)</h3>
+                <TrendChart data={trendData} />
               </Card>
             )}
 

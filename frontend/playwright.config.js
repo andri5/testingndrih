@@ -39,10 +39,10 @@ export default defineConfig({
   ],
 
   webServer: process.env.CI ? {
-    command: 'npm run dev',
+    command: 'npx vite preview --port 3000',
     cwd: '.',
     url: 'http://localhost:3000',
-    reuseExistingServer: false,
+    reuseExistingServer: true,
     timeout: 120000
   } : undefined,
 })

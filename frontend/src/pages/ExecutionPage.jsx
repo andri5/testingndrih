@@ -274,6 +274,23 @@ export default function ExecutionPage() {
                     {currentExecution.endTime && (
                       <> • Ended: {new Date(currentExecution.endTime).toLocaleString()}</>
                     )}
+                    {currentExecution.browser && (
+                      <> • Browser: <span className="font-mono">{currentExecution.browser}</span></>
+                    )}
+                  </div>
+                )}
+
+                {/* Video Recording */}
+                {currentExecution.videoPath && (
+                  <div className="mt-4">
+                    <h3 className="font-semibold text-gray-900 mb-2">📹 Execution Video</h3>
+                    <video
+                      controls
+                      className="w-full max-w-2xl rounded border border-gray-200"
+                      src={`http://localhost:5001${currentExecution.videoPath}`}
+                    >
+                      Your browser does not support video playback.
+                    </video>
                   </div>
                 )}
 
