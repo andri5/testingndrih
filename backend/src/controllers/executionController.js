@@ -1,4 +1,5 @@
 import { executionService } from '../services/executionService.js'
+import { reportService } from '../services/reportService.js'
 
 /**
  * Execution Controller
@@ -162,6 +163,47 @@ export const executionController = {
         success: false,
         message: error.message
       })
+    }
+  },
+
+  /**
+   * Export execution report
+   * GET /api/executions/:executionId/export?format=html|pdf
+   */
+  async exportReport(req, res) {
+    try {
+      const userId = req.user.id
+      const { executionId } = req.params
+      const format = (req.query.format || 'html').toLowerCase()
+
+      if (!['html', 'pdf'].includes(format)) {
+        return res.status(400).json({ success: false, message: "format must be 'html' or 'pdf'" })
+      }
+
+      const execution = await reportService.fetchExecution(userId, executionId)
+      const html = reportService.buildHtml(execution)
+
+      if (format === 'pdf') {
+        const pdfBuffer = await reportService.buildPdf(html)
+        const filename = `execution-report-${executionId}.pdf`
+        res.set({
+          'Content-Type': 'application/pdf',
+          'Content-Disposition': `attachment; filename="${filename}"`,
+          'Content-Length': pdfBuffer.length
+        })
+        return res.end(pdfBuffer)
+      }
+
+      // HTML
+      const filename = `execution-report-${executionId}.html`
+      res.set({
+        'Content-Type': 'text/html; charset=utf-8',
+        'Content-Disposition': `attachment; filename="${filename}"`
+      })
+      return res.send(html)
+    } catch (error) {
+      console.error('Error exporting report:', error)
+      res.status(400).json({ success: false, message: error.message })
     }
   },
 

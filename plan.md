@@ -117,6 +117,7 @@ Architecture
 ├─ Video Recording (P2)             [=============================] 100% DONE
 ├─ Reports & Analytics (P3)         [=============================] 100% DONE
 ├─ Headless/Browser Options (P3)    [=============================] 100% DONE
+├─ Report Export (HTML/PDF) (P3)     [=============================] 100% DONE
 └─ API Documentation (P4)           [=============================] 100% DONE
 ```
 
@@ -182,7 +183,7 @@ backend/screenshots/
 - [x] Browser selection (Chromium / Firefox / WebKit)
 - [x] Retry per-step configuration (via step `metadata.maxRetries`)
 - [x] Trend graphs (pass/fail rate over time) — in Reports page
-- [ ] PDF/HTML reporting export — future
+- [x] PDF/HTML reporting export
 - [ ] Parallel execution (multiple scenarios at once) — future
 - [ ] Scheduled execution (cron jobs) — future
 - [ ] Team collaboration features (shared scenarios) — future

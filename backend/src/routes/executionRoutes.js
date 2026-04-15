@@ -138,4 +138,35 @@ executionRoutes.post('/:executionId/cancel', executionController.cancelExecution
  */
 executionRoutes.delete('/:executionId', executionController.deleteExecution)
 
+/**
+ * @swagger
+ * /api/executions/{executionId}/export:
+ *   get:
+ *     summary: Export execution report as HTML or PDF
+ *     tags: [Execution]
+ *     parameters:
+ *       - in: path
+ *         name: executionId
+ *         required: true
+ *         schema: { type: string }
+ *       - in: query
+ *         name: format
+ *         schema:
+ *           type: string
+ *           enum: [html, pdf]
+ *           default: html
+ *         description: "Output format: html (default) or pdf"
+ *     responses:
+ *       200:
+ *         description: Report file (HTML or PDF)
+ *         content:
+ *           text/html:
+ *             schema: { type: string }
+ *           application/pdf:
+ *             schema: { type: string, format: binary }
+ *       400:
+ *         description: Invalid format or execution not found
+ */
+executionRoutes.get('/:executionId/export', executionController.exportReport)
+
 export default executionRoutes

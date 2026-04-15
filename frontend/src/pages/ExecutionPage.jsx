@@ -56,6 +56,28 @@ export default function ExecutionPage() {
     }
   }
 
+  const handleExportReport = async (executionId, format) => {
+    try {
+      const token = localStorage.getItem('authToken')
+      const response = await fetch(`/api/executions/${executionId}/export?format=${format}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      if (!response.ok) throw new Error('Export failed')
+      const blob = await response.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `execution-report-${executionId}.${format}`
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      URL.revokeObjectURL(url)
+    } catch (err) {
+      console.error('Export failed:', err)
+      alert('Export failed: ' + err.message)
+    }
+  }
+
   const getStatusColor = (status) => {
     switch (status) {
       case 'PASSED':
@@ -425,13 +447,31 @@ export default function ExecutionPage() {
                         {new Date(execution.createdAt).toLocaleString()}
                       </td>
                       <td className="py-3 px-4 text-center">
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          onClick={() => handleViewDetails(execution.id)}
-                        >
-                          View
-                        </Button>
+                        <div className="flex items-center justify-center gap-1 flex-wrap">
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => handleViewDetails(execution.id)}
+                          >
+                            View
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            title="Download HTML report"
+                            onClick={() => handleExportReport(execution.id, 'html')}
+                          >
+                            HTML
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            title="Download PDF report"
+                            onClick={() => handleExportReport(execution.id, 'pdf')}
+                          >
+                            PDF
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   ))}
