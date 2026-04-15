@@ -145,19 +145,4 @@ export const useExecutionStore = create((set, get) => ({
     })
   },
 
-  // AI Suggestion State
-  aiSuggestion: null,
-  isLoadingAI: false,
-
-  setAISuggestion: (suggestion) => {
-    set({ aiSuggestion: suggestion })
-  },
-
-  clearAISuggestion: () => {
-    set({ aiSuggestion: null })
-  },
-
-  setIsLoadingAI: (loading) => {
-    set({ isLoadingAI: loading })
-  }
 }))
