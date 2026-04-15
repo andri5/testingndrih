@@ -1,4 +1,0 @@
-Error: Project(s) "chromium" not found. Available projects: ""
-    at filterProjects (D:\testingndrih\node_modules\playwright\lib\runner\projectUtils.js:80:11)
-    at runTests (D:\testingndrih\node_modules\playwright\lib\program.js:208:42)
-    at async i.<anonymous> (D:\testingndrih\node_modules\playwright\lib\program.js:70:7)

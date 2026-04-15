@@ -4,7 +4,11 @@ import { authenticateToken } from '../middleware/auth.js'
 
 const executionRoutes = Router()
 
-// All routes require authentication
+// Live execution viewer & SSE stream — no auth (served to popup window)
+executionRoutes.get('/:executionId/live-view', executionController.liveView)
+executionRoutes.get('/:executionId/live-stream', executionController.liveStream)
+
+// All remaining routes require authentication
 executionRoutes.use(authenticateToken)
 
 /**

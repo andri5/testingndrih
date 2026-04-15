@@ -50,20 +50,6 @@ app.get('/health', (req, res) => {
   })
 })
 
-// Root endpoint
-app.get('/', (req, res) => {
-  res.json({
-    message: 'testingndrih API - Automated Web Testing Platform',
-    version: '1.0.0',
-    endpoints: {
-      health: '/health',
-      auth: '/api/auth',
-      scenarios: '/api/scenarios',
-      execution: '/api/executions'
-    }
-  })
-})
-
 // Routes
 app.use('/api/auth', authRoutes)
 app.use('/api/scenarios', scenarioRoutes)

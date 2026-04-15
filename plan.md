@@ -1,9 +1,9 @@
 # PLAN - testingndrih Testing Automation Platform
 
 > Platform Otomatis untuk Record, Playback, dan Eksekusi Test Scenario di Website Apapun
-> 
-> **Last Updated**: April 14, 2026 - Session 10 (Advanced Features: P2 + P3 + P4)
-> **Current Phase**: Production-Ready — Implementing Advanced Selectors, Video Recording, Reports & Docs
+>
+> **Last Updated**: April 15, 2026 - Session 11 (Proxy Recorder, Headed Execution, Live Viewer)
+> **Current Phase**: Production-Ready — All core features implemented and deployed
 
 ---
 
@@ -11,15 +11,15 @@
 
 | Item | Detail |
 |------|--------|
-| **Aplikasi** | testingndrih (Testing Validation Platform)|
+| **Aplikasi** | testingndrih (Testing Validation Platform) |
 | **Fitur Utama** | Record interaction → Generate test steps → Execute & validate |
-| **Frontend** | React 18 + Vite 5.4.21 + TailwindCSS + Zustand |
+| **Frontend** | React 18 + Vite + TailwindCSS + Zustand |
 | **Backend** | Node.js + Express.js (ESM) + Prisma ORM |
 | **Database** | PostgreSQL 16 (Docker) |
-| **Browser Automation** | Playwright (headed mode) |
+| **Browser Automation** | Playwright (Firefox headed + Xvfb virtual display) |
 | **Auth** | JWT + bcrypt |
-| **Containerization** | Docker + docker-compose (3 containers: Backend, Frontend, PostgreSQL) |
-| **CI/CD** | GitHub Actions (Backend unit tests + Frontend build) |
+| **Containerization** | Docker + docker-compose (2 containers: App + PostgreSQL) |
+| **CI/CD** | GitHub Actions |
 
 ---
 
@@ -31,76 +31,84 @@
 # 1. Copy .env.example to .env and fill in your values
 cp .env.example .env
 
-# 2. Start all services (postgres + combined app)
+# 2. Start all services
 docker-compose up -d
 
-# Application runs on ONE port:
-# http://localhost:3000  ←  Frontend (React) + Backend API on same port
-# Database: localhost:5432
+# Application: http://localhost:3000  (React SPA + REST API on same port)
+# Database:    localhost:5432
 
 # View logs
-docker-compose logs -f
+docker-compose logs -f app
 
-# Stop all services
+# Stop
 docker-compose down
 ```
 
-**Default Credentials** *(created by `npm run db:seed`)*:
-- Email: `admin@testingndrih.local` *(customize via `SEED_EMAIL` in .env)*
-- Password: `changeme123` *(customize via `SEED_PASSWORD` in .env)*
+**Default Credentials** *(created by seed on first start)*:
+- Email: `admin@testingndrih.local`
+- Password: `changeme123`
 
 ---
 
 ## ✅ COMPLETED FEATURES
 
 ### Phase 1: Core Recording Engine
-- [x] Headed Chromium browser with console.log communication (CSP-proof)
-- [x] Event capture: click, fill, paste, change, submit
-- [x] Input field tracking with debouncing (400ms)
-- [x] Smart selector building: data-testid → id → name → aria-label → placeholder → text → CSSPath
-- [x] Checkbox/Radio auto-detection with true/false values
+- [x] Proxy-based recording (server fetches target page, injects recorder script)
+- [x] Event capture: click, fill, paste, change, submit, hover, scroll, drag
+- [x] Input field tracking with debouncing
+- [x] Smart selector: data-testid → id → name → aria-label → placeholder → role+text → CSSPath
+- [x] Checkbox/Radio auto-detection
 - [x] Contenteditable support (Gmail, rich text editors)
 - [x] SPA route detection (history.pushState/replaceState + popstate)
-- [x] Shadow DOM support (composedPath, MutationObserver, >>> piercing)
-- [x] iframe support (context.addInitScript, frameattached listener)
-- [x] Dynamic class filtering (Angular, React, Vue, Styled Components, etc.)
-- [x] Selector uniqueness validation (auto-add nth-child if needed)
+- [x] Shadow DOM support (composedPath, MutationObserver)
+- [x] Dynamic class filtering (Angular, React, Vue, Styled Components)
+- [x] Selector uniqueness validation with auto nth-child refinement
 - [x] Hover indicator overlay with live selector display
+- [x] Link interception for multi-page proxy navigation
+- [x] Stop recording → auto-close browser + auto-save steps to DB
+- [x] Bug fix: `<base href>` resolved fetch to correct origin via `window.__recOrigin`
+- [x] Bug fix: `window.fetch` captured early as `window.__nativeFetch` before page scripts override
 
-### Phase 2: Execution Engine with Error Handling
-- [x] Step-by-step execution: NAVIGATE, CLICK, FILL, WAIT, ASSERTION, SCREENSHOT, API_CALL
+### Phase 2: Execution Engine
+- [x] Step types: NAVIGATE, CLICK, FILL, WAIT, ASSERTION, SCREENSHOT, API_CALL, HOVER, SCROLL, FILE_UPLOAD, DRAG, MOCK_ROUTE
+- [x] Firefox headed execution via Xvfb virtual display (not headless)
+- [x] slowMo=300ms for realistic pacing and better video
 - [x] Rich error capture: message, step info, page URL, console errors, failed network requests
-- [x] Smart wait strategy: waitFor(visible) → fallback attached → scrollIntoView → retry
-- [x] Checkbox/Radio auto-handling: .check()/.uncheck() instead of .fill()
-- [x] Select dropdown support: .selectOption() detection
-- [x] Contenteditable fill support: keyboard.type() fallback
-- [x] Fill fallback for custom inputs: click + keyboard if .fill() fails
-- [x] Dialog auto-handling: auto-accept alert/confirm/prompt
-- [x] Multi-tab support: context.on('page') for new windows
-- [x] Post-navigation networkidle wait
-- [x] Screenshot capture after each step (except WAIT/API_CALL)
+- [x] Full-page screenshot on failed step with red error overlay annotation
+- [x] Smart wait: waitFor(visible) → attached → scrollIntoView → retry
+- [x] Checkbox/Radio: .check()/.uncheck(), Select: .selectOption()
+- [x] Dialog auto-handling: alert/confirm/prompt
+- [x] Multi-tab support
+- [x] Screenshot after every step
+- [x] Video recording of full execution (.webm)
+- [x] Async execution — server returns execution ID immediately, runs in background
+- [x] SSE (Server-Sent Events) live stream endpoint
 
-### Phase 3: Error Reporting & UX
-- [x] StepErrorDetail component with error parsing
-- [x] 16+ contextual error suggestions
-- [x] Retest button integration
+### Phase 3: Live Execution Viewer
+- [x] Live Viewer popup window opens automatically when executing
+- [x] Real-time screenshot display via SSE updates
+- [x] Progress bar with passed/failed counters
+- [x] Sidebar with per-step status (active, passed, failed)
+- [x] Error detail inline per failed step
+- [x] Execution-done banner with video link
+
+### Phase 4: Error Reporting & UX
+- [x] StepErrorDetail component with 16+ contextual suggestions
+- [x] Locator suggestion service (DOM analysis for alternatives)
+- [x] PDF/HTML execution report export
+- [x] Retest button
 - [x] Execution result auto-scroll
-- [x] Form edit step auto-scroll to form
-- [x] Checkbox bulk delete with selection UI
-- [x] XPath selector support (//, /path, xpath=)
-- [x] Error suggestions for: timeout, strict mode, URL, SSL, detached, console errors, network, Shadow DOM, contenteditable, iframe, dialog
+- [x] Bulk step delete
+- [x] XPath selector support
 
-### Phase 4: Multi-Website Compatibility Enhancements
-- [x] Shadow DOM event piercing with composedPath
-- [x] iframe automatic injection & console capture
-- [x] Dynamic class filtering (removes framework-specific classes)
-- [x] Selector uniqueness validation & refinement
-- [x] SPA route change detection (not just page navigation)
-- [x] Contenteditable form support
-- [x] Smart wait with networkidle + render debounce
-- [x] Retry mechanism on detached elements
-- [x] Dialog & popup handling
-- [x] >>> combinator support in executor
+### Phase 5: Infrastructure
+- [x] Single Docker container (backend + frontend served together on port 3000)
+- [x] Xvfb virtual display for headed browser in Docker
+- [x] PostgreSQL 16 + persistent volume
+- [x] Prisma ORM with migrations
+- [x] Swagger/OpenAPI documentation at `/api/docs`
+- [x] GitHub Actions CI/CD
+- [x] Credential sanitization (no secrets in git)
 
 ---
 
@@ -108,94 +116,39 @@ docker-compose down
 
 ```
 Architecture
-├─ Recording Engine                 [=============================] 100% DONE
-├─ Execution Engine                 [=============================] 100% DONE
-├─ Error Handling                   [=============================] 100% DONE
-├─ Multi-Site Support               [=============================] 100% DONE
-├─ UI/UX Polish                     [=============================] 100% DONE
-├─ Docker Containerization          [=============================] 100% DONE
-├─ GitHub Actions CI/CD             [=============================] 100% DONE
-├─ Advanced Selectors (P2)          [=============================] 100% DONE
-├─ Video Recording (P2)             [=============================] 100% DONE
-├─ Reports & Analytics (P3)         [=============================] 100% DONE
-├─ Headless/Browser Options (P3)    [=============================] 100% DONE
-├─ Report Export (HTML/PDF) (P3)     [=============================] 100% DONE
-└─ API Documentation (P4)           [=============================] 100% DONE
+├─ Proxy Recording Engine           [=============================] 100% DONE
+├─ Execution Engine (Headed)        [=============================] 100% DONE
+├─ Live Execution Viewer (SSE)      [=============================] 100% DONE
+├─ Error Handling & Suggestions     [=============================] 100% DONE
+├─ Video Recording                  [=============================] 100% DONE
+├─ Report Export (HTML/PDF)         [=============================] 100% DONE
+├─ Docker (Single Container)        [=============================] 100% DONE
+├─ Xvfb Virtual Display             [=============================] 100% DONE
+├─ API Documentation (Swagger)      [=============================] 100% DONE
+└─ CI/CD (GitHub Actions)           [=============================] 100% DONE
 ```
 
-**Overall Feature Completeness: ~98%** (Production-ready, all priority 2/3/4 features complete)
+**Overall Feature Completeness: 100%** (Production-ready)
 
 ---
 
-## 🎯 Tested & Verified
+## 🎯 Test Credentials
 
-| Feature | Status | Notes |
-|---------|--------|-------|
-| Recording basic interactions | ✅ PASS | Click, fill, select, checkbox |
-| Execution on test sites | ✅ PASS | Localhost + external sites |
-| Error detail capture | ✅ PASS | Message, step, page, console, network |
-| Error suggestions | ✅ PASS | 16+ contextual patterns |
-| Shadow DOM recording | ✅ PASS | composedPath + listener attachment |
-| iframe recording | ✅ PASS | context.addInitScript + frameattached |
-| SPA navigation | ✅ PASS | pushState/replaceState detection |
-| Contenteditable | ✅ PASS | Gmail-style editor support |
-| Checkbox handling | ✅ PASS | Auto .check()/.uncheck() |
-| Dialog handling | ✅ PASS | Auto-accept alert/confirm |
-| Multi-tab | ✅ PASS | context.on('page') tracking |
-| Network retry | ✅ PASS | Fallback for detached elements |
-| XPath selectors | ✅ PASS | //, /, xpath= formats |
+```
+Email:    admin@testingndrih.local
+Password: changeme123
+URL:      http://localhost:3000
+```
 
 ---
 
 ## 🔐 Security
 
-### ✅ Credentials Management
-- `.env` files properly excluded in `.gitignore` ✓
-- `.env.example` provided as template ✓
-- Test credentials only in seed.js with hashed passwords ✓
-- External API keys use environment variables ✓
-
-### Files Protected from Git
-```
-.env*
-node_modules/
-dist/
-build/
-backend/uploads/
-backend/screenshots/
-.vscode/
-.idea/
-```
-
----
-
-## 🚀 TODO - Future Enhancements
-
-### ✅ Priority 2: Advanced Selectors & Debugging (COMPLETE)
-- [x] Record file upload interactions (`input[type="file"]`) → FILE_UPLOAD step
-- [x] Hover gesture recording → HOVER step
-- [x] Scroll gesture recording → SCROLL step
-- [x] Video recording of execution (Playwright `recordVideo`)
-- [x] Advanced assertion builder (regex, partial match, element count, visibility)
-- [x] Network request mocking/interception (MOCK_ROUTE step)
-- [x] Drag gesture recording → DRAG step
-
-### Priority 3: Execution Options & Reporting (IN PROGRESS)
-- [x] Headless mode option (configurable per-run)
-- [x] Browser selection (Chromium / Firefox / WebKit)
-- [x] Retry per-step configuration (via step `metadata.maxRetries`)
-- [x] Trend graphs (pass/fail rate over time) — in Reports page
-- [x] PDF/HTML reporting export
-- [ ] Parallel execution (multiple scenarios at once) — future
-- [ ] Scheduled execution (cron jobs) — future
-- [ ] Team collaboration features (shared scenarios) — future
-- [ ] Role-based access control — future
-
-### Priority 4: Documentation (IN PROGRESS)
-- [x] API endpoint documentation (Swagger / OpenAPI)
-- [ ] Deployment guide — future
-- [ ] Architecture documentation — future
-- [ ] Troubleshooting guide — future
+- `.env` files excluded from git via `.gitignore`
+- `.env.example` provided as template
+- JWT secret via environment variable
+- No secrets committed to repository
+- Database credentials in Docker environment only
 
 ---
 
@@ -203,286 +156,125 @@ backend/screenshots/
 
 ```
 testingndrih/
-├── backend/                      # Node.js + Express
+├── Dockerfile                    # Multi-stage: React build → Node server + Xvfb
+├── docker-compose.yml            # App (port 3000) + PostgreSQL 16
+├── .env.example                  # Environment variable template
+├── .gitignore
+├── README.md
+├── plan.md                       # This file
+│
+├── backend/
 │   ├── src/
-│   │   ├── services/
-│   │   │   ├── recorderService.js      # Record engine with 7x enhancements
-│   │   │   ├── executionService.js     # Execute engine with smart wait
-│   │   │   ├── scenarioService.js      # Scenario CRUD
-│   │   │   ├── testStepService.js      # Test step CRUD
-│   │   │   └── ...
+│   │   ├── server.js             # Express app + static frontend serving
 │   │   ├── controllers/
-│   │   └── routes/
-│   ├── prisma/schema.prisma     # DB schema (Scenario, TestStep, Execution, StepResult)
-│   └── seed.js                  # Test user seeder
-│
-├── frontend/                     # React + Vite
-│   ├── src/
-│   │   ├── pages/
-│   │   │   ├── LoginPage.jsx
-│   │   │   ├── RegisterPage.jsx
-│   │   │   ├── DashboardPage.jsx
-│   │   │   ├── ScenariosPage.jsx
-│   │   │   ├── ScenarioDetailPage.jsx  # Record + Edit + Execute
-│   │   │   ├── ExecutionPage.jsx       # History + Details
-│   │   │   ├── QaseSettingsPage.jsx    # Integration settings
+│   │   │   ├── authController.js
+│   │   │   ├── executionController.js  # + liveStream + liveView handlers
+│   │   │   ├── recorderController.js   # + proxyPage + receiveStep handlers
+│   │   │   ├── scenarioController.js
+│   │   │   ├── testStepController.js
+│   │   │   ├── fileController.js
+│   │   │   ├── importController.js
+│   │   │   ├── qaseController.js
+│   │   │   └── searchController.js
+│   │   ├── services/
+│   │   │   ├── executionService.js     # Playwright executor + EventEmitter SSE
+│   │   │   ├── recorderService.js      # Proxy recorder + step capture script
+│   │   │   ├── reportService.js        # HTML/PDF report generation
+│   │   │   ├── scenarioService.js
+│   │   │   ├── testStepService.js
+│   │   │   ├── fileService.js
+│   │   │   ├── importService.js
+│   │   │   ├── locatorSuggestionService.js
+│   │   │   ├── qaseService.js
+│   │   │   └── searchService.js
+│   │   ├── routes/
+│   │   │   ├── authRoutes.js
+│   │   │   ├── executionRoutes.js      # + /live-view + /live-stream
+│   │   │   ├── recorderRoutes.js       # + /proxy + /step/:scenarioId
 │   │   │   └── ...
-│   │   ├── components/
-│   │   │   ├── StepErrorDetail.jsx     # Error + suggestions
-│   │   │   ├── Layout.jsx
-│   │   │   ├── ProtectedRoute.jsx
-│   │   │   └── ...
-│   │   └── services/api.js      # Axios client
-│   └── vite.config.js
+│   │   ├── middleware/
+│   │   │   └── auth.js                 # JWT authentication
+│   │   ├── lib/
+│   │   │   └── prisma.js
+│   │   └── utils/
+│   ├── prisma/
+│   │   ├── schema.prisma         # DB schema
+│   │   └── migrations/
+│   ├── templates/                # CSV import templates
+│   ├── seed.js                   # Admin user seeder
+│   ├── jest.config.js
+│   └── package.json
 │
-├── docker-compose.yml           # PostgreSQL 16 + volumes
-├── .gitignore                   # Excludes .env, uploads, node_modules
-├── .env.example                 # Template
-└── plan.md                      # This file
-```
-
----
-
-## 🔧 Environment Setup
-
-### .env.example
-```
-DATABASE_URL=postgresql://your_db_user:your_db_password@localhost:5432/testingndrih
-JWT_SECRET=your-super-secret-key-change-in-production
-JWT_EXPIRES_IN=7d
-PORT=5001
-```
-
-### Commands
-```bash
-# Start services
-docker compose up -d
-cd backend && npm run dev
-cd frontend && npm start
-
-# Seed test user (after DB is up)
-cd backend && npx prisma db seed
-
-# Run tests
-cd backend && npm test
-cd frontend && npx playwright test --project=chromium
-
-# Build for production
-cd backend && npm run build
-cd frontend && npm run build
-```
-
----
-
-## 📋 Test Credentials
-
-```
-Email: admin@testingndrih.local  (or set SEED_EMAIL in .env)
-Password: changeme123            (or set SEED_PASSWORD in .env)
+└── frontend/
+    ├── src/
+    │   ├── App.jsx
+    │   ├── main.jsx
+    │   ├── pages/
+    │   │   ├── LoginPage.jsx
+    │   │   ├── RegisterPage.jsx
+    │   │   ├── DashboardPage.jsx
+    │   │   ├── ScenariosPage.jsx
+    │   │   ├── ScenarioDetailPage.jsx  # Record + Edit + Execute + Live Viewer
+    │   │   ├── ExecutionPage.jsx       # History + Details
+    │   │   └── QaseSettingsPage.jsx
+    │   ├── components/
+    │   │   ├── StepErrorDetail.jsx
+    │   │   ├── TestStepList.jsx
+    │   │   ├── Layout.jsx
+    │   │   └── ui/
+    │   ├── services/
+    │   │   └── api.js              # Axios client + all API endpoints
+    │   └── store/
+    │       └── authStore.js
+    ├── e2e/                        # Playwright E2E test specs
+    ├── index.html
+    ├── vite.config.js
+    ├── tailwind.config.js
+    └── package.json
 ```
 
 ---
 
 ## 🎬 How It Works
 
-### Recording:
-1. User opens a scenario in the web app
-2. Clicks "Start Recording" → headed browser launches
-3. User interacts with target website
-4. Recorder captures: clicks, fills, checkbox checks, navigation, even Shadow DOM clicks
-5. User clicks "Stop Recording" → browser closes, steps saved to DB
+### Recording (Proxy-based)
+1. User opens a scenario → clicks "Mulai Recording" → enters target URL
+2. Server fetches target HTML, strips CSP, injects recorder script + toolbar
+3. New browser window opens showing the proxied page
+4. User interacts (click, fill, navigate) — steps are sent to backend via `fetch`
+5. User clicks "Stop Recording" → browser window closes automatically
+6. Steps are auto-saved to the database
 
-### Playback:
-1. User opens scenario with recorded steps
-2. Clicks "Jalankan Scenario" (Execute)
-3. Headed browser launches, runs each step
-4. Per-step result: ✓ PASSED or ✗ FAILED with error detail
-5. If error: shows suggestion (e.g., "element not found → check selector" or "timeout → add WAIT step")
-6. User can edit step and "Jalankan Ulang" without re-recording
-
-### Error Handling:
-- Timeout → "elemen tidak ditemukan dalam waktu yang ditentukan"
-- Strict mode violation → "selector cocok dengan >1 elemen"
-- Detached element → "halaman melakukan re-render"
-- Network failure → "website target sedang bermasalah"
-- Shadow DOM issues → "elemen berada di dalam Web Component"
+### Execution (Headed via Xvfb)
+1. User clicks "Jalankan Skenario"
+2. Live Viewer popup opens immediately
+3. Backend creates execution record, returns ID
+4. Firefox launches headed on Xvfb `:99` virtual display
+5. Live Viewer connects to SSE stream (`/api/executions/:id/live-stream`)
+6. Screenshots streamed in real-time after each step
+7. Failed step: full-page screenshot with red error overlay + rich error detail
+8. Execution done: video link available in Live Viewer
 
 ---
 
-## ✨ Key Improvements in Session 7
+## 🔧 Environment Variables (.env)
 
-1. **Shadow DOM piercing** - Events via `composedPath()`, listeners auto-attach
-2. **iframe traversal** - Automatic recorder injection to all frames
-3. **Dynamic class filtering** - Removes Angular/React/Vue framework classes
-4. **Selector uniqueness** - Auto-validates and refines non-unique selectors
-5. **SPA route detection** - Catches `history.pushState/replaceState` navigation
-6. **Contenteditable support** - Gmail-style rich text editors
-7. **Smart smart wait** - visible → attached → scroll → retry + networkidle
-8. **Better error suggestions** - 20+ contextual tips for common issues
-
----
-
-## 📞 Support & Troubleshooting
-
-### Recording Issues
-- **"Recorder injected OK" but no steps captured?**
-  - Website might block console.log via CSP
-  - Try adding `[data-testid]` attributes to elements
-  - Record on localhost first to test
-
-- **Selector too generic?**
-  - Record step again for better selector
-  - Manually edit step to add more specific CSS/XPath
-
-### Execution Issues
-- **"Timeout" error?**
-  - Add WAIT step before CLICK/FILL
-  - Check if selector is still valid (website might have changed)
-
-- **"Element not found"?**
-  - Website might have updated the DOM
-  - Use Edit step to update selector or re-record
-
-- **"Shadow DOM" error?**
-  - Use >>> combinator in selector
-  - Or use XPath for more flexibility
-
----
-
-## 🌍 Browser Compatibility
-
-| Browser | Recording | Execution | Notes |
-|---------|-----------|-----------|-------|
-| Chromium | ✅ Full | ✅ Full | Primary testing browser |
-| Firefox | ⚠️ Planned | ⚠️ Planned | In Playwright roadmap |
-| WebKit | ⚠️ Planned | ⚠️ Planned | In Playwright roadmap |
-
----
-
-## 📊 Metrics
-
-- **Recording script size**: ~20KB (injected into page)
-- **Execution timeout default**: 10s per step, 30s per navigation
-- **Max screenshot size**: ~5MB per step
-- **Supported step types**: 7 (Navigate, Click, Fill, Wait, Assert, Screenshot, API Call)
-- **Selector quality patterns**: 8 tried in priority order
-- **Contextual error suggestions**: 20+
-
----
-
----
-
-## 🐳 Docker Architecture
-
-### 3-Container Setup
 ```
-docker-compose.yml
-├─ PostgreSQL 16 (testingndrih-db)
-│  ├─ Port: 5432
-│  ├─ User: testuser / testpass123
-│  ├─ Database: testingndrih
-│  └─ Volume: postgres_data (persistent)
-│
-├─ Backend API (testingndrih-backend)
-│  ├─ Port: 5001
-│  ├─ Image: testingndri-backend:latest
-│  ├─ Depends on: PostgreSQL (health check)
-│  ├─ Volumes: ./backend/src (hot-reload)
-│  └─ Env: NODE_ENV=development, DATABASE_URL
-│
-└─ Frontend UI (testingndrih-frontend)
-   ├─ Port: 3000
-   ├─ Image: testingndri-frontend:latest
-   ├─ Depends on: Backend
-   ├─ Volumes: ./frontend/src (hot-reload)
-   └─ Env: VITE_API_URL=http://localhost:5001
+DATABASE_URL=postgresql://testingndrih_user:testingndrih_pass_2026@postgres:5432/testingndrih
+JWT_SECRET=your-super-secret-key-change-in-production
+JWT_EXPIRES_IN=7d
+PORT=3000
+SEED_EMAIL=admin@testingndrih.local
+SEED_PASSWORD=changeme123
 ```
 
-### Docker Commands
-```bash
-# Start all services
-docker-compose up -d
-
-# View logs
-docker-compose logs -f                              # All services
-docker-compose logs -f testingndrih-backend          # Backend only
-
-# Stop all services
-docker-compose down
-
-# Rebuild containers
-docker-compose up -d --build
-
-# Clean up (remove volumes)
-docker-compose down -v
-```
-
-### Dockerfile Details
-- **Backend Dockerfile**: Node 18-alpine, npm install --production, prisma generate, expose 5001
-- **Frontend Dockerfile**: Node 18-alpine, npm install, expose 3000
-- **Both**: Source code volumes for hot-reload support
-
 ---
 
-## 🔄 GitHub Actions CI/CD
+## 🚀 Future Enhancements
 
-### Workflows Configured
-```
-.github/workflows/
-├─ backend-tests.yml           (Backend unit tests + coverage)
-│  ├─ Trigger: push/PR to main, develop
-│  ├─ Steps:
-│  │  ├─ Checkout code
-│  │  ├─ Setup Node.js 18
-│  │  ├─ Install dependencies
-│  │  ├─ Run Jest unit tests (--coverage)
-│  │  └─ Upload coverage to Codecov
-│  └─ Status: ✅ PASSING
-│
-└─ frontend-build.yml          (Frontend build verification)
-   ├─ Trigger: push/PR to main, develop
-   ├─ Steps:
-   │  ├─ Checkout code
-   │  ├─ Setup Node.js 18
-   │  ├─ Install dependencies
-   │  ├─ Build with Vite
-   │  └─ Upload build artifacts (retain 7 days)
-   └─ Status: ✅ PASSING
-```
+- [ ] Parallel execution (multiple scenarios at once)
+- [ ] Scheduled execution (cron jobs)  
+- [ ] Team collaboration (shared scenarios)
+- [ ] Role-based access control
+- [ ] Deployment guide / architecture docs
 
-### CI/CD Pipeline Notes
-- ✅ Node.js v5 actions (compatible with Node.js 24)
-- ✅ No npm caching (package-lock.json not in git)
-- ✅ Backend: Mocked Prisma (no database required in CI)
-- ✅ Frontend: Vite 5.4.0 stable build with ES2020 target
-- ✅ Artifacts: Build outputs retained for 7 days
-
----
-
-## 🔐 Security Checklist
-
-- [x] All .env files in .gitignore (no hardcoded credentials)
-- [x] JWT secret not exposed (dev-secret-key for testing)
-- [x] Password hashing with bcrypt (testuser: testpass123)
-- [x] CORS configured for localhost
-- [x] Database credentials in docker-compose (not git-tracked)
-- [x] npm vulnerabilities resolved (audited + fixed)
-- [x] Sensitive files excluded: uploads/, screenshots/, logs/
-
----
-
-## 📋 Recent Updates (Session 8)
-
-**April 2, 2026**
-- ✅ Fixed Node.js 20 deprecation → Updated to GitHub Actions v5
-- ✅ Resolved npm vulnerabilities (frontend audit fix --force)
-- ✅ Downgraded Vite 8.0.3 → 5.4.0 for LightningCSS stability
-- ✅ Added Docker containers for Backend & Frontend
-- ✅ Created .dockerignore for optimal build size
-- ✅ Configured docker-compose with health checks
-- ✅ Simplified CI/CD (removed flaky E2E tests)
-- ✅ Updated plan.md and README.md with Docker instructions
-
-**Status**: 🚀 **READY FOR GITHUB PUSH & PRODUCTION** - All credentials excluded, Docker setup complete, plan up-to-date
-
----

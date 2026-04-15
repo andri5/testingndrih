@@ -1,4 +1,4 @@
-import { chromium } from 'playwright'
+import { firefox } from 'playwright'
 import { prisma } from '../lib/prisma.js'
 
 /**
@@ -169,7 +169,7 @@ export const reportService = {
   async buildPdf(htmlContent) {
     let browser
     try {
-      browser = await chromium.launch({ headless: true })
+      browser = await firefox.launch({ headless: true })
       const page = await browser.newPage()
       await page.setContent(htmlContent, { waitUntil: 'networkidle' })
       const pdfBuffer = await page.pdf({

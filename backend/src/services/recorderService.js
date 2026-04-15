@@ -1,4 +1,3 @@
-import { chromium } from 'playwright'
 import { prisma } from '../lib/prisma.js'
 
 /**
@@ -18,15 +17,40 @@ function sessionKey(userId, scenarioId) {
  * Supports: Shadow DOM, iframes, contenteditable, SPA navigation,
  *           dynamic class filtering, selector uniqueness validation.
  */
-export function getRecorderScript() {
+export function getRecorderScript(sessionId = null) {
+  const sendStepFn = sessionId !== null
+    ? `  var __SESSION_ID = ${JSON.stringify(String(sessionId))};
+  var __nativeFetch = window.__nativeFetch || window.fetch.bind(window);
+  var __recOrigin = window.__recOrigin || window.location.origin;
+  function __showRecErr(msg) {
+    var el = document.getElementById('__rec_status');
+    if (el) { el.textContent = '\u26a0 ' + msg; el.style.background = '#b91c1c'; }
+  }
+  function sendStep(step) {
+    var token = localStorage.getItem('authToken');
+    if (!token) { __showRecErr('authToken tidak ditemukan — pastikan sudah login'); return; }
+    __nativeFetch(__recOrigin + '/api/recorder/step/' + __SESSION_ID, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify(step)
+    }).then(function(r) {
+      if (!r.ok) { __showRecErr('Step gagal: HTTP ' + r.status); }
+      else {
+        var el = document.getElementById('__rec_count');
+        if (el) el.dataset.n = (parseInt(el.dataset.n||'0') + 1) + '';
+        if (el) el.textContent = el.dataset.n + ' step' + (el.dataset.n !== '1' ? 's' : '');
+      }
+    }).catch(function(e) { __showRecErr('Fetch error: ' + e.message); });
+  }`
+    : `  function sendStep(step) {
+    try { console.log('__REC__' + JSON.stringify(step)); } catch(e) {}
+  }`
   return `
 (function() {
   if (window.__recorderInjected) return;
   window.__recorderInjected = true;
 
-  function sendStep(step) {
-    try { console.log('__REC__' + JSON.stringify(step)); } catch(e) {}
-  }
+` + sendStepFn + `
 
   /* ══════════════════════════════════════════════════
    * DYNAMIC CLASS FILTER — strips framework-generated classes
@@ -551,6 +575,7 @@ export function getRecorderScript() {
   if (document.body) { initOverlay(); }
   else if (document.addEventListener) { document.addEventListener('DOMContentLoaded', initOverlay); }
 
+  window.__recSendStep = sendStep;
   console.log('[testingndrih] Recorder injected OK');
 })();
 `
@@ -558,19 +583,18 @@ export function getRecorderScript() {
 
 export const recorderService = {
   /**
-   * Start a recording session: Launch headed Chromium, navigate to URL,
-   * inject recorder script, capture user interactions.
+   * Start a recording session: creates a proxy session and returns the proxy URL.
+   * The frontend opens the proxy URL in a new window — the user's own browser is used.
    */
   async startRecording(userId, scenarioId, startUrl) {
     const key = sessionKey(userId, scenarioId)
 
-    // Check if already recording
+    // Clean up stale session
     if (sessions.has(key)) {
       const existing = sessions.get(key)
-      if (existing.browser?.isConnected()) {
+      if (existing.status === 'recording') {
         throw new Error('Recording sudah berjalan untuk skenario ini')
       }
-      // Stale session, clean it up
       sessions.delete(key)
     }
 
@@ -580,181 +604,49 @@ export const recorderService = {
     })
     if (!scenario) throw new Error('Scenario tidak ditemukan')
 
-    const url = startUrl || scenario.url || 'about:blank'
-
-    // Use headless in Docker/CI (no display), headed locally so user can see and interact
-    const isHeadless = process.env.HEADLESS === 'true' || (!process.env.DISPLAY && process.platform === 'linux')
-    const browser = await chromium.launch({
-      headless: isHeadless,
-      args: ['--start-maximized', '--no-sandbox'],
-      ...(process.env.PLAYWRIGHT_CHROMIUM_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_PATH } : {})
-    })
-
-    const context = await browser.newContext({
-      viewport: null, // full window
-      ignoreHTTPSErrors: true
-    })
-    const page = await context.newPage()
+    const url = startUrl || scenario.url || ''
+    if (!url) throw new Error('URL target diperlukan untuk recording')
 
     const session = {
-      browser,
-      context,
-      page,
       steps: [],
-      status: 'recording',   // recording | paused | stopped
+      status: 'recording',
       startedAt: new Date(),
       scenarioId,
       userId,
       startUrl: url
     }
 
-    // Expose function so injected JS can send steps back to Node
-    // Use BOTH exposeFunction AND console.log listener for maximum compatibility
-    let exposeWorking = false
-    try {
-      await page.exposeFunction('__recordStep', (step) => {
-        if (session.status !== 'recording') return
-        session.steps.push({ ...step, stepNumber: session.steps.length + 1 })
-      })
-      exposeWorking = true
-    } catch { /* some contexts don't support exposeFunction */ }
-
-    // PRIMARY communication: listen for console.log messages from injected script
-    // This works even when exposeFunction fails (CSP, cross-origin, etc.)
-    // Listen on ALL frames (main + iframes)
-    const handleConsoleMsg = (msg) => {
-      if (session.status !== 'recording') return
-      const text = msg.text()
-      if (!text.startsWith('__REC__')) return
-      try {
-        const step = JSON.parse(text.slice(7))
-        session.steps.push({ ...step, stepNumber: session.steps.length + 1 })
-      } catch { /* ignore parse errors */ }
-    }
-    page.on('console', handleConsoleMsg)
-
-    // Inject recorder script — use addInitScript for initial load (all frames)
-    await context.addInitScript(getRecorderScript())
-
-    // ALSO re-inject on every navigation via evaluate (redundant but reliable)
-    const injectScript = async (targetPage) => {
-      try {
-        if (session.status === 'stopped') return
-        await targetPage.evaluate(getRecorderScript())
-      } catch { /* page might not be ready or detached */ }
-      // Also inject into all current iframes
-      try {
-        if (session.status === 'stopped') return
-        const frames = targetPage.frames()
-        for (const frame of frames) {
-          if (frame === targetPage.mainFrame()) continue
-          try { await frame.evaluate(getRecorderScript()) } catch { /* cross-origin iframes may block this */ }
-        }
-      } catch { /* frames iteration might fail */ }
-    }
-
-    page.on('load', () => {
-      setTimeout(() => injectScript(page).catch(() => {}), 300)
-    })
-    page.on('domcontentloaded', () => {
-      setTimeout(() => injectScript(page).catch(() => {}), 100)
-    })
-
-    // Listen for new iframes appearing and inject recorder into them
-    page.on('frameattached', (frame) => {
-      frame.waitForLoadState('domcontentloaded').then(async () => {
-        try { await frame.evaluate(getRecorderScript()) } catch { /* may be cross-origin or detached */ }
-      }).catch(() => {})
-    })
-
-    // Track navigations as NAVIGATE steps — only real page navigations, not SPA route changes
-    let lastNavUrl = url
-    let lastNavTime = Date.now()
-    let navDebounceTimer = null
-
-    page.on('framenavigated', (frame) => {
-      if (frame !== page.mainFrame()) return
-      if (session.status !== 'recording') return
-      const navUrl = frame.url()
-      if (!navUrl || navUrl === 'about:blank' || navUrl.startsWith('data:')) return
-
-      // Skip if same URL (or only hash/query changed)
-      try {
-        const prev = new URL(lastNavUrl)
-        const curr = new URL(navUrl)
-        // Same origin + pathname = SPA route or hash change, skip
-        if (prev.origin === curr.origin && prev.pathname === curr.pathname) return
-      } catch { /* invalid URL, let it through */ }
-
-      // Skip if same URL as last navigate step
-      const lastStep = session.steps[session.steps.length - 1]
-      if (lastStep && lastStep.type === 'NAVIGATE' && lastStep.value === navUrl) return
-
-      // Skip if a CLICK happened less than 1 second ago (the click caused this navigation)
-      const now = Date.now()
-      const recentClick = session.steps.filter(s => s.type === 'CLICK' && (now - s.timestamp) < 1000)
-      if (recentClick.length > 0) {
-        lastNavUrl = navUrl
-        return
-      }
-
-      // Debounce rapid navigations (redirects chain)
-      if (navDebounceTimer) clearTimeout(navDebounceTimer)
-      navDebounceTimer = setTimeout(() => {
-        try {
-          if (session.status === 'stopped') return
-          // Re-check: get the actual current URL after debounce
-          const currentUrl = frame.url()
-          if (!currentUrl || currentUrl === 'about:blank') return
-          const lastStepNow = session.steps[session.steps.length - 1]
-          if (lastStepNow && lastStepNow.type === 'NAVIGATE' && lastStepNow.value === currentUrl) return
-
-          session.steps.push({
-            type: 'NAVIGATE',
-            selector: '',
-            value: currentUrl,
-            description: 'Navigate to ' + currentUrl,
-            tagName: '',
-            timestamp: Date.now(),
-            stepNumber: session.steps.length + 1
-          })
-          lastNavUrl = currentUrl
-        } catch { /* frame may be detached */ }
-      }, 500)
-    })
-
-    // When browser is closed manually by user, clean up session
-    browser.on('disconnected', () => {
-      session.status = 'stopped'
-      // Clean up session from map after browser disconnects
-      sessions.delete(key)
-    })
-
-    // Handle page crash / close gracefully
-    page.on('crash', () => {
-      console.error('Page crashed during recording')
-      session.status = 'stopped'
-    })
-    page.on('close', () => {
-      session.status = 'stopped'
-    })
-
     sessions.set(key, session)
 
-    // Navigate to start URL
-    try {
-      await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 })
-    } catch (err) {
-      // Don't fail the whole recording if initial nav fails (e.g. firewall)
-      console.error('Initial navigation warning:', err.message)
-    }
+    // Return proxy URL — frontend opens this in a new window
+    const proxyUrl = `/api/recorder/proxy?url=${encodeURIComponent(url)}&sessionId=${encodeURIComponent(scenarioId)}`
 
     return {
       status: 'recording',
       startUrl: url,
       scenarioId,
-      message: 'Browser terbuka — silakan berinteraksi dengan halaman. Steps akan tercatat otomatis.'
+      proxyUrl,
+      message: 'Membuka browser untuk recording...'
     }
+  },
+
+  /**
+   * Receive a step from the client-side recorder script running in the proxy page
+   */
+  addStep(userId, scenarioId, step) {
+    const key = sessionKey(userId, scenarioId)
+    const session = sessions.get(key)
+    if (!session) {
+      console.warn(`[RECORDER] No session found for key ${key}. Active sessions: [${[...sessions.keys()].join(', ')}]`)
+      return false
+    }
+    if (session.status !== 'recording') {
+      console.warn(`[RECORDER] Session ${key} has status=${session.status}, cannot add step`)
+      return false
+    }
+    session.steps.push({ ...step, stepNumber: session.steps.length + 1 })
+    console.log(`[RECORDER] Step added to ${key}: ${step.type} (total: ${session.steps.length})`)
+    return true
   },
 
   /**
@@ -778,7 +670,7 @@ export const recorderService = {
   },
 
   /**
-   * Stop recording: close browser, return recorded steps
+   * Stop recording: mark session stopped and return recorded steps
    */
   async stopRecording(userId, scenarioId) {
     const key = sessionKey(userId, scenarioId)
@@ -789,18 +681,6 @@ export const recorderService = {
     }
 
     session.status = 'stopped'
-
-    // Take a final screenshot before closing
-    let finalScreenshot = null
-    try {
-      if (session.browser.isConnected()) {
-        finalScreenshot = await session.page.screenshot({ type: 'png' }).catch(() => null)
-        await session.browser.close().catch(() => {})
-      }
-    } catch {
-      // Browser might already be closed
-    }
-
     const steps = [...session.steps]
     sessions.delete(key)
 

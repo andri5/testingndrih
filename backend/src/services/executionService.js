@@ -1,8 +1,16 @@
-import { chromium } from 'playwright'
+import { firefox } from 'playwright'
 import { prisma } from '../lib/prisma.js'
 import fs from 'fs'
 import path from 'path'
+import { EventEmitter } from 'events'
 import { suggestAlternativeLocators } from './locatorSuggestionService.js'
+
+/**
+ * Event bus for live execution streaming (SSE)
+ * Events: 'step-start', 'step-done', 'execution-done'
+ */
+export const executionEvents = new EventEmitter()
+executionEvents.setMaxListeners(50)
 
 /**
  * Comprehensive execution service using Playwright
@@ -35,7 +43,7 @@ export const executionService = {
         scenarioId,
         status: 'RUNNING',
         totalSteps: scenario.testSteps.length,
-        browser: options.browser || 'chromium',
+        browser: options.browser || 'firefox',
         headless: options.headless ?? false,
         startTime: new Date()
       },
@@ -47,21 +55,21 @@ export const executionService = {
     let page = null
 
     try {
-      // Use headless in Docker/CI (no display), headed locally so user can watch
-      // Options override: headless=true forces headless, headless=false forces headed
-      const isCI = process.env.HEADLESS === 'true' || (!process.env.DISPLAY && process.platform === 'linux')
-      const useHeadless = options.headless === true ? true : (options.headless === false ? isCI : isCI)
+      // Headed mode: we have Xvfb virtual display in Docker, so always run headed
+      // This produces better video recordings and more realistic test execution
+      const useHeadless = options.headless === true
+      const slowMo = options.slowMo ?? (useHeadless ? 0 : 300)
 
-      // Browser selection: chromium (default), firefox, webkit
+      // Browser selection: firefox (default), chromium, webkit
       const { chromium: chromiumBrowser, firefox, webkit } = await import('playwright')
       const browserEngines = { chromium: chromiumBrowser, firefox, webkit }
-      const selectedBrowserName = options.browser && browserEngines[options.browser] ? options.browser : 'chromium'
+      const selectedBrowserName = options.browser && browserEngines[options.browser] ? options.browser : 'firefox'
       const browserEngine = browserEngines[selectedBrowserName]
 
       browser = await browserEngine.launch({
         headless: useHeadless,
         args: selectedBrowserName === 'chromium' ? ['--start-maximized', '--no-sandbox'] : [],
-        slowMo: useHeadless ? 0 : 400
+        slowMo
       })
 
       // Video recording setup
@@ -128,6 +136,16 @@ export const executionService = {
         const stepStartTime = Date.now()
         let stepStatus = 'PASSED'
         let errorMessage = null
+
+        // Emit step-start event for live viewer
+        executionEvents.emit(`exec:${execution.id}`, {
+          event: 'step-start',
+          stepNumber: step.stepNumber,
+          totalSteps: scenario.testSteps.length,
+          type: step.type,
+          description: step.description,
+          selector: step.selector
+        })
 
         // Clear per-step diagnostics
         pageErrors.length = 0
@@ -280,7 +298,29 @@ export const executionService = {
             }
             const filename = `exec-${execution.id}-step-${step.stepNumber}.png`
             const filepath = path.join(screenshotDir, filename)
-            await page.screenshot({ path: filepath, fullPage: false })
+
+            // Jika step gagal, ambil fullPage screenshot untuk lebih banyak konteks
+            if (stepStatus === 'FAILED') {
+              // Inject error overlay pada halaman sebelum screenshot
+              try {
+                const errMsg = errorMessage ? JSON.parse(errorMessage).message : 'Unknown error'
+                await page.evaluate((info) => {
+                  const ov = document.createElement('div')
+                  ov.id = '__err_overlay'
+                  ov.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:2147483647;background:rgba(220,38,38,0.95);color:white;font:13px/1.4 sans-serif;padding:12px 16px;box-shadow:0 -2px 8px rgba(0,0,0,0.3)'
+                  ov.innerHTML = '<b>❌ Step ' + info.stepNum + ' FAILED:</b> ' + info.type + ' — ' + info.errMsg.substring(0, 200)
+                  + (info.selector ? '<br><b>Selector:</b> ' + info.selector : '')
+                  document.body.appendChild(ov)
+                }, { stepNum: step.stepNumber, type: step.type, errMsg: errMsg, selector: step.selector || '' })
+              } catch { /* ignore overlay injection errors */ }
+
+              await page.screenshot({ path: filepath, fullPage: true })
+
+              // Hapus overlay setelah screenshot
+              try { await page.evaluate(() => { const el = document.getElementById('__err_overlay'); if (el) el.remove() }) } catch {}
+            } else {
+              await page.screenshot({ path: filepath, fullPage: false })
+            }
 
             await prisma.screenshot.create({
               data: {
@@ -293,6 +333,21 @@ export const executionService = {
             console.error(`Screenshot capture failed for step ${step.stepNumber}:`, screenshotErr.message)
           }
         }
+
+        // Emit step-done event for live viewer
+        executionEvents.emit(`exec:${execution.id}`, {
+          event: 'step-done',
+          stepNumber: step.stepNumber,
+          totalSteps: scenario.testSteps.length,
+          status: stepStatus,
+          type: step.type,
+          description: step.description,
+          duration: Date.now() - stepStartTime,
+          screenshotUrl: `/api/screenshots/exec-${execution.id}-step-${step.stepNumber}.png`,
+          errorMessage: stepStatus === 'FAILED' ? (errorMessage || null) : null,
+          passedSteps,
+          failedSteps
+        })
 
         // Stop execution if step failed
         if (stepStatus === 'FAILED') {
@@ -333,6 +388,17 @@ export const executionService = {
         }
       })
 
+      // Emit execution-done event for live viewer
+      executionEvents.emit(`exec:${execution.id}`, {
+        event: 'execution-done',
+        status: failedSteps > 0 ? 'FAILED' : 'PASSED',
+        passedSteps,
+        failedSteps,
+        totalSteps: scenario.testSteps.length,
+        duration,
+        videoPath
+      })
+
       return {
         execution: {
           id: execution.id,
@@ -347,6 +413,13 @@ export const executionService = {
         }
       }
     } catch (error) {
+      // Emit execution-error event
+      executionEvents.emit(`exec:${execution.id}`, {
+        event: 'execution-done',
+        status: 'FAILED',
+        errorMessage: error.message
+      })
+
       // Mark execution as failed
       await prisma.execution.update({
         where: { id: execution.id },
@@ -767,7 +840,7 @@ export const executionService = {
 
   /**
    * Execute a MOCK_ROUTE step: intercept network requests matching a URL glob/regex.
-   * step.value    = URL glob pattern (e.g. "**/api/users*")
+   * step.value    = URL glob pattern (e.g. "**\/api\/users*")
    * step.metadata = JSON string with override options:
    *   { status, body, contentType, headers, passthrough }
    *   passthrough:true → forward to real server unchanged

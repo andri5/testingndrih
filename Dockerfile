@@ -18,22 +18,24 @@ RUN npm run build
 FROM node:20-bookworm-slim
 WORKDIR /app
 
-# System deps: openssl (Prisma) + ca-certificates (HTTPS requests from Playwright)
+# System deps: openssl (Prisma) + ca-certificates (HTTPS) + xvfb (virtual display for headed browser)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     openssl \
     ca-certificates \
+    xvfb \
     && rm -rf /var/lib/apt/lists/*
 
 # Install backend dependencies
 COPY backend/package*.json ./
 RUN npm install
 
-# Install Playwright + Chromium (used by the test execution engine)
-RUN npx playwright install --with-deps chromium
+# Install Playwright + Firefox (used by the test execution engine)
+RUN npx playwright install --with-deps firefox
 
 # Copy backend source & database schema
 COPY backend/src ./src
 COPY backend/prisma ./prisma
+COPY backend/seed.js ./seed.js
 
 # Copy built React frontend → Express serves it as static files
 COPY --from=frontend-builder /build/dist ./public
@@ -43,5 +45,5 @@ RUN npx prisma generate
 
 EXPOSE 3000
 
-# On container start: run any pending DB migrations, then launch the server
-CMD ["sh", "-c", "npx prisma migrate deploy && node src/server.js"]
+# On container start: start virtual display, run migrations, then launch server
+CMD ["sh", "-c", "Xvfb :99 -screen 0 1280x720x24 -nolisten tcp &  export DISPLAY=:99 && npx prisma migrate deploy && node src/server.js"]

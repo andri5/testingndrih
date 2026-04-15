@@ -56,6 +56,7 @@ export default function ScenarioDetailPage() {
   const [isSavingRecording, setIsSavingRecording] = useState(false)
   const [showRecordingPanel, setShowRecordingPanel] = useState(false)
   const pollingRef = useRef(null)
+  const recorderWindowRef = useRef(null)
   const stepFormRef = useRef(null)
 
   // Checkbox selection state
@@ -267,6 +268,12 @@ export default function ScenarioDetailPage() {
 
     if (!window.confirm(`Jalankan skenario "${scenario.name}"?`)) return
 
+    // Buka window live viewer SEBELUM await untuk menghindari popup blocker
+    const liveWindow = window.open('', '_blank', 'width=1280,height=800,menubar=no,toolbar=no,scrollbars=yes,resizable=yes')
+    if (liveWindow) {
+      liveWindow.document.write('<html><body style="font-family:sans-serif;padding:40px;background:#0f172a;color:#e2e8f0"><p>Memulai eksekusi, mohon tunggu...</p></body></html>')
+    }
+
     setIsExecuting(true)
     setExecutionResult(null)
     setCurrentStepIndex(null)
@@ -276,7 +283,12 @@ export default function ScenarioDetailPage() {
       const res = await executionAPI.executeScenario(id)
       const execution = res.data.execution
 
-      // Poll execution details to track progress
+      // Redirect live viewer ke halaman live-view
+      if (res.data.liveViewUrl && liveWindow && !liveWindow.closed) {
+        liveWindow.location.href = res.data.liveViewUrl
+      }
+
+      // Poll execution details to track progress in main page
       const pollExecution = async () => {
         try {
           const detailRes = await executionAPI.getDetails(execution.id)
@@ -333,6 +345,9 @@ export default function ScenarioDetailPage() {
       }
 
       setError(errMsg)
+
+      // Tutup live window jika ada error
+      if (liveWindow && !liveWindow.closed) liveWindow.close()
 
       // If backend returned execution details on failure, show them
       if (errData?.execution) {
@@ -412,16 +427,34 @@ export default function ScenarioDetailPage() {
       setError('Masukkan URL target untuk recording')
       return
     }
+
+    // Buka window SEBELUM await — browser menolak window.open setelah async gap
+    const recorderWindow = window.open('', '_blank', 'width=1280,height=800,menubar=yes,toolbar=yes,scrollbars=yes,resizable=yes')
+    recorderWindowRef.current = recorderWindow
+    if (recorderWindow) {
+      recorderWindow.document.write('<html><body style="font-family:sans-serif;padding:40px;background:#f9fafb"><p style="color:#4b5563">Menyiapkan recorder, mohon tunggu...</p></body></html>')
+    }
+
     setIsStartingRecording(true)
     setError(null)
     try {
-      await recorderAPI.start(id, url)
+      const res = await recorderAPI.start(id, url)
       setIsRecording(true)
       setRecordingSteps([])
       setShowRecordingPanel(true)
-      showSuccess('Recording dimulai — browser Chromium terbuka. Silakan berinteraksi dengan halaman.')
+      if (res.data.proxyUrl) {
+        if (recorderWindowRef.current && !recorderWindowRef.current.closed) {
+          recorderWindowRef.current.location.href = res.data.proxyUrl
+        } else {
+          // Fallback jika window tertutup atau diblokir
+          recorderWindowRef.current = window.open(res.data.proxyUrl, '_blank', 'width=1280,height=800,menubar=yes,toolbar=yes,scrollbars=yes,resizable=yes')
+        }
+      }
+      showSuccess('Browser rekaman terbuka. Silakan berinteraksi dengan halaman.')
       startPollingSteps()
     } catch (err) {
+      if (recorderWindowRef.current && !recorderWindowRef.current.closed) recorderWindowRef.current.close()
+      recorderWindowRef.current = null
       setError(err.response?.data?.error || 'Gagal memulai recording')
     } finally {
       setIsStartingRecording(false)
@@ -431,11 +464,34 @@ export default function ScenarioDetailPage() {
   const handleStopRecording = async () => {
     setIsStoppingRecording(true)
     try {
+      // Tutup browser recorder
+      if (recorderWindowRef.current && !recorderWindowRef.current.closed) {
+        recorderWindowRef.current.close()
+      }
+      recorderWindowRef.current = null
+
       const res = await recorderAPI.stop(id)
-      setRecordingSteps(res.data.steps || [])
+      const stoppedSteps = res.data.steps || []
+      setRecordingSteps(stoppedSteps)
       setIsRecording(false)
       stopPolling()
-      showSuccess(res.data.message || 'Recording selesai')
+
+      // Auto-save steps ke database jika ada
+      if (stoppedSteps.length > 0) {
+        try {
+          const saveRes = await recorderAPI.save(id, stoppedSteps)
+          showSuccess(saveRes.data.message || `${stoppedSteps.length} steps berhasil direkam dan disimpan`)
+          setRecordingSteps([])
+          setShowRecordingPanel(false)
+          await loadSteps() // Refresh daftar steps
+        } catch (saveErr) {
+          // Jika gagal save, tampilkan steps untuk manual save
+          setError(`Recording selesai (${stoppedSteps.length} steps), tapi gagal auto-save: ${saveErr.response?.data?.error || saveErr.message}. Klik "Simpan" untuk coba lagi.`)
+        }
+      } else {
+        showSuccess('Recording selesai — tidak ada steps yang tercatat')
+        setShowRecordingPanel(false)
+      }
     } catch (err) {
       setError(err.response?.data?.error || 'Gagal menghentikan recording')
     } finally {
