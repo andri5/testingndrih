@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+﻿import { test, expect } from '@playwright/test'
 
 test.describe('E2E Tests with Mocked Auth', () => {
   // Mock token for testing

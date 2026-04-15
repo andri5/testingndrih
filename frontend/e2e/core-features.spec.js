@@ -2,8 +2,8 @@ import { test, expect } from '@playwright/test'
 
 test.describe('NDRI Application E2E Tests - Core Features', () => {
   const testUser = {
-    email: 'donkditren@gmail.com',
-    password: 'password*1'
+    email: process.env.TEST_EMAIL || 'admin@testingndrih.local',
+    password: process.env.TEST_PASSWORD || 'changeme123'
   }
 
   let authToken
@@ -30,7 +30,7 @@ test.describe('NDRI Application E2E Tests - Core Features', () => {
     if (authToken) {
       await page.addInitScript((token) => {
         localStorage.setItem('authToken', token)
-        localStorage.setItem('user', JSON.stringify({ email: 'donkditren@gmail.com', name: 'donkdi' }))
+        localStorage.setItem('user', JSON.stringify({ email: process.env.TEST_EMAIL || 'admin@testingndrih.local', name: 'Admin User' }))
       }, authToken)
     }
   })
@@ -226,7 +226,7 @@ test.describe('NDRI Application E2E Tests - Core Features', () => {
     console.log('  8. ✅ Page Navigation')
     console.log('  9. ✅ Auth Token Management')
     console.log('\n📋 TEST USER:')
-    console.log('  Email: donkditren@gmail.com')
+    console.log('  Email: ' + (process.env.TEST_EMAIL || 'admin@testingndrih.local'))
     console.log('  Password: password*1')
     console.log('  Status: ✅ Verified & Working')
     console.log('\n🔧 SERVERS:')

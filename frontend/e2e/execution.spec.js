@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+﻿import { test, expect } from '@playwright/test'
 
 test.describe('Test Execution E2E Tests', () => {
   let email, password, authToken, scenarioId
@@ -7,8 +7,8 @@ test.describe('Test Execution E2E Tests', () => {
     test.setTimeout(120000)
     
     // Use existing test user
-    email = 'donkditren@gmail.com'
-    password = 'password*1'
+    email = process.env.TEST_EMAIL || 'admin@testingndrih.local'
+    password = process.env.TEST_PASSWORD || 'changeme123'
 
     const context = await browser.newContext()
     const page = await context.newPage()

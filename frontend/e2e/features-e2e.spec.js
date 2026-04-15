@@ -1,11 +1,11 @@
-import { test, expect } from '@playwright/test'
+﻿import { test, expect } from '@playwright/test'
 
 test.describe.serial('Complete Feature E2E Testing', () => {
   const BASE_URL = 'http://localhost:3000'  // Vite dev server port
   
   const testUser = {
-    email: 'donkditren@gmail.com',
-    password: 'password*1'
+    email: process.env.TEST_EMAIL || 'admin@testingndrih.local',
+    password: process.env.TEST_PASSWORD || 'changeme123'
   }
   
   let authToken
@@ -47,7 +47,7 @@ test.describe.serial('Complete Feature E2E Testing', () => {
     if (authToken) {
       await page.addInitScript((token) => {
         localStorage.setItem('authToken', token)
-        localStorage.setItem('user', JSON.stringify({ email: 'donkditren@gmail.com', name: 'donkdi' }))
+        localStorage.setItem('user', JSON.stringify({ email: process.env.TEST_EMAIL || 'admin@testingndrih.local', name: 'Admin User' }))
       }, authToken)
     }
   })

@@ -45,8 +45,8 @@ router.post('/register', registerUser)
  *             type: object
  *             required: [email, password]
  *             properties:
- *               email: { type: string, format: email, example: donkditren@gmail.com }
- *               password: { type: string, example: 'password*1' }
+ *               email: { type: string, format: email, example: admin@testingndrih.local }
+ *               password: { type: string, example: 'your-password' }
  *     responses:
  *       200:
  *         description: Login successful — returns JWT token

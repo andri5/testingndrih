@@ -4,6 +4,7 @@ import helmet from 'helmet'
 import rateLimit from 'express-rate-limit'
 import dotenv from 'dotenv'
 import path from 'path'
+import fs from 'fs'
 import { fileURLToPath } from 'url'
 import swaggerUi from 'swagger-ui-express'
 import authRoutes from './routes/authRoutes.js'
@@ -89,6 +90,19 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 app.use('/api/screenshots', express.static(path.resolve(__dirname, '../uploads/screenshots')))
 app.use('/api/videos', express.static(path.resolve(__dirname, '../uploads/videos')))
+
+// ── Combined-mode: serve built React frontend (Docker) ─────────────────────
+// When the container includes a /app/public/index.html (built frontend),
+// Express serves the React SPA at / so frontend + backend share one port.
+const publicDir = path.resolve(__dirname, '../public')
+if (fs.existsSync(publicDir)) {
+  app.use(express.static(publicDir))
+  // SPA fallback — all non-API GET requests return index.html (for React Router)
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api/')) return next()
+    res.sendFile(path.join(publicDir, 'index.html'))
+  })
+}
 
 // 404 handler
 app.use((req, res) => {

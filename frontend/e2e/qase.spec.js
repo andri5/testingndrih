@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+﻿import { test, expect } from '@playwright/test'
 
 test.describe('Qase Integration E2E Tests', () => {
   let authToken
@@ -26,7 +26,7 @@ test.describe('Qase Integration E2E Tests', () => {
         // Fallback: use known test user
         const loginResponse = await page.request.post('http://localhost:5001/api/auth/login', {
           headers: { 'Content-Type': 'application/json' },
-          data: { email: 'donkditren@gmail.com', password: 'password*1' }
+          data: { email: process.env.TEST_EMAIL || 'admin@testingndrih.local', password: process.env.TEST_PASSWORD || 'changeme123' }
         })
         if (loginResponse.ok()) {
           const data = await loginResponse.json()

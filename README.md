@@ -130,13 +130,14 @@ Overall Feature Completeness: **~90%** (Production-ready with Docker & CI/CD)
 git clone https://github.com/andri5/testingndrih.git
 cd testingndrih
 
-# Start all 3 containers (Backend, Frontend, PostgreSQL)
+# Copy .env.example → .env and fill in your DB credentials + JWT secret
+cp .env.example .env
+
+# Start both services (PostgreSQL + combined app)
 docker-compose up -d
 
-# Access the application
-# Frontend:  http://localhost:3000
-# Backend:   http://localhost:5001
-# Database:  localhost:5432
+# Access the application (frontend + API on ONE port):
+# http://localhost:3000
 
 # View logs
 docker-compose logs -f
@@ -145,9 +146,9 @@ docker-compose logs -f
 docker-compose down
 ```
 
-**Default Credentials:**
-- Email: `donkditren@gmail.com`
-- Password: `password*1`
+**Default Credentials** *(created by `npm run db:seed`)*:
+- Email: `admin@testingndrih.local` *(customize via `SEED_EMAIL` in .env)*
+- Password: `changeme123` *(customize via `SEED_PASSWORD` in .env)*
 
 ---
 
@@ -240,24 +241,24 @@ testingndrih/
 ### Database Setup (Docker)
 ```yaml
 PostgreSQL 16:
-  User: testuser
-  Password: testpass123
+  User: <DB_USER from .env>
+  Password: <DB_PASSWORD from .env>
   Database: testingndrih
   Port: 5432
 ```
 
 ### Environment Variables
-Create `.env` in project root (auto-created from defaults):
+Create `.env` in project root by copying `.env.example`:
 ```
 # Database (docker-compose uses these)
-DB_USER=testuser
-DB_PASSWORD=testpass123
+DB_USER=your_db_user
+DB_PASSWORD=your_db_password
 DB_NAME=testingndrih
 DB_PORT=5432
-DATABASE_URL=postgresql://testuser:testpass123@postgres:5432/testingndrih
+DATABASE_URL=postgresql://your_db_user:your_db_password@postgres:5432/testingndrih
 
 # JWT
-JWT_SECRET=dev-secret-key-change-in-production
+JWT_SECRET=change-me-to-a-long-random-secret-at-least-32-chars
 JWT_EXPIRES_IN=7d
 
 # Application
@@ -375,9 +376,9 @@ MIT License - See LICENSE file for details
    npm start
    ```
 
-5. **Login with test credentials**
-   - Email: `donkditren@gmail.com`
-   - Password: `password*1`
+5. **Login with seed credentials**
+   - Email: `admin@testingndrih.local`
+   - Password: `changeme123`
 
 ### Your First Test
 1. Navigate to **Scenarios** page
@@ -669,7 +670,7 @@ npx playwright show-report     # View HTML report
 ### Backend Setup
 Create `backend/.env`:
 ```env
-DATABASE_URL="postgresql://testuser:testpass@localhost:5432/testingndrih"
+DATABASE_URL="postgresql://your_db_user:your_db_password@localhost:5432/testingndrih"
 JWT_SECRET="your-secret-key-here"
 JWT_EXPIRES_IN="7d"
 NODE_ENV="development"
@@ -687,8 +688,8 @@ VITE_APP_NAME="TestingNDRIH"
 Copy `./env.example`:
 ```env
 # Database
-POSTGRES_USER=testuser
-POSTGRES_PASSWORD=testpass
+POSTGRES_USER=your_db_user
+POSTGRES_PASSWORD=your_db_password
 POSTGRES_DB=testingndrih
 DATABASE_PORT=5432
 ```

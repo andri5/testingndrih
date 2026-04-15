@@ -1,10 +1,10 @@
-import { test, expect } from '@playwright/test'
+﻿import { test, expect } from '@playwright/test'
 
 test.describe.serial('Authentication E2E Tests', () => {
   // Test account - using pre-existing user for reliable testing
   const testUser = {
-    email: 'donkditren@gmail.com',
-    password: 'password*1'
+    email: process.env.TEST_EMAIL || 'admin@testingndrih.local',
+    password: process.env.TEST_PASSWORD || 'changeme123'
   }
   
   let authToken = null

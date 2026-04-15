@@ -152,23 +152,27 @@ async function main() {
   try {
     console.log('🌱 Starting database seed...')
 
+    // Seed user — configure via SEED_EMAIL / SEED_PASSWORD env vars
+    const seedEmail = process.env.SEED_EMAIL || 'admin@testingndrih.local'
+    const seedPassword = process.env.SEED_PASSWORD || 'changeme123'
+
     // ── 1. Create or find test user ──────────────────────
     let user = await prisma.user.findUnique({
-      where: { email: 'donkditren@gmail.com' }
+      where: { email: seedEmail }
     })
 
     if (!user) {
-      const hashedPassword = await hashPassword('password*1')
+      const hashedPassword = await hashPassword(seedPassword)
       user = await prisma.user.create({
         data: {
-          email: 'donkditren@gmail.com',
+          email: seedEmail,
           password: hashedPassword,
-          name: 'Test User'
+          name: 'Admin User'
         }
       })
-      console.log('✅ Test user created:', user.email)
+      console.log('✅ Seed user created:', user.email)
     } else {
-      console.log('✅ Test user already exists:', user.email)
+      console.log('✅ Seed user already exists:', user.email)
     }
 
     // ── 2. Seed 10 comprehensive test scenarios ──────────

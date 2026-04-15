@@ -3,16 +3,16 @@ services:
     image: postgres:16-alpine
     container_name: testingndrih-db
     environment:
-      POSTGRES_USER: ${DB_USER:-testuser}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-testpass123}
-      POSTGRES_DB: ${DB_NAME:-testingndrih}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
       POSTGRES_INITDB_ARGS: "--encoding=UTF8"
     ports:
       - "${DB_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-testuser} -d ${DB_NAME:-testingndrih}"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -21,43 +21,28 @@ services:
     networks:
       - testingndrih-network
 
-  backend:
+  # Combined frontend + backend in a single container.
+  # Frontend is built at image-build time; Express serves both the React SPA
+  # (at /) and the REST API (at /api/*) on the same port.
+  app:
     build:
-      context: ./backend
+      context: .
       dockerfile: Dockerfile
-    container_name: testingndrih-backend
+    container_name: testingndrih-app
     environment:
-      NODE_ENV: development
-      DATABASE_URL: postgresql://${DB_USER:-testuser}:${DB_PASSWORD:-testpass123}@postgres:5432/${DB_NAME:-testingndrih}
-      PORT: 5001
-    ports:
-      - "5001:5001"
-    depends_on:
-      postgres:
-        condition: service_healthy
-    volumes:
-      - ./backend/src:/app/src
-      - ./backend/prisma:/app/prisma
-    networks:
-      - testingndrih-network
-    restart: unless-stopped
-
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: testingndrih-frontend
-    environment:
-      VITE_API_URL: http://backend:5001
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}
+      JWT_SECRET: ${JWT_SECRET}
+      PORT: 3000
+      CORS_ORIGIN: http://localhost:3000
     ports:
       - "3000:3000"
     depends_on:
-      - backend
-    volumes:
-      - ./frontend/src:/app/src
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
     networks:
       - testingndrih-network
-    restart: unless-stopped
 
 volumes:
   postgres_data:
@@ -66,3 +51,4 @@ volumes:
 networks:
   testingndrih-network:
     driver: bridge
+

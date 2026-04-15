@@ -26,26 +26,28 @@
 ## 🚀 Quick Start (Docker)
 
 ```bash
-# Prerequisites: Docker & Docker Desktop runningcd
+# Prerequisites: Docker & Docker Desktop running
 
-# Start all 3 containers
+# 1. Copy .env.example to .env and fill in your values
+cp .env.example .env
+
+# 2. Start all services (postgres + combined app)
 docker-compose up -d
 
-# Access application
-# Frontend: http://localhost:3000
-# Backend API: http://localhost:5001
+# Application runs on ONE port:
+# http://localhost:3000  ←  Frontend (React) + Backend API on same port
 # Database: localhost:5432
 
 # View logs
 docker-compose logs -f
 
-# Stop all containers
+# Stop all services
 docker-compose down
 ```
 
-**Default Credentials:**
-- Email: `donkditren@gmail.com`
-- Password: `password*1`
+**Default Credentials** *(created by `npm run db:seed`)*:
+- Email: `admin@testingndrih.local` *(customize via `SEED_EMAIL` in .env)*
+- Password: `changeme123` *(customize via `SEED_PASSWORD` in .env)*
 
 ---
 
@@ -245,7 +247,7 @@ testingndrih/
 
 ### .env.example
 ```
-DATABASE_URL=postgresql://testuser:testpass123@localhost:5432/testingndrih
+DATABASE_URL=postgresql://your_db_user:your_db_password@localhost:5432/testingndrih
 JWT_SECRET=your-super-secret-key-change-in-production
 JWT_EXPIRES_IN=7d
 PORT=5001
@@ -275,8 +277,8 @@ cd frontend && npm run build
 ## 📋 Test Credentials
 
 ```
-Email: donkditren@gmail.com
-Password: password*1
+Email: admin@testingndrih.local  (or set SEED_EMAIL in .env)
+Password: changeme123            (or set SEED_PASSWORD in .env)
 ```
 
 ---

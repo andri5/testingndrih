@@ -1,10 +1,10 @@
-import { test, expect } from '@playwright/test'
+﻿import { test, expect } from '@playwright/test'
 
 test.describe.serial('Complete Application E2E Testing', () => {
   // Shared state across tests
   const testUser = {
-    email: 'donkditren@gmail.com',
-    password: 'password*1'
+    email: process.env.TEST_EMAIL || 'admin@testingndrih.local',
+    password: process.env.TEST_PASSWORD || 'changeme123'
   }
   
   let authToken
@@ -45,7 +45,7 @@ test.describe.serial('Complete Application E2E Testing', () => {
     if (authToken) {
       await page.addInitScript((token) => {
         localStorage.setItem('authToken', token)
-        localStorage.setItem('user', JSON.stringify({ email: 'donkditren@gmail.com', name: 'donkdi' }))
+        localStorage.setItem('user', JSON.stringify({ email: process.env.TEST_EMAIL || 'admin@testingndrih.local', name: 'Admin User' }))
       }, authToken)
     }
     
@@ -73,7 +73,7 @@ test.describe.serial('Complete Application E2E Testing', () => {
     if (authToken) {
       await page.addInitScript((token) => {
         localStorage.setItem('authToken', token)
-        localStorage.setItem('user', JSON.stringify({ email: 'donkditren@gmail.com', name: 'donkdi' }))
+        localStorage.setItem('user', JSON.stringify({ email: process.env.TEST_EMAIL || 'admin@testingndrih.local', name: 'Admin User' }))
       }, authToken)
     }
     await page.goto('http://localhost:3000/scenarios', { waitUntil: 'networkidle' })
@@ -128,7 +128,7 @@ test.describe.serial('Complete Application E2E Testing', () => {
     if (authToken) {
       await page.addInitScript((token) => {
         localStorage.setItem('authToken', token)
-        localStorage.setItem('user', JSON.stringify({ email: 'donkditren@gmail.com', name: 'donkdi' }))
+        localStorage.setItem('user', JSON.stringify({ email: process.env.TEST_EMAIL || 'admin@testingndrih.local', name: 'Admin User' }))
       }, authToken)
     }
     await page.goto('http://localhost:3000/scenarios', { waitUntil: 'networkidle' })
@@ -166,7 +166,7 @@ test.describe.serial('Complete Application E2E Testing', () => {
     if (authToken) {
       await page.addInitScript((token) => {
         localStorage.setItem('authToken', token)
-        localStorage.setItem('user', JSON.stringify({ email: 'donkditren@gmail.com', name: 'donkdi' }))
+        localStorage.setItem('user', JSON.stringify({ email: process.env.TEST_EMAIL || 'admin@testingndrih.local', name: 'Admin User' }))
       }, authToken)
     }
     await page.goto(`http://localhost:3000/scenarios/${createdScenarioId}`, { waitUntil: 'networkidle' })
@@ -191,7 +191,7 @@ test.describe.serial('Complete Application E2E Testing', () => {
     if (authToken) {
       await page.addInitScript((token) => {
         localStorage.setItem('authToken', token)
-        localStorage.setItem('user', JSON.stringify({ email: 'donkditren@gmail.com', name: 'donkdi' }))
+        localStorage.setItem('user', JSON.stringify({ email: process.env.TEST_EMAIL || 'admin@testingndrih.local', name: 'Admin User' }))
       }, authToken)
     }
     await page.goto(`http://localhost:3000/scenarios/${createdScenarioId}`, { waitUntil: 'networkidle' })
@@ -249,7 +249,7 @@ test.describe.serial('Complete Application E2E Testing', () => {
     if (authToken) {
       await page.addInitScript((token) => {
         localStorage.setItem('authToken', token)
-        localStorage.setItem('user', JSON.stringify({ email: 'donkditren@gmail.com', name: 'donkdi' }))
+        localStorage.setItem('user', JSON.stringify({ email: process.env.TEST_EMAIL || 'admin@testingndrih.local', name: 'Admin User' }))
       }, authToken)
     }
     await page.goto(`http://localhost:3000/scenarios/${createdScenarioId}`, { waitUntil: 'networkidle' })
@@ -291,7 +291,7 @@ test.describe.serial('Complete Application E2E Testing', () => {
     if (authToken) {
       await page.addInitScript((token) => {
         localStorage.setItem('authToken', token)
-        localStorage.setItem('user', JSON.stringify({ email: 'donkditren@gmail.com', name: 'donkdi' }))
+        localStorage.setItem('user', JSON.stringify({ email: process.env.TEST_EMAIL || 'admin@testingndrih.local', name: 'Admin User' }))
       }, authToken)
     }
     await page.goto('http://localhost:3000/scenarios', { waitUntil: 'networkidle' })
@@ -326,7 +326,7 @@ test.describe.serial('Complete Application E2E Testing', () => {
     if (authToken) {
       await page.addInitScript((token) => {
         localStorage.setItem('authToken', token)
-        localStorage.setItem('user', JSON.stringify({ email: 'donkditren@gmail.com', name: 'donkdi' }))
+        localStorage.setItem('user', JSON.stringify({ email: process.env.TEST_EMAIL || 'admin@testingndrih.local', name: 'Admin User' }))
       }, authToken)
     }
     await page.goto('http://localhost:3000/execution', { waitUntil: 'networkidle' })
@@ -346,7 +346,7 @@ test.describe.serial('Complete Application E2E Testing', () => {
     if (authToken) {
       await page.addInitScript((token) => {
         localStorage.setItem('authToken', token)
-        localStorage.setItem('user', JSON.stringify({ email: 'donkditren@gmail.com', name: 'donkdi' }))
+        localStorage.setItem('user', JSON.stringify({ email: process.env.TEST_EMAIL || 'admin@testingndrih.local', name: 'Admin User' }))
       }, authToken)
     }
     await page.goto('http://localhost:3000/execution', { waitUntil: 'networkidle' })
@@ -370,7 +370,7 @@ test.describe.serial('Complete Application E2E Testing', () => {
     if (authToken) {
       await page.addInitScript((token) => {
         localStorage.setItem('authToken', token)
-        localStorage.setItem('user', JSON.stringify({ email: 'donkditren@gmail.com', name: 'donkdi' }))
+        localStorage.setItem('user', JSON.stringify({ email: process.env.TEST_EMAIL || 'admin@testingndrih.local', name: 'Admin User' }))
       }, authToken)
     }
     await page.goto('http://localhost:3000/execution', { waitUntil: 'networkidle' })
@@ -412,7 +412,7 @@ test.describe.serial('Complete Application E2E Testing', () => {
     if (authToken) {
       await page.addInitScript((token) => {
         localStorage.setItem('authToken', token)
-        localStorage.setItem('user', JSON.stringify({ email: 'donkditren@gmail.com', name: 'donkdi' }))
+        localStorage.setItem('user', JSON.stringify({ email: process.env.TEST_EMAIL || 'admin@testingndrih.local', name: 'Admin User' }))
       }, authToken)
     }
     await page.goto('http://localhost:3000/qase', { waitUntil: 'networkidle' })
@@ -439,7 +439,7 @@ test.describe.serial('Complete Application E2E Testing', () => {
     if (authToken) {
       await page.addInitScript((token) => {
         localStorage.setItem('authToken', token)
-        localStorage.setItem('user', JSON.stringify({ email: 'donkditren@gmail.com', name: 'donkdi' }))
+        localStorage.setItem('user', JSON.stringify({ email: process.env.TEST_EMAIL || 'admin@testingndrih.local', name: 'Admin User' }))
       }, authToken)
     }
     await page.goto('http://localhost:3000/dashboard', { waitUntil: 'networkidle' })
