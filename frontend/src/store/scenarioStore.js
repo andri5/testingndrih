@@ -23,7 +23,7 @@ export const useScenarioStore = create((set, get) => ({
       const params = { skip, take }
       
       if (search) {
-        const response = await apiClient.get('/search', { params: { q: search, skip, take } })
+        const response = await apiClient.get('/search', { params: { query: search, skip, take } })
         set({ 
           scenarios: response.data.scenarios || [], 
           pagination: response.data.pagination,
