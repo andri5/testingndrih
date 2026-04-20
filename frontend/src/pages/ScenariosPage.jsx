@@ -201,26 +201,50 @@ export default function ScenariosPage() {
 
         {/* Stats */}
         {!showCreateForm && !editingScenario && scenarios.length > 0 && (
-          <Card>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="text-center">
-                <p className="text-3xl font-bold text-[#5E6AD2]">{scenarios.length}</p>
-                <p className="text-[#A0A0A4] mt-2">Total Scenarios</p>
-              </div>
-              <div className="text-center">
-                <p className="text-3xl font-bold text-green-600">
-                  {scenarios.reduce((sum, s) => sum + (s.stepCount || 0), 0)}
-                </p>
-                <p className="text-[#A0A0A4] mt-2">Total Test Steps</p>
-              </div>
-              <div className="text-center">
-                <p className="text-3xl font-bold text-blue-600">
-                  {new Date().toLocaleDateString()}
-                </p>
-                <p className="text-[#A0A0A4] mt-2">Last Updated</p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Total Scenarios */}
+            <div className="linear-card p-5">
+              <div className="flex items-center gap-4">
+                <div className="w-11 h-11 rounded-xl bg-[#5E6AD2]/10 flex items-center justify-center shrink-0">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9BA3F0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-[#E0E0E2] leading-none">{scenarios.length}</p>
+                  <p className="text-xs text-[#8A8A8F] mt-1.5 font-medium uppercase tracking-wider">Total Scenarios</p>
+                </div>
               </div>
             </div>
-          </Card>
+
+            {/* Total Test Steps */}
+            <div className="linear-card p-5">
+              <div className="flex items-center gap-4">
+                <div className="w-11 h-11 rounded-xl bg-[#34D399]/10 flex items-center justify-center shrink-0">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#34D399" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-[#E0E0E2] leading-none">
+                    {scenarios.reduce((sum, s) => sum + (s.stepCount || 0), 0)}
+                  </p>
+                  <p className="text-xs text-[#8A8A8F] mt-1.5 font-medium uppercase tracking-wider">Total Test Steps</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Last Updated */}
+            <div className="linear-card p-5">
+              <div className="flex items-center gap-4">
+                <div className="w-11 h-11 rounded-xl bg-[#FBBF24]/10 flex items-center justify-center shrink-0">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FBBF24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-[#E0E0E2] leading-none">
+                    {new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                  </p>
+                  <p className="text-xs text-[#8A8A8F] mt-1.5 font-medium uppercase tracking-wider">Last Updated</p>
+                </div>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </Layout>
