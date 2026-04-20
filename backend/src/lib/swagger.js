@@ -83,8 +83,7 @@ const options = {
       { name: 'Test Steps', description: 'Step management within a scenario' },
       { name: 'Execution', description: 'Run scenarios and view results' },
       { name: 'Recorder', description: 'Browser recording session management' },
-      { name: 'Search', description: 'Search and filter scenarios' },
-      { name: 'Import/Export', description: 'Import test scenarios from file' }
+      { name: 'Search', description: 'Search and filter scenarios' }
     ]
   },
   apis: ['./src/routes/*.js', './src/controllers/*.js']

@@ -539,7 +539,7 @@ export default function ScenarioDetailPage() {
       <Layout>
         <Card>
           <div className="text-center py-12">
-            <p className="text-gray-500 text-lg">Scenario tidak ditemukan</p>
+            <p className="text-[#888] text-lg">Scenario tidak ditemukan</p>
             <Button variant="primary" className="mt-4" onClick={() => navigate('/scenarios')}>
               Kembali ke Scenarios
             </Button>
@@ -553,25 +553,25 @@ export default function ScenarioDetailPage() {
     <Layout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-start justify-between">
-          <div>
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+          <div className="min-w-0">
             <button
               onClick={() => navigate('/scenarios')}
-              className="text-indigo-600 hover:text-indigo-800 text-sm font-medium mb-2 flex items-center gap-1"
+              className="text-[#5E6AD2] hover:text-[#6B7AE8] text-sm font-medium mb-2 flex items-center gap-1"
             >
               ← Kembali ke Scenarios
             </button>
-            <h1 className="text-3xl font-bold text-gray-900">{scenario.name}</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-[#E0E0E2] break-words">{scenario.name}</h1>
             {scenario.description && (
-              <p className="text-gray-600 mt-1">{scenario.description}</p>
+              <p className="text-[#A0A0A4] mt-1">{scenario.description}</p>
             )}
-            <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
+            <div className="flex items-center gap-4 mt-2 text-sm text-[#888]">
               <span>🌐 {scenario.url}</span>
               <span>📋 {steps.length} steps</span>
             </div>
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2 shrink-0">
             {!isRecording ? (
               <Button
                 variant="secondary"
@@ -621,14 +621,14 @@ export default function ScenarioDetailPage() {
         {showRecordingPanel && (
           <Card>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+              <h2 className="text-xl font-bold text-[#E0E0E2] flex items-center gap-2">
                 {isRecording && <span className="inline-block w-3 h-3 bg-red-500 rounded-full animate-pulse" />}
                 🎬 {isRecording ? 'Recording Aktif...' : 'Mode Recording'}
               </h2>
               {!isRecording && recordingSteps.length === 0 && (
                 <button
                   onClick={() => setShowRecordingPanel(false)}
-                  className="text-gray-400 hover:text-gray-600 text-xl leading-none"
+                  className="text-[#666] hover:text-[#E0E0E2] text-xl leading-none"
                 >
                   ✕
                 </button>
@@ -638,19 +638,19 @@ export default function ScenarioDetailPage() {
             {/* Start recording controls */}
             {!isRecording && recordingSteps.length === 0 && (
               <div className="space-y-4">
-                <p className="text-gray-600 text-sm">
+                <p className="text-[#A0A0A4] text-sm">
                   Mulai recording untuk merekam interaksi Anda di browser. Browser Chromium akan terbuka secara otomatis —
                   setiap klik, isian form, dan navigasi akan tercatat sebagai test steps.
                 </p>
                 <div className="flex items-end gap-3">
                   <div className="flex-1">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">URL Target</label>
+                    <label className="block text-sm font-medium text-[#A0A0A4] mb-1">URL Target</label>
                     <input
                       type="url"
                       value={recordingUrl}
                       onChange={(e) => setRecordingUrl(e.target.value)}
                       placeholder="https://example.com"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                      className="w-full px-3 py-2 bg-[#161618] border border-[#2D2D2F] text-[#E0E0E2] placeholder-[#4A4A52] rounded-lg focus:ring-1 focus:ring-[#5E6AD2] focus:outline-none"
                     />
                   </div>
                   <Button
@@ -670,7 +670,7 @@ export default function ScenarioDetailPage() {
             {(isRecording || recordingSteps.length > 0) && (
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-[#888]">
                     {recordingSteps.length} step{recordingSteps.length !== 1 ? 's' : ''} tercatat
                     {isRecording && ' — berinteraksilah dengan browser...'}
                   </p>
@@ -696,15 +696,15 @@ export default function ScenarioDetailPage() {
                     return (
                       <div
                         key={idx}
-                        className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded text-sm border border-gray-100"
+                        className="flex items-center gap-2 px-3 py-2 bg-[#161618] rounded text-sm border border-[#2D2D2F]"
                       >
-                        <span className="flex-shrink-0 w-6 h-6 bg-indigo-100 text-indigo-700 rounded-full flex items-center justify-center text-xs font-bold">
+                        <span className="flex-shrink-0 w-6 h-6 bg-[#5E6AD2]/15 text-[#5E6AD2] rounded-full flex items-center justify-center text-xs font-bold">
                           {idx + 1}
                         </span>
                         <Badge variant="primary">{config.icon} {config.label}</Badge>
-                        <span className="text-gray-700 truncate flex-1">{step.description}</span>
+                        <span className="text-[#E0E0E2] truncate flex-1">{step.description}</span>
                         {step.selector && (
-                          <code className="text-xs bg-gray-200 px-1 rounded text-gray-600 truncate max-w-[200px]">
+                          <code className="text-xs bg-[#2D2D2F] px-1 rounded text-[#A0A0A4] truncate max-w-[200px]">
                             {step.selector}
                           </code>
                         )}
@@ -712,7 +712,7 @@ export default function ScenarioDetailPage() {
                     )
                   })}
                   {recordingSteps.length === 0 && isRecording && (
-                    <div className="text-center py-6 text-gray-400 text-sm">
+                    <div className="text-center py-6 text-[#555] text-sm">
                       Menunggu interaksi... Klik, isi form, atau navigasi di browser yang terbuka.
                     </div>
                   )}
@@ -725,7 +725,7 @@ export default function ScenarioDetailPage() {
         {/* Test Steps */}
         <Card>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-gray-900">Test Steps</h2>
+            <h2 className="text-xl font-bold text-[#E0E0E2]">Test Steps</h2>
             <div className="flex items-center gap-2">
               {/* Bulk delete controls */}
               {selectedStepIds.size > 0 && (
@@ -748,21 +748,21 @@ export default function ScenarioDetailPage() {
 
           {/* Step Form */}
           {showStepForm && (
-            <div ref={stepFormRef} className="mb-6 p-4 border-2 border-indigo-200 rounded-lg bg-indigo-50">
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">
+            <div ref={stepFormRef} className="mb-6 p-4 border border-[#5E6AD2]/30 rounded-lg bg-[#1A1A2E]">
+              <h3 className="text-lg font-semibold text-[#E0E0E2] mb-3">
                 {editingStep ? 'Edit Step' : 'Tambah Step Baru'}
               </h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Type */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-[#A0A0A4] mb-1">
                     Type *
                   </label>
                   <select
                     value={stepForm.type}
                     onChange={(e) => setStepForm({ ...stepForm, type: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    className="w-full px-3 py-2 bg-[#161618] border border-[#2D2D2F] text-[#E0E0E2] rounded-lg focus:ring-1 focus:ring-[#5E6AD2] focus:outline-none"
                   >
                     {STEP_TYPES.map(t => (
                       <option key={t.value} value={t.value}>
@@ -774,7 +774,7 @@ export default function ScenarioDetailPage() {
 
                 {/* Description */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-[#A0A0A4] mb-1">
                     Description *
                   </label>
                   <input
@@ -782,14 +782,14 @@ export default function ScenarioDetailPage() {
                     value={stepForm.description}
                     onChange={(e) => setStepForm({ ...stepForm, description: e.target.value })}
                     placeholder="Deskripsi langkah ini"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    className="w-full px-3 py-2 bg-[#161618] border border-[#2D2D2F] text-[#E0E0E2] placeholder-[#4A4A52] rounded-lg focus:ring-1 focus:ring-[#5E6AD2] focus:outline-none"
                   />
                 </div>
 
                 {/* Conditional fields based on type */}
                 {getStepTypeConfig(stepForm.type).fields.includes('selector') && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-[#A0A0A4] mb-1">
                       Selector
                     </label>
                     <input
@@ -797,14 +797,14 @@ export default function ScenarioDetailPage() {
                       value={stepForm.selector}
                       onChange={(e) => setStepForm({ ...stepForm, selector: e.target.value })}
                       placeholder={getStepTypeConfig(stepForm.type).placeholder.selector}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                      className="w-full px-3 py-2 bg-[#161618] border border-[#2D2D2F] text-[#E0E0E2] placeholder-[#4A4A52] rounded-lg focus:ring-1 focus:ring-[#5E6AD2] focus:outline-none"
                     />
                   </div>
                 )}
 
                 {getStepTypeConfig(stepForm.type).fields.includes('value') && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-[#A0A0A4] mb-1">
                       Value
                     </label>
                     <input
@@ -812,14 +812,14 @@ export default function ScenarioDetailPage() {
                       value={stepForm.value}
                       onChange={(e) => setStepForm({ ...stepForm, value: e.target.value })}
                       placeholder={getStepTypeConfig(stepForm.type).placeholder.value}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                      className="w-full px-3 py-2 bg-[#161618] border border-[#2D2D2F] text-[#E0E0E2] placeholder-[#4A4A52] rounded-lg focus:ring-1 focus:ring-[#5E6AD2] focus:outline-none"
                     />
                   </div>
                 )}
 
                 {getStepTypeConfig(stepForm.type).fields.includes('metadata') && (
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-[#A0A0A4] mb-1">
                       Metadata (JSON)
                     </label>
                     <textarea
@@ -827,14 +827,14 @@ export default function ScenarioDetailPage() {
                       onChange={(e) => setStepForm({ ...stepForm, metadata: e.target.value })}
                       placeholder={getStepTypeConfig(stepForm.type).placeholder.metadata}
                       rows={3}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none font-mono text-sm"
+                      className="w-full px-3 py-2 bg-[#161618] border border-[#2D2D2F] text-[#E0E0E2] placeholder-[#4A4A52] rounded-lg focus:ring-1 focus:ring-[#5E6AD2] focus:outline-none font-mono text-sm"
                     />
                   </div>
                 )}
               </div>
 
               {/* Type hint */}
-              <div className="mt-3 text-sm text-gray-500">
+              <div className="mt-3 text-sm text-[#888]">
                 {stepForm.type === 'NAVIGATE' && '💡 Masukkan URL tujuan di field Value'}
                 {stepForm.type === 'CLICK' && '💡 Masukkan CSS selector atau XPath elemen yang akan di-klik'}
                 {stepForm.type === 'FILL' && '💡 Masukkan CSS selector atau XPath input dan text yang akan diketik'}
@@ -876,30 +876,30 @@ export default function ScenarioDetailPage() {
           <div ref={executionResultRef}>
           <Card>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-gray-900">Hasil Eksekusi</h2>
+              <h2 className="text-xl font-bold text-[#E0E0E2]">Hasil Eksekusi</h2>
               <Badge variant={executionResult.status === 'PASSED' ? 'success' : 'danger'}>
                 {executionResult.status === 'PASSED' ? '✓' : '✗'} {executionResult.status}
               </Badge>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-              <div className="text-center p-3 bg-green-50 rounded-lg">
-                <p className="text-2xl font-bold text-green-600">{executionResult.passedSteps || 0}</p>
-                <p className="text-sm text-gray-600">Passed</p>
+              <div className="text-center p-3 bg-green-900/20 rounded-lg">
+                <p className="text-2xl font-bold text-green-400">{executionResult.passedSteps || 0}</p>
+                <p className="text-sm text-[#A0A0A4]">Passed</p>
               </div>
-              <div className="text-center p-3 bg-red-50 rounded-lg">
-                <p className="text-2xl font-bold text-red-600">{executionResult.failedSteps || 0}</p>
-                <p className="text-sm text-gray-600">Failed</p>
+              <div className="text-center p-3 bg-red-900/20 rounded-lg">
+                <p className="text-2xl font-bold text-red-400">{executionResult.failedSteps || 0}</p>
+                <p className="text-sm text-[#A0A0A4]">Failed</p>
               </div>
-              <div className="text-center p-3 bg-blue-50 rounded-lg">
-                <p className="text-2xl font-bold text-blue-600">{executionResult.totalSteps || 0}</p>
-                <p className="text-sm text-gray-600">Total Steps</p>
+              <div className="text-center p-3 bg-[#1A1A2E] rounded-lg">
+                <p className="text-2xl font-bold text-[#5E6AD2]">{executionResult.totalSteps || 0}</p>
+                <p className="text-sm text-[#A0A0A4]">Total Steps</p>
               </div>
-              <div className="text-center p-3 bg-gray-50 rounded-lg">
-                <p className="text-2xl font-bold text-gray-700">
+              <div className="text-center p-3 bg-[#1A1A1C] rounded-lg">
+                <p className="text-2xl font-bold text-[#E0E0E2]">
                   {executionResult.duration ? `${(executionResult.duration / 1000).toFixed(2)}s` : '-'}
                 </p>
-                <p className="text-sm text-gray-600">Durasi</p>
+                <p className="text-sm text-[#A0A0A4]">Durasi</p>
               </div>
             </div>
 
@@ -919,7 +919,7 @@ export default function ScenarioDetailPage() {
             {/* Step Results */}
             {executionResult.stepResults && executionResult.stepResults.length > 0 && (
               <div>
-                <h3 className="font-semibold text-gray-900 mb-2">Detail Per-Step</h3>
+                <h3 className="font-semibold text-[#E0E0E2] mb-2">Detail Per-Step</h3>
                 <div className="space-y-3">
                   {executionResult.stepResults.map((result, idx) => (
                     <div
@@ -935,10 +935,10 @@ export default function ScenarioDetailPage() {
                           {result.status === 'PASSED' ? '✓' : '✗'}
                         </span>
                         <div className="flex-1">
-                          <p className="font-medium text-gray-900">
+                          <p className="font-medium text-[#E0E0E2]">
                             Step {result.testStep?.stepNumber || idx + 1}: {result.testStep?.type || result.type} — {result.testStep?.description || result.description || '-'}
                           </p>
-                          <p className="text-xs text-gray-500">
+                          <p className="text-xs text-[#888]">
                             {result.testStep?.type || result.type} 
                             {result.testStep?.selector ? ` • ${result.testStep.selector}` : ''}
                             {result.duration ? ` • ${result.duration}ms` : ''}
@@ -961,7 +961,7 @@ export default function ScenarioDetailPage() {
                               stepNumber: result.testStep?.stepNumber || idx + 1,
                               description: result.testStep?.description || ''
                             })}
-                            className="flex-shrink-0 border-2 border-gray-300 rounded-lg overflow-hidden hover:border-indigo-500 transition cursor-pointer"
+                            className="flex-shrink-0 border-2 border-[#2D2D2F] rounded-lg overflow-hidden hover:border-[#5E6AD2] transition cursor-pointer"
                             title="Klik untuk memperbesar screenshot"
                           >
                             <img
@@ -988,16 +988,16 @@ export default function ScenarioDetailPage() {
             onClick={() => setScreenshotModal(null)}
           >
             <div
-              className="bg-white rounded-lg max-w-5xl w-full max-h-[90vh] overflow-auto"
+              className="bg-[#1A1A1C] border border-[#2D2D2F] rounded-lg max-w-5xl w-full max-h-[90vh] overflow-auto"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex items-center justify-between p-4 border-b">
-                <h3 className="text-lg font-semibold text-gray-900">
+              <div className="flex items-center justify-between p-4 border-b border-[#2D2D2F]">
+                <h3 className="text-lg font-semibold text-[#E0E0E2]">
                   📸 Step {screenshotModal.stepNumber}: {screenshotModal.description}
                 </h3>
                 <button
                   onClick={() => setScreenshotModal(null)}
-                  className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
+                  className="text-[#666] hover:text-[#E0E0E2] text-2xl leading-none"
                 >
                   ✕
                 </button>
@@ -1006,15 +1006,15 @@ export default function ScenarioDetailPage() {
                 <img
                   src={screenshotModal.url}
                   alt={`Screenshot step ${screenshotModal.stepNumber}`}
-                  className="w-full rounded-lg border border-gray-200"
+                  className="w-full rounded-lg border border-[#2D2D2F]"
                 />
               </div>
-              <div className="flex justify-end p-4 border-t">
+              <div className="flex justify-end p-4 border-t border-[#2D2D2F]">
                 <a
                   href={screenshotModal.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-indigo-600 hover:text-indigo-800 text-sm font-medium mr-4"
+                  className="text-[#5E6AD2] hover:text-[#6B7AE8] text-sm font-medium mr-4"
                 >
                   Buka di tab baru ↗
                 </a>

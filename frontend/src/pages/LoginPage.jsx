@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
+import { CheckCircle2, AlertCircle, Eye, EyeOff, Loader2, ShieldCheck } from 'lucide-react'
 
 export default function LoginPage() {
   const navigate = useNavigate()
@@ -28,51 +29,51 @@ export default function LoginPage() {
       setLocalError('')
       clearError()
       await login(email, password)
-      setSuccessMessage('Sukses login')
+      setSuccessMessage('Signed in successfully')
       setTimeout(() => {
         navigate('/dashboard')
-      }, 1500)
+      }, 1000)
     } catch (err) {
       setLocalError(err.message)
     }
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-4">
-      <div className="flex flex-col gap-8 w-full max-w-md">
-        {/* Header */}
-        <div className="text-center">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">testingndrih</h1>
-          <p className="text-gray-600">Automated Web Testing Platform</p>
+    <div className="auth-page-bg min-h-screen bg-[#0F0E11] flex items-center justify-center px-4">
+      <div className="w-full max-w-sm animate-slide-up">
+
+        {/* Logo mark */}
+        <div className="flex flex-col items-center mb-8">
+          <div className="w-9 h-9 rounded-lg bg-[#5E6AD2] flex items-center justify-center mb-4">
+            <ShieldCheck size={20} className="text-white" />
+          </div>
+          <h1 className="text-lg font-semibold text-[#E0E0E2]">testingndrih</h1>
+          <p className="text-sm text-[#8A8A8F] mt-0.5">Sign in to your workspace</p>
         </div>
 
-        {/* Login Form Card */}
-        <div className="bg-white rounded-lg shadow-lg p-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Login</h2>
+        {/* Card */}
+        <div className="auth-card bg-[#161618] border border-[rgba(255,255,255,0.08)] rounded-xl p-6">
 
-          {/* Success Message */}
+          {/* Success */}
           {successMessage && (
-            <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-              <p className="text-green-700 text-sm font-medium">
-                {successMessage}
-              </p>
+            <div className="mb-4 p-3 rounded-md bg-[#0F1F17] border border-[#34D399]/30 text-[#34D399] text-sm flex items-center gap-2">
+              <CheckCircle2 size={15} className="shrink-0" />
+              {successMessage}
             </div>
           )}
 
-          {/* Error Messages */}
+          {/* Error */}
           {(localError || error) && (
-            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-red-700 text-sm font-medium">
-                {localError || error}
-              </p>
+            <div className="mb-4 p-3 rounded-md bg-[#1F0F0F] border border-[#F87171]/30 text-[#F87171] text-sm flex items-center gap-2">
+              <AlertCircle size={15} className="shrink-0" />
+              {localError || error}
             </div>
           )}
 
-          {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Email Input */}
+            {/* Email */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="email" className="block text-xs font-medium text-[#8A8A8F] mb-1.5 uppercase tracking-wider">
                 Email
               </label>
               <input
@@ -81,14 +82,14 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="your@email.com"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition"
                 disabled={isLoading}
+                className="auth-input w-full px-3 py-2 bg-[#0F0E11] border border-[rgba(255,255,255,0.1)] rounded-md focus:ring-1 focus:ring-[#5E6AD2] focus:border-[#5E6AD2] outline-none transition-all text-[#E0E0E2] placeholder-[#4A4A52] text-sm disabled:opacity-50"
               />
             </div>
 
-            {/* Password Input */}
+            {/* Password */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="password" className="block text-xs font-medium text-[#8A8A8F] mb-1.5 uppercase tracking-wider">
                 Password
               </label>
               <div className="relative">
@@ -98,63 +99,52 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full px-4 py-2 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition"
                   disabled={isLoading}
+                  className="auth-input w-full px-3 py-2 pr-10 bg-[#0F0E11] border border-[rgba(255,255,255,0.1)] rounded-md focus:ring-1 focus:ring-[#5E6AD2] focus:border-[#5E6AD2] outline-none transition-all text-[#E0E0E2] placeholder-[#4A4A52] text-sm disabled:opacity-50"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700"
+                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-[#4A4A52] hover:text-[#8A8A8F] transition-colors"
                   tabIndex={-1}
                 >
                   {showPassword ? (
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
-                      <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
-                      <line x1="1" y1="1" x2="23" y2="23" />
-                    </svg>
+                  <EyeOff size={15} />
                   ) : (
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                      <circle cx="12" cy="12" r="3" />
-                    </svg>
+                  <Eye size={15} />
                   )}
                 </button>
               </div>
             </div>
 
-            {/* Submit Button */}
+            {/* Submit */}
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-400 text-white font-semibold py-2 px-4 rounded-lg transition duration-200"
+              className="w-full py-2 px-4 rounded-md font-medium text-sm text-white bg-[#5E6AD2] hover:bg-[#6B7AE8] transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-[#5E6AD2] focus:ring-offset-2 focus:ring-offset-[#161618] disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? 'Logging in...' : 'Login'}
+              {isLoading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <Loader2 size={15} className="animate-spin" />
+                  Signing in...
+                </span>
+              ) : 'Continue'}
             </button>
           </form>
 
-          {/* Divider */}
-          <div className="my-6 relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">Don't have an account?</span>
-            </div>
+          <div className="mt-5 pt-5 border-t border-[rgba(255,255,255,0.06)] text-center">
+            <span className="text-xs text-[#8A8A8F]">Don't have an account? </span>
+            <Link
+              to="/register"
+              className="text-xs text-[#9BA3F0] hover:text-[#5E6AD2] font-medium transition-colors"
+            >
+              Create one
+            </Link>
           </div>
-
-          {/* Register Link */}
-          <Link
-            to="/register"
-            className="w-full bg-gray-100 hover:bg-gray-200 text-gray-900 font-semibold py-2 px-4 rounded-lg transition duration-200 text-center block"
-          >
-            Create Account
-          </Link>
         </div>
 
-        {/* Footer */}
-        <p className="text-center text-gray-600 text-sm">
-          Test automation made simple • v1.0.0
+        <p className="text-center text-xs text-[#4A4A52] mt-5">
+          testingndrih &copy; {new Date().getFullYear()}
         </p>
       </div>
     </div>

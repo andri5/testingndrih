@@ -191,12 +191,12 @@ export default function ReportsPage() {
   return (
     <Layout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">📈 Reports</h1>
-            <p className="text-gray-600 mt-1">Execution reports and analytics</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-[#E0E0E2]">📈 Reports</h1>
+            <p className="text-[#A0A0A4] mt-1">Execution reports and analytics</p>
           </div>
-          <Button onClick={() => handleExportCSV(null)} variant="secondary">
+          <Button onClick={() => handleExportCSV(null)} variant="secondary" className="self-start sm:self-auto">
             📥 Export CSV
           </Button>
         </div>
@@ -213,25 +213,25 @@ export default function ReportsPage() {
                 <Card>
                   <div className="text-center">
                     <p className="text-3xl font-bold text-blue-600">{stats.total}</p>
-                    <p className="text-sm text-gray-600 mt-1">Total Executions</p>
+                    <p className="text-sm text-[#A0A0A4] mt-1">Total Executions</p>
                   </div>
                 </Card>
                 <Card>
                   <div className="text-center">
                     <p className="text-3xl font-bold text-green-600">{stats.passed}</p>
-                    <p className="text-sm text-gray-600 mt-1">Passed</p>
+                    <p className="text-sm text-[#A0A0A4] mt-1">Passed</p>
                   </div>
                 </Card>
                 <Card>
                   <div className="text-center">
                     <p className="text-3xl font-bold text-red-600">{stats.failed}</p>
-                    <p className="text-sm text-gray-600 mt-1">Failed</p>
+                    <p className="text-sm text-[#A0A0A4] mt-1">Failed</p>
                   </div>
                 </Card>
                 <Card>
                   <div className="text-center">
                     <p className="text-3xl font-bold text-purple-600">{stats.successRate}%</p>
-                    <p className="text-sm text-gray-600 mt-1">Success Rate</p>
+                    <p className="text-sm text-[#A0A0A4] mt-1">Success Rate</p>
                   </div>
                 </Card>
               </div>
@@ -240,8 +240,8 @@ export default function ReportsPage() {
             {/* Success Rate Bar */}
             {stats && stats.total > 0 && (
               <Card>
-                <h3 className="font-semibold text-gray-900 mb-3">Success Rate</h3>
-                <div className="w-full bg-gray-200 rounded-full h-6 overflow-hidden">
+                <h3 className="font-semibold text-[#E0E0E2] mb-3">Success Rate</h3>
+                <div className="w-full bg-[#2D2D2F] rounded-full h-6 overflow-hidden">
                   <div
                     className="h-full bg-green-500 rounded-full transition-all duration-500 flex items-center justify-center text-xs font-bold text-white"
                     style={{ width: `${Math.max(parseFloat(stats.successRate), 5)}%` }}
@@ -249,7 +249,7 @@ export default function ReportsPage() {
                     {stats.successRate}%
                   </div>
                 </div>
-                <div className="flex justify-between mt-2 text-sm text-gray-500">
+                <div className="flex flex-wrap justify-between gap-2 mt-2 text-sm text-[#888]">
                   <span>✅ {stats.passed} passed</span>
                   <span>❌ {stats.failed} failed</span>
                   <span>⏱️ Avg: {formatDuration(stats.averageDuration)}</span>
@@ -260,7 +260,7 @@ export default function ReportsPage() {
             {/* Trend Chart — last 14 days */}
             {trendData.some(d => d.passed + d.failed > 0) && (
               <Card>
-                <h3 className="font-semibold text-gray-900 mb-4">📊 Pass/Fail Trend (14 hari terakhir)</h3>
+                <h3 className="font-semibold text-[#E0E0E2] mb-4">📊 Pass/Fail Trend (14 hari terakhir)</h3>
                 <TrendChart data={trendData} />
               </Card>
             )}
@@ -268,22 +268,22 @@ export default function ReportsPage() {
             {/* Most Executed Scenarios */}
             {mostExecuted.length > 0 && (
               <Card>
-                <h3 className="font-semibold text-gray-900 mb-4">🏆 Most Executed Scenarios</h3>
+                <h3 className="font-semibold text-[#E0E0E2] mb-4">🏆 Most Executed Scenarios</h3>
                 <div className="space-y-3">
                   {mostExecuted.map((s, idx) => (
                     <div
                       key={s.id}
                       onClick={() => navigate(`/scenarios/${s.id}`)}
-                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-indigo-50 cursor-pointer transition"
+                      className="flex items-center justify-between p-3 bg-[#161618] rounded-lg hover:bg-[#1A1A2E] cursor-pointer transition"
                     >
                       <div className="flex items-center gap-3">
-                        <span className="text-lg font-bold text-gray-400 w-6">#{idx + 1}</span>
+                        <span className="text-lg font-bold text-[#555] w-6">#{idx + 1}</span>
                         <div>
-                          <p className="font-medium text-gray-900">{s.name}</p>
-                          <p className="text-xs text-gray-500">{s.description || '-'}</p>
+                          <p className="font-medium text-[#E0E0E2]">{s.name}</p>
+                          <p className="text-xs text-[#888]">{s.description || '-'}</p>
                         </div>
                       </div>
-                      <span className="text-sm font-semibold text-indigo-600">
+                      <span className="text-sm font-semibold text-[#5E6AD2]">
                         {s._count?.executions ?? s.executionCount ?? 0} runs
                       </span>
                     </div>
@@ -294,28 +294,28 @@ export default function ReportsPage() {
 
             {/* Execution History Table */}
             <Card>
-              <h3 className="font-semibold text-gray-900 mb-4">📋 Execution History</h3>
+              <h3 className="font-semibold text-[#E0E0E2] mb-4">📋 Execution History</h3>
               {executions.length === 0 ? (
-                <p className="text-center py-8 text-gray-500">No executions yet</p>
+                <p className="text-center py-8 text-[#888]">No executions yet</p>
               ) : (
                 <>
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead>
-                        <tr className="border-b border-gray-200">
-                          <th className="text-left py-3 px-2 font-semibold text-gray-600">Scenario</th>
-                          <th className="text-left py-3 px-2 font-semibold text-gray-600">Status</th>
-                          <th className="text-left py-3 px-2 font-semibold text-gray-600">Duration</th>
-                          <th className="text-left py-3 px-2 font-semibold text-gray-600">Steps (P/F)</th>
-                          <th className="text-left py-3 px-2 font-semibold text-gray-600">Date</th>
+                        <tr className="border-b border-[#2D2D2F]">
+                          <th className="text-left py-3 px-2 font-semibold text-[#A0A0A4]">Scenario</th>
+                          <th className="text-left py-3 px-2 font-semibold text-[#A0A0A4]">Status</th>
+                          <th className="text-left py-3 px-2 font-semibold text-[#A0A0A4]">Duration</th>
+                          <th className="text-left py-3 px-2 font-semibold text-[#A0A0A4]">Steps (P/F)</th>
+                          <th className="text-left py-3 px-2 font-semibold text-[#A0A0A4]">Date</th>
                         </tr>
                       </thead>
                       <tbody>
                         {executions.map(e => (
-                          <tr key={e.id} className="border-b border-gray-100 hover:bg-gray-50">
+                          <tr key={e.id} className="border-b border-[#2D2D2F] hover:bg-[#1A1A1C]">
                             <td className="py-3 px-2">
                               <span
-                                className="text-indigo-600 hover:underline cursor-pointer"
+                                className="text-[#5E6AD2] hover:underline cursor-pointer"
                                 onClick={() => navigate(`/scenarios/${e.scenarioId}`)}
                               >
                                 {e.scenario?.name || 'Unknown'}
@@ -328,7 +328,7 @@ export default function ReportsPage() {
                               {' / '}
                               <span className="text-red-600">{e.failedSteps || 0}</span>
                             </td>
-                            <td className="py-3 px-2 text-gray-500">{formatDate(e.startTime)}</td>
+                            <td className="py-3 px-2 text-[#888]">{formatDate(e.startTime)}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -338,7 +338,7 @@ export default function ReportsPage() {
                   {/* Pagination */}
                   {totalPages > 1 && (
                     <div className="flex items-center justify-between mt-4 pt-4 border-t">
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-[#888]">
                         Showing {page * LIMIT + 1}-{Math.min((page + 1) * LIMIT, total)} of {total}
                       </p>
                       <div className="flex gap-2">

@@ -113,8 +113,8 @@ export default function ExecutionPage() {
       <div className="space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Test Execution</h1>
-          <p className="text-gray-600 mt-2">
+          <h1 className="text-3xl font-bold text-[#E0E0E2]">Test Execution</h1>
+          <p className="text-[#A0A0A4] mt-2">
             Run and monitor test scenarios
           </p>
         </div>
@@ -130,12 +130,12 @@ export default function ExecutionPage() {
 
         {/* Execution Control Panel */}
         <Card>
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Run Scenario</h2>
+          <h2 className="text-lg sm:text-xl font-bold text-[#E0E0E2] mb-4">Run Scenario</h2>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Scenario Selector */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-[#A0A0A4] mb-2">
                 Select Scenario
               </label>
               <select
@@ -146,9 +146,9 @@ export default function ExecutionPage() {
                   setSelectedScenarioId(scenarioId)
                   setSelectedScenarioName(scenario?.name || '')
                 }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-3 py-2 bg-[#161618] border border-[#2D2D2F] text-[#E0E0E2] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5E6AD2]"
               >
-                <option value="">Choose a scenario...</option>
+                <option value="" className="bg-[#161618]">Choose a scenario...</option>
                 {scenarios && scenarios.map((scenario) => (
                   <option key={scenario.id} value={scenario.id}>
                     {scenario.name} ({scenario.testSteps?.length || 0} steps)
@@ -159,24 +159,24 @@ export default function ExecutionPage() {
 
             {/* Status Info */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-[#A0A0A4] mb-2">
                 Status
               </label>
-              <div className="px-3 py-2 bg-gray-100 rounded-lg">
+              <div className="px-3 py-2 bg-[#1A1A1C] rounded-lg">
                 {isRunning ? (
-                  <div className="flex items-center gap-2 text-blue-600">
+                  <div className="flex items-center gap-2 text-blue-400">
                     <Spinner size="sm" />
                     <span>Running...</span>
                   </div>
                 ) : (
-                  <span className="text-gray-600">Ready</span>
+                  <span className="text-[#A0A0A4]">Ready</span>
                 )}
               </div>
             </div>
 
             {/* Execute Button */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-[#A0A0A4] mb-2">
                 Action
               </label>
               {selectedScenarioId ? (
@@ -209,31 +209,31 @@ export default function ExecutionPage() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <Card>
               <div className="text-center">
-                <p className="text-3xl font-bold text-indigo-600">{stats.total || 0}</p>
-                <p className="text-gray-600 mt-2 text-sm">Total Executions</p>
+                <p className="text-3xl font-bold text-[#5E6AD2]">{stats.total || 0}</p>
+                <p className="text-[#A0A0A4] mt-2 text-sm">Total Executions</p>
               </div>
             </Card>
 
             <Card>
               <div className="text-center">
-                <p className="text-3xl font-bold text-green-600">{stats.passed || 0}</p>
-                <p className="text-gray-600 mt-2 text-sm">Passed</p>
+                <p className="text-3xl font-bold text-green-400">{stats.passed || 0}</p>
+                <p className="text-[#A0A0A4] mt-2 text-sm">Passed</p>
               </div>
             </Card>
 
             <Card>
               <div className="text-center">
-                <p className="text-3xl font-bold text-red-600">{stats.failed || 0}</p>
-                <p className="text-gray-600 mt-2 text-sm">Failed</p>
+                <p className="text-3xl font-bold text-red-400">{stats.failed || 0}</p>
+                <p className="text-[#A0A0A4] mt-2 text-sm">Failed</p>
               </div>
             </Card>
 
             <Card>
               <div className="text-center">
-                <p className="text-3xl font-bold text-blue-600">
+                <p className="text-3xl font-bold text-blue-400">
                   {stats.successRate || 0}%
                 </p>
-                <p className="text-gray-600 mt-2 text-sm">Success Rate</p>
+                <p className="text-[#A0A0A4] mt-2 text-sm">Success Rate</p>
               </div>
             </Card>
           </div>
@@ -245,7 +245,7 @@ export default function ExecutionPage() {
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 <div className="flex items-center gap-3">
-                  <h2 className="text-2xl font-bold text-gray-900">
+                  <h2 className="text-2xl font-bold text-[#E0E0E2]">
                     {currentExecution.scenario?.name}
                   </h2>
                   <Badge variant={getStatusColor(currentExecution.status)}>
@@ -255,29 +255,29 @@ export default function ExecutionPage() {
 
                 <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div>
-                    <p className="text-sm text-gray-600">Passed Steps</p>
-                    <p className="text-2xl font-bold text-green-600">
+                    <p className="text-sm text-[#A0A0A4]">Passed Steps</p>
+                    <p className="text-2xl font-bold text-green-400">
                       {currentExecution.passedSteps || 0}
                     </p>
                   </div>
 
                   <div>
-                    <p className="text-sm text-gray-600">Failed Steps</p>
-                    <p className="text-2xl font-bold text-red-600">
+                    <p className="text-sm text-[#A0A0A4]">Failed Steps</p>
+                    <p className="text-2xl font-bold text-red-400">
                       {currentExecution.failedSteps || 0}
                     </p>
                   </div>
 
                   <div>
-                    <p className="text-sm text-gray-600">Total Steps</p>
-                    <p className="text-2xl font-bold text-gray-900">
+                    <p className="text-sm text-[#A0A0A4]">Total Steps</p>
+                    <p className="text-2xl font-bold text-[#E0E0E2]">
                       {currentExecution.totalSteps || 0}
                     </p>
                   </div>
 
                   <div>
-                    <p className="text-sm text-gray-600">Duration</p>
-                    <p className="text-2xl font-bold text-blue-600">
+                    <p className="text-sm text-[#A0A0A4]">Duration</p>
+                    <p className="text-2xl font-bold text-blue-400">
                       {currentExecution.duration ? `${(currentExecution.duration / 1000).toFixed(2)}s` : '−'}
                     </p>
                   </div>
@@ -291,7 +291,7 @@ export default function ExecutionPage() {
                 )}
 
                 {currentExecution.startTime && (
-                  <div className="mt-4 text-sm text-gray-500">
+                  <div className="mt-4 text-sm text-[#888]">
                     Started: {new Date(currentExecution.startTime).toLocaleString()}
                     {currentExecution.endTime && (
                       <> • Ended: {new Date(currentExecution.endTime).toLocaleString()}</>
@@ -305,7 +305,7 @@ export default function ExecutionPage() {
                 {/* Video Recording */}
                 {currentExecution.videoPath && (
                   <div className="mt-4">
-                    <h3 className="font-semibold text-gray-900 mb-2">📹 Execution Video</h3>
+                    <h3 className="font-semibold text-[#E0E0E2] mb-2">📹 Execution Video</h3>
                     <video
                       controls
                       className="w-full max-w-2xl rounded border border-gray-200"
@@ -319,26 +319,26 @@ export default function ExecutionPage() {
                 {/* Per-Step Results */}
                 {currentExecution.stepResults && currentExecution.stepResults.length > 0 && (
                   <div className="mt-4">
-                    <h3 className="font-semibold text-gray-900 mb-2">Detail Per-Step</h3>
+                    <h3 className="font-semibold text-[#E0E0E2] mb-2">Detail Per-Step</h3>
                     <div className="space-y-2">
                       {currentExecution.stepResults.map((result, idx) => (
                         <div
                           key={result.id || idx}
                           className={`flex items-center gap-3 p-2 rounded border ${
                             result.status === 'PASSED'
-                              ? 'bg-green-50 border-green-200'
-                              : 'bg-red-50 border-red-200'
+                              ? 'bg-green-900/20 border-green-700/30'
+                              : 'bg-red-900/20 border-red-700/30'
                           }`}
                         >
                           <span className={`text-sm ${result.status === 'PASSED' ? 'text-green-600' : 'text-red-600'}`}>
                             {result.status === 'PASSED' ? '✓' : '✗'}
                           </span>
                           <div className="flex-1">
-                            <p className="text-sm font-medium text-gray-900 truncate">
+                            <p className="text-sm font-medium text-[#E0E0E2] truncate">
                               Step {result.testStep?.stepNumber || idx + 1}: {result.testStep?.type || ''} — {result.testStep?.description || '-'}
                             </p>
                             {result.testStep?.selector && (
-                              <p className="text-xs text-gray-500 truncate font-mono">Selector: {result.testStep.selector}</p>
+                              <p className="text-xs text-[#666] truncate font-mono">Selector: {result.testStep.selector}</p>
                             )}
                             {result.errorMessage && (
                               <StepErrorDetail errorMessage={result.errorMessage} size="small" />
@@ -380,37 +380,37 @@ export default function ExecutionPage() {
 
         {/* Execution History */}
         <Card>
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Execution History</h2>
+          <h2 className="text-xl font-bold text-[#E0E0E2] mb-4">Execution History</h2>
 
           {isLoading && executions.length === 0 ? (
             <div className="flex justify-center py-12">
               <Spinner size="lg" />
             </div>
           ) : executions.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-[#888]">
               <p>No executions yet</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-gray-200">
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700">
+                  <tr className="border-b border-[#2D2D2F]">
+                    <th className="text-left py-3 px-4 font-semibold text-[#A0A0A4]">
                       Scenario
                     </th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700">
+                    <th className="text-left py-3 px-4 font-semibold text-[#A0A0A4]">
                       Status
                     </th>
-                    <th className="text-center py-3 px-4 font-semibold text-gray-700">
+                    <th className="text-center py-3 px-4 font-semibold text-[#A0A0A4]">
                       Steps (P/F)
                     </th>
-                    <th className="text-center py-3 px-4 font-semibold text-gray-700">
+                    <th className="text-center py-3 px-4 font-semibold text-[#A0A0A4]">
                       Duration
                     </th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700">
+                    <th className="text-left py-3 px-4 font-semibold text-[#A0A0A4]">
                       Date
                     </th>
-                    <th className="text-center py-3 px-4 font-semibold text-gray-700">
+                    <th className="text-center py-3 px-4 font-semibold text-[#A0A0A4]">
                       Action
                     </th>
                   </tr>
@@ -419,9 +419,9 @@ export default function ExecutionPage() {
                   {executions.map((execution) => (
                     <tr
                       key={execution.id}
-                      className="border-b border-gray-100 hover:bg-gray-50 transition"
+                      className="border-b border-[#2D2D2F] hover:bg-[#1A1A1C] transition"
                     >
-                      <td className="py-3 px-4 text-gray-900">
+                      <td className="py-3 px-4 text-[#E0E0E2]">
                         {execution.scenario?.name}
                       </td>
                       <td className="py-3 px-4">
@@ -438,12 +438,12 @@ export default function ExecutionPage() {
                           {execution.failedSteps}
                         </span>
                       </td>
-                      <td className="py-3 px-4 text-center text-sm text-gray-600">
+                      <td className="py-3 px-4 text-center text-sm text-[#A0A0A4]">
                         {execution.duration
                           ? `${(execution.duration / 1000).toFixed(2)}s`
                           : '−'}
                       </td>
-                      <td className="py-3 px-4 text-sm text-gray-600">
+                      <td className="py-3 px-4 text-sm text-[#A0A0A4]">
                         {new Date(execution.createdAt).toLocaleString()}
                       </td>
                       <td className="py-3 px-4 text-center">
@@ -502,16 +502,16 @@ export default function ExecutionPage() {
             onClick={() => setScreenshotModal(null)}
           >
             <div
-              className="bg-white rounded-lg max-w-5xl w-full max-h-[90vh] overflow-auto"
+              className="bg-[#1A1A1C] border border-[#2D2D2F] rounded-lg max-w-5xl w-full max-h-[90vh] overflow-auto"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex items-center justify-between p-4 border-b">
-                <h3 className="text-lg font-semibold text-gray-900">
+              <div className="flex items-center justify-between p-4 border-b border-[#2D2D2F]">
+                <h3 className="text-lg font-semibold text-[#E0E0E2]">
                   📸 Step {screenshotModal.stepNumber}: {screenshotModal.description}
                 </h3>
                 <button
                   onClick={() => setScreenshotModal(null)}
-                  className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
+                  className="text-[#666] hover:text-[#E0E0E2] text-2xl leading-none"
                 >
                   ✕
                 </button>
@@ -520,15 +520,15 @@ export default function ExecutionPage() {
                 <img
                   src={screenshotModal.url}
                   alt={`Screenshot step ${screenshotModal.stepNumber}`}
-                  className="w-full rounded-lg border border-gray-200"
+                  className="w-full rounded-lg border border-[#2D2D2F]"
                 />
               </div>
-              <div className="flex justify-end p-4 border-t">
+              <div className="flex justify-end p-4 border-t border-[#2D2D2F]">
                 <a
                   href={screenshotModal.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-indigo-600 hover:text-indigo-800 text-sm font-medium mr-4"
+                  className="text-[#5E6AD2] hover:text-[#6B7AE8] text-sm font-medium mr-4"
                 >
                   Buka di tab baru ↗
                 </a>

@@ -24,8 +24,8 @@ export function ScenariosList({
     return (
       <Card>
         <div className="text-center py-12">
-          <p className="text-gray-500 text-lg mb-4">No scenarios found</p>
-          <p className="text-gray-400 text-sm">Create your first scenario to get started</p>
+          <p className="text-[#888] text-lg mb-4">No scenarios found</p>
+          <p className="text-[#555] text-sm">Create your first scenario to get started</p>
         </div>
       </Card>
     )
@@ -39,17 +39,17 @@ export function ScenariosList({
             {/* Info */}
             <div className="flex-1">
               <div className="flex items-center gap-3">
-                <h3 className="text-lg font-semibold text-gray-900">{scenario.name}</h3>
+                <h3 className="text-lg font-semibold text-[#E0E0E2]">{scenario.name}</h3>
                 {scenario.stepCount > 0 && (
                   <Badge variant="primary">{scenario.stepCount} steps</Badge>
                 )}
               </div>
               
               {scenario.description && (
-                <p className="text-gray-600 mt-1 text-sm">{scenario.description}</p>
+                <p className="text-[#A0A0A4] mt-1 text-sm">{scenario.description}</p>
               )}
               
-              <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
+              <div className="flex items-center gap-4 mt-2 text-xs text-[#666]">
                 <span>🌐 {scenario.url}</span>
                 <span>Created: {new Date(scenario.createdAt).toLocaleDateString()}</span>
               </div>

@@ -12,9 +12,7 @@ import scenarioRoutes from './routes/scenarioRoutes.js'
 import searchRoutes from './routes/searchRoutes.js'
 import stepTypeRoutes from './routes/stepTypeRoutes.js'
 import fileRoutes from './routes/fileRoutes.js'
-import importRoutes from './routes/importRoutes.js'
 import executionRoutes from './routes/executionRoutes.js'
-import qaseRoutes from './routes/qaseRoutes.js'
 import recorderRoutes from './routes/recorderRoutes.js'
 import { errorHandler } from './middleware/auth.js'
 import { swaggerSpec } from './lib/swagger.js'
@@ -56,9 +54,7 @@ app.use('/api/scenarios', scenarioRoutes)
 app.use('/api/search', searchRoutes)
 app.use('/api/step-types', stepTypeRoutes)
 app.use('/api/files', fileRoutes)
-app.use('/api/import', importRoutes)
 app.use('/api/executions', executionRoutes)
-app.use('/api/qase', qaseRoutes)
 app.use('/api/recorder', recorderRoutes)
 
 // Swagger API docs — available at /api/docs

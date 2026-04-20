@@ -1,11 +1,18 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
-import { Card, Spinner } from '../components/ui'
 import Layout from '../components/Layout'
-import QaseIntegrationCard from '../components/QaseIntegrationCard'
-import { executionAPI, scenarioAPI } from '../services/api'
+import { executionAPI } from '../services/api'
 import apiClient from '../services/api'
+import {
+  ClipboardList,
+  PlayCircle,
+  CheckCircle2,
+  Clock,
+  Check,
+  X,
+  Plus,
+} from 'lucide-react'
 
 export default function DashboardPage() {
   const navigate = useNavigate()
@@ -62,156 +69,195 @@ export default function DashboardPage() {
 
   return (
     <Layout>
-      <div className="space-y-6">
-        {/* Welcome Section */}
+      <div className="space-y-6 animate-fade-in">
+        {/* Welcome */}
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">
-            Welcome, {user?.name || 'User'}! 👋
+          <h1 className="text-xl font-semibold text-[#E0E0E2]">
+            Welcome back, <span className="text-[#9BA3F0]">{user?.name || 'User'}</span>
           </h1>
-          <p className="text-gray-600 mt-2">
-            Manage your test scenarios and automations
+          <p className="text-[#8A8A8F] mt-1 text-sm">
+            Here's what's happening with your test automation today.
           </p>
         </div>
 
         {loading ? (
-          <div className="flex justify-center py-12"><Spinner size="lg" /></div>
+          <div className="flex justify-center py-16">
+            <div className="w-10 h-10 rounded-full border-2 border-[rgba(255,255,255,0.08)] border-t-[#5E6AD2] animate-spin" />
+          </div>
         ) : (
           <>
             {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <Card>
-                <div className="text-center">
-                  <div className="text-4xl font-bold text-indigo-600">{stats.scenarios}</div>
-                  <p className="text-gray-600 mt-2">Test Scenarios</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="linear-card stat-violet p-5">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-[#8A8A8F] font-medium uppercase tracking-wider">Test Scenarios</p>
+                    <p className="text-3xl font-bold text-[#E0E0E2] mt-1">{stats.scenarios}</p>
+                  </div>
+                  <div className="w-10 h-10 rounded-lg bg-[#5E6AD2]/10 flex items-center justify-center">
+                    <ClipboardList size={18} className="text-[#9BA3F0]" />
+                  </div>
                 </div>
-              </Card>
-              <Card>
-                <div className="text-center">
-                  <div className="text-4xl font-bold text-blue-600">{stats.executions}</div>
-                  <p className="text-gray-600 mt-2">Total Executions</p>
+              </div>
+
+              <div className="linear-card stat-cyan p-5">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-[#8A8A8F] font-medium uppercase tracking-wider">Total Executions</p>
+                    <p className="text-3xl font-bold text-[#E0E0E2] mt-1">{stats.executions}</p>
+                  </div>
+                  <div className="w-10 h-10 rounded-lg bg-[#4EC9B0]/10 flex items-center justify-center">
+                    <PlayCircle size={18} className="text-[#4EC9B0]" />
+                  </div>
                 </div>
-              </Card>
-              <Card>
-                <div className="text-center">
-                  <div className="text-4xl font-bold text-green-600">{stats.successRate}%</div>
-                  <p className="text-gray-600 mt-2">Success Rate</p>
+              </div>
+
+              <div className="linear-card stat-green p-5">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-[#8A8A8F] font-medium uppercase tracking-wider">Success Rate</p>
+                    <p className="text-3xl font-bold text-[#E0E0E2] mt-1">{stats.successRate}%</p>
+                  </div>
+                  <div className="w-10 h-10 rounded-lg bg-[#34D399]/10 flex items-center justify-center">
+                    <CheckCircle2 size={18} className="text-[#34D399]" />
+                  </div>
                 </div>
-              </Card>
-              <Card>
-                <div className="text-center">
-                  <div className="text-4xl font-bold text-purple-600">{formatDuration(stats.avgDuration)}</div>
-                  <p className="text-gray-600 mt-2">Avg Duration</p>
+              </div>
+
+              <div className="linear-card stat-amber p-5">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-[#8A8A8F] font-medium uppercase tracking-wider">Avg Duration</p>
+                    <p className="text-3xl font-bold text-[#E0E0E2] mt-1">{formatDuration(stats.avgDuration)}</p>
+                  </div>
+                  <div className="w-10 h-10 rounded-lg bg-[#FBBF24]/10 flex items-center justify-center">
+                    <Clock size={18} className="text-[#FBBF24]" />
+                  </div>
                 </div>
-              </Card>
+              </div>
             </div>
 
             {/* Pass/Fail Summary */}
             {stats.executions > 0 && (
-              <div className="grid grid-cols-2 gap-4">
-                <Card className="border-l-4 border-l-green-500">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="linear-card p-5 border-l-2 border-l-[#34D399]">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-gray-600">Passed</p>
-                      <p className="text-2xl font-bold text-green-600">{stats.passed}</p>
+                      <p className="text-xs text-[#8A8A8F] uppercase tracking-wider">Passed</p>
+                      <p className="text-2xl font-bold text-emerald-400 mt-1">{stats.passed}</p>
                     </div>
-                    <span className="text-3xl">✅</span>
+                    <div className="w-9 h-9 rounded-lg bg-[#34D399]/10 flex items-center justify-center">
+                      <Check size={16} className="text-[#34D399]" />
+                    </div>
                   </div>
-                </Card>
-                <Card className="border-l-4 border-l-red-500">
+                </div>
+                <div className="linear-card p-5 border-l-2 border-l-[#F87171]">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-gray-600">Failed</p>
-                      <p className="text-2xl font-bold text-red-600">{stats.failed}</p>
+                      <p className="text-xs text-[#8A8A8F] uppercase tracking-wider">Failed</p>
+                      <p className="text-2xl font-bold text-rose-400 mt-1">{stats.failed}</p>
                     </div>
-                    <span className="text-3xl">❌</span>
+                    <div className="w-9 h-9 rounded-lg bg-[#F87171]/10 flex items-center justify-center">
+                      <X size={16} className="text-[#F87171]" />
+                    </div>
                   </div>
-                </Card>
+                </div>
               </div>
             )}
 
             {/* Quick Actions */}
-            <Card>
-              <h2 className="text-xl font-bold text-gray-900 mb-4">Quick Actions</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="linear-card p-5">
+              <h2 className="text-sm font-semibold text-[#E0E0E2] mb-4">Quick Actions</h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <button
                   onClick={() => navigate('/scenarios')}
-                  className="p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-indigo-500 hover:bg-indigo-50 transition text-left"
+                  className="action-btn p-4 text-left"
                 >
-                  <p className="font-semibold text-gray-900">+ Create Scenario</p>
-                  <p className="text-sm text-gray-600 mt-1">Start recording a new test</p>
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-8 h-8 rounded-lg bg-[#5E6AD2]/10 flex items-center justify-center">
+                      <Plus size={15} className="text-[#9BA3F0]" />
+                    </div>
+                    <p className="font-medium text-[#E0E0E2] text-sm">Create Scenario</p>
+                  </div>
+                  <p className="text-xs text-[#8A8A8F]">Start recording a new test</p>
                 </button>
+
                 <button
                   onClick={() => navigate('/execution')}
-                  className="p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-green-500 hover:bg-green-50 transition text-left"
+                  className="action-btn p-4 text-left"
                 >
-                  <p className="font-semibold text-gray-900">▶️ Run Execution</p>
-                  <p className="text-sm text-gray-600 mt-1">Execute a test scenario</p>
-                </button>
-                <button
-                  onClick={() => navigate('/import')}
-                  className="p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition text-left"
-                >
-                  <p className="font-semibold text-gray-900">📥 Import Scenarios</p>
-                  <p className="text-sm text-gray-600 mt-1">Import from CSV or template</p>
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-8 h-8 rounded-lg bg-[#34D399]/10 flex items-center justify-center">
+                      <PlayCircle size={15} className="text-[#34D399]" />
+                    </div>
+                    <p className="font-medium text-[#E0E0E2] text-sm">Run Execution</p>
+                  </div>
+                  <p className="text-xs text-[#8A8A8F]">Execute a test scenario</p>
                 </button>
               </div>
-            </Card>
+            </div>
 
-            {/* Qase.io Integration */}
-            <QaseIntegrationCard />
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
               {/* Recent Scenarios */}
-              <Card>
-                <h2 className="text-xl font-bold text-gray-900 mb-4">Recent Scenarios</h2>
+              <div className="linear-card p-5">
+                <h2 className="text-sm font-semibold text-[#E0E0E2] mb-4">Recent Scenarios</h2>
                 {recentScenarios.length === 0 ? (
-                  <p className="text-center py-4 text-gray-500">No scenarios yet</p>
+                  <p className="text-center py-6 text-[#8A8A8F] text-sm">No scenarios yet</p>
                 ) : (
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     {recentScenarios.map(s => (
                       <div
                         key={s.id}
                         onClick={() => navigate(`/scenarios/${s.id}`)}
-                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-indigo-50 cursor-pointer transition"
+                        className="flex items-center justify-between p-3 rounded-md bg-[rgba(255,255,255,0.02)] hover:bg-[rgba(255,255,255,0.04)] cursor-pointer transition-all border border-transparent hover:border-[rgba(255,255,255,0.08)]"
                       >
                         <div className="min-w-0">
-                          <p className="font-medium text-gray-900 truncate">{s.name}</p>
-                          <p className="text-xs text-gray-500">{formatDate(s.updatedAt || s.createdAt)}</p>
+                          <p className="font-medium text-[#E0E0E2] text-sm truncate">{s.name}</p>
+                          <p className="text-xs text-[#8A8A8F] mt-0.5">{formatDate(s.updatedAt || s.createdAt)}</p>
                         </div>
-                        <span className="text-sm text-gray-400 ml-2">{s._count?.testSteps ?? s.testSteps?.length ?? 0} steps</span>
+                        <span className="text-xs text-[#8A8A8F] ml-3 shrink-0 bg-[rgba(255,255,255,0.04)] px-2 py-0.5 rounded">
+                          {s._count?.testSteps ?? s.testSteps?.length ?? 0} steps
+                        </span>
                       </div>
                     ))}
                   </div>
                 )}
-              </Card>
+              </div>
 
               {/* Recent Executions */}
-              <Card>
-                <h2 className="text-xl font-bold text-gray-900 mb-4">Recent Executions</h2>
+              <div className="linear-card p-5">
+                <h2 className="text-sm font-semibold text-[#E0E0E2] mb-4">Recent Executions</h2>
                 {recentExecutions.length === 0 ? (
-                  <p className="text-center py-4 text-gray-500">No executions yet</p>
+                  <p className="text-center py-6 text-[#8A8A8F] text-sm">No executions yet</p>
                 ) : (
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     {recentExecutions.map(e => (
                       <div
                         key={e.id}
                         onClick={() => navigate('/execution')}
-                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-indigo-50 cursor-pointer transition"
+                        className="flex items-center justify-between p-3 rounded-md bg-[rgba(255,255,255,0.02)] hover:bg-[rgba(255,255,255,0.04)] cursor-pointer transition-all border border-transparent hover:border-[rgba(255,255,255,0.08)]"
                       >
                         <div className="min-w-0">
-                          <p className="font-medium text-gray-900 truncate">{e.scenario?.name || 'Scenario'}</p>
-                          <p className="text-xs text-gray-500">{formatDate(e.startTime)}</p>
+                          <p className="font-medium text-[#E0E0E2] text-sm truncate">{e.scenario?.name || 'Scenario'}</p>
+                          <p className="text-xs text-[#8A8A8F]">{formatDate(e.startTime)}</p>
                         </div>
-                        <span className={`px-2 py-1 rounded text-xs font-semibold ${
-                          e.status === 'PASSED' ? 'bg-green-100 text-green-700' :
-                          e.status === 'FAILED' ? 'bg-red-100 text-red-700' :
-                          'bg-yellow-100 text-yellow-700'
-                        }`}>{e.status}</span>
+                        <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${
+                          e.status === 'PASSED' ? 'text-[#34D399]' :
+                          e.status === 'FAILED' ? 'text-[#F87171]' :
+                          'text-[#FBBF24]'
+                        }`}>
+                          <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                            e.status === 'PASSED' ? 'bg-[#34D399]' :
+                            e.status === 'FAILED' ? 'bg-[#F87171]' :
+                            'bg-[#FBBF24]'
+                          }`} />
+                          {e.status}
+                        </span>
                       </div>
                     ))}
                   </div>
                 )}
-              </Card>
+              </div>
             </div>
           </>
         )}

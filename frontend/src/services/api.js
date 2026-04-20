@@ -124,27 +124,6 @@ export const scenarioAPI = {
   
   deleteTemplate: (id) =>
     apiClient.delete(`/files/templates/${id}`),
-
-  // Import/Export
-  validateCSV: (csvContent) =>
-    apiClient.post('/import/validate', { content: csvContent }),
-  
-  importCSV: (file) => {
-    const formData = new FormData()
-    formData.append('file', file)
-    return apiClient.post('/import/csv', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    })
-  },
-  
-  importFromTemplate: (templateId) =>
-    apiClient.post(`/import/template/${templateId}`),
-  
-  exportToCSV: (scenarioId) =>
-    apiClient.get(`/import/export/${scenarioId}`, { responseType: 'blob' }),
-  
-  bulkImport: (scenarios) =>
-    apiClient.post('/import/bulk', { scenarios })
 }
 
 export const executionAPI = {

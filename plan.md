@@ -2,7 +2,7 @@
 
 > Platform Otomatis untuk Record, Playback, dan Eksekusi Test Scenario di Website Apapun
 >
-> **Last Updated**: April 15, 2026 - Session 11 (Proxy Recorder, Headed Execution, Live Viewer)
+> **Last Updated**: April 20, 2026 - Session 13 (UI Polish: Dark/Light theme, Responsive design, Auth pages redesign)
 > **Current Phase**: Production-Ready — All core features implemented and deployed
 
 ---
@@ -110,9 +110,19 @@ docker-compose down
 - [x] GitHub Actions CI/CD
 - [x] Credential sanitization (no secrets in git)
 
----
+### Phase 6: UI Polish & Responsive Design
+- [x] Dark theme readability fixed across all pages (ScenarioDetailPage, TestStepList, all menus)
+- [x] Light theme support — comprehensive CSS overrides for all dark tokens, hover states, RGBA borders
+- [x] Layout.jsx refactored — Settings moved to top-right header (gear icon), user dropdown from avatar
+- [x] Responsive sidebar — mobile overlay drawer (`< lg`), desktop inline collapsible
+- [x] Responsive pages — DashboardPage, ScenariosPage, ReportsPage, ScenarioDetailPage, SettingsPage, ImportExportPage, ExecutionPage all adapt to small screens
+- [x] Touch-friendly tap targets (min 40px) via global CSS
+- [x] Browser autofill dark/light override (`-webkit-box-shadow inset`)
+- [x] LoginPage redesigned — dark card design with autofill fix
+- [x] RegisterPage fully redesigned — matches LoginPage design system, English language, password strength UI
+- [x] Default theme changed to **light**
 
-## 📈 Current Status
+---
 
 ```
 Architecture
@@ -173,8 +183,6 @@ testingndrih/
 │   │   │   ├── scenarioController.js
 │   │   │   ├── testStepController.js
 │   │   │   ├── fileController.js
-│   │   │   ├── importController.js
-│   │   │   ├── qaseController.js
 │   │   │   └── searchController.js
 │   │   ├── services/
 │   │   │   ├── executionService.js     # Playwright executor + EventEmitter SSE
@@ -183,9 +191,7 @@ testingndrih/
 │   │   │   ├── scenarioService.js
 │   │   │   ├── testStepService.js
 │   │   │   ├── fileService.js
-│   │   │   ├── importService.js
 │   │   │   ├── locatorSuggestionService.js
-│   │   │   ├── qaseService.js
 │   │   │   └── searchService.js
 │   │   ├── routes/
 │   │   │   ├── authRoutes.js
@@ -216,7 +222,8 @@ testingndrih/
     │   │   ├── ScenariosPage.jsx
     │   │   ├── ScenarioDetailPage.jsx  # Record + Edit + Execute + Live Viewer
     │   │   ├── ExecutionPage.jsx       # History + Details
-    │   │   └── QaseSettingsPage.jsx
+│   │   │   ├── ReportsPage.jsx
+│   │   │   └── SettingsPage.jsx
     │   ├── components/
     │   │   ├── StepErrorDetail.jsx
     │   │   ├── TestStepList.jsx

@@ -1,33 +1,33 @@
-// Button Component
-export function Button({ 
-  children, 
-  variant = 'primary', 
-  size = 'md', 
-  disabled = false, 
+// ─── Button Component ───────────────────────────────────────────────────────
+export function Button({
+  children,
+  variant = 'primary',
+  size = 'md',
+  disabled = false,
   onClick,
   className = '',
-  ...props 
+  ...props
 }) {
-  const baseStyles = 'font-semibold rounded-lg transition duration-200 focus:outline-none'
-  
+  const base = 'font-medium rounded-md transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-offset-[#0F0E11] inline-flex items-center justify-center gap-2 cursor-pointer'
+
   const variants = {
-    primary: 'bg-indigo-600 hover:bg-indigo-700 text-white',
-    secondary: 'bg-gray-200 hover:bg-gray-300 text-gray-900',
-    danger: 'bg-red-600 hover:bg-red-700 text-white',
-    ghost: 'bg-transparent hover:bg-gray-100 text-gray-900'
+    primary:   'bg-[#5E6AD2] hover:bg-[#6B7AE8] text-white focus:ring-[#5E6AD2]',
+    secondary: 'bg-[#1A1A1C] hover:bg-[#252528] text-[#E0E0E2] border border-[rgba(255,255,255,0.1)] focus:ring-[#5E6AD2]',
+    danger:    'bg-[#C24B4B] hover:bg-[#D45555] text-white focus:ring-[#C24B4B]',
+    ghost:     'bg-transparent hover:bg-[rgba(255,255,255,0.05)] text-[#8A8A8F] hover:text-[#E0E0E2] focus:ring-[#5E6AD2]',
+    success:   'bg-[#3DAF7A] hover:bg-[#44C287] text-white focus:ring-[#3DAF7A]',
+    cyan:      'bg-[#3A9E9E] hover:bg-[#44B2B2] text-white focus:ring-[#3A9E9E]',
   }
 
   const sizes = {
-    sm: 'px-3 py-1 text-sm',
-    md: 'px-4 py-2',
-    lg: 'px-6 py-3 text-lg'
+    sm: 'px-3 py-1.5 text-xs',
+    md: 'px-3.5 py-2 text-sm',
+    lg: 'px-5 py-2.5 text-sm',
   }
-
-  const disabledStyles = disabled ? 'opacity-50 cursor-not-allowed' : ''
 
   return (
     <button
-      className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${disabledStyles} ${className}`}
+      className={`${base} ${variants[variant] ?? variants.primary} ${sizes[size]} ${disabled ? 'opacity-40 cursor-not-allowed' : ''} ${className}`}
       disabled={disabled}
       onClick={onClick}
       {...props}
@@ -37,7 +37,7 @@ export function Button({
   )
 }
 
-// Input Component
+// ─── Input Component ─────────────────────────────────────────────────────────
 export function Input({
   label,
   type = 'text',
@@ -51,7 +51,7 @@ export function Input({
   return (
     <div className="w-full">
       {label && (
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-xs font-medium text-[#8A8A8F] mb-1.5 uppercase tracking-wider">
           {label}
         </label>
       )}
@@ -61,49 +61,42 @@ export function Input({
         onChange={onChange}
         placeholder={placeholder}
         disabled={disabled}
-        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition ${
-          error ? 'border-red-500' : 'border-gray-300'
-        } ${disabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+        className={`w-full px-3 py-2 bg-[#161618] border rounded-md focus:ring-1 focus:ring-[#5E6AD2] focus:border-[#5E6AD2] outline-none transition-all text-[#E0E0E2] placeholder-[#4A4A52] text-sm ${
+          error ? 'border-[#C24B4B]' : 'border-[rgba(255,255,255,0.1)]'
+        } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
         {...props}
       />
-      {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
+      {error && <p className="text-[#F87171] text-xs mt-1">{error}</p>}
     </div>
   )
 }
 
-// Card Component
+// ─── Card Component ───────────────────────────────────────────────────────────
 export function Card({ children, className = '' }) {
   return (
-    <div className={`bg-white rounded-lg shadow-md p-6 ${className}`}>
+    <div className={`linear-card p-5 ${className}`}>
       {children}
     </div>
   )
 }
 
-// Alert Component
+// ─── Alert Component ──────────────────────────────────────────────────────────
 export function Alert({ type = 'info', message, onClose }) {
-  const bgColors = {
-    info: 'bg-blue-50 border-blue-200',
-    success: 'bg-green-50 border-green-200',
-    warning: 'bg-yellow-50 border-yellow-200',
-    error: 'bg-red-50 border-red-200'
-  }
-
-  const textColors = {
-    info: 'text-blue-700',
-    success: 'text-green-700',
-    warning: 'text-yellow-700',
-    error: 'text-red-700'
+  const styles = {
+    info:    'bg-[#1A1A2E] border-[#5E6AD2]/40 text-[#9BA3F0]',
+    success: 'bg-[#0F1F17] border-[#34D399]/40 text-[#34D399]',
+    warning: 'bg-[#1F1A0F] border-[#FBBF24]/40 text-[#FBBF24]',
+    error:   'bg-[#1F0F0F] border-[#F87171]/40 text-[#F87171]',
   }
 
   return (
-    <div className={`p-4 border rounded-lg ${bgColors[type]}`}>
+    <div className={`p-3.5 border rounded-md ${styles[type] ?? styles.info}`}>
       <div className="flex items-center justify-between">
-        <p className={`text-sm font-medium ${textColors[type]}`}>{message}</p>
+        <p className="text-sm">{message}</p>
         {onClose && (
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
+            className="ml-4 opacity-50 hover:opacity-100 transition-opacity text-base leading-none"
           >
             ✕
           </button>
@@ -113,32 +106,31 @@ export function Alert({ type = 'info', message, onClose }) {
   )
 }
 
-// Badge Component
+// ─── Badge Component ──────────────────────────────────────────────────────────
 export function Badge({ children, variant = 'default' }) {
-  const variants = {
-    default: 'bg-gray-200 text-gray-900',
-    primary: 'bg-indigo-200 text-indigo-900',
-    success: 'bg-green-200 text-green-900',
-    warning: 'bg-yellow-200 text-yellow-900',
-    danger: 'bg-red-200 text-red-900'
+  const colors = {
+    default: { dot: 'bg-[#8A8A8F]', text: 'text-[#8A8A8F]' },
+    primary: { dot: 'bg-[#5E6AD2]', text: 'text-[#9BA3F0]' },
+    success: { dot: 'bg-[#34D399]', text: 'text-[#34D399]' },
+    warning: { dot: 'bg-[#FBBF24]', text: 'text-[#FBBF24]' },
+    danger:  { dot: 'bg-[#F87171]', text: 'text-[#F87171]' },
   }
 
+  const c = colors[variant] ?? colors.default
+
   return (
-    <span className={`px-3 py-1 rounded-full text-sm font-semibold ${variants[variant]}`}>
+    <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${c.text}`}>
+      <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${c.dot}`} />
       {children}
     </span>
   )
 }
 
-// Loading Spinner
+// ─── Spinner Component ────────────────────────────────────────────────────────
 export function Spinner({ size = 'md' }) {
-  const sizes = {
-    sm: 'w-4 h-4',
-    md: 'w-8 h-8',
-    lg: 'w-12 h-12'
-  }
-
+  const sizes = { sm: 'w-4 h-4', md: 'w-8 h-8', lg: 'w-12 h-12' }
   return (
-    <div className={`${sizes[size]} border-4 border-gray-300 border-t-indigo-600 rounded-full animate-spin`}></div>
+    <div className={`${sizes[size]} rounded-full border-2 border-[rgba(255,255,255,0.08)] border-t-[#5E6AD2] animate-spin`} />
   )
 }
+

@@ -122,10 +122,10 @@ export default function ScenariosPage() {
     <Layout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Test Scenarios</h1>
-            <p className="text-gray-600 mt-2">Create and manage your test scenarios</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-[#E0E0E2]">Test Scenarios</h1>
+            <p className="text-[#A0A0A4] mt-1">Create and manage your test scenarios</p>
           </div>
           {!showCreateForm && !editingScenario && (
             <Button
@@ -133,6 +133,7 @@ export default function ScenariosPage() {
               variant="primary"
               size="lg"
               data-testid="create-scenario-btn"
+              className="self-start sm:self-auto"
             >
               + Create Scenario
             </Button>
@@ -152,7 +153,7 @@ export default function ScenariosPage() {
         {(showCreateForm || editingScenario) && (
           <Card>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-gray-900">
+              <h2 className="text-xl font-bold text-[#E0E0E2]">
                 {editingScenario ? 'Edit Scenario' : 'Create New Scenario'}
               </h2>
               <button
@@ -160,7 +161,7 @@ export default function ScenariosPage() {
                   setShowCreateForm(false)
                   setEditingScenario(null)
                 }}
-                className="text-gray-400 hover:text-gray-600 text-2xl"
+                className="text-[#666] hover:text-[#E0E0E2] text-2xl"
               >
                 ✕
               </button>
@@ -203,20 +204,20 @@ export default function ScenariosPage() {
           <Card>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="text-center">
-                <p className="text-3xl font-bold text-indigo-600">{scenarios.length}</p>
-                <p className="text-gray-600 mt-2">Total Scenarios</p>
+                <p className="text-3xl font-bold text-[#5E6AD2]">{scenarios.length}</p>
+                <p className="text-[#A0A0A4] mt-2">Total Scenarios</p>
               </div>
               <div className="text-center">
                 <p className="text-3xl font-bold text-green-600">
                   {scenarios.reduce((sum, s) => sum + (s.stepCount || 0), 0)}
                 </p>
-                <p className="text-gray-600 mt-2">Total Test Steps</p>
+                <p className="text-[#A0A0A4] mt-2">Total Test Steps</p>
               </div>
               <div className="text-center">
                 <p className="text-3xl font-bold text-blue-600">
                   {new Date().toLocaleDateString()}
                 </p>
-                <p className="text-gray-600 mt-2">Last Updated</p>
+                <p className="text-[#A0A0A4] mt-2">Last Updated</p>
               </div>
             </div>
           </Card>

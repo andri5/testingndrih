@@ -36,7 +36,7 @@ export function ScenarioSearch({ onSearch, onFilterChange, isLoading = false }) 
         {searchText && (
           <button
             onClick={handleClearSearch}
-            className="px-4 py-2 text-gray-600 hover:text-gray-900 transition"
+            className="px-4 py-2 text-[#A0A0A4] hover:text-[#E0E0E2] transition"
             disabled={isLoading}
           >
             Clear
@@ -50,7 +50,7 @@ export function ScenarioSearch({ onSearch, onFilterChange, isLoading = false }) 
           value={filterType}
           onChange={handleFilterChange}
           disabled={isLoading}
-          className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition bg-white cursor-pointer"
+          className="px-4 py-2 bg-[#161618] border border-[#2D2D2F] text-[#E0E0E2] rounded-lg focus:ring-2 focus:ring-[#5E6AD2] focus:border-transparent outline-none transition cursor-pointer"
         >
           <option value="all">All Scenarios</option>
           <option value="recent">Recently Created</option>

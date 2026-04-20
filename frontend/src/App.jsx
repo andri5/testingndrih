@@ -1,19 +1,24 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import { useEffect } from 'react'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import DashboardPage from './pages/DashboardPage'
 import ScenariosPage from './pages/ScenariosPage'
 import ScenarioDetailPage from './pages/ScenarioDetailPage'
 import ExecutionPage from './pages/ExecutionPage'
-import QaseSettingsPage from './pages/QaseSettingsPage'
 import ReportsPage from './pages/ReportsPage'
 import SettingsPage from './pages/SettingsPage'
-import ImportExportPage from './pages/ImportExportPage'
 import ProtectedRoute from './components/ProtectedRoute'
 import { useAuthStore } from './store/authStore'
+import { useSettingsStore } from './store/settingsStore'
 
 export default function App() {
   const token = useAuthStore((state) => state.token)
+  const init = useSettingsStore((state) => state.init)
+
+  useEffect(() => {
+    init()
+  }, [])
 
   return (
     <Router>
@@ -62,14 +67,6 @@ export default function App() {
           }
         />
         <Route
-          path="/qase"
-          element={
-            <ProtectedRoute>
-              <QaseSettingsPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
           path="/reports"
           element={
             <ProtectedRoute>
@@ -85,16 +82,8 @@ export default function App() {
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/import"
-          element={
-            <ProtectedRoute>
-              <ImportExportPage />
-            </ProtectedRoute>
-          }
-        />
 
-        {/* Catch-all redirect */}
+        {/* Catch-all redirect */}}
         <Route path="/" element={<Navigate to="/dashboard" />} />
         <Route path="*" element={<Navigate to="/dashboard" />} />
       </Routes>

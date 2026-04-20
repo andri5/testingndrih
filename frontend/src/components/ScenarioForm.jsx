@@ -100,7 +100,7 @@ export function ScenarioForm({ onSubmit, initialScenario = null, isLoading = fal
       />
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-sm font-medium text-[#A0A0A4] mb-1">
           Description (Optional)
         </label>
         <textarea
@@ -110,7 +110,7 @@ export function ScenarioForm({ onSubmit, initialScenario = null, isLoading = fal
           onChange={handleChange}
           disabled={isLoading}
           rows="3"
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition"
+          className="w-full px-4 py-2 bg-[#161618] border border-[rgba(255,255,255,0.1)] text-[#E0E0E2] placeholder-[#4A4A52] rounded-lg focus:ring-1 focus:ring-[#5E6AD2] focus:border-[#5E6AD2] outline-none transition"
         />
       </div>
 

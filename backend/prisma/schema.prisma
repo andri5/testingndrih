@@ -67,7 +67,6 @@ model User {
   scenarios        Scenario[]
   executions       Execution[]
   executionLogs    ExecutionLog[]
-  qaseIntegration  QaseIntegration?
 
   @@map("users")
 }
@@ -86,7 +85,6 @@ model Scenario {
   testSteps  TestStep[]
   executions Execution[]
   apiTests   ApiTest[]
-  qaseTestCases QaseTestCase[]
 
   @@index([userId])
   @@map("scenarios")
@@ -243,42 +241,4 @@ model ExecutionLog {
   @@index([executionId])
   @@index([userId])
   @@map("execution_logs")
-}
-
-model QaseIntegration {
-  id           String   @id @default(cuid())
-  userId       String   @unique
-  apiKey       String   // Ideally encrypted - see TODO below
-  projectCode  String
-  isConnected  Boolean  @default(true)
-  lastSyncedAt DateTime?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  testCases QaseTestCase[]
-
-  @@index([userId])
-  @@map("qase_integrations")
-}
-
-model QaseTestCase {
-  id              String   @id @default(cuid())
-  userId          String
-  qaseId          Int      // ID from Qase API
-  caseTitle       String
-  caseDescription String?
-  qaseStatus      String   // Status from Qase (e.g., 'active', 'draft')
-  scenarioId      String?  // Link to created scenario (optional)
-  tags            String?  // JSON array string
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  integration QaseIntegration @relation(fields: [userId], references: [userId], onDelete: Cascade)
-  scenario    Scenario?       @relation(fields: [scenarioId], references: [id], onDelete: SetNull)
-
-  @@unique([qaseId, userId])
-  @@index([userId])
-  @@index([scenarioId])
-  @@map("qase_test_cases")
 }
