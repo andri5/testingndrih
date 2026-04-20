@@ -9,6 +9,8 @@ import ExecutionPage from './pages/ExecutionPage'
 import ReportsPage from './pages/ReportsPage'
 import SettingsPage from './pages/SettingsPage'
 import ProtectedRoute from './components/ProtectedRoute'
+import NotFoundPage from './pages/NotFoundPage'
+import MaintenancePage from './pages/MaintenancePage'
 import { useAuthStore } from './store/authStore'
 import { useSettingsStore } from './store/settingsStore'
 
@@ -83,9 +85,12 @@ export default function App() {
           }
         />
 
-        {/* Catch-all redirect */}}
+        {/* Maintenance */}
+        <Route path="/maintenance" element={<MaintenancePage />} />
+
+        {/* Catch-all */}
         <Route path="/" element={<Navigate to="/dashboard" />} />
-        <Route path="*" element={<Navigate to="/dashboard" />} />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </Router>
   )
