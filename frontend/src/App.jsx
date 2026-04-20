@@ -11,6 +11,7 @@ import SettingsPage from './pages/SettingsPage'
 import ProtectedRoute from './components/ProtectedRoute'
 import NotFoundPage from './pages/NotFoundPage'
 import MaintenancePage from './pages/MaintenancePage'
+import SessionExpiredPage from './pages/SessionExpiredPage'
 import { useAuthStore } from './store/authStore'
 import { useSettingsStore } from './store/settingsStore'
 
@@ -87,6 +88,9 @@ export default function App() {
 
         {/* Maintenance */}
         <Route path="/maintenance" element={<MaintenancePage />} />
+
+        {/* Session expired */}
+        <Route path="/session-expired" element={<SessionExpiredPage />} />
 
         {/* Catch-all */}
         <Route path="/" element={<Navigate to="/dashboard" />} />

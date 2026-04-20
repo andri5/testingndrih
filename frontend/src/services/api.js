@@ -28,11 +28,11 @@ apiClient.interceptors.response.use(
     if (error.response?.status === 401) {
       // Token expired/invalid - clear auth
       // Don't redirect if already on login or register page
-      const isAuthPage = window.location.pathname === '/login' || window.location.pathname === '/register'
+      const isAuthPage = ['/login', '/register', '/session-expired'].includes(window.location.pathname)
       localStorage.removeItem('authToken')
       localStorage.removeItem('user')
       if (!isAuthPage) {
-        window.location.href = '/login'
+        window.location.href = '/session-expired'
       }
     }
     return Promise.reject(error)
