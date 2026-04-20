@@ -12,6 +12,10 @@ import ProtectedRoute from './components/ProtectedRoute'
 import NotFoundPage from './pages/NotFoundPage'
 import MaintenancePage from './pages/MaintenancePage'
 import SessionExpiredPage from './pages/SessionExpiredPage'
+import ForbiddenPage from './pages/ForbiddenPage'
+import ServerErrorPage from './pages/ServerErrorPage'
+import ErrorBoundary from './components/ErrorBoundary'
+import OfflineBanner from './components/OfflineBanner'
 import { useAuthStore } from './store/authStore'
 import { useSettingsStore } from './store/settingsStore'
 
@@ -24,7 +28,9 @@ export default function App() {
   }, [])
 
   return (
-    <Router>
+    <ErrorBoundary>
+      <OfflineBanner />
+      <Router>
       <Routes>
         {/* Public Routes */}
         <Route
@@ -92,10 +98,17 @@ export default function App() {
         {/* Session expired */}
         <Route path="/session-expired" element={<SessionExpiredPage />} />
 
+        {/* Forbidden */}
+        <Route path="/forbidden" element={<ForbiddenPage />} />
+
+        {/* Server error */}
+        <Route path="/server-error" element={<ServerErrorPage />} />
+
         {/* Catch-all */}
         <Route path="/" element={<Navigate to="/dashboard" />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </Router>
+    </ErrorBoundary>
   )
 }

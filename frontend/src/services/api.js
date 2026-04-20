@@ -25,16 +25,34 @@ apiClient.interceptors.request.use((config) => {
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      // Token expired/invalid - clear auth
-      // Don't redirect if already on login or register page
-      const isAuthPage = ['/login', '/register', '/session-expired'].includes(window.location.pathname)
+    const status = error.response?.status
+    const currentPath = window.location.pathname
+    const isAuthPage = ['/login', '/register', '/session-expired'].includes(currentPath)
+
+    if (status === 401) {
+      // Token expired/invalid - clear auth and redirect
       localStorage.removeItem('authToken')
       localStorage.removeItem('user')
       if (!isAuthPage) {
         window.location.href = '/session-expired'
       }
+    } else if (status === 403) {
+      if (!isAuthPage) {
+        window.location.href = '/forbidden'
+      }
+    } else if (status >= 500) {
+      if (!isAuthPage) {
+        window.location.href = '/server-error'
+      }
+    } else if (!error.response) {
+      // Network error / timeout — only redirect if not already on an error page
+      const isErrorPage = ['/session-expired', '/forbidden', '/server-error', '/maintenance'].includes(currentPath)
+      if (!isAuthPage && !isErrorPage) {
+        // Let components handle network errors inline; don't hard-redirect
+        // (offline banner handles UI feedback)
+      }
     }
+
     return Promise.reject(error)
   }
 )
