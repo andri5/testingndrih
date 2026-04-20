@@ -24,9 +24,10 @@ export const useScenarioStore = create((set, get) => ({
       
       if (search) {
         const response = await apiClient.get('/search', { params: { query: search, skip, take } })
+        const { scenarios, total, hasMore } = response.data
         set({ 
-          scenarios: response.data.scenarios || [], 
-          pagination: response.data.pagination,
+          scenarios: scenarios || [], 
+          pagination: { skip, take, total: total || 0, hasMore: hasMore || false },
           isLoading: false 
         })
       } else {
