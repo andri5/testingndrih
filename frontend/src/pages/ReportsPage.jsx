@@ -4,6 +4,7 @@ import Layout from '../components/Layout'
 import { Card, Button, Badge, Spinner, Alert } from '../components/ui'
 import { executionAPI } from '../services/api'
 import apiClient from '../services/api'
+import { PlayCircle, CheckCircle2, XCircle, TrendingUp } from 'lucide-react'
 
 /** Pure SVG stacked bar chart for pass/fail trend */
 function TrendChart({ data }) {
@@ -210,30 +211,50 @@ export default function ReportsPage() {
             {/* Summary Stats */}
             {stats && (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <Card>
-                  <div className="text-center">
-                    <p className="text-3xl font-bold text-blue-600">{stats.total}</p>
-                    <p className="text-sm text-[#A0A0A4] mt-1">Total Executions</p>
+                <div className="linear-card p-5">
+                  <div className="flex items-center gap-4">
+                    <div className="w-11 h-11 rounded-xl bg-[#5E6AD2]/10 flex items-center justify-center shrink-0">
+                      <PlayCircle size={18} className="text-[#9BA3F0]" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-[#E0E0E2] leading-none">{stats.total}</p>
+                      <p className="text-xs text-[#8A8A8F] mt-1.5 font-medium uppercase tracking-wider">Total Executions</p>
+                    </div>
                   </div>
-                </Card>
-                <Card>
-                  <div className="text-center">
-                    <p className="text-3xl font-bold text-green-600">{stats.passed}</p>
-                    <p className="text-sm text-[#A0A0A4] mt-1">Passed</p>
+                </div>
+                <div className="linear-card p-5">
+                  <div className="flex items-center gap-4">
+                    <div className="w-11 h-11 rounded-xl bg-[#34D399]/10 flex items-center justify-center shrink-0">
+                      <CheckCircle2 size={18} className="text-[#34D399]" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-[#E0E0E2] leading-none">{stats.passed}</p>
+                      <p className="text-xs text-[#8A8A8F] mt-1.5 font-medium uppercase tracking-wider">Passed</p>
+                    </div>
                   </div>
-                </Card>
-                <Card>
-                  <div className="text-center">
-                    <p className="text-3xl font-bold text-red-600">{stats.failed}</p>
-                    <p className="text-sm text-[#A0A0A4] mt-1">Failed</p>
+                </div>
+                <div className="linear-card p-5">
+                  <div className="flex items-center gap-4">
+                    <div className="w-11 h-11 rounded-xl bg-[#F87171]/10 flex items-center justify-center shrink-0">
+                      <XCircle size={18} className="text-[#F87171]" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-[#E0E0E2] leading-none">{stats.failed}</p>
+                      <p className="text-xs text-[#8A8A8F] mt-1.5 font-medium uppercase tracking-wider">Failed</p>
+                    </div>
                   </div>
-                </Card>
-                <Card>
-                  <div className="text-center">
-                    <p className="text-3xl font-bold text-purple-600">{stats.successRate}%</p>
-                    <p className="text-sm text-[#A0A0A4] mt-1">Success Rate</p>
+                </div>
+                <div className="linear-card p-5">
+                  <div className="flex items-center gap-4">
+                    <div className="w-11 h-11 rounded-xl bg-[#FBBF24]/10 flex items-center justify-center shrink-0">
+                      <TrendingUp size={18} className="text-[#FBBF24]" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-[#E0E0E2] leading-none">{stats.successRate}%</p>
+                      <p className="text-xs text-[#8A8A8F] mt-1.5 font-medium uppercase tracking-wider">Success Rate</p>
+                    </div>
                   </div>
-                </Card>
+                </div>
               </div>
             )}
 

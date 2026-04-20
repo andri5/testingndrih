@@ -6,6 +6,7 @@ import StepErrorDetail from '../components/StepErrorDetail'
 import { useExecutionStore } from '../store/executionStore'
 import { useScenarioStore } from '../store/scenarioStore'
 import { ExecuteScenarioButton } from '../components/ExecuteScenarioButton'
+import { PlayCircle, CheckCircle2, XCircle, TrendingUp, ClipboardList, Clock } from 'lucide-react'
 
 export default function ExecutionPage() {
   const navigate = useNavigate()
@@ -207,35 +208,50 @@ export default function ExecutionPage() {
         {/* Stats Cards */}
         {Object.keys(stats).length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Card>
-              <div className="text-center">
-                <p className="text-3xl font-bold text-[#5E6AD2]">{stats.total || 0}</p>
-                <p className="text-[#A0A0A4] mt-2 text-sm">Total Executions</p>
+            <div className="linear-card p-5">
+              <div className="flex items-center gap-4">
+                <div className="w-11 h-11 rounded-xl bg-[#5E6AD2]/10 flex items-center justify-center shrink-0">
+                  <PlayCircle size={18} className="text-[#9BA3F0]" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-[#E0E0E2] leading-none">{stats.total || 0}</p>
+                  <p className="text-xs text-[#8A8A8F] mt-1.5 font-medium uppercase tracking-wider">Total Executions</p>
+                </div>
               </div>
-            </Card>
-
-            <Card>
-              <div className="text-center">
-                <p className="text-3xl font-bold text-green-400">{stats.passed || 0}</p>
-                <p className="text-[#A0A0A4] mt-2 text-sm">Passed</p>
+            </div>
+            <div className="linear-card p-5">
+              <div className="flex items-center gap-4">
+                <div className="w-11 h-11 rounded-xl bg-[#34D399]/10 flex items-center justify-center shrink-0">
+                  <CheckCircle2 size={18} className="text-[#34D399]" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-[#E0E0E2] leading-none">{stats.passed || 0}</p>
+                  <p className="text-xs text-[#8A8A8F] mt-1.5 font-medium uppercase tracking-wider">Passed</p>
+                </div>
               </div>
-            </Card>
-
-            <Card>
-              <div className="text-center">
-                <p className="text-3xl font-bold text-red-400">{stats.failed || 0}</p>
-                <p className="text-[#A0A0A4] mt-2 text-sm">Failed</p>
+            </div>
+            <div className="linear-card p-5">
+              <div className="flex items-center gap-4">
+                <div className="w-11 h-11 rounded-xl bg-[#F87171]/10 flex items-center justify-center shrink-0">
+                  <XCircle size={18} className="text-[#F87171]" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-[#E0E0E2] leading-none">{stats.failed || 0}</p>
+                  <p className="text-xs text-[#8A8A8F] mt-1.5 font-medium uppercase tracking-wider">Failed</p>
+                </div>
               </div>
-            </Card>
-
-            <Card>
-              <div className="text-center">
-                <p className="text-3xl font-bold text-blue-400">
-                  {stats.successRate || 0}%
-                </p>
-                <p className="text-[#A0A0A4] mt-2 text-sm">Success Rate</p>
+            </div>
+            <div className="linear-card p-5">
+              <div className="flex items-center gap-4">
+                <div className="w-11 h-11 rounded-xl bg-[#FBBF24]/10 flex items-center justify-center shrink-0">
+                  <TrendingUp size={18} className="text-[#FBBF24]" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-[#E0E0E2] leading-none">{stats.successRate || 0}%</p>
+                  <p className="text-xs text-[#8A8A8F] mt-1.5 font-medium uppercase tracking-wider">Success Rate</p>
+                </div>
               </div>
-            </Card>
+            </div>
           </div>
         )}
 
@@ -253,33 +269,42 @@ export default function ExecutionPage() {
                   </Badge>
                 </div>
 
-                <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div>
-                    <p className="text-sm text-[#A0A0A4]">Passed Steps</p>
-                    <p className="text-2xl font-bold text-green-400">
-                      {currentExecution.passedSteps || 0}
-                    </p>
+                <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <div className="flex items-center gap-3 p-3 rounded-xl bg-[#161618] border border-[#2A2A2D]">
+                    <div className="w-8 h-8 rounded-lg bg-[#34D399]/10 flex items-center justify-center shrink-0">
+                      <CheckCircle2 size={15} className="text-[#34D399]" />
+                    </div>
+                    <div>
+                      <p className="text-xl font-bold text-[#E0E0E2] leading-none">{currentExecution.passedSteps || 0}</p>
+                      <p className="text-xs text-[#8A8A8F] mt-1 uppercase tracking-wider">Passed</p>
+                    </div>
                   </div>
-
-                  <div>
-                    <p className="text-sm text-[#A0A0A4]">Failed Steps</p>
-                    <p className="text-2xl font-bold text-red-400">
-                      {currentExecution.failedSteps || 0}
-                    </p>
+                  <div className="flex items-center gap-3 p-3 rounded-xl bg-[#161618] border border-[#2A2A2D]">
+                    <div className="w-8 h-8 rounded-lg bg-[#F87171]/10 flex items-center justify-center shrink-0">
+                      <XCircle size={15} className="text-[#F87171]" />
+                    </div>
+                    <div>
+                      <p className="text-xl font-bold text-[#E0E0E2] leading-none">{currentExecution.failedSteps || 0}</p>
+                      <p className="text-xs text-[#8A8A8F] mt-1 uppercase tracking-wider">Failed</p>
+                    </div>
                   </div>
-
-                  <div>
-                    <p className="text-sm text-[#A0A0A4]">Total Steps</p>
-                    <p className="text-2xl font-bold text-[#E0E0E2]">
-                      {currentExecution.totalSteps || 0}
-                    </p>
+                  <div className="flex items-center gap-3 p-3 rounded-xl bg-[#161618] border border-[#2A2A2D]">
+                    <div className="w-8 h-8 rounded-lg bg-[#5E6AD2]/10 flex items-center justify-center shrink-0">
+                      <ClipboardList size={15} className="text-[#9BA3F0]" />
+                    </div>
+                    <div>
+                      <p className="text-xl font-bold text-[#E0E0E2] leading-none">{currentExecution.totalSteps || 0}</p>
+                      <p className="text-xs text-[#8A8A8F] mt-1 uppercase tracking-wider">Total</p>
+                    </div>
                   </div>
-
-                  <div>
-                    <p className="text-sm text-[#A0A0A4]">Duration</p>
-                    <p className="text-2xl font-bold text-blue-400">
-                      {currentExecution.duration ? `${(currentExecution.duration / 1000).toFixed(2)}s` : '−'}
-                    </p>
+                  <div className="flex items-center gap-3 p-3 rounded-xl bg-[#161618] border border-[#2A2A2D]">
+                    <div className="w-8 h-8 rounded-lg bg-[#FBBF24]/10 flex items-center justify-center shrink-0">
+                      <Clock size={15} className="text-[#FBBF24]" />
+                    </div>
+                    <div>
+                      <p className="text-xl font-bold text-[#E0E0E2] leading-none">{currentExecution.duration ? `${(currentExecution.duration / 1000).toFixed(2)}s` : '−'}</p>
+                      <p className="text-xs text-[#8A8A8F] mt-1 uppercase tracking-wider">Duration</p>
+                    </div>
                   </div>
                 </div>
 

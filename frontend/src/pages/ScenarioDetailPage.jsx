@@ -5,6 +5,7 @@ import { Card, Button, Badge, Spinner, Alert } from '../components/ui'
 import StepErrorDetail from '../components/StepErrorDetail'
 import TestStepList from '../components/TestStepList'
 import { scenarioAPI, executionAPI, recorderAPI } from '../services/api'
+import { CheckCircle2, XCircle, ClipboardList, Clock } from 'lucide-react'
 
 const STEP_TYPES = [
   { value: 'NAVIGATE', label: 'Navigate', icon: '🌐', fields: ['value'], placeholder: { value: 'https://example.com' } },
@@ -882,24 +883,42 @@ export default function ScenarioDetailPage() {
               </Badge>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-              <div className="text-center p-3 bg-green-900/20 rounded-lg">
-                <p className="text-2xl font-bold text-green-400">{executionResult.passedSteps || 0}</p>
-                <p className="text-sm text-[#A0A0A4]">Passed</p>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-[#0F170F] border border-[#34D399]/20">
+                <div className="w-9 h-9 rounded-lg bg-[#34D399]/10 flex items-center justify-center shrink-0">
+                  <CheckCircle2 size={16} className="text-[#34D399]" />
+                </div>
+                <div>
+                  <p className="text-xl font-bold text-[#34D399] leading-none">{executionResult.passedSteps || 0}</p>
+                  <p className="text-xs text-[#8A8A8F] mt-1 uppercase tracking-wider">Passed</p>
+                </div>
               </div>
-              <div className="text-center p-3 bg-red-900/20 rounded-lg">
-                <p className="text-2xl font-bold text-red-400">{executionResult.failedSteps || 0}</p>
-                <p className="text-sm text-[#A0A0A4]">Failed</p>
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-[#170F0F] border border-[#F87171]/20">
+                <div className="w-9 h-9 rounded-lg bg-[#F87171]/10 flex items-center justify-center shrink-0">
+                  <XCircle size={16} className="text-[#F87171]" />
+                </div>
+                <div>
+                  <p className="text-xl font-bold text-[#F87171] leading-none">{executionResult.failedSteps || 0}</p>
+                  <p className="text-xs text-[#8A8A8F] mt-1 uppercase tracking-wider">Failed</p>
+                </div>
               </div>
-              <div className="text-center p-3 bg-[#1A1A2E] rounded-lg">
-                <p className="text-2xl font-bold text-[#5E6AD2]">{executionResult.totalSteps || 0}</p>
-                <p className="text-sm text-[#A0A0A4]">Total Steps</p>
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-[#161618] border border-[#2A2A2D]">
+                <div className="w-9 h-9 rounded-lg bg-[#5E6AD2]/10 flex items-center justify-center shrink-0">
+                  <ClipboardList size={16} className="text-[#9BA3F0]" />
+                </div>
+                <div>
+                  <p className="text-xl font-bold text-[#E0E0E2] leading-none">{executionResult.totalSteps || 0}</p>
+                  <p className="text-xs text-[#8A8A8F] mt-1 uppercase tracking-wider">Total Steps</p>
+                </div>
               </div>
-              <div className="text-center p-3 bg-[#1A1A1C] rounded-lg">
-                <p className="text-2xl font-bold text-[#E0E0E2]">
-                  {executionResult.duration ? `${(executionResult.duration / 1000).toFixed(2)}s` : '-'}
-                </p>
-                <p className="text-sm text-[#A0A0A4]">Durasi</p>
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-[#161618] border border-[#2A2A2D]">
+                <div className="w-9 h-9 rounded-lg bg-[#FBBF24]/10 flex items-center justify-center shrink-0">
+                  <Clock size={16} className="text-[#FBBF24]" />
+                </div>
+                <div>
+                  <p className="text-xl font-bold text-[#E0E0E2] leading-none">{executionResult.duration ? `${(executionResult.duration / 1000).toFixed(2)}s` : '-'}</p>
+                  <p className="text-xs text-[#8A8A8F] mt-1 uppercase tracking-wider">Duration</p>
+                </div>
               </div>
             </div>
 
