@@ -58,6 +58,8 @@ export default function ScenarioDetailPage() {
   const [showRecordingPanel, setShowRecordingPanel] = useState(false)
   const pollingRef = useRef(null)
   const recorderWindowRef = useRef(null)
+  const windowWatchRef = useRef(null)
+  const handleStopRecordingRef = useRef(null)
   const stepFormRef = useRef(null)
 
   // Checkbox selection state
@@ -404,10 +406,20 @@ export default function ScenarioDetailPage() {
     }
   }, [])
 
+  const stopWindowWatch = useCallback(() => {
+    if (windowWatchRef.current) {
+      clearInterval(windowWatchRef.current)
+      windowWatchRef.current = null
+    }
+  }, [])
+
   // Cleanup polling on unmount
   useEffect(() => {
-    return () => stopPolling()
-  }, [stopPolling])
+    return () => {
+      stopPolling()
+      stopWindowWatch()
+    }
+  }, [stopPolling, stopWindowWatch])
 
   // Check for existing recording session on load
   useEffect(() => {
@@ -444,15 +456,25 @@ export default function ScenarioDetailPage() {
       setRecordingSteps([])
       setShowRecordingPanel(true)
       if (res.data.proxyUrl) {
+        const absoluteProxyUrl = window.location.origin + res.data.proxyUrl
         if (recorderWindowRef.current && !recorderWindowRef.current.closed) {
-          recorderWindowRef.current.location.href = res.data.proxyUrl
+          recorderWindowRef.current.location.href = absoluteProxyUrl
         } else {
           // Fallback jika window tertutup atau diblokir
-          recorderWindowRef.current = window.open(res.data.proxyUrl, '_blank', 'width=1280,height=800,menubar=yes,toolbar=yes,scrollbars=yes,resizable=yes')
+          recorderWindowRef.current = window.open(absoluteProxyUrl, '_blank', 'width=1280,height=800,menubar=yes,toolbar=yes,scrollbars=yes,resizable=yes')
         }
       }
       showSuccess('Browser rekaman terbuka. Silakan berinteraksi dengan halaman.')
       startPollingSteps()
+
+      // Pantau window — jika ditutup, otomatis stop recording
+      stopWindowWatch()
+      windowWatchRef.current = setInterval(() => {
+        if (recorderWindowRef.current && recorderWindowRef.current.closed) {
+          stopWindowWatch()
+          if (handleStopRecordingRef.current) handleStopRecordingRef.current()
+        }
+      }, 800)
     } catch (err) {
       if (recorderWindowRef.current && !recorderWindowRef.current.closed) recorderWindowRef.current.close()
       recorderWindowRef.current = null
@@ -464,6 +486,7 @@ export default function ScenarioDetailPage() {
 
   const handleStopRecording = async () => {
     setIsStoppingRecording(true)
+    stopWindowWatch()
     try {
       // Tutup browser recorder
       if (recorderWindowRef.current && !recorderWindowRef.current.closed) {
@@ -499,6 +522,7 @@ export default function ScenarioDetailPage() {
       setIsStoppingRecording(false)
     }
   }
+  handleStopRecordingRef.current = handleStopRecording
 
   const handleSaveRecordedSteps = async () => {
     if (recordingSteps.length === 0) {
