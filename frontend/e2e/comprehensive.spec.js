@@ -408,14 +408,14 @@ test.describe.serial('Complete Application E2E Testing', () => {
   // 4. SETTINGS & INTEGRATION TESTS
   // ============================================
   
-  test('User can navigate to Qase settings', async ({ page }) => {
+  test('User can navigate to Settings', async ({ page }) => {
     if (authToken) {
       await page.addInitScript((token) => {
         localStorage.setItem('authToken', token)
         localStorage.setItem('user', JSON.stringify({ email: process.env.TEST_EMAIL || 'admin@testingndrih.local', name: 'Admin User' }))
       }, authToken)
     }
-    await page.goto('http://localhost:3000/qase', { waitUntil: 'networkidle' })
+    await page.goto('http://localhost:3000/settings', { waitUntil: 'networkidle' })
     
     // Wait for page to stabilize
     await page.waitForLoadState('domcontentloaded')
@@ -423,7 +423,7 @@ test.describe.serial('Complete Application E2E Testing', () => {
     
     // Verify we're on qase page or redirected to login (token may have expired in serial run)
     const currentUrl = page.url()
-    const isOnQase = currentUrl.includes('/qase')
+    const isOnSettings = currentUrl.includes('/settings')
     const isOnLogin = currentUrl.includes('/login')
     
     expect(isOnQase || isOnLogin).toBe(true)

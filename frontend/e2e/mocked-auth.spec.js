@@ -90,15 +90,15 @@ test.describe('E2E Tests with Mocked Auth', () => {
     console.log(`✅ Execution page accessible (url: ${currentUrl})`)
   })
 
-  test('Qase settings page accessible with mocked auth', async ({ page }) => {
+  test('Settings page accessible with mocked auth', async ({ page }) => {
     // Set mocked auth via addInitScript
     await page.addInitScript(({ token, user }) => {
       localStorage.setItem('authToken', token)
       localStorage.setItem('user', JSON.stringify(user))
     }, { token: mockToken, user: mockUser })
 
-    // Navigate to Qase settings
-    await page.goto('http://localhost:3000/qase', { waitUntil: 'domcontentloaded' })
+    // Navigate to Settings
+    await page.goto('http://localhost:3000/settings', { waitUntil: 'domcontentloaded' })
 
     // Wait for page to stabilize - mock token may trigger redirect
     await page.waitForLoadState('domcontentloaded')
@@ -120,7 +120,7 @@ test.describe('E2E Tests with Mocked Auth', () => {
       pageContent = await page.content()
     }
     expect(pageContent.length).toBeGreaterThan(100)
-    console.log('✅ Qase settings page accessible')
+    console.log('✅ Settings page accessible')
   })
 
   test('Login page renders correctly', async ({ page }) => {

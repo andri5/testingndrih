@@ -36,7 +36,12 @@ jobs:
           node-version: '18.x'
           cache: 'npm'
 
-      - name: Install Dependencies
+      - name: Install Backend Dependencies
+        working-directory: ./backend
+        run: npm install
+
+      - name: Install Frontend Dependencies
+        working-directory: ./frontend
         run: npm install
 
       - name: Setup Database

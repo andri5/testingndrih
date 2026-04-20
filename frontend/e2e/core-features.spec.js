@@ -93,31 +93,13 @@ test.describe('NDRI Application E2E Tests - Core Features', () => {
   })
 
   // Test 5: Settings Page
-  test('✅ Feature 5: Qase Settings Page', async ({ page }) => {
+  test('✅ Feature 5: Settings Page', async ({ page }) => {
     console.log('\n⚙️  Testing: Settings Page Access\n')
     
-    const settingsUrls = [
-      'http://localhost:3000/qase',
-      'http://localhost:3000/settings/qase',
-      'http://localhost:3000/settings'
-    ]
-    
-    let found = false
-    for (const url of settingsUrls) {
-      try {
-        await page.goto(url, { timeout: 3000, waitUntil: 'domcontentloaded' })
-        const content = await page.content()
-        if (content.length > 100) {
-          found = true
-          console.log(`✅ RESULT: Settings page accessible at ${url}`)
-          break
-        }
-      } catch (e) {
-        // Continue to next URL
-      }
-    }
-    
-    expect(found).toBeTruthy()
+    await page.goto('http://localhost:3000/settings', { timeout: 5000, waitUntil: 'domcontentloaded' })
+    const content = await page.content()
+    expect(content.length).toBeGreaterThan(100)
+    console.log('✅ RESULT: Settings page accessible')
   })
 
   // Test 6: Scenario Operations

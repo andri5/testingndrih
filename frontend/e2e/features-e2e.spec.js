@@ -251,30 +251,16 @@ test.describe.serial('Complete Feature E2E Testing', () => {
     console.log('✅ Execution page accessible')
   })
 
-  test('Qase settings page is accessible', async ({ page }) => {
-    console.log('Starting: Access Qase settings')
+  test('Settings page is accessible', async ({ page }) => {
+    console.log('Starting: Access Settings')
     
     // Try common settings paths
-    const settingsPaths = [
-      `${BASE_URL}/settings/qase`,
-      `${BASE_URL}/qase`,
-      `${BASE_URL}/settings`
-    ]
-    
-    for (const path of settingsPaths) {
-      try {
-        await page.goto(path, { waitUntil: 'networkidle', timeout: 5000 })
-        const url = page.url()
-        const bodyContent = await page.textContent('body')
-        
-        if (bodyContent && bodyContent.length > 50) {
-          console.log(`✅ Settings page accessible at ${path}`)
-          break
-        }
-      } catch (e) {
-        // Try next path
-      }
+    await page.goto(`${BASE_URL}/settings`, { waitUntil: 'networkidle', timeout: 5000 })
+    const bodyContent = await page.textContent('body')
+    if (bodyContent && bodyContent.length > 50) {
+      console.log('✅ Settings page accessible')
     }
+  }
   })
 
   test('User can logout', async ({ page }) => {
