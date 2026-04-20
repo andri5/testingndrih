@@ -2,7 +2,7 @@
 
 > Platform Otomatis untuk Record, Playback, dan Eksekusi Test Scenario di Website Apapun
 >
-> **Last Updated**: April 20, 2026 - Session 13 (UI Polish: Dark/Light theme, Responsive design, Auth pages redesign)
+> **Last Updated**: April 20, 2026 - Session 14 (Remove CI/CD workflows)
 > **Current Phase**: Production-Ready — All core features implemented and deployed
 
 ---
@@ -19,7 +19,7 @@
 | **Browser Automation** | Playwright (Firefox headed + Xvfb virtual display) |
 | **Auth** | JWT + bcrypt |
 | **Containerization** | Docker + docker-compose (2 containers: App + PostgreSQL) |
-| **CI/CD** | GitHub Actions |
+| **CI/CD** | Removed (was GitHub Actions) |
 
 ---
 
@@ -135,7 +135,7 @@ Architecture
 ├─ Docker (Single Container)        [=============================] 100% DONE
 ├─ Xvfb Virtual Display             [=============================] 100% DONE
 ├─ API Documentation (Swagger)      [=============================] 100% DONE
-└─ CI/CD (GitHub Actions)           [=============================] 100% DONE
+└─ CI/CD (GitHub Actions)           [-----------------------------] REMOVED
 ```
 
 **Overall Feature Completeness: 100%** (Production-ready)
