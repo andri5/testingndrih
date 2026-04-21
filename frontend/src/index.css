@@ -70,6 +70,10 @@ html.theme-light .bg-black          { background-color: #FFFFFF !important; }
 html.theme-light .bg-\[\#0F170F\]   { background-color: #ECFDF5 !important; } /* passed card - light green */
 html.theme-light .bg-\[\#170F0F\]   { background-color: #FEF2F2 !important; } /* failed card - light red */
 html.theme-light .border-\[\#2A2A2D\] { border-color: #DDDDE0 !important; }
+html.theme-light .bg-\[\#1F0F0F\]   { background-color: #FEF2F2 !important; } /* alert error bg */
+html.theme-light .bg-\[\#0F1F17\]   { background-color: #ECFDF5 !important; } /* alert success bg */
+html.theme-light .bg-\[\#1F1A0F\]   { background-color: #FFFBEB !important; } /* alert warning bg */
+html.theme-light .bg-\[\#1A1A2E\]   { background-color: #EEF0FF !important; } /* alert info bg */
 html.theme-light .hover\:bg-\[\#252528\]:hover { background-color: #E0E0E2 !important; }
 
 /* ─── Modal backdrop ─── */
