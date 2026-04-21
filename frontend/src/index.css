@@ -64,6 +64,17 @@ html.theme-light .text-\[\#8A8A8F\] { color: #555 !important; }
 html.theme-light .text-\[\#4A4A52\] { color: #888 !important; }
 html.theme-light .bg-\[\#1A1A2E\]   { background-color: #EEF0FF !important; }
 html.theme-light .bg-\[\#2D2D2F\]   { background-color: #DDDDE0 !important; }
+html.theme-light .bg-\[\#141316\]   { background-color: #FAFAFA !important; }
+html.theme-light .bg-gray-900       { background-color: #F0F0F2 !important; }
+html.theme-light .bg-black          { background-color: #FFFFFF !important; }
+html.theme-light .bg-\[\#0F170F\]   { background-color: #ECFDF5 !important; } /* passed card - light green */
+html.theme-light .bg-\[\#170F0F\]   { background-color: #FEF2F2 !important; } /* failed card - light red */
+html.theme-light .border-\[\#2A2A2D\] { border-color: #DDDDE0 !important; }
+html.theme-light .hover\:bg-\[\#252528\]:hover { background-color: #E0E0E2 !important; }
+
+/* ─── Modal backdrop ─── */
+html.theme-light .bg-black\/75,
+html.theme-light .bg-opacity-75 { background-color: rgba(0,0,0,0.5) !important; }
 
 /* ─── Card / component borders ─── */
 html.theme-light .linear-card  { background: #FFFFFF !important; border-color: #DDDDE0 !important; }
@@ -176,6 +187,14 @@ html.theme-light .auth-input {
   background: #FAFAFA !important;
   border-color: #DDDDE0 !important;
   color: #1A1A1C !important;
+}
+
+/* ─── Modal backdrop ─── */
+.modal-backdrop {
+  background-color: rgba(0, 0, 0, 0.75);
+}
+html.theme-light .modal-backdrop {
+  background-color: rgba(0, 0, 0, 0.5);
 }
 
 /* ─── Custom Scrollbar ─── */
