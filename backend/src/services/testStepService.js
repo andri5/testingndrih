@@ -160,6 +160,66 @@ export async function updateTestStep(stepId, userId, data) {
 }
 
 /**
+ * Batch update test steps (Batch Fix Mode)
+ */
+export async function batchUpdateTestSteps(scenarioId, userId, updates) {
+  try {
+    // Verify scenario belongs to user
+    const scenario = await prisma.scenario.findUnique({
+      where: { id: scenarioId }
+    })
+
+    if (!scenario || scenario.userId !== userId) {
+      throw new Error('Scenario not found or unauthorized')
+    }
+
+    if (!Array.isArray(updates) || updates.length === 0) {
+      throw new Error('Updates array is required and must not be empty')
+    }
+
+    // Validate all updates first
+    const validUpdates = []
+    for (const update of updates) {
+      const { stepId, selector, ...otherData } = update
+      if (!stepId) {
+        throw new Error('Each update must include stepId')
+      }
+
+      // Verify step belongs to this scenario
+      const step = await prisma.testStep.findUnique({
+        where: { id: stepId },
+        select: { scenarioId: true, type: true, description: true, value: true, metadata: true }
+      })
+
+      if (!step || step.scenarioId !== scenarioId) {
+        throw new Error(`Step ${stepId} not found in this scenario`)
+      }
+
+      validUpdates.push({ stepId, selector, ...otherData })
+    }
+
+    // Perform all updates
+    const results = []
+    for (const update of validUpdates) {
+      const { stepId, ...updateData } = update
+      const updated = await prisma.testStep.update({
+        where: { id: stepId },
+        data: updateData
+      })
+      results.push(updated)
+    }
+
+    return {
+      message: `${results.length} step(s) updated successfully`,
+      updated: results.length,
+      steps: results
+    }
+  } catch (error) {
+    throw new Error(`Failed to batch update steps: ${error.message}`)
+  }
+}
+
+/**
  * Delete a test step
  */
 export async function deleteTestStep(stepId, userId) {

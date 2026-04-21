@@ -15,6 +15,7 @@ import fileRoutes from './routes/fileRoutes.js'
 import executionRoutes from './routes/executionRoutes.js'
 import recorderRoutes from './routes/recorderRoutes.js'
 import analyticsRoutes from './routes/analyticsRoutes.js'
+import chainRoutes from './routes/chainRoutes.js'
 import { errorHandler } from './middleware/auth.js'
 import { swaggerSpec } from './lib/swagger.js'
 
@@ -58,6 +59,7 @@ app.use('/api/files', fileRoutes)
 app.use('/api/executions', executionRoutes)
 app.use('/api/recorder', recorderRoutes)
 app.use('/api/analytics', analyticsRoutes)
+app.use('/api/chains', chainRoutes)
 
 // Swagger API docs — available at /api/docs
 app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {

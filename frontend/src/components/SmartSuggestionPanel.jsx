@@ -5,10 +5,15 @@ import { Button } from './ui'
  * SmartSuggestionPanel — Shows DOM-based locator suggestions when a step fails.
  * No AI required. Suggestions come from page DOM analysis at error time.
  */
-export default function SmartSuggestionPanel({ suggestions = [], currentSelector, onApply, onAutoRetry, isAutoRetrying = false }) {
+export default function SmartSuggestionPanel({ suggestions = [], currentSelector, onApply, onAutoRetry, isAutoRetrying = false, executionId = null }) {
   const [expanded, setExpanded] = useState(false)
   const [selectedIdx, setSelectedIdx] = useState(null)
   const [showAltSelectors, setShowAltSelectors] = useState(null)
+  
+  // Selector testing state
+  const [testInput, setTestInput] = useState('')
+  const [testResult, setTestResult] = useState(null)
+  const [isTesting, setIsTesting] = useState(false)
 
   if (!suggestions || suggestions.length === 0) return null
 
@@ -30,6 +35,34 @@ export default function SmartSuggestionPanel({ suggestions = [], currentSelector
     if (confidence >= 0.85) return { text: 'Tinggi', color: 'text-green-700' }
     if (confidence >= 0.60) return { text: 'Sedang', color: 'text-amber-700' }
     return { text: 'Rendah', color: 'text-red-700' }
+  }
+
+  const handleTestSelector = async () => {
+    if (!testInput.trim() || !executionId) return
+
+    setIsTesting(true)
+    try {
+      const res = await fetch(`/api/executions/${executionId}/test-selector`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ selector: testInput })
+      })
+      const data = await res.json()
+      setTestResult(data.result)
+    } catch (err) {
+      setTestResult({ found: false, selector: testInput, error: err.message })
+    } finally {
+      setIsTesting(false)
+    }
+  }
+
+  const handleClearHighlight = async () => {
+    if (!executionId) return
+    try {
+      await fetch(`/api/executions/${executionId}/clear-highlight`, { method: 'POST' })
+      setTestResult(null)
+      setTestInput('')
+    } catch { /* ignore */ }
   }
 
   return (
@@ -63,6 +96,72 @@ export default function SmartSuggestionPanel({ suggestions = [], currentSelector
           {currentSelector}
         </code>
       </div>
+
+      {/* Selector testing UI */}
+      {executionId && (
+        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <p className="text-xs text-blue-700 font-medium mb-2">🔍 Test Selector Baru</p>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={testInput}
+              onChange={(e) => setTestInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleTestSelector()}
+              placeholder="Coba selector baru (contoh: button.login, #submit)"
+              className="flex-1 px-2.5 py-1.5 text-xs border border-blue-300 rounded bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            />
+            <Button
+              size="sm"
+              variant="primary"
+              onClick={handleTestSelector}
+              disabled={!testInput.trim() || isTesting}
+              className="whitespace-nowrap"
+            >
+              {isTesting ? '⏳ Testing...' : '✓ Test'}
+            </Button>
+          </div>
+
+          {/* Test result */}
+          {testResult && (
+            <div className={`mt-2 p-2 rounded text-xs ${testResult.found ? 'bg-green-100 border border-green-300 text-green-800' : 'bg-red-100 border border-red-300 text-red-800'}`}>
+              {testResult.found ? (
+                <div className="space-y-1">
+                  <p className="font-medium">✓ Elemen ditemukan!</p>
+                  <p><span className="font-medium">Tag:</span> {testResult.tagName}</p>
+                  {testResult.id && <p><span className="font-medium">ID:</span> {testResult.id}</p>}
+                  {testResult.className && <p><span className="font-medium">Class:</span> <code className="bg-white/30 px-1">{testResult.className}</code></p>}
+                  {testResult.text && <p><span className="font-medium">Text:</span> "{testResult.text.substring(0, 50)}"</p>}
+                  <p><span className="font-medium">Visibility:</span> {testResult.isVisible ? '✓ Visible' : '✗ Hidden'}</p>
+                  <p><span className="font-medium">Size:</span> {testResult.boundingBox.width}x{testResult.boundingBox.height}px</p>
+                  {onApply && (
+                    <Button
+                      size="sm"
+                      variant="primary"
+                      onClick={() => {
+                        onApply(testResult.selector)
+                        handleClearHighlight()
+                      }}
+                      className="mt-2 w-full text-xs"
+                    >
+                      ✓ Gunakan Selector Ini
+                    </Button>
+                  )}
+                </div>
+              ) : (
+                <p>✗ {testResult.error || 'Elemen tidak ditemukan'}</p>
+              )}
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={handleClearHighlight}
+                className="mt-2 w-full text-xs"
+              >
+                Clear Highlight
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Suggestion cards */}
       <div className="space-y-2">

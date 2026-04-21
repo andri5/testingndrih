@@ -58,6 +58,7 @@ export default function Layout({ children }) {
   const mainItems = [
     { name: 'Dashboard',    path: '/dashboard',  icon: <LayoutDashboard size={16} /> },
     { name: 'Scenarios',    path: '/scenarios',  icon: <ClipboardList size={16} /> },
+    { name: 'Chains',       path: '/chains',     icon: <Link2 size={16} /> },
     { name: 'Execution',    path: '/execution',  icon: <PlayCircle size={16} /> },
     { name: 'Reports',      path: '/reports',    icon: <BarChart2 size={16} /> },
   ]

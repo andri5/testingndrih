@@ -4,8 +4,7 @@ import {
   getTestStep,
   updateTestStep,
   deleteTestStep,
-  bulkDeleteTestSteps,
-  reorderSteps,
+  bulkDeleteTestSteps,  batchUpdateTestSteps,  reorderSteps,
   getStepTypes,
   validateStep
 } from '../services/testStepService.js'
@@ -136,6 +135,27 @@ export async function bulkDeleteStepsHandler(req, res, next) {
     }
 
     const result = await bulkDeleteTestSteps(scenarioId, stepIds, userId)
+    res.json(result)
+  } catch (error) {
+    next(error)
+  }
+}
+
+/**
+ * Batch update test steps (Batch Fix Mode)
+ * PUT /api/scenarios/:scenarioId/steps/batch-update
+ */
+export async function batchUpdateStepsHandler(req, res, next) {
+  try {
+    const userId = req.user.id
+    const { scenarioId } = req.params
+    const { updates } = req.body
+
+    if (!Array.isArray(updates) || updates.length === 0) {
+      return res.status(400).json({ error: 'updates array is required' })
+    }
+
+    const result = await batchUpdateTestSteps(scenarioId, userId, updates)
     res.json(result)
   } catch (error) {
     next(error)

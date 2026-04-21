@@ -161,7 +161,7 @@ function getSuggestions(detail) {
   return suggestions
 }
 
-export default function StepErrorDetail({ errorMessage, onRetest, size = 'normal', step = null, pageUrl = '', onApplyAIFix = null, onAutoRetry = null, isAutoRetrying = false }) {
+export default function StepErrorDetail({ errorMessage, onRetest, size = 'normal', step = null, pageUrl = '', onApplyAIFix = null, onAutoRetry = null, isAutoRetrying = false, executionId = null }) {
   const [expanded, setExpanded] = useState(false)
   const detail = parseErrorDetail(errorMessage)
   const textSize = size === 'small' ? 'text-xs' : 'text-sm'
@@ -268,6 +268,7 @@ export default function StepErrorDetail({ errorMessage, onRetest, size = 'normal
           onApply={onApplyAIFix}
           onAutoRetry={onAutoRetry}
           isAutoRetrying={isAutoRetrying}
+          executionId={executionId}
         />
       )}
 

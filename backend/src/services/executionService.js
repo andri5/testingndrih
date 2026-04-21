@@ -13,11 +13,110 @@ export const executionEvents = new EventEmitter()
 executionEvents.setMaxListeners(50)
 
 /**
+ * Store active Playwright pages during execution
+ * Maps executionId -> { page, context, browser }
+ * Used for live selector testing feature
+ */
+const activePages = new Map()
+
+/**
  * Comprehensive execution service using Playwright
  * Handles test scenario execution and step-by-step automation
  */
 
 export const executionService = {
+  /**
+   * Get active page for selector testing during live execution
+   */
+  getActivePage(executionId) {
+    return activePages.get(executionId)?.page || null
+  },
+
+  /**
+   * Test a selector on the active page and get element info
+   * Returns: { found, text, tagName, className, boundingBox, preview }
+   */
+  async testSelector(executionId, selector) {
+    const pageData = activePages.get(executionId)
+    if (!pageData) {
+      throw new Error('Execution not running or page not available')
+    }
+
+    const { page } = pageData
+
+    try {
+      // Try to find element with the selector
+      const element = await page.$(selector)
+      if (!element) {
+        return { found: false, selector, error: 'Element not found' }
+      }
+
+      // Element found — get details
+      const info = await page.evaluate((sel) => {
+        const el = document.querySelector(sel)
+        if (!el) return null
+        
+        const rect = el.getBoundingClientRect()
+        return {
+          tagName: el.tagName,
+          text: el.textContent?.substring(0, 100) || '',
+          className: el.className,
+          id: el.id,
+          boundingBox: {
+            x: Math.round(rect.x),
+            y: Math.round(rect.y),
+            width: Math.round(rect.width),
+            height: Math.round(rect.height)
+          },
+          isVisible: rect.width > 0 && rect.height > 0
+        }
+      }, selector)
+
+      if (!info) {
+        return { found: false, selector, error: 'Element found but cannot access properties' }
+      }
+
+      // Highlight element in browser
+      await page.evaluate((sel) => {
+        const el = document.querySelector(sel)
+        if (el && el.style) {
+          el.style.outline = '3px solid #10B981'
+          el.dataset.testingndrihHighlight = 'true'
+        }
+      }, selector)
+
+      return {
+        found: true,
+        selector,
+        ...info
+      }
+    } catch (err) {
+      return {
+        found: false,
+        selector,
+        error: err.message
+      }
+    }
+  },
+
+  /**
+   * Clear highlight from page
+   */
+  async clearHighlight(executionId) {
+    const pageData = activePages.get(executionId)
+    if (!pageData) return
+
+    const { page } = pageData
+    try {
+      await page.evaluate(() => {
+        document.querySelectorAll('[data-testingndrih-highlight]').forEach(el => {
+          el.style.outline = ''
+          delete el.dataset.testingndrihHighlight
+        })
+      })
+    } catch { /* ignore */ }
+  },
+
   /**
    * Execute a complete test scenario
    */
@@ -83,6 +182,9 @@ export const executionService = {
         recordVideo: { dir: videoDir, size: { width: 1280, height: 720 } }
       })
       page = await context.newPage()
+
+      // Store page for live selector testing
+      activePages.set(execution.id, { page, context, browser })
 
       // ═══ DIALOG HANDLING — auto-accept alert/confirm/prompt ═══
       page.on('dialog', async (dialog) => {
@@ -433,6 +535,9 @@ export const executionService = {
       error.executionId = execution.id
       throw error
     } finally {
+      // Remove from active pages for selector testing
+      activePages.delete(execution.id)
+
       // Cleanup
       if (page) {
         await page.close().catch(() => {})

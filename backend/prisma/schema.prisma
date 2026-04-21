@@ -67,6 +67,8 @@ model User {
   scenarios        Scenario[]
   executions       Execution[]
   executionLogs    ExecutionLog[]
+  testChains       TestChain[]
+  chainExecutions  ChainExecution[]
 
   @@map("users")
 }
@@ -81,10 +83,11 @@ model Scenario {
   updatedAt   DateTime @updatedAt
   userId      String
 
-  user       User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  testSteps  TestStep[]
-  executions Execution[]
-  apiTests   ApiTest[]
+  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  testSteps   TestStep[]
+  executions  Execution[]
+  apiTests    ApiTest[]
+  chainSteps  ChainStep[]
 
   @@index([userId])
   @@map("scenarios")
@@ -241,4 +244,90 @@ model ExecutionLog {
   @@index([executionId])
   @@index([userId])
   @@map("execution_logs")
+}
+
+model TestChain {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  steps       Int      @default(0) // count of chain steps
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  userId      String
+
+  user              User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  chainSteps        ChainStep[]
+  chainExecutions   ChainExecution[]
+
+  @@index([userId])
+  @@map("test_chains")
+}
+
+model ChainStep {
+  id           String  @id @default(cuid())
+  stepNumber   Int
+  scenarioId   String
+  description  String?
+  runMode      String  @default("sequential") // sequential, parallel, conditional
+  waitTime     Int     @default(0) // milliseconds to wait before next step
+  retryCount   Int     @default(1) // times to retry if failed
+  stopOnFail   Boolean @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  chainId      String
+
+  chain        TestChain    @relation(fields: [chainId], references: [id], onDelete: Cascade)
+  scenario     Scenario     @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+  stepResults  ChainStepResult[]
+
+  @@unique([chainId, stepNumber])
+  @@index([chainId])
+  @@index([scenarioId])
+  @@map("chain_steps")
+}
+
+model ChainExecution {
+  id           String            @id @default(cuid())
+  status       ExecutionStatus   @default(PENDING)
+  startTime    DateTime?
+  endTime      DateTime?
+  duration     Int? // milliseconds
+  totalSteps   Int
+  passedSteps  Int @default(0)
+  failedSteps  Int @default(0)
+  errorMessage String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  chainId      String
+  userId       String
+
+  chain         TestChain        @relation(fields: [chainId], references: [id], onDelete: Cascade)
+  user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stepResults   ChainStepResult[]
+
+  @@index([chainId])
+  @@index([userId])
+  @@index([status])
+  @@map("chain_executions")
+}
+
+model ChainStepResult {
+  id           String            @id @default(cuid())
+  stepNumber   Int
+  status       ExecutionStatus
+  duration     Int? // milliseconds
+  errorMessage String?
+  executionId  String // the individual scenario execution created by this chain step
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  chainStepId  String
+  chainExecutionId String
+
+  chainStep       ChainStep       @relation(fields: [chainStepId], references: [id], onDelete: Cascade)
+  chainExecution  ChainExecution  @relation(fields: [chainExecutionId], references: [id], onDelete: Cascade)
+
+  @@index([chainStepId])
+  @@index([chainExecutionId])
+  @@map("chain_step_results")
 }

@@ -221,4 +221,45 @@ export const analyticsAPI = {
     apiClient.get('/analytics/export', { params: { format }, responseType: format === 'csv' ? 'blob' : 'json' })
 }
 
+export const chainAPI = {
+  // Chain CRUD
+  create: (name, description) =>
+    apiClient.post('/chains', { name, description }),
+
+  getAll: (limit = 20, offset = 0) =>
+    apiClient.get('/chains', { params: { limit, offset } }),
+
+  getById: (chainId) =>
+    apiClient.get(`/chains/${chainId}`),
+
+  update: (chainId, name, description, isActive) =>
+    apiClient.put(`/chains/${chainId}`, { name, description, isActive }),
+
+  delete: (chainId) =>
+    apiClient.delete(`/chains/${chainId}`),
+
+  // Chain Steps
+  addStep: (chainId, scenarioId, description, stepNumber, runMode = 'sequential', waitTime = 0, retryCount = 1, stopOnFail = true) =>
+    apiClient.post(`/chains/${chainId}/steps`, { scenarioId, description, stepNumber, runMode, waitTime, retryCount, stopOnFail }),
+
+  getSteps: (chainId) =>
+    apiClient.get(`/chains/${chainId}/steps`),
+
+  updateStep: (stepId, description, runMode, waitTime, retryCount, stopOnFail) =>
+    apiClient.put(`/chains/step/${stepId}`, { description, runMode, waitTime, retryCount, stopOnFail }),
+
+  deleteStep: (stepId) =>
+    apiClient.delete(`/chains/step/${stepId}`),
+
+  // Chain Execution
+  execute: (chainId, headless = false) =>
+    apiClient.post(`/chains/${chainId}/execute`, { headless }, { timeout: 600000 }), // 10 min timeout
+
+  getExecutionHistory: (chainId, limit = 20, offset = 0) =>
+    apiClient.get(`/chains/${chainId}/executions`, { params: { limit, offset } }),
+
+  getExecutionDetails: (executionId) =>
+    apiClient.get(`/chains/execution/${executionId}`)
+}
+
 export default apiClient

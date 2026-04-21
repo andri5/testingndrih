@@ -9,6 +9,9 @@ import ScenarioDetailPage from './pages/ScenarioDetailPage'
 import ExecutionPage from './pages/ExecutionPage'
 import ReportsPage from './pages/ReportsPage'
 import SettingsPage from './pages/SettingsPage'
+import ChainsPage from './pages/ChainsPage'
+import ChainBuilderPage from './pages/ChainBuilderPage'
+import ChainExecutorPage from './pages/ChainExecutorPage'
 import ProtectedRoute from './components/ProtectedRoute'
 import NotFoundPage from './pages/NotFoundPage'
 import MaintenancePage from './pages/MaintenancePage'
@@ -97,6 +100,30 @@ export default function App() {
           element={
             <ProtectedRoute>
               <SettingsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/chains"
+          element={
+            <ProtectedRoute>
+              <ChainsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/chains/:chainId"
+          element={
+            <ProtectedRoute>
+              <ChainBuilderPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/chains/:chainId/execute"
+          element={
+            <ProtectedRoute>
+              <ChainExecutorPage />
             </ProtectedRoute>
           }
         />
