@@ -3,6 +3,7 @@ import { useEffect } from 'react'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import DashboardPage from './pages/DashboardPage'
+import AnalyticsPage from './pages/AnalyticsPage'
 import ScenariosPage from './pages/ScenariosPage'
 import ScenarioDetailPage from './pages/ScenarioDetailPage'
 import ExecutionPage from './pages/ExecutionPage'
@@ -48,6 +49,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <DashboardPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/analytics"
+          element={
+            <ProtectedRoute>
+              <AnalyticsPage />
             </ProtectedRoute>
           }
         />

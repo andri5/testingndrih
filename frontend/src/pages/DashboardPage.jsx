@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import Layout from '../components/Layout'
-import { executionAPI } from '../services/api'
+import { executionAPI, analyticsAPI } from '../services/api'
 import apiClient from '../services/api'
 import {
   ClipboardList,
@@ -12,15 +12,20 @@ import {
   Check,
   X,
   Plus,
+  Download,
+  TrendingUp,
 } from 'lucide-react'
+import toast from 'react-hot-toast'
 
 export default function DashboardPage() {
   const navigate = useNavigate()
   const user = useAuthStore((state) => state.user)
   const [stats, setStats] = useState({ scenarios: 0, executions: 0, successRate: 0, passed: 0, failed: 0, avgDuration: 0 })
+  const [analytics, setAnalytics] = useState(null)
   const [recentScenarios, setRecentScenarios] = useState([])
   const [recentExecutions, setRecentExecutions] = useState([])
   const [loading, setLoading] = useState(true)
+  const [exporting, setExporting] = useState(false)
 
   useEffect(() => {
     loadDashboardData()
@@ -29,11 +34,12 @@ export default function DashboardPage() {
   const loadDashboardData = async () => {
     setLoading(true)
     try {
-      const [execStatsRes, scenariosRes, recentRes, execHistoryRes] = await Promise.allSettled([
+      const [execStatsRes, scenariosRes, recentRes, execHistoryRes, analyticsRes] = await Promise.allSettled([
         executionAPI.getStats(),
         apiClient.get('/scenarios', { params: { skip: 0, take: 1 } }),
         apiClient.get('/search/recent', { params: { limit: 5 } }),
-        executionAPI.getHistory(null, 5, 0)
+        executionAPI.getHistory(null, 5, 0),
+        analyticsAPI.getSummary()
       ])
 
       if (execStatsRes.status === 'fulfilled') {
@@ -48,6 +54,9 @@ export default function DashboardPage() {
       }
       if (execHistoryRes.status === 'fulfilled') {
         setRecentExecutions(execHistoryRes.value.data.executions || [])
+      }
+      if (analyticsRes.status === 'fulfilled') {
+        setAnalytics(analyticsRes.value.data)
       }
     } catch (err) {
       console.error('Dashboard load error:', err)
@@ -65,6 +74,40 @@ export default function DashboardPage() {
   const formatDate = (date) => {
     if (!date) return '-'
     return new Date(date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+  }
+
+  const handleExport = async (format) => {
+    try {
+      setExporting(true)
+      const response = await analyticsAPI.exportData(format)
+      
+      if (format === 'csv') {
+        const url = window.URL.createObjectURL(new Blob([response.data]))
+        const link = document.createElement('a')
+        link.href = url
+        link.setAttribute('download', `analytics-${Date.now()}.csv`)
+        document.body.appendChild(link)
+        link.click()
+        link.parentNode.removeChild(link)
+      } else {
+        const dataStr = JSON.stringify(response.data, null, 2)
+        const dataBlob = new Blob([dataStr], { type: 'application/json' })
+        const url = window.URL.createObjectURL(dataBlob)
+        const link = document.createElement('a')
+        link.href = url
+        link.setAttribute('download', `analytics-${Date.now()}.json`)
+        document.body.appendChild(link)
+        link.click()
+        link.parentNode.removeChild(link)
+      }
+      
+      toast.success(`✅ Exported as ${format.toUpperCase()}`)
+    } catch (error) {
+      console.error('Export error:', error)
+      toast.error('Failed to export analytics')
+    } finally {
+      setExporting(false)
+    }
   }
 
   return (
@@ -194,8 +237,75 @@ export default function DashboardPage() {
                   </div>
                   <p className="text-xs text-[#8A8A8F]">Execute a test scenario</p>
                 </button>
+
+                <button
+                  onClick={() => navigate('/analytics')}
+                  className="action-btn p-4 text-left"
+                >
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-8 h-8 rounded-lg bg-[#9BA3F0]/10 flex items-center justify-center">
+                      <TrendingUp size={15} className="text-[#9BA3F0]" />
+                    </div>
+                    <p className="font-medium text-[#E0E0E2] text-sm">View Analytics</p>
+                  </div>
+                  <p className="text-xs text-[#8A8A8F]">Detailed test performance metrics</p>
+                </button>
               </div>
             </div>
+
+            {/* Analytics Section */}
+            {analytics && (
+              <div className="linear-card p-6 border-l-2 border-l-[#9BA3F0]">
+                <div className="flex items-center justify-between mb-5">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-[#5E6AD2]/10 flex items-center justify-center">
+                      <TrendingUp size={18} className="text-[#9BA3F0]" />
+                    </div>
+                    <div>
+                      <h2 className="text-sm font-semibold text-[#E0E0E2]">📊 Analytics Summary</h2>
+                      <p className="text-xs text-[#8A8A8F] mt-0.5">Last 7 days: {analytics.last7Days?.passRate || 0}% pass rate</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleExport('json')}
+                      disabled={exporting}
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#5E6AD2]/10 hover:bg-[#5E6AD2]/20 text-[#9BA3F0] text-xs font-medium transition-colors disabled:opacity-50"
+                    >
+                      <Download size={14} />
+                      JSON
+                    </button>
+                    <button
+                      onClick={() => handleExport('csv')}
+                      disabled={exporting}
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#4EC9B0]/10 hover:bg-[#4EC9B0]/20 text-[#4EC9B0] text-xs font-medium transition-colors disabled:opacity-50"
+                    >
+                      <Download size={14} />
+                      CSV
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div>
+                    <p className="text-xs text-[#8A8A8F] mb-1">Total Executions</p>
+                    <p className="text-2xl font-bold text-[#E0E0E2]">{analytics.totalExecutions}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-[#8A8A8F] mb-1">Pass Rate</p>
+                    <p className="text-2xl font-bold text-[#34D399]">{analytics.passRate}%</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-[#8A8A8F] mb-1">Avg Duration</p>
+                    <p className="text-2xl font-bold text-[#FBBF24]">{formatDuration(analytics.avgDuration)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-[#8A8A8F] mb-1">Total Scenarios</p>
+                    <p className="text-2xl font-bold text-[#4EC9B0]">{analytics.totalScenarios}</p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
               {/* Recent Scenarios */}

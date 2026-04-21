@@ -121,7 +121,10 @@ export const scenarioAPI = {
   
   reorderSteps: (scenarioId, stepOrders) =>
     apiClient.put(`/scenarios/${scenarioId}/steps/reorder`, { stepOrders }),
-  
+
+  batchUpdateSteps: (scenarioId, data) =>
+    apiClient.put(`/scenarios/${scenarioId}/steps/batch-update`, data),
+
   getStepTypes: () =>
     apiClient.get('/step-types'),
 
@@ -194,6 +197,24 @@ export const recorderAPI = {
 
   save: (scenarioId, steps) =>
     apiClient.post(`/recorder/save/${scenarioId}`, { steps })
+}
+
+export const analyticsAPI = {
+  // Get overall analytics summary
+  getSummary: () =>
+    apiClient.get('/analytics/summary'),
+
+  // Get execution history (paginated)
+  getExecutionHistory: (limit = 50, offset = 0) =>
+    apiClient.get('/analytics/executions', { params: { limit, offset } }),
+
+  // Get scenario performance metrics
+  getScenarioMetrics: (scenarioId) =>
+    apiClient.get(`/analytics/scenarios/${scenarioId}`),
+
+  // Export analytics data
+  exportData: (format = 'json') =>
+    apiClient.get('/analytics/export', { params: { format }, responseType: format === 'csv' ? 'blob' : 'json' })
 }
 
 export default apiClient
