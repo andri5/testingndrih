@@ -2,7 +2,7 @@
 
 > Platform Otomatis untuk Record, Playback, dan Eksekusi Test Scenario di Website Apapun
 >
-> **Last Updated**: April 20, 2026 - Session 15 (Error Handling & Special Pages)
+> **Last Updated**: April 21, 2026 - Session 16 (UI Fixes & Light Theme Compatibility)
 > **Current Phase**: Production-Ready — All core features implemented and deployed
 
 ---
@@ -132,6 +132,14 @@ docker-compose down
 - [x] OfflineBanner — top banner appears automatically when internet disconnects, dismisses on reconnect
 - [x] API interceptor updated — routes 401/403/5xx to correct error pages automatically
 
+### Phase 8: UI Fixes & Light Theme Compatibility
+- [x] Search bug fixed — backend expects `query` param, not `q`
+- [x] Search response structure fixed — map `{scenarios, total, hasMore}` to pagination object correctly
+- [x] Stats cards redesigned across all pages (ScenariosPage, ExecutionPage, ReportsPage, ScenarioDetailPage) — modern icon + number layout using `linear-card`
+- [x] Execution result stats cards light theme fix — `bg-[#0F170F]`/`bg-[#170F0F]` override to green/red tint in light mode
+- [x] Alert component light theme fix — `bg-[#1F0F0F]`, `bg-[#0F1F17]`, `bg-[#1F1A0F]`, `bg-[#1A1A2E]` override to pastel colors per theme
+- [x] Border `border-[#2A2A2D]` override to `#DDDDE0` in light mode
+
 ---
 
 ```
@@ -146,6 +154,7 @@ Architecture
 ├─ Xvfb Virtual Display             [=============================] 100% DONE
 ├─ API Documentation (Swagger)      [=============================] 100% DONE
 ├─ Error Pages & Boundaries         [=============================] 100% DONE
+├─ Light Theme Compatibility        [=============================] 100% DONE
 └─ CI/CD (GitHub Actions)           [-----------------------------] REMOVED
 ```
 

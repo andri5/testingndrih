@@ -61,6 +61,12 @@
 - ✅ **Offline Banner** — Auto-appears when internet disconnects, dismisses on reconnect
 - ✅ **Auto Logout on 401** — Axios interceptor clears session and redirects to login
 
+### 🎨 Theme & Display
+- ✅ **Full Light/Dark Theme** — All components and alerts adapt to active theme
+- ✅ **Stats Cards Modern Layout** — Icon + number design across all pages (Scenarios, Execution, Reports, Scenario Detail)
+- ✅ **Execution Result Cards** — Passed/Failed cards use green/red tint in light mode, not dark background
+- ✅ **Alert Notifications** — Error/success/warning/info banners render in correct pastel colors per theme
+
 ---
 
 ## 🏗️ Tech Stack
