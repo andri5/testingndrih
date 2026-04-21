@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { Card, Button, Badge, Spinner, Alert } from '../components/ui'
+import BrowserSelector from '../components/BrowserSelector'
 import StepErrorDetail from '../components/StepErrorDetail'
 import TestStepList from '../components/TestStepList'
 import { scenarioAPI, executionAPI, recorderAPI } from '../services/api'
@@ -47,6 +48,12 @@ export default function ScenarioDetailPage() {
   const [executionResult, setExecutionResult] = useState(null)
   const [currentStepIndex, setCurrentStepIndex] = useState(null)
   const [isAutoRetrying, setIsAutoRetrying] = useState(false)
+  const [isBatchFixing, setIsBatchFixing] = useState(false)
+
+  // Browser selection state
+  const [selectedBrowser, setSelectedBrowser] = useState('chromium')
+  const [headlessMode, setHeadlessMode] = useState(false)
+  const [showBrowserSelector, setShowBrowserSelector] = useState(false)
 
   // Screenshot modal state
   const [screenshotModal, setScreenshotModal] = useState(null)
@@ -297,7 +304,10 @@ export default function ScenarioDetailPage() {
     setError(null)
 
     try {
-      const res = await executionAPI.executeScenario(id)
+      const res = await executionAPI.executeScenario(id, {
+        browser: selectedBrowser,
+        headless: headlessMode
+      })
       const execution = res.data.execution
 
       // Redirect live viewer ke halaman live-view
@@ -431,6 +441,66 @@ export default function ScenarioDetailPage() {
     } catch (err) {
       setError(err.response?.data?.error || 'Auto-retry gagal')
       setIsAutoRetrying(false)
+    }
+  }
+
+  /**
+   * Batch Fix Mode: Apply top suggestions to all failed steps at once
+   */
+  const handleBatchFix = async () => {
+    if (!executionResult || !executionResult.stepResults || isBatchFixing) return
+
+    try {
+      setIsBatchFixing(true)
+      setError(null)
+
+      // Collect all failed steps with suggestions
+      const updates = []
+      let fixedCount = 0
+
+      for (const result of executionResult.stepResults) {
+        if (result.status !== 'FAILED' || !result.errorMessage) continue
+
+        // Parse error message to extract suggestions
+        let parsedError = null
+        try {
+          parsedError = typeof result.errorMessage === 'string' ? JSON.parse(result.errorMessage) : result.errorMessage
+        } catch {
+          continue
+        }
+
+        // Get top suggestion
+        const topSuggestion = parsedError.locatorSuggestions?.[0]
+        if (!topSuggestion || !topSuggestion.selector) continue
+
+        // Find the step to get full data
+        const step = steps.find(s => s.id === result.testStep?.id)
+        if (!step) continue
+
+        updates.push({
+          stepId: step.id,
+          selector: topSuggestion.selector
+        })
+        fixedCount++
+      }
+
+      if (updates.length === 0) {
+        setError('Tidak ada step yang bisa diperbaiki secara otomatis')
+        setIsBatchFixing(false)
+        return
+      }
+
+      // Batch update all steps
+      await scenarioAPI.batchUpdateSteps(id, { updates })
+      await loadSteps()
+
+      showSuccess(`✓ ${fixedCount} locator diperbarui. Menjalankan kembali scenario...`)
+
+      // Re-execute scenario
+      setTimeout(() => handleExecute(), 500)
+    } catch (err) {
+      setError(err.response?.data?.error || 'Batch fix gagal')
+      setIsBatchFixing(false)
     }
   }
 
@@ -651,6 +721,14 @@ export default function ScenarioDetailPage() {
           </div>
 
           <div className="flex flex-wrap gap-2 shrink-0">
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={() => setShowBrowserSelector(!showBrowserSelector)}
+              disabled={isExecuting}
+            >
+              🌐 Browser: {selectedBrowser}
+            </Button>
             {!isRecording ? (
               <Button
                 variant="secondary"
@@ -695,6 +773,28 @@ export default function ScenarioDetailPage() {
         {/* Alerts */}
         {error && <Alert type="error" message={error} onClose={() => setError(null)} />}
         {successMsg && <Alert type="success" message={successMsg} />}
+
+        {/* Browser Selector */}
+        {showBrowserSelector && (
+          <Card>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold text-slate-900">Cross-Browser Testing</h2>
+              <button
+                onClick={() => setShowBrowserSelector(false)}
+                className="text-slate-400 hover:text-slate-600 text-xl leading-none"
+              >
+                ✕
+              </button>
+            </div>
+            <BrowserSelector
+              selectedBrowser={selectedBrowser}
+              onBrowserChange={setSelectedBrowser}
+              headless={headlessMode}
+              onHeadlessChange={setHeadlessMode}
+              disabled={isExecuting}
+            />
+          </Card>
+        )}
 
         {/* Recording Panel */}
         {showRecordingPanel && (
@@ -1000,6 +1100,31 @@ export default function ScenarioDetailPage() {
               </div>
             </div>
 
+            {/* Batch Fix All Button */}
+            {executionResult.status === 'FAILED' && executionResult.failedSteps > 0 && executionResult.stepResults && (
+              <div className="mb-4 p-3 bg-[#0F170F] border border-[#5E6AD2]/30 rounded-lg flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-[#5E6AD2]">⚡</span>
+                  <span className="text-sm text-[#E0E0E2]">Gunakan AI untuk memperbaiki semua step yang gagal sekaligus</span>
+                </div>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={handleBatchFix}
+                  disabled={isBatchFixing || isExecuting}
+                >
+                  {isBatchFixing ? (
+                    <>
+                      <Spinner size="xs" className="inline mr-2" />
+                      Memperbaiki...
+                    </>
+                  ) : (
+                    '🔧 Batch Fix All'
+                  )}
+                </Button>
+              </div>
+            )}
+
             {executionResult.errorMessage && (
               <div className="p-3 bg-red-950/30 border border-red-700/40 rounded-lg text-red-400 text-sm mb-4">
                 <strong>Error:</strong>
@@ -1011,6 +1136,7 @@ export default function ScenarioDetailPage() {
                   onApplyAIFix={executionResult.failedStepIndex !== undefined ? (locator) => handleApplyAIFix(steps[executionResult.failedStepIndex]?.id, locator) : null}
                   onAutoRetry={executionResult.failedStepIndex !== undefined ? (selector) => handleAutoRetry(steps[executionResult.failedStepIndex]?.id, selector) : null}
                   isAutoRetrying={isAutoRetrying}
+                  executionId={executionResult.id}
                 />
               </div>
             )}
@@ -1051,6 +1177,7 @@ export default function ScenarioDetailPage() {
                               onApplyAIFix={result.testStep ? (locator) => handleApplyAIFix(result.testStep.id, locator) : null}
                               onAutoRetry={result.testStep ? (selector) => handleAutoRetry(result.testStep.id, selector) : null}
                               isAutoRetrying={isAutoRetrying}
+                              executionId={executionResult.id}
                             />
                           )}
                         </div>

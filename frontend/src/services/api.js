@@ -182,7 +182,11 @@ export const executionAPI = {
       params.scenarioId = scenarioId
     }
     return apiClient.get('/executions/stats/summary', { params })
-  }
+  },
+
+  // Get available browsers for cross-browser testing
+  getBrowsers: () =>
+    apiClient.get('/executions/browsers')
 }
 
 export const recorderAPI = {

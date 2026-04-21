@@ -349,7 +349,14 @@ export default function DashboardPage() {
                       >
                         <div className="min-w-0">
                           <p className="font-medium text-[#E0E0E2] text-sm truncate">{e.scenario?.name || 'Scenario'}</p>
-                          <p className="text-xs text-[#8A8A8F]">{formatDate(e.startTime)}</p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <p className="text-xs text-[#8A8A8F]">{formatDate(e.startTime)}</p>
+                            {e.browser && (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 text-xs font-medium">
+                                🌐 {e.browser}
+                              </span>
+                            )}
+                          </div>
                         </div>
                         <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${
                           e.status === 'PASSED' ? 'text-[#34D399]' :

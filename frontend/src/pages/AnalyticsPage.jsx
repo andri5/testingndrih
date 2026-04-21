@@ -240,8 +240,9 @@ export default function AnalyticsPage() {
                                 </th>
                                 <th className="text-left py-3 px-4 text-xs font-medium text-[#8A8A8F] uppercase tracking-wider">
                                   Status
-                                </th>
-                                <th className="text-left py-3 px-4 text-xs font-medium text-[#8A8A8F] uppercase tracking-wider">
+                                </th>                                <th className="text-left py-3 px-4 text-xs font-medium text-[#8A8A8F] uppercase tracking-wider">
+                                  Browser
+                                </th>                                <th className="text-left py-3 px-4 text-xs font-medium text-[#8A8A8F] uppercase tracking-wider">
                                   Duration
                                 </th>
                                 <th className="text-center py-3 px-4 text-xs font-medium text-[#8A8A8F] uppercase tracking-wider">
@@ -274,6 +275,15 @@ export default function AnalyticsPage() {
                                     </span>
                                   </td>
                                   <td className="py-3 px-4 text-sm text-[#E0E0E2]">
+                                    {exec.browser ? (
+                                      <span className="inline-flex items-center px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 text-xs font-medium">
+                                        🌐 {exec.browser}
+                                      </span>
+                                    ) : (
+                                      <span className="text-[#8A8A8F]">-</span>
+                                    )}
+                                  </td>
+                                  <td className="py-3 px-4 text-sm text-[#E0E0E2] text-right">
                                     {formatDuration(exec.duration)}
                                   </td>
                                   <td className="py-3 px-4 text-center text-sm text-[#8A8A8F]">

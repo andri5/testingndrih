@@ -595,5 +595,69 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#0f172a;color:#e2
       'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'"
     })
     res.send(html)
+  },
+
+  /**
+   * Test a selector on the currently running execution page
+   * POST /api/executions/:executionId/test-selector
+   * Body: { selector: string }
+   */
+  async testSelector(req, res) {
+    try {
+      const { executionId } = req.params
+      const { selector } = req.body
+
+      if (!selector) {
+        return res.status(400).json({ success: false, message: 'Selector is required' })
+      }
+
+      const result = await executionService.testSelector(executionId, selector)
+      res.status(200).json({ success: true, result })
+    } catch (error) {
+      console.error('Error testing selector:', error)
+      res.status(400).json({ success: false, message: error.message })
+    }
+  },
+
+  /**
+   * Clear highlight from the currently running execution page
+   * POST /api/executions/:executionId/clear-highlight
+   */
+  async clearHighlight(req, res) {
+    try {
+      const { executionId } = req.params
+      await executionService.clearHighlight(executionId)
+      res.status(200).json({ success: true })
+    } catch (error) {
+      console.error('Error clearing highlight:', error)
+      res.status(400).json({ success: false, message: error.message })
+    }
+  },
+
+  /**
+   * Get available browsers for cross-browser testing
+   * GET /api/executions/browsers
+   */
+  async getAvailableBrowsers(req, res) {
+    try {
+      const { getAvailableBrowsers } = await import('../services/browserService.js')
+      const browsers = getAvailableBrowsers()
+      
+      res.status(200).json({
+        success: true,
+        browsers: browsers.map(b => ({
+          key: b.key,
+          displayName: b.displayName,
+          description: b.description,
+          isDefault: b.isDefault
+        }))
+      })
+    } catch (error) {
+      console.error('Error fetching available browsers:', error)
+      res.status(400).json({
+        success: false,
+        message: error.message
+      })
+    }
   }
 }

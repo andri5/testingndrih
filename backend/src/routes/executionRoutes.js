@@ -8,6 +8,13 @@ const executionRoutes = Router()
 executionRoutes.get('/:executionId/live-view', executionController.liveView)
 executionRoutes.get('/:executionId/live-stream', executionController.liveStream)
 
+// Get available browsers — no auth needed
+executionRoutes.get('/browsers', executionController.getAvailableBrowsers)
+
+// Selector testing endpoints — no auth (called from live viewer popup)
+executionRoutes.post('/:executionId/test-selector', executionController.testSelector)
+executionRoutes.post('/:executionId/clear-highlight', executionController.clearHighlight)
+
 // All remaining routes require authentication
 executionRoutes.use(authenticateToken)
 
