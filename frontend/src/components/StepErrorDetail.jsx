@@ -161,31 +161,31 @@ function getSuggestions(detail) {
   return suggestions
 }
 
-export default function StepErrorDetail({ errorMessage, onRetest, size = 'normal', step = null, pageUrl = '', onApplyAIFix = null }) {
+export default function StepErrorDetail({ errorMessage, onRetest, size = 'normal', step = null, pageUrl = '', onApplyAIFix = null, onAutoRetry = null, isAutoRetrying = false }) {
   const [expanded, setExpanded] = useState(false)
   const detail = parseErrorDetail(errorMessage)
   const textSize = size === 'small' ? 'text-xs' : 'text-sm'
 
   if (!detail) {
-    return <p className={`${textSize} text-red-600 mt-1`}>{errorMessage}</p>
+    return <p className={`${textSize} text-red-400 mt-1`}>{errorMessage}</p>
   }
 
   const suggestions = getSuggestions(detail)
 
   return (
     <div className="mt-1">
-      <p className={`${textSize} text-red-600 font-medium`}>{detail.message}</p>
+      <p className={`${textSize} text-red-400 font-medium`}>{detail.message}</p>
       <div className="flex items-center gap-3 mt-1">
         <button
           onClick={(e) => { e.stopPropagation(); setExpanded(!expanded) }}
-          className="text-xs text-indigo-600 hover:text-indigo-800 underline"
+          className="text-xs text-[#5E6AD2] hover:text-[#8B95E3] underline"
         >
           {expanded ? 'Sembunyikan detail ▲' : 'Lihat detail error ▼'}
         </button>
         {onRetest && (
           <button
             onClick={(e) => { e.stopPropagation(); onRetest() }}
-            className="text-xs text-green-600 hover:text-green-800 underline font-medium"
+            className="text-xs text-green-400 hover:text-green-300 underline font-medium"
           >
             🔄 Jalankan ulang
           </button>
@@ -194,21 +194,21 @@ export default function StepErrorDetail({ errorMessage, onRetest, size = 'normal
       {expanded && (
         <div className="mt-2 space-y-3 text-xs">
           {/* Suggestions */}
-          <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 space-y-2">
-            <p className="font-bold text-amber-800">💡 Saran Perbaikan:</p>
+          <div className="bg-amber-950/30 border border-amber-700/40 rounded-lg p-3 space-y-2">
+            <p className="font-bold text-amber-400">💡 Saran Perbaikan:</p>
             {suggestions.map((s, i) => (
               <div key={i} className="flex gap-2">
                 <span className="flex-shrink-0">{s.icon}</span>
                 <div>
-                  <p className="text-amber-900 font-medium">{s.text}</p>
-                  <p className="text-amber-700 mt-0.5">→ {s.action}</p>
+                  <p className="text-amber-300 font-medium">{s.text}</p>
+                  <p className="text-amber-400/80 mt-0.5">→ {s.action}</p>
                 </div>
               </div>
             ))}
           </div>
 
           {/* Technical Detail */}
-          <div className="bg-gray-900 text-gray-100 rounded-lg p-3 font-mono space-y-2 overflow-x-auto">
+          <div className="bg-[#1A1A1C] text-gray-100 rounded-lg p-3 font-mono space-y-2 overflow-x-auto">
             {/* Step Info */}
             <div>
               <span className="text-yellow-400 font-bold">▸ STEP (Payload)</span>
@@ -266,6 +266,8 @@ export default function StepErrorDetail({ errorMessage, onRetest, size = 'normal
           suggestions={detail.locatorSuggestions}
           currentSelector={detail.step?.selector}
           onApply={onApplyAIFix}
+          onAutoRetry={onAutoRetry}
+          isAutoRetrying={isAutoRetrying}
         />
       )}
 

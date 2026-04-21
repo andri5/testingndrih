@@ -29,8 +29,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY backend/package*.json ./
 RUN npm install
 
-# Install Playwright + Firefox (used by the test execution engine)
-RUN npx playwright install --with-deps firefox
+# Install Playwright + Chromium (used by the test execution engine)
+RUN npx playwright install --with-deps chromium
 
 # Copy backend source & database schema
 COPY backend/src ./src

@@ -5,7 +5,7 @@ import { Button } from './ui'
  * SmartSuggestionPanel — Shows DOM-based locator suggestions when a step fails.
  * No AI required. Suggestions come from page DOM analysis at error time.
  */
-export default function SmartSuggestionPanel({ suggestions = [], currentSelector, onApply }) {
+export default function SmartSuggestionPanel({ suggestions = [], currentSelector, onApply, onAutoRetry, isAutoRetrying = false }) {
   const [expanded, setExpanded] = useState(false)
   const [selectedIdx, setSelectedIdx] = useState(null)
   const [showAltSelectors, setShowAltSelectors] = useState(null)
@@ -169,7 +169,22 @@ export default function SmartSuggestionPanel({ suggestions = [], currentSelector
 
       {/* Quick apply for top suggestion */}
       {!expanded && suggestions.length > 0 && onApply && (
-        <div className="mt-3 flex gap-2">
+        <div className="mt-3 flex gap-2 flex-wrap">
+          {onAutoRetry && (
+            <Button
+              size="sm"
+              variant="success"
+              onClick={() => onAutoRetry(suggestions[0].selector)}
+              disabled={isAutoRetrying}
+              className="flex-1"
+            >
+              {isAutoRetrying ? (
+                <>⏳ Auto-Retry...</>
+              ) : (
+                <>🔄 Auto-Retry</>
+              )}
+            </Button>
+          )}
           <Button
             size="sm"
             variant="primary"

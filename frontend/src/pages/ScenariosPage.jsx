@@ -1,17 +1,27 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
-import { Card, Button, Alert } from '../components/ui'
+import { Card, Button, Alert, Spinner } from '../components/ui'
 import { ScenarioForm } from '../components/ScenarioForm'
 import { ScenarioSearch } from '../components/ScenarioSearch'
 import { ScenariosList } from '../components/ScenariosList'
+import { TemplatePickerModal } from '../components/TemplatePickerModal'
+import { QuickRecordModal } from '../components/QuickRecordModal'
 import { useScenarioStore } from '../store/scenarioStore'
+import { executionAPI } from '../services/api'
 
 export default function ScenariosPage() {
   const navigate = useNavigate()
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [editingScenario, setEditingScenario] = useState(null)
   const [searchTimeout, setSearchTimeout] = useState(null)
+
+  // New feature state
+  const [showTemplatePicker, setShowTemplatePicker] = useState(false)
+  const [showQuickRecord, setShowQuickRecord] = useState(false)
+  const [selectedIds, setSelectedIds] = useState(new Set())
+  const [bulkExecuteStatus, setBulkExecuteStatus] = useState(null) // null | 'running' | 'done'
+  const [bulkResults, setBulkResults] = useState([]) // [{id, name, status, executionId}]
 
   const {
     scenarios,
@@ -33,11 +43,7 @@ export default function ScenariosPage() {
   }, [])
 
   const handleSearch = (query) => {
-    // Debounce search
-    if (searchTimeout) {
-      clearTimeout(searchTimeout)
-    }
-
+    if (searchTimeout) clearTimeout(searchTimeout)
     const timeout = setTimeout(() => {
       if (query.trim()) {
         fetchScenarios(0, 10, query)
@@ -45,24 +51,18 @@ export default function ScenariosPage() {
         fetchScenarios(0, 10)
       }
     }, 300)
-
     setSearchTimeout(timeout)
   }
 
   const handleFilterChange = async (filter) => {
     if (filter === 'recent') {
-      // Fetch by creation date - already sorted
       fetchScenarios(0, 10)
     } else if (filter === 'active') {
-      // Get most executed
       try {
         const response = await fetch('/api/scenarios/stats', {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-          }
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` }
         })
-        const data = await response.json()
-        // Scenarios are returned sorted by execution count
+        await response.json()
       } catch (err) {
         console.error('Failed to fetch scenario stats')
       }
@@ -73,18 +73,14 @@ export default function ScenariosPage() {
     try {
       await createScenario(formData.name, formData.description, formData.url)
       setShowCreateForm(false)
-    } catch (error) {
-      // Error is handled by store
-    }
+    } catch (error) {}
   }
 
   const handleUpdateScenario = async (formData) => {
     try {
       await updateScenario(editingScenario.id, formData.name, formData.description, formData.url)
       setEditingScenario(null)
-    } catch (error) {
-      // Error is handled by store
-    }
+    } catch (error) {}
   }
 
   const handleViewScenario = (scenario) => {
@@ -100,17 +96,14 @@ export default function ScenariosPage() {
   const handleDeleteScenario = async (scenarioId) => {
     try {
       await deleteScenario(scenarioId)
-    } catch (error) {
-      // Error is handled by store
-    }
+      setSelectedIds(prev => { const n = new Set(prev); n.delete(scenarioId); return n })
+    } catch (error) {}
   }
 
   const handleDuplicateScenario = async (scenarioId) => {
     try {
       await duplicateScenario(scenarioId)
-    } catch (error) {
-      // Error is handled by store
-    }
+    } catch (error) {}
   }
 
   const handleLoadMore = () => {
@@ -118,35 +111,108 @@ export default function ScenariosPage() {
     fetchScenarios(newSkip, pagination.take)
   }
 
+  // ── Template Library ────────────────────────────────────────────────────────
+  const handleTemplateCreated = (scenario) => {
+    setShowTemplatePicker(false)
+    fetchScenarios() // refresh list
+    navigate(`/scenarios/${scenario.id}`)
+  }
+
+  // ── Quick Record ────────────────────────────────────────────────────────────
+  const handleQuickRecordCreated = (scenario) => {
+    setShowQuickRecord(false)
+    fetchScenarios()
+    // Navigate to detail page — recording panel will be visible there
+    navigate(`/scenarios/${scenario.id}?autoRecord=1`)
+  }
+
+  // ── Bulk Select ─────────────────────────────────────────────────────────────
+  const handleToggleSelect = (id) => {
+    setSelectedIds(prev => {
+      const n = new Set(prev)
+      if (n.has(id)) n.delete(id); else n.add(id)
+      return n
+    })
+  }
+
+  const handleSelectAll = (ids) => {
+    setSelectedIds(new Set(ids))
+  }
+
+  // ── Bulk Execute ─────────────────────────────────────────────────────────────
+  const handleBulkExecute = async () => {
+    const ids = [...selectedIds]
+    const scenarioMap = Object.fromEntries(scenarios.map(s => [s.id, s.name]))
+    setBulkResults(ids.map(id => ({ id, name: scenarioMap[id] || id, status: 'pending', executionId: null })))
+    setBulkExecuteStatus('running')
+
+    for (let i = 0; i < ids.length; i++) {
+      const id = ids[i]
+      setBulkResults(prev => prev.map(r => r.id === id ? { ...r, status: 'running' } : r))
+      try {
+        const res = await executionAPI.executeScenario(id, { browser: 'chromium', headless: true })
+        const execution = res.data.execution
+        setBulkResults(prev => prev.map(r =>
+          r.id === id ? { ...r, status: execution.status === 'FAILED' ? 'failed' : 'passed', executionId: execution.id } : r
+        ))
+      } catch {
+        setBulkResults(prev => prev.map(r => r.id === id ? { ...r, status: 'error' } : r))
+      }
+    }
+    setBulkExecuteStatus('done')
+  }
+
+  const clearBulkState = () => {
+    setSelectedIds(new Set())
+    setBulkExecuteStatus(null)
+    setBulkResults([])
+  }
+
   return (
     <Layout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-[#E0E0E2]">Test Scenarios</h1>
             <p className="text-[#A0A0A4] mt-1">Create and manage your test scenarios</p>
           </div>
           {!showCreateForm && !editingScenario && (
-            <Button
-              onClick={() => setShowCreateForm(true)}
-              variant="primary"
-              size="lg"
-              data-testid="create-scenario-btn"
-              className="self-start sm:self-auto"
-            >
-              + Create Scenario
-            </Button>
+            <div className="flex flex-wrap gap-2 self-start">
+              {/* Quick Record */}
+              <Button
+                onClick={() => setShowQuickRecord(true)}
+                variant="success"
+                size="md"
+                title="Buat scenario & langsung mulai recording"
+              >
+                ⚡ Quick Record
+              </Button>
+              {/* Template Library */}
+              <Button
+                onClick={() => setShowTemplatePicker(true)}
+                variant="secondary"
+                size="md"
+                title="Buat scenario dari template siap pakai"
+              >
+                📋 Templates
+              </Button>
+              {/* Create Manual */}
+              <Button
+                onClick={() => setShowCreateForm(true)}
+                variant="primary"
+                size="md"
+                data-testid="create-scenario-btn"
+              >
+                + Create Scenario
+              </Button>
+            </div>
           )}
         </div>
 
         {/* Error Alert */}
         {error && (
-          <Alert
-            type="error"
-            message={error}
-            onClose={clearError}
-          />
+          <Alert type="error" message={error} onClose={clearError} />
         )}
 
         {/* Create/Edit Form */}
@@ -157,14 +223,9 @@ export default function ScenariosPage() {
                 {editingScenario ? 'Edit Scenario' : 'Create New Scenario'}
               </h2>
               <button
-                onClick={() => {
-                  setShowCreateForm(false)
-                  setEditingScenario(null)
-                }}
+                onClick={() => { setShowCreateForm(false); setEditingScenario(null) }}
                 className="text-[#666] hover:text-[#E0E0E2] text-2xl"
-              >
-                ✕
-              </button>
+              >✕</button>
             </div>
             <ScenarioForm
               onSubmit={editingScenario ? handleUpdateScenario : handleCreateScenario}
@@ -172,6 +233,63 @@ export default function ScenariosPage() {
               isLoading={isLoading}
             />
           </Card>
+        )}
+
+        {/* Bulk Execute Panel */}
+        {!showCreateForm && !editingScenario && selectedIds.size > 0 && (
+          <div className="bg-[#5E6AD2]/10 border border-[#5E6AD2]/30 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center gap-4">
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-[#E0E0E2]">
+                {selectedIds.size} scenario dipilih
+              </p>
+              {bulkExecuteStatus === 'running' && (
+                <p className="text-xs text-[#8A8A8F] mt-1">Menjalankan eksekusi secara berurutan (headless)...</p>
+              )}
+            </div>
+
+            {/* Bulk Results */}
+            {bulkResults.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {bulkResults.map(r => (
+                  <div key={r.id} className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full bg-[#0F0E11] border border-[rgba(255,255,255,0.07)]">
+                    {r.status === 'pending' && <span className="text-[#555]">⏳</span>}
+                    {r.status === 'running' && <Spinner size="sm" />}
+                    {r.status === 'passed' && <span className="text-green-400">✓</span>}
+                    {r.status === 'failed' && <span className="text-red-400">✗</span>}
+                    {r.status === 'error' && <span className="text-yellow-400">!</span>}
+                    <span className={
+                      r.status === 'passed' ? 'text-green-400' :
+                      r.status === 'failed' ? 'text-red-400' :
+                      r.status === 'running' ? 'text-[#5E6AD2]' :
+                      'text-[#8A8A8F]'
+                    }>{r.name.length > 20 ? r.name.slice(0, 20) + '…' : r.name}</span>
+                    {r.executionId && (
+                      <button
+                        onClick={() => navigate(`/scenarios/${r.id}`)}
+                        className="text-[#5E6AD2] hover:underline ml-1"
+                      >↗</button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="flex gap-2 shrink-0">
+              {bulkExecuteStatus !== 'running' && (
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={handleBulkExecute}
+                  disabled={bulkExecuteStatus === 'running'}
+                >
+                  ▶ Run Selected ({selectedIds.size})
+                </Button>
+              )}
+              <Button variant="ghost" size="sm" onClick={clearBulkState}>
+                {bulkExecuteStatus === 'done' ? 'Tutup' : 'Batal'}
+              </Button>
+            </div>
+          </div>
         )}
 
         {/* Search and Filters */}
@@ -196,13 +314,16 @@ export default function ScenariosPage() {
             isLoading={isLoading}
             hasMore={pagination.hasMore}
             onLoadMore={handleLoadMore}
+            selectedIds={selectedIds}
+            onToggleSelect={handleToggleSelect}
+            onSelectAll={handleSelectAll}
+            bulkSelectEnabled={true}
           />
         )}
 
         {/* Stats */}
         {!showCreateForm && !editingScenario && scenarios.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Total Scenarios */}
             <div className="linear-card p-5">
               <div className="flex items-center gap-4">
                 <div className="w-11 h-11 rounded-xl bg-[#5E6AD2]/10 flex items-center justify-center shrink-0">
@@ -214,8 +335,6 @@ export default function ScenariosPage() {
                 </div>
               </div>
             </div>
-
-            {/* Total Test Steps */}
             <div className="linear-card p-5">
               <div className="flex items-center gap-4">
                 <div className="w-11 h-11 rounded-xl bg-[#34D399]/10 flex items-center justify-center shrink-0">
@@ -229,8 +348,6 @@ export default function ScenariosPage() {
                 </div>
               </div>
             </div>
-
-            {/* Last Updated */}
             <div className="linear-card p-5">
               <div className="flex items-center gap-4">
                 <div className="w-11 h-11 rounded-xl bg-[#FBBF24]/10 flex items-center justify-center shrink-0">
@@ -247,6 +364,20 @@ export default function ScenariosPage() {
           </div>
         )}
       </div>
+
+      {/* Modals */}
+      {showTemplatePicker && (
+        <TemplatePickerModal
+          onClose={() => setShowTemplatePicker(false)}
+          onCreated={handleTemplateCreated}
+        />
+      )}
+      {showQuickRecord && (
+        <QuickRecordModal
+          onClose={() => setShowQuickRecord(false)}
+          onCreated={handleQuickRecordCreated}
+        />
+      )}
     </Layout>
   )
 }

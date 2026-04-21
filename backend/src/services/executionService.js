@@ -43,7 +43,7 @@ export const executionService = {
         scenarioId,
         status: 'RUNNING',
         totalSteps: scenario.testSteps.length,
-        browser: options.browser || 'firefox',
+        browser: options.browser || 'chromium',
         headless: options.headless ?? false,
         startTime: new Date()
       },
@@ -63,7 +63,7 @@ export const executionService = {
       // Browser selection: firefox (default), chromium, webkit
       const { chromium: chromiumBrowser, firefox, webkit } = await import('playwright')
       const browserEngines = { chromium: chromiumBrowser, firefox, webkit }
-      const selectedBrowserName = options.browser && browserEngines[options.browser] ? options.browser : 'firefox'
+      const selectedBrowserName = options.browser && browserEngines[options.browser] ? options.browser : 'chromium'
       const browserEngine = browserEngines[selectedBrowserName]
 
       browser = await browserEngine.launch({
@@ -903,10 +903,10 @@ export const executionService = {
     if (hasTextMatch) {
       const [, tag, text] = hasTextMatch
       if (tag === 'button') {
-        return page.getByRole('button', { name: text, exact: true })
+        return page.getByRole('button', { name: text, exact: false })
       }
       if (tag === 'a') {
-        return page.getByRole('link', { name: text, exact: true })
+        return page.getByRole('link', { name: text, exact: false })
       }
       return page.locator(tag, { hasText: text })
     }

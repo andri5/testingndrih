@@ -7,6 +7,9 @@ const router = Router()
 // Proxy page — no auth (recorder script inside uses localStorage token)
 router.get('/proxy', recorderController.proxyPage)
 
+// Asset proxy — no auth (proxies static/data resources for the proxied page)
+router.get('/asset', recorderController.proxyAsset)
+
 router.use(authenticateToken)
 
 router.post('/start', recorderController.startRecording)

@@ -64,6 +64,9 @@ export function getRecorderScript(sessionId = null) {
     if (!cls || cls.length === 0 || cls.length > 60) return false;
     if (dynamicClassRe.test(cls)) return false;
     if (hashSuffixRe.test(cls)) return false;
+    // Filter Tailwind responsive/state prefix classes (hover:, focus:, dark:, sm:, etc.)
+    // These contain colons which are invalid in unescaped CSS selectors
+    if (cls.includes(':')) return false;
     return true;
   }
 
@@ -178,7 +181,7 @@ export function getRecorderScript(sessionId = null) {
       }
       if (cur.className && typeof cur.className === 'string') {
         var cls = cur.className.trim().split(/\\s+/).filter(isStableClass).slice(0, 2);
-        if (cls.length) sel += '.' + cls.join('.');
+        if (cls.length) sel += '.' + cls.map(function(c) { return CSS.escape ? CSS.escape(c) : c; }).join('.');
       }
       var parent = cur.parentElement;
       if (parent) {
@@ -465,16 +468,28 @@ export function getRecorderScript(sessionId = null) {
 
   /* ══════════════════════════════════════════════════
    * SPA ROUTE DETECTION — catches pushState / replaceState navigation
+   * Only fires AFTER user has interacted (click/input) to avoid recording
+   * automatic SPA initialization redirects (auth guards, etc.)
    * ══════════════════════════════════════════════════ */
   var lastSpaUrl = location.href;
   var spaTimer = null;
+  var userHasInteracted = false;
+  // Mark interaction on first click or input
+  document.addEventListener('click', function() { userHasInteracted = true; }, { capture: true, once: true, passive: true });
+  document.addEventListener('input', function() { userHasInteracted = true; }, { capture: true, once: true, passive: true });
 
   function checkSpaNavigation() {
     var currentUrl = location.href;
+    // Skip if URL contains proxy path — this is the proxy page URL, not a real navigation
+    if (currentUrl.indexOf('/api/recorder/proxy') !== -1) {
+      lastSpaUrl = currentUrl;
+      return;
+    }
     if (currentUrl !== lastSpaUrl) {
       var oldUrl = lastSpaUrl;
       lastSpaUrl = currentUrl;
-      // Only emit if pathname actually changed (not just hash)
+      // Only emit if user has actually interacted AND pathname actually changed (not just hash)
+      if (!userHasInteracted) return;
       try {
         var o = new URL(oldUrl);
         var n = new URL(currentUrl);

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { Card, Button, Badge, Spinner, Alert } from '../components/ui'
 import StepErrorDetail from '../components/StepErrorDetail'
@@ -27,6 +27,8 @@ const emptyStep = { type: 'NAVIGATE', description: '', selector: '', value: '', 
 export default function ScenarioDetailPage() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const routeLocation = useLocation()
+  const location = useLocation()
 
   const [scenario, setScenario] = useState(null)
   const [steps, setSteps] = useState([])
@@ -44,6 +46,7 @@ export default function ScenarioDetailPage() {
   const [isExecuting, setIsExecuting] = useState(false)
   const [executionResult, setExecutionResult] = useState(null)
   const [currentStepIndex, setCurrentStepIndex] = useState(null)
+  const [isAutoRetrying, setIsAutoRetrying] = useState(false)
 
   // Screenshot modal state
   const [screenshotModal, setScreenshotModal] = useState(null)
@@ -56,6 +59,17 @@ export default function ScenarioDetailPage() {
   const [isStoppingRecording, setIsStoppingRecording] = useState(false)
   const [isSavingRecording, setIsSavingRecording] = useState(false)
   const [showRecordingPanel, setShowRecordingPanel] = useState(false)
+
+  // Auto-open recording panel if navigated via Quick Record (?autoRecord=1)
+  useEffect(() => {
+    const params = new URLSearchParams(routeLocation.search)
+    if (params.get('autoRecord') === '1') {
+      setShowRecordingPanel(true)
+      // Clean up URL param without re-render
+      const cleanUrl = routeLocation.pathname
+      window.history.replaceState(null, '', cleanUrl)
+    }
+  }, [routeLocation])
   const pollingRef = useRef(null)
   const recorderWindowRef = useRef(null)
   const windowWatchRef = useRef(null)
@@ -328,11 +342,9 @@ export default function ScenarioDetailPage() {
             }, 100)
           }
         } catch (pollErr) {
-          // Ignore polling errors but log them
-          if (pollingRef.current) {
-            console.debug('Polling error (execution may still be running):', pollErr.message)
-            setTimeout(pollExecution, 1000)
-          }
+          // Ignore transient polling errors, keep retrying
+          console.debug('Polling error (execution may still be running):', pollErr.message)
+          setTimeout(pollExecution, 1000)
         }
       }
 
@@ -364,19 +376,61 @@ export default function ScenarioDetailPage() {
     }
   }
 
-  // Handle applying AI fix to a step
-  const handleApplyAIFix = (stepId, suggestedLocator) => {
-    // Find the step and update its selector
-    const stepIndex = steps.findIndex(s => s.id === stepId)
-    if (stepIndex !== -1) {
-      const updatedStep = { ...steps[stepIndex], selector: suggestedLocator }
-      
-      // Show approval modal
-      if (window.confirm(`Apply this fix?\n\nOld: ${steps[stepIndex].selector || '(none)'}\nNew: ${suggestedLocator}\n\nStep will be updated and saved.`)) {
-        // Update step in database
-        handleSaveStep(updatedStep, stepIndex)
-        showSuccess('Locator updated! Ready to run again.')
+  const handleApplyAIFix = async (stepId, suggestedLocator) => {
+    const step = steps.find(s => s.id === stepId)
+    if (!step) return
+    if (!window.confirm(`Apply this fix?\n\nOld: ${step.selector || '(none)'}\nNew: ${suggestedLocator}\n\nStep will be updated and saved.`)) return
+    try {
+      let parsedMeta = null
+      if (step.metadata) {
+        try { parsedMeta = typeof step.metadata === 'string' ? JSON.parse(step.metadata) : step.metadata } catch { parsedMeta = null }
       }
+      await scenarioAPI.updateStep(id, stepId, {
+        type: step.type,
+        description: step.description,
+        selector: suggestedLocator,
+        value: step.value || null,
+        metadata: parsedMeta
+      })
+      showSuccess('Locator updated! Ready to run again.')
+      await loadSteps()
+    } catch (err) {
+      setError(err.response?.data?.error || 'Gagal mengupdate selector')
+    }
+  }
+
+  const handleAutoRetry = async (stepId, topSuggestionSelector) => {
+    if (!stepId || !topSuggestionSelector || isAutoRetrying) return
+    
+    const step = steps.find(s => s.id === stepId)
+    if (!step) return
+    
+    try {
+      setIsAutoRetrying(true)
+      setError(null)
+      
+      // Update step with top suggestion (silent, no confirmation)
+      let parsedMeta = null
+      if (step.metadata) {
+        try { parsedMeta = typeof step.metadata === 'string' ? JSON.parse(step.metadata) : step.metadata } catch { parsedMeta = null }
+      }
+      
+      await scenarioAPI.updateStep(id, stepId, {
+        type: step.type,
+        description: step.description,
+        selector: topSuggestionSelector,
+        value: step.value || null,
+        metadata: parsedMeta
+      })
+      
+      await loadSteps()
+      showSuccess(`Locator diperbarui: "${step.selector}" → "${topSuggestionSelector}". Menjalankan kembali...`)
+      
+      // Immediately re-execute scenario
+      setTimeout(() => handleExecute(), 500)
+    } catch (err) {
+      setError(err.response?.data?.error || 'Auto-retry gagal')
+      setIsAutoRetrying(false)
     }
   }
 
@@ -947,7 +1001,7 @@ export default function ScenarioDetailPage() {
             </div>
 
             {executionResult.errorMessage && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm mb-4">
+              <div className="p-3 bg-red-950/30 border border-red-700/40 rounded-lg text-red-400 text-sm mb-4">
                 <strong>Error:</strong>
                 <StepErrorDetail 
                   errorMessage={executionResult.errorMessage} 
@@ -955,6 +1009,8 @@ export default function ScenarioDetailPage() {
                   step={executionResult.failedStepIndex !== undefined ? steps[executionResult.failedStepIndex] : null}
                   pageUrl={scenario?.url}
                   onApplyAIFix={executionResult.failedStepIndex !== undefined ? (locator) => handleApplyAIFix(steps[executionResult.failedStepIndex]?.id, locator) : null}
+                  onAutoRetry={executionResult.failedStepIndex !== undefined ? (selector) => handleAutoRetry(steps[executionResult.failedStepIndex]?.id, selector) : null}
+                  isAutoRetrying={isAutoRetrying}
                 />
               </div>
             )}
@@ -969,12 +1025,12 @@ export default function ScenarioDetailPage() {
                       key={result.id || idx}
                       className={`p-3 rounded-lg border ${
                         result.status === 'PASSED'
-                          ? 'bg-green-50 border-green-200'
-                          : 'bg-red-50 border-red-200'
+                          ? 'bg-green-900/20 border-green-700/30'
+                          : 'bg-red-900/20 border-red-700/30'
                       }`}
                     >
                       <div className="flex items-center gap-3">
-                        <span className={`text-lg ${result.status === 'PASSED' ? 'text-green-600' : 'text-red-600'}`}>
+                        <span className={`text-lg ${result.status === 'PASSED' ? 'text-green-400' : 'text-red-400'}`}>
                           {result.status === 'PASSED' ? '✓' : '✗'}
                         </span>
                         <div className="flex-1">
@@ -993,6 +1049,8 @@ export default function ScenarioDetailPage() {
                               step={result.testStep}
                               pageUrl={scenario?.url}
                               onApplyAIFix={result.testStep ? (locator) => handleApplyAIFix(result.testStep.id, locator) : null}
+                              onAutoRetry={result.testStep ? (selector) => handleAutoRetry(result.testStep.id, selector) : null}
+                              isAutoRetrying={isAutoRetrying}
                             />
                           )}
                         </div>
@@ -1027,7 +1085,7 @@ export default function ScenarioDetailPage() {
         {/* Screenshot Modal */}
         {screenshotModal && (
           <div
-            className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
+            className="fixed inset-0 modal-backdrop flex items-center justify-center z-50 p-4"
             onClick={() => setScreenshotModal(null)}
           >
             <div

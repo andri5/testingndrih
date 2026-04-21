@@ -38,7 +38,7 @@ export const executionController = {
       // Return execution ID immediately so the live viewer can connect
       // Execution runs in the background
       const options = {
-        browser: browser || 'firefox',
+        browser: browser || 'chromium',
         headless: headless === true || headless === 'true'
       }
 
@@ -281,7 +281,7 @@ export const executionController = {
    * SSE live execution stream
    * GET /api/executions/:executionId/live-stream
    */
-  liveStream(req, res) {
+  async liveStream(req, res) {
     const { executionId } = req.params
 
     res.writeHead(200, {
@@ -291,16 +291,109 @@ export const executionController = {
       'X-Accel-Buffering': 'no'
     })
 
-    res.write(`data: ${JSON.stringify({ event: 'connected', executionId })}\n\n`)
+    const safeSend = (data) => {
+      try { res.write(`data: ${JSON.stringify(data)}\n\n`) } catch (_) {}
+    }
+
+    safeSend({ event: 'connected', executionId })
+
+    // Subscribe to future events BEFORE DB query so we don't miss any
+    const pendingBuffer = []
+    let dbDone = false
 
     const handler = (data) => {
-      res.write(`data: ${JSON.stringify(data)}\n\n`)
-      if (data.event === 'execution-done') {
-        setTimeout(() => res.end(), 500)
+      if (!dbDone) {
+        pendingBuffer.push(data)
+      } else {
+        safeSend(data)
+        if (data.event === 'execution-done') {
+          setTimeout(() => { try { res.end() } catch (_) {} }, 500)
+        }
       }
     }
 
     executionEvents.on(`exec:${executionId}`, handler)
+
+    // Replay existing state from DB for late-connecting clients
+    try {
+      const { prisma } = await import('../lib/prisma.js')
+      const execution = await prisma.execution.findUnique({
+        where: { id: executionId },
+        include: {
+          stepResults: {
+            include: { testStep: true, screenshot: true },
+            orderBy: { createdAt: 'asc' }
+          }
+        }
+      })
+
+      if (execution) {
+        const totalSteps = execution.totalSteps || execution.stepResults.length
+        let replayPassed = 0
+        let replayFailed = 0
+
+        for (const sr of execution.stepResults) {
+          const stepNum = sr.testStep?.stepNumber
+          if (stepNum == null) continue
+
+          safeSend({
+            event: 'step-start',
+            stepNumber: stepNum,
+            totalSteps,
+            type: sr.testStep?.type,
+            description: sr.testStep?.description,
+            selector: sr.testStep?.selector
+          })
+
+          if (sr.status === 'PASSED') replayPassed++
+          else replayFailed++
+
+          safeSend({
+            event: 'step-done',
+            stepNumber: stepNum,
+            totalSteps,
+            status: sr.status,
+            type: sr.testStep?.type,
+            description: sr.testStep?.description,
+            duration: sr.duration,
+            screenshotUrl: sr.screenshot?.url || null,
+            errorMessage: sr.errorMessage,
+            passedSteps: replayPassed,
+            failedSteps: replayFailed
+          })
+        }
+
+        // If execution is already finished, send done event and close
+        if (execution.status !== 'RUNNING' && execution.status !== 'PENDING') {
+          safeSend({
+            event: 'execution-done',
+            status: execution.status,
+            passedSteps: execution.passedSteps || 0,
+            failedSteps: execution.failedSteps || 0,
+            totalSteps,
+            duration: execution.duration,
+            videoPath: execution.videoPath
+          })
+          executionEvents.removeListener(`exec:${executionId}`, handler)
+          setTimeout(() => { try { res.end() } catch (_) {} }, 500)
+          return
+        }
+      }
+    } catch (err) {
+      console.error('Error replaying execution state for SSE:', err.message)
+    }
+
+    // DB query done — flush buffered events and continue live streaming
+    dbDone = true
+    for (const event of pendingBuffer) {
+      safeSend(event)
+      if (event.event === 'execution-done') {
+        executionEvents.removeListener(`exec:${executionId}`, handler)
+        setTimeout(() => { try { res.end() } catch (_) {} }, 500)
+        return
+      }
+    }
+    pendingBuffer.length = 0
 
     req.on('close', () => {
       executionEvents.removeListener(`exec:${executionId}`, handler)
@@ -496,7 +589,11 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#0f172a;color:#e2
 </script>
 </body></html>`
 
-    res.set('Content-Type', 'text/html; charset=utf-8')
+    res.set({
+      'Content-Type': 'text/html; charset=utf-8',
+      // Override Helmet CSP: allow inline scripts (required for the live viewer page)
+      'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'"
+    })
     res.send(html)
   }
 }

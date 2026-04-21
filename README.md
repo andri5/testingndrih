@@ -3,11 +3,11 @@
 **Intelligent Test Recording & Playback Engine** — Record user interactions on any website, convert to test steps, and execute with smart error handling and multi-website compatibility.
 
 ![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)
-![Status](https://img.shields.io/badge/status-recording--playback--complete-brightgreen.svg)
+![Status](https://img.shields.io/badge/status-production--ready-brightgreen.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
-![Node](https://img.shields.io/badge/node-20.x-brightgreen.svg)
+![Node](https://img.shields.io/badge/node-24.x-brightgreen.svg)
 ![Playwright](https://img.shields.io/badge/Playwright-1.40+-blue.svg)
-![Feature Completeness](https://img.shields.io/badge/feature--completeness-85%25-brightgreen.svg)
+![Feature Completeness](https://img.shields.io/badge/feature--completeness-100%25-brightgreen.svg)
 
 ---
 
@@ -46,6 +46,20 @@
 - ✅ **Form-Based Step Editor** — Manually add/edit steps with validation
 - ✅ **Execution History** — View past execution results with details
 - ✅ **Bulk Delete Scenarios** — Select multiple scenarios for batch deletion
+- ✅ **Dark & Light Theme** — Full theme toggle with persistent preference
+- ✅ **Responsive Design** — Mobile-first layout with collapsible sidebar
+- ✅ **Live Execution Viewer** — Popup window with real-time SSE screenshot stream
+- ✅ **PDF/HTML Report Export** — Download full execution report
+
+### 🛡️ Error Handling & Resilience
+- ✅ **404 Not Found Page** — Unknown routes show proper error page
+- ✅ **Under Maintenance Page** — Accessible at `/maintenance` with animated status badge
+- ✅ **Session Expired Page** — Auto-triggered on 401 API response
+- ✅ **403 Forbidden Page** — Auto-triggered on 403 API response
+- ✅ **500 Server Error Page** — Auto-triggered on 5xx API response
+- ✅ **React ErrorBoundary** — Catches render crashes, prevents blank white screen
+- ✅ **Offline Banner** — Auto-appears when internet disconnects, dismisses on reconnect
+- ✅ **Auto Logout on 401** — Axios interceptor clears session and redirects to login
 
 ---
 
@@ -56,12 +70,12 @@
 | **Frontend** | React + Vite | 18.2 + 5.4.21 | Modern SPA with fast HMR |
 | **Backend** | Node.js + Express | 20.x + 4.x | RESTful API server (ESM) |
 | **Database** | PostgreSQL + Prisma | 16 + 5.x | Relational DB with ORM |
-| **Browser Automation** | Playwright | 1.40+ | Chromium recordings & execution |
+| **Browser Automation** | Playwright | 1.40+ | Firefox headed + Xvfb virtual display |
 | **State Management** | Zustand | 4.4 | Frontend state |
 | **Styling** | TailwindCSS | 3.4 | Utility-first CSS |
 | **Authentication** | JWT + bcryptjs | Standard | Secure auth & password hashing |
 | **API Client** | Axios | Latest | HTTP requests with timeouts |
-| **Container** | Docker + docker-compose | Latest | PostgreSQL environment |
+| **Container** | Docker + docker-compose | Latest | Single app container + PostgreSQL |
 
 ---
 
@@ -97,7 +111,7 @@ UI/UX Polish                [==========================..] 90% ✅
   └─ Bulk delete             [=============================] 100% ✅
   └─ Error visualization     [=============================] 100% ✅
 
-Overall Feature Completeness: **~90%** (Production-ready with Docker & CI/CD)
+Overall Feature Completeness: **100%** (Production-ready)
 ```
 
 ### Tested & Verified Features
@@ -177,24 +191,6 @@ npm run dev           # Runs on http://localhost:3000
 
 ---
 
-## 🔄 GitHub Actions CI/CD
-
-### Automated Workflows
-- **Backend Tests** (`.github/workflows/backend-tests.yml`)
-  - ✅ Runs on push/PR to `main` or `develop`
-  - ✅ Jest unit tests with coverage
-  - ✅ Coverage uploaded to Codecov
-  
-- **Frontend Build** (`.github/workflows/frontend-build.yml`)
-  - ✅ Runs on push/PR to `main` or `develop`
-  - ✅ Vite build verification
-  - ✅ Build artifacts retention
-
-### Status
-- ✅ Backend unit tests: PASSING
-- ✅ Frontend build: PASSING
-- ✅ All GitHub Actions v5 compatible with Node.js 24
-
 ---
 
 ## 📁 Project Structure
@@ -226,8 +222,7 @@ testingndrih/
 │   ├── Dockerfile                    # Frontend container image
 │   └── package.json
 │
-├── docker-compose.yml                # 3-container orchestration
-├── .github/workflows/                # GitHub Actions CI/CD
+├── docker-compose.yml                # 2-container orchestration (App + PostgreSQL)
 ├── .env                              # Environment variables (git-ignored)
 ├── .gitignore                        # Git ignore rules
 ├── plan.md                           # Project roadmap & status
@@ -326,27 +321,28 @@ npm run preview         # Test production build locally
 
 ---
 
-## 📝 Recent Changes (Session 8)
+## 📝 Recent Changes (April 2026)
 
-✅ **Docker Integration**
-- 3-container setup: Backend, Frontend, PostgreSQL
-- docker-compose orchestration with health checks
-- .dockerignore optimization
+✅ **Error Handling & Special Pages (Phase 7)**
+- 404 NotFoundPage — unknown routes now show proper error page
+- Under Maintenance page — accessible at `/maintenance`
+- Session Expired page — auto-triggered on 401 API response
+- 403 Forbidden & 500 Server Error pages
+- React ErrorBoundary — prevents blank white screen on render crash
+- OfflineBanner — auto-appears when internet disconnects
+- Axios interceptor updated — routes 401/403/5xx to correct error pages
 
-✅ **GitHub Actions CI/CD**
-- Backend unit test workflow (Jest + Codecov)
-- Frontend build verification workflow
-- Updated to GitHub Actions v5 (Node.js 24 compatible)
+✅ **UI Polish & Responsive Design (Phase 6)**
+- Dark & Light theme with full CSS override coverage
+- Responsive sidebar (mobile overlay drawer, desktop collapsible)
+- All pages adapted for small screens (mobile-first)
+- LoginPage & RegisterPage redesigned with password strength UI
+- Default theme changed to light
 
-✅ **Dependency Fixes**
-- Downgraded Vite 8.0.3 → 5.4.0 for stability
-- Fixed npm vulnerabilities (7 packages)
-- Resolved LightningCSS compatibility issues
-
-✅ **Documentation**
-- Updated plan.md with Docker architecture
-- Enhanced README.md with setup instructions
-- GitHub Actions workflow details
+✅ **Infrastructure**
+- Docker simplified to 2-container setup (App + PostgreSQL)
+- CI/CD removed (was GitHub Actions)
+- Node.js upgraded to 24.x
 
 ---
 
