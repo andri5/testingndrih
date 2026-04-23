@@ -4,6 +4,16 @@ import fs from 'fs'
 import path from 'path'
 import { EventEmitter } from 'events'
 import { suggestAlternativeLocators } from './locatorSuggestionService.js'
+import locatorRepairService from './locatorRepairService.js'
+import screenshotComparisonService from './screenshotComparisonService.js'
+import { retryEngineService } from './retryEngineService.js'
+
+/* Phase 2.1: Self Healing Selector configuration */
+const ENABLE_SELF_HEALING = true
+const SELF_HEALING_TIMEOUT = 5000
+
+/* Phase 2.2: Screenshot on Failure configuration */
+const ENABLE_SCREENSHOT_COMPARISON = true
 
 /**
  * Event bus for live execution streaming (SSE)
@@ -320,22 +330,55 @@ export const executionService = {
         }
 
         try {
-          // Attempt with optional retries
-          let lastErr = null
-          for (let attempt = 0; attempt <= maxRetries; attempt++) {
-            try {
-              await executeStepOnce()
-              lastErr = null
-              break // success
-            } catch (err) {
-              lastErr = err
-              if (attempt < maxRetries) {
-                console.warn(`Step ${step.stepNumber} attempt ${attempt + 1} failed, retrying...`)
-                await new Promise(r => setTimeout(r, 1000)) // 1s wait between retries
+          // Priority 3.1: Smart Retry Engine for CLICK and FILL steps
+          // Use intelligent failure classification and retry strategies
+          if (['CLICK', 'FILL'].includes(step.type)) {
+            const stepExecutor = async (params) => {
+              if (step.type === 'CLICK') {
+                await this.executeClick(params.page, step)
+              } else if (step.type === 'FILL') {
+                await this.executeFill(params.page, step)
               }
             }
+
+            try {
+              const retryResult = await retryEngineService.attemptRetry(stepExecutor, {
+                page,
+                step,
+                stepType: step.type
+              })
+
+              if (!retryResult?.success) {
+                throw retryResult?.error || new Error('Step execution failed')
+              }
+            } catch (err) {
+              // If retry engine doesn't handle it, at least log the failure type
+              const failureType = retryEngineService.classifyFailure(err, {
+                step,
+                stepType: step.type,
+                errorMessage: err.message
+              })
+              console.log(`[RETRY] Step ${step.stepNumber} (${step.type}): ${failureType}`)
+              throw err
+            }
+          } else {
+            // Other step types: basic retry loop
+            let lastErr = null
+            for (let attempt = 0; attempt <= maxRetries; attempt++) {
+              try {
+                await executeStepOnce()
+                lastErr = null
+                break // success
+              } catch (err) {
+                lastErr = err
+                if (attempt < maxRetries) {
+                  console.warn(`Step ${step.stepNumber} attempt ${attempt + 1} failed, retrying...`)
+                  await new Promise(r => setTimeout(r, 1000)) // 1s wait between retries
+                }
+              }
+            }
+            if (lastErr) throw lastErr
           }
-          if (lastErr) throw lastErr
 
           passedSteps++
         } catch (error) {
@@ -418,10 +461,49 @@ export const executionService = {
 
               await page.screenshot({ path: filepath, fullPage: true })
 
+              // Phase 2.2: Screenshot Comparison on Failure
+              if (ENABLE_SCREENSHOT_COMPARISON) {
+                try {
+                  const errMsg = errorMessage ? JSON.parse(errorMessage).message : 'Unknown error'
+                  const comparisonResult = await screenshotComparisonService.saveFailureScreenshot(
+                    page,
+                    execution.id,
+                    execution.scenarioId,
+                    step.stepNumber,
+                    step.description || step.type,
+                    errMsg
+                  )
+                  if (comparisonResult.success && comparisonResult.comparison) {
+                    // Attach comparison to error detail for API response
+                    try {
+                      const errorDetail = JSON.parse(errorMessage)
+                      errorDetail.screenshotComparison = comparisonResult.comparison
+                      errorMessage = JSON.stringify(errorDetail)
+                    } catch { /* keep original error message */ }
+                  }
+                } catch (compErr) {
+                  console.log(`[SCREENSHOT] Comparison failed: ${compErr.message}`)
+                }
+              }
+
               // Hapus overlay setelah screenshot
               try { await page.evaluate(() => { const el = document.getElementById('__err_overlay'); if (el) el.remove() }) } catch {}
             } else {
               await page.screenshot({ path: filepath, fullPage: false })
+
+              // Phase 2.2: Save successful screenshot for future comparison
+              if (ENABLE_SCREENSHOT_COMPARISON) {
+                try {
+                  await screenshotComparisonService.saveSuccessfulScreenshot(
+                    page,
+                    execution.scenarioId,
+                    step.stepNumber,
+                    step.description || step.type
+                  )
+                } catch (successScreenErr) {
+                  console.log(`[SCREENSHOT] Success screenshot save failed: ${successScreenErr.message}`)
+                }
+              }
             }
 
             await prisma.screenshot.create({
@@ -574,14 +656,15 @@ export const executionService = {
   },
 
   /**
-   * Execute CLICK step - Click on element with smart wait and retry
+   * Execute CLICK step - Click on element with smart wait and retry + self-healing fallback
+   * Phase 2.1: Self Healing if selector fails
    */
   async executeClick(page, step) {
     if (!step.selector) {
       throw new Error('CLICK step requires a selector')
     }
 
-    const locator = this.resolveLocator(page, step.selector)
+    let locator = this.resolveLocator(page, step.selector)
 
     // Smart wait: try visible first, fallback to attached (for off-screen elements)
     try {
@@ -598,7 +681,32 @@ export const executionService = {
     } catch (firstErr) {
       // Wait a beat for any re-render to settle, then retry
       await page.waitForTimeout(500)
-      await locator.click({ timeout: 10000 })
+      try {
+        await locator.click({ timeout: 10000 })
+      } catch (secondErr) {
+        // Phase 2.1: Self Healing Selector fallback
+        if (ENABLE_SELF_HEALING) {
+          console.log(`[SELF_HEAL] Primary click failed, attempting repair for: ${step.selector}`)
+          try {
+            const repairedSelector = await locatorRepairService.repairLocator(page, step.selector, {
+              type: 'CLICK',
+              description: step.description,
+              value: step.value
+            })
+            if (repairedSelector) {
+              console.log(`[SELF_HEAL] ✅ Repaired selector: ${repairedSelector}`)
+              locator = this.resolveLocator(page, repairedSelector)
+              await locator.click({ timeout: 10000 })
+              // Update step with repaired selector for future use
+              step.selector = repairedSelector
+              return
+            }
+          } catch (repairErr) {
+            console.log(`[SELF_HEAL] Repair failed: ${repairErr.message}`)
+          }
+        }
+        throw secondErr
+      }
     }
 
     // After click: wait for potential navigation or network activity to settle
@@ -606,8 +714,9 @@ export const executionService = {
   },
 
   /**
-   * Execute FILL step - Fill input field
+   * Execute FILL step - Fill input field with self-healing fallback
    * Handles checkbox/radio, contenteditable, and select elements
+   * Phase 2.1: Self Healing if selector fails
    */
   async executeFill(page, step) {
     if (!step.selector) {
@@ -615,14 +724,43 @@ export const executionService = {
     }
 
     const value = step.value ?? ''
-    const locator = this.resolveLocator(page, step.selector)
+    let locator = this.resolveLocator(page, step.selector)
 
     // Smart wait: try visible, fallback to attached
     try {
       await locator.waitFor({ state: 'visible', timeout: 10000 })
-    } catch {
-      await locator.waitFor({ state: 'attached', timeout: 5000 })
-      await locator.scrollIntoViewIfNeeded({ timeout: 3000 }).catch(() => {})
+    } catch (waitErr) {
+      try {
+        await locator.waitFor({ state: 'attached', timeout: 5000 })
+        await locator.scrollIntoViewIfNeeded({ timeout: 3000 }).catch(() => {})
+      } catch (attachErr) {
+        // Phase 2.1: Self Healing Selector - Element not found
+        if (ENABLE_SELF_HEALING) {
+          console.log(`[SELF_HEAL] FILL locator not found, attempting repair for: ${step.selector}`)
+          try {
+            const repairedSelector = await locatorRepairService.repairLocator(page, step.selector, {
+              type: 'FILL',
+              description: step.description,
+              value: step.value
+            })
+            if (repairedSelector) {
+              console.log(`[SELF_HEAL] ✅ Repaired selector: ${repairedSelector}`)
+              locator = this.resolveLocator(page, repairedSelector)
+              await locator.waitFor({ state: 'visible', timeout: 10000 }).catch(() =>
+                locator.waitFor({ state: 'attached', timeout: 5000 })
+              )
+              step.selector = repairedSelector
+            } else {
+              throw attachErr
+            }
+          } catch (repairErr) {
+            console.log(`[SELF_HEAL] Repair failed: ${repairErr.message}`)
+            throw attachErr
+          }
+        } else {
+          throw attachErr
+        }
+      }
     }
 
     // Detect element properties

@@ -77,9 +77,10 @@ export default function ScenarioDetailPage() {
       window.history.replaceState(null, '', cleanUrl)
     }
   }, [routeLocation])
+
+  // ── End of state declarations ──
+
   const pollingRef = useRef(null)
-  const recorderWindowRef = useRef(null)
-  const windowWatchRef = useRef(null)
   const handleStopRecordingRef = useRef(null)
   const stepFormRef = useRef(null)
 
@@ -530,20 +531,12 @@ export default function ScenarioDetailPage() {
     }
   }, [])
 
-  const stopWindowWatch = useCallback(() => {
-    if (windowWatchRef.current) {
-      clearInterval(windowWatchRef.current)
-      windowWatchRef.current = null
-    }
-  }, [])
-
   // Cleanup polling on unmount
   useEffect(() => {
     return () => {
       stopPolling()
-      stopWindowWatch()
     }
-  }, [stopPolling, stopWindowWatch])
+  }, [stopPolling])
 
   // Check for existing recording session on load
   useEffect(() => {
@@ -565,44 +558,27 @@ export default function ScenarioDetailPage() {
       return
     }
 
-    // Buka window SEBELUM await — browser menolak window.open setelah async gap
-    const recorderWindow = window.open('', '_blank', 'width=1280,height=800,menubar=yes,toolbar=yes,scrollbars=yes,resizable=yes')
-    recorderWindowRef.current = recorderWindow
-    if (recorderWindow) {
-      recorderWindow.document.write('<html><body style="font-family:sans-serif;padding:40px;background:#f9fafb"><p style="color:#4b5563">Menyiapkan recorder, mohon tunggu...</p></body></html>')
-    }
-
     setIsStartingRecording(true)
     setError(null)
     try {
+      // ═══ Start Playwright-based Recording ═══
       const res = await recorderAPI.start(id, url)
+      
       setIsRecording(true)
       setRecordingSteps([])
       setShowRecordingPanel(true)
-      if (res.data.proxyUrl) {
-        const absoluteProxyUrl = window.location.origin + res.data.proxyUrl
-        if (recorderWindowRef.current && !recorderWindowRef.current.closed) {
-          recorderWindowRef.current.location.href = absoluteProxyUrl
-        } else {
-          // Fallback jika window tertutup atau diblokir
-          recorderWindowRef.current = window.open(absoluteProxyUrl, '_blank', 'width=1280,height=800,menubar=yes,toolbar=yes,scrollbars=yes,resizable=yes')
-        }
-      }
-      showSuccess('Browser rekaman terbuka. Silakan berinteraksi dengan halaman.')
+
+      // ═══ Show Status ═══
+      // Dengan Playwright, browser dibuka di backend (headless)
+      // Frontend tinggal menampilkan status dan polling steps
+      showSuccess(`Recording dimulai dengan Playwright 🎥\nBackend: ${res.data.message}`)
+      
+      // Start polling for recorded steps
       startPollingSteps()
 
-      // Pantau window — jika ditutup, otomatis stop recording
-      stopWindowWatch()
-      windowWatchRef.current = setInterval(() => {
-        if (recorderWindowRef.current && recorderWindowRef.current.closed) {
-          stopWindowWatch()
-          if (handleStopRecordingRef.current) handleStopRecordingRef.current()
-        }
-      }, 800)
     } catch (err) {
-      if (recorderWindowRef.current && !recorderWindowRef.current.closed) recorderWindowRef.current.close()
-      recorderWindowRef.current = null
       setError(err.response?.data?.error || 'Gagal memulai recording')
+      console.error('Recording start error:', err)
     } finally {
       setIsStartingRecording(false)
     }
@@ -610,19 +586,14 @@ export default function ScenarioDetailPage() {
 
   const handleStopRecording = async () => {
     setIsStoppingRecording(true)
-    stopWindowWatch()
+    stopPolling() // Stop polling steps from backend
     try {
-      // Tutup browser recorder
-      if (recorderWindowRef.current && !recorderWindowRef.current.closed) {
-        recorderWindowRef.current.close()
-      }
-      recorderWindowRef.current = null
-
+      // ═══ Stop Playwright-based Recording ═══
       const res = await recorderAPI.stop(id)
       const stoppedSteps = res.data.steps || []
+      
       setRecordingSteps(stoppedSteps)
       setIsRecording(false)
-      stopPolling()
 
       // Auto-save steps ke database jika ada
       if (stoppedSteps.length > 0) {

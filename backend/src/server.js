@@ -16,6 +16,9 @@ import executionRoutes from './routes/executionRoutes.js'
 import recorderRoutes from './routes/recorderRoutes.js'
 import analyticsRoutes from './routes/analyticsRoutes.js'
 import chainRoutes from './routes/chainRoutes.js'
+import schedulerRoutes from './routes/schedulerRoutes.js'
+import parallelExecutionRoutes from './routes/parallelExecutionRoutes.js'
+import browserMatrixRoutes from './routes/browserMatrixRoutes.js'
 import { errorHandler } from './middleware/auth.js'
 import { swaggerSpec } from './lib/swagger.js'
 
@@ -60,6 +63,9 @@ app.use('/api/executions', executionRoutes)
 app.use('/api/recorder', recorderRoutes)
 app.use('/api/analytics', analyticsRoutes)
 app.use('/api/chains', chainRoutes)
+app.use('/api/scheduler', schedulerRoutes)
+app.use('/api/parallel', parallelExecutionRoutes)
+app.use('/api/browser-matrix', browserMatrixRoutes)
 
 // Swagger API docs — available at /api/docs
 app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
@@ -119,10 +125,18 @@ process.on('uncaughtException', (err) => {
 })
 
 // Start server
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(`\n✅ Backend server running on http://localhost:${PORT}`)
-  console.log(`� API docs (Swagger): http://localhost:${PORT}/api/docs`)
+  console.log(`📚 API docs (Swagger): http://localhost:${PORT}/api/docs`)
   console.log(`🏥 Health check: http://localhost:${PORT}/health\n`)
+
+  // Phase 2.4: Initialize scheduler
+  try {
+    const { schedulerService } = await import('./services/schedulerService.js')
+    await schedulerService.initialize()
+  } catch (err) {
+    console.error('Failed to initialize scheduler:', err.message)
+  }
 })
 
 export default app

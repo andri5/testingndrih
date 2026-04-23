@@ -13,8 +13,18 @@ export const recorderController = {
         return res.status(400).json({ error: 'scenarioId diperlukan' })
       }
       const result = await recorderService.startRecording(userId, scenarioId, url)
-      res.json(result)
+      
+      // Return result with Playwright status (no proxy URL needed)
+      res.status(202).json({
+        success: true,
+        status: result.status,
+        scenarioId: result.scenarioId,
+        message: result.message,
+        method: 'playwright', // ⭐ Indicate using Playwright
+        browserPid: result.browserPid
+      })
     } catch (err) {
+      console.error(`[RECORDER] startRecording error: ${err.message}`)
       if (err.message.includes('sudah berjalan') || err.message.includes('tidak ditemukan')) {
         return res.status(400).json({ error: err.message })
       }
@@ -30,8 +40,16 @@ export const recorderController = {
         return res.status(400).json({ error: 'scenarioId diperlukan' })
       }
       const result = await recorderService.stopRecording(userId, scenarioId)
-      res.json(result)
+      res.json({
+        success: true,
+        status: result.status,
+        stepCount: result.stepCount,
+        steps: result.steps,
+        duration: result.duration,
+        message: result.message
+      })
     } catch (err) {
+      console.error(`[RECORDER] stopRecording error: ${err.message}`)
       if (err.message.includes('Tidak ada recording')) {
         return res.status(400).json({ error: err.message })
       }
@@ -341,13 +359,83 @@ window.__targetBase=${JSON.stringify(url)};
     }
   },
 
+  /**
+   * POST /api/recorder/step/:scenarioId
+   * Receives a step from the client-side recorder (via console.log or postMessage).
+   * 
+   * Request body (from injected script):
+   * {
+   *   type: 'CLICK'|'FILL'|'HOVER'|'SCROLL'|'DRAG'|'FILE_UPLOAD',
+   *   selector: string (CSS selector or shadow DOM path),
+   *   value?: string (for FILL),
+   *   description?: string (human-readable),
+   *   tagName?: string,
+   *   timestamp?: number (unix ms),
+   *   contentEditable?: boolean (for FILL)
+   * }
+   * 
+   * Returns: { ok: true } or { ok: false, error: string }
+   * Supports both legacy console.log and new postMessage communication.
+   */
   receiveStep(req, res) {
-    const userId = req.user.id
-    const { scenarioId } = req.params
-    const step = req.body
-    if (!step || !step.type) return res.json({ ok: false, reason: 'no type' })
-    console.log(`[RECORDER] receiveStep user=${userId} scenario=${scenarioId} type=${step.type}`)
-    const added = recorderService.addStep(userId, scenarioId, step)
-    res.json({ ok: added })
+    try {
+      const userId = req.user.id
+      const { scenarioId } = req.params
+      const step = req.body
+
+      // ═══ VALIDATION ═══
+      if (!step || typeof step !== 'object') {
+        return res.status(400).json({ ok: false, error: 'Invalid step format' })
+      }
+
+      if (!step.type || typeof step.type !== 'string') {
+        return res.status(400).json({ ok: false, error: 'Missing or invalid step.type' })
+      }
+
+      if (!scenarioId) {
+        return res.status(400).json({ ok: false, error: 'Missing scenarioId parameter' })
+      }
+
+      // Validate step type
+      const validTypes = ['CLICK', 'FILL', 'HOVER', 'SCROLL', 'DRAG', 'FILE_UPLOAD', 'SUBMIT', 'PASTE', 'CHANGE']
+      if (!validTypes.includes(step.type)) {
+        return res.status(400).json({ ok: false, error: `Invalid step type: ${step.type}` })
+      }
+
+      // Validate selector (required for most step types)
+      if (['CLICK', 'FILL', 'HOVER', 'DRAG', 'FILE_UPLOAD'].includes(step.type)) {
+        if (!step.selector || typeof step.selector !== 'string') {
+          return res.status(400).json({ ok: false, error: `step.selector required for ${step.type}` })
+        }
+      }
+
+      // ═══ SANITIZE ═══
+      const sanitized = {
+        type: step.type,
+        selector: step.selector || '',
+        value: step.value ? String(step.value).substring(0, 10000) : '',
+        description: step.description ? String(step.description).substring(0, 500) : '',
+        tagName: step.tagName ? String(step.tagName).substring(0, 50) : '',
+        timestamp: Number.isInteger(step.timestamp) ? step.timestamp : Date.now(),
+        contentEditable: Boolean(step.contentEditable)
+      }
+
+      // ═══ ADD STEP ═══
+      console.log(`[RECORDER] receiveStep user=${userId} scenario=${scenarioId} type=${sanitized.type} selector=${sanitized.selector.substring(0, 50)}`)
+      const added = recorderService.addStep(userId, scenarioId, sanitized)
+
+      if (!added) {
+        // Session not found or not recording
+        return res.status(409).json({
+          ok: false,
+          error: 'Recording session not active. Please restart recording.'
+        })
+      }
+
+      res.json({ ok: true, stepNumber: sanitized.stepNumber })
+    } catch (err) {
+      console.error(`[RECORDER] receiveStep error:`, err)
+      res.status(500).json({ ok: false, error: 'Internal server error' })
+    }
   }
 }

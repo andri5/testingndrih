@@ -132,14 +132,24 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <div className="mt-5 pt-5 border-t border-[rgba(255,255,255,0.06)] text-center">
-            <span className="text-xs text-[#8A8A8F]">Don't have an account? </span>
-            <Link
-              to="/register"
-              className="text-xs text-[#9BA3F0] hover:text-[#5E6AD2] font-medium transition-colors"
-            >
-              Create one
-            </Link>
+          <div className="mt-5 pt-5 border-t border-[rgba(255,255,255,0.06)] space-y-3">
+            <div className="text-center">
+              <span className="text-xs text-[#8A8A8F]">Don't have an account? </span>
+              <Link
+                to="/register"
+                className="text-xs font-semibold text-[#9BA3F0] hover:text-[#5E6AD2] underline cursor-pointer hover:underline-offset-2 transition-all"
+              >
+                Create one
+              </Link>
+            </div>
+            <div className="text-center">
+              <Link
+                to="/forgot-password"
+                className="text-xs font-semibold text-[#9BA3F0] hover:text-[#5E6AD2] underline cursor-pointer hover:underline-offset-2 transition-all"
+              >
+                Forgot password?
+              </Link>
+            </div>
           </div>
         </div>
 

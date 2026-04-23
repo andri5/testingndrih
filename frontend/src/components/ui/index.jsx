@@ -134,3 +134,39 @@ export function Spinner({ size = 'md' }) {
   )
 }
 
+// ─── CardHeader Component ─────────────────────────────────────────────────────
+export function CardHeader({ children, className = '' }) {
+  return (
+    <div className={`pb-3 border-b border-[rgba(255,255,255,0.1)] ${className}`}>
+      {children}
+    </div>
+  )
+}
+
+// ─── CardTitle Component ──────────────────────────────────────────────────────
+export function CardTitle({ children, className = '' }) {
+  return (
+    <h3 className={`text-lg font-semibold text-[#E0E0E2] ${className}`}>
+      {children}
+    </h3>
+  )
+}
+
+// ─── CardDescription Component ────────────────────────────────────────────────
+export function CardDescription({ children, className = '' }) {
+  return (
+    <p className={`text-sm text-[#8A8A8F] mt-1 ${className}`}>
+      {children}
+    </p>
+  )
+}
+
+// ─── CardContent Component ────────────────────────────────────────────────────
+export function CardContent({ children, className = '' }) {
+  return (
+    <div className={`pt-4 ${className}`}>
+      {children}
+    </div>
+  )
+}
+

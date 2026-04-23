@@ -2,6 +2,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { useEffect } from 'react'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
+import ForgotPasswordPage from './pages/ForgotPasswordPage'
+import ResetPasswordPage from './pages/ResetPasswordPage'
 import DashboardPage from './pages/DashboardPage'
 import AnalyticsPage from './pages/AnalyticsPage'
 import ScenariosPage from './pages/ScenariosPage'
@@ -12,6 +14,9 @@ import SettingsPage from './pages/SettingsPage'
 import ChainsPage from './pages/ChainsPage'
 import ChainBuilderPage from './pages/ChainBuilderPage'
 import ChainExecutorPage from './pages/ChainExecutorPage'
+import SchedulerPage from './pages/SchedulerPage'
+import ParallelExecutionPage from './pages/ParallelExecutionPage'
+import BrowserMatrixPage from './pages/BrowserMatrixPage'
 import ProtectedRoute from './components/ProtectedRoute'
 import NotFoundPage from './pages/NotFoundPage'
 import MaintenancePage from './pages/MaintenancePage'
@@ -44,6 +49,14 @@ export default function App() {
         <Route
           path="/register"
           element={token ? <Navigate to="/dashboard" /> : <RegisterPage />}
+        />
+        <Route
+          path="/forgot-password"
+          element={token ? <Navigate to="/dashboard" /> : <ForgotPasswordPage />}
+        />
+        <Route
+          path="/reset-password/:token"
+          element={token ? <Navigate to="/dashboard" /> : <ResetPasswordPage />}
         />
 
         {/* Protected Routes */}
@@ -124,6 +137,30 @@ export default function App() {
           element={
             <ProtectedRoute>
               <ChainExecutorPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/scheduler"
+          element={
+            <ProtectedRoute>
+              <SchedulerPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/parallel"
+          element={
+            <ProtectedRoute>
+              <ParallelExecutionPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/browser-matrix"
+          element={
+            <ProtectedRoute>
+              <BrowserMatrixPage />
             </ProtectedRoute>
           }
         />

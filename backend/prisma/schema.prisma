@@ -64,11 +64,18 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // Password reset fields
+  resetToken       String?   @unique
+  resetTokenExpiry DateTime?
+
   scenarios        Scenario[]
   executions       Execution[]
   executionLogs    ExecutionLog[]
   testChains       TestChain[]
   chainExecutions  ChainExecution[]
+  testSchedules    TestSchedule[] @relation("UserSchedules")
+  executionBatches ExecutionBatch[] @relation("UserBatches")
+  matrixExecutions MatrixExecution[] @relation("UserMatrices")
 
   @@map("users")
 }
@@ -83,11 +90,13 @@ model Scenario {
   updatedAt   DateTime @updatedAt
   userId      String
 
-  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  testSteps   TestStep[]
-  executions  Execution[]
-  apiTests    ApiTest[]
-  chainSteps  ChainStep[]
+  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  testSteps     TestStep[]
+  executions    Execution[]
+  apiTests      ApiTest[]
+  chainSteps    ChainStep[]
+  testSchedules TestSchedule[] @relation("ScenarioSchedules")
+  matrixExecutions MatrixExecution[] @relation("ScenarioMatrices")
 
   @@index([userId])
   @@map("scenarios")
@@ -114,25 +123,27 @@ model TestStep {
 }
 
 model Execution {
-  id           String            @id @default(cuid())
-  status       ExecutionStatus   @default(PENDING)
-  startTime    DateTime?
-  endTime      DateTime?
-  duration     Int? // in milliseconds
-  errorMessage String?
-  passedSteps  Int               @default(0)
-  failedSteps  Int               @default(0)
-  totalSteps   Int
-  videoPath    String?           // path to execution video file
-  browser      String?           @default("chromium") // chromium | firefox | webkit
-  headless     Boolean?          @default(false)
-  createdAt    DateTime          @default(now())
-  updatedAt    DateTime          @updatedAt
-  userId       String
-  scenarioId   String
+  id                  String            @id @default(cuid())
+  status              ExecutionStatus   @default(PENDING)
+  startTime           DateTime?
+  endTime             DateTime?
+  duration            Int? // in milliseconds
+  errorMessage        String?
+  passedSteps         Int               @default(0)
+  failedSteps         Int               @default(0)
+  totalSteps          Int
+  videoPath           String?           // path to execution video file
+  browser             String?           @default("chromium") // chromium | firefox | webkit
+  headless            Boolean?          @default(false)
+  executionBatchId    String?           // for parallel execution batches
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  userId              String
+  scenarioId          String
 
   user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   scenario     Scenario     @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+  batch        ExecutionBatch? @relation(fields: [executionBatchId], references: [id], onDelete: SetNull)
   stepResults  StepResult[]
   screenshots  Screenshot[]
   issues       Issue[]
@@ -141,6 +152,7 @@ model Execution {
   @@index([userId])
   @@index([scenarioId])
   @@index([status])
+  @@index([executionBatchId])
   @@map("executions")
 }
 
@@ -330,4 +342,69 @@ model ChainStepResult {
   @@index([chainStepId])
   @@index([chainExecutionId])
   @@map("chain_step_results")
+}
+
+model TestSchedule {
+  id                String   @id @default(cuid())
+  userId            String
+  scenarioId        String
+  frequency         String
+  timeOfDay         String?
+  daysOfWeek        String?
+  cronExpression    String?
+  lastRunAt         DateTime?
+  nextRunAt         DateTime?
+  lastExecutionId   String?
+  successCount      Int      @default(0)
+  failureCount      Int      @default(0)
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  user              User     @relation("UserSchedules", fields: [userId], references: [id], onDelete: Cascade)
+  scenario          Scenario @relation("ScenarioSchedules", fields: [scenarioId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([scenarioId])
+  @@index([isActive])
+  @@map("test_schedules")
+}
+
+model ExecutionBatch {
+  id            String   @id @default(cuid())
+  status        String   @default("RUNNING") // RUNNING, SUCCESS, PARTIAL_FAILURE, FAILED, CANCELLED
+  scenarioCount Int
+  successCount  Int      @default(0)
+  failureCount  Int      @default(0)
+  startedAt     DateTime
+  completedAt   DateTime?
+  createdAt     DateTime @default(now())
+  userId        String
+
+  user       User        @relation("UserBatches", fields: [userId], references: [id], onDelete: Cascade)
+  executions Execution[]
+
+  @@index([userId])
+  @@index([status])
+  @@map("execution_batches")
+}
+
+model MatrixExecution {
+  id        String   @id @default(cuid())
+  status    String   @default("RUNNING") // RUNNING, SUCCESS, PARTIAL_FAILURE, FAILED
+  browsers  String[] // array of browser names: ["chromium", "firefox", "webkit"]
+  results   String?  // JSON string with compatibility matrix
+  startedAt DateTime
+  completedAt DateTime?
+  createdAt DateTime @default(now())
+  scenarioId String
+  userId    String
+
+  user     User     @relation("UserMatrices", fields: [userId], references: [id], onDelete: Cascade)
+  scenario Scenario @relation("ScenarioMatrices", fields: [scenarioId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([scenarioId])
+  @@index([status])
+  @@map("matrix_executions")
 }

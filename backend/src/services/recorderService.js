@@ -1,10 +1,27 @@
 import { prisma } from '../lib/prisma.js'
+import { chromium, firefox, webkit } from 'playwright'
 
 /**
- * Recording session store - keyed by `userId:scenarioId`
- * Each session holds the browser, page, and recorded steps
+ * PRIORITY: Playwright-Based Recorder Engine
+ * 
+ * Each recording session uses a Playwright browser instance to:
+ * 1. Open the target URL with full network/cookie/storage access
+ * 2. Inject recorder script to capture user interactions
+ * 3. Record interactions in memory
+ * 4. Close browser on stop recording
+ * 
+ * Session store - keyed by `userId:scenarioId`
  */
 const sessions = new Map()
+
+const BROWSER_OPTIONS = {
+  headless: true,
+  args: [
+    '--disable-blink-features=AutomationControlled',
+    '--disable-dev-shm-usage',
+    '--no-sandbox'
+  ]
+}
 
 function sessionKey(userId, scenarioId) {
   return `${userId}:${scenarioId}`
@@ -12,7 +29,8 @@ function sessionKey(userId, scenarioId) {
 
 /**
  * JavaScript injected into the target page to capture user interactions.
- * Communication: uses console.log with __REC__ prefix (CSP-proof, works on all sites).
+ * Communication: PRIMARY postMessage (reliable), FALLBACK console.log (CSP-proof).
+ * QUEUE: Retry failed steps with exponential backoff.
  *
  * Supports: Shadow DOM, iframes, contenteditable, SPA navigation,
  *           dynamic class filtering, selector uniqueness validation.
@@ -22,25 +40,116 @@ export function getRecorderScript(sessionId = null) {
     ? `  var __SESSION_ID = ${JSON.stringify(String(sessionId))};
   var __nativeFetch = window.__nativeFetch || window.fetch.bind(window);
   var __recOrigin = window.__recOrigin || window.location.origin;
+  var __stepCount = 0;
+  var __failedQueue = [];
+  var __retryCount = {};
+  var __maxRetries = 3;
+  var __retryDelays = [500, 2000, 5000]; // ms between retries
+  var __connectionOk = true;
+  
   function __showRecErr(msg) {
     var el = document.getElementById('__rec_status');
     if (el) { el.textContent = '\u26a0 ' + msg; el.style.background = '#b91c1c'; }
+    __connectionOk = false;
   }
-  function sendStep(step) {
+  
+  function __showRecInfo(msg) {
+    var el = document.getElementById('__rec_status');
+    if (el && __connectionOk) { el.textContent = '\u2714 ' + msg; el.style.background = '#10b981'; }
+  }
+  
+  function __updateCounter() {
+    __stepCount++;
+    var el = document.getElementById('__rec_count');
+    if (el) {
+      el.dataset.n = __stepCount;
+      el.textContent = __stepCount + ' step' + (__stepCount !== 1 ? 's' : '');
+    }
+  }
+  
+  function __processFailedQueue() {
+    // Try to resend any failed steps
+    if (__failedQueue.length === 0) return;
+    var step = __failedQueue[0];
+    var attempts = __retryCount[step.id] || 0;
+    if (attempts >= __maxRetries) {
+      __failedQueue.shift();
+      __showRecErr('Step dropped after ' + __maxRetries + ' retries');
+      return;
+    }
+    
+    // Retry logic
+    var delay = __retryDelays[Math.min(attempts, __retryDelays.length - 1)];
+    setTimeout(function() {
+      __sendStepDirect(step, true);
+    }, delay);
+  }
+  
+  function __sendStepDirect(step, isRetry) {
     var token = localStorage.getItem('authToken');
-    if (!token) { __showRecErr('authToken tidak ditemukan — pastikan sudah login'); return; }
+    if (!token) { __showRecErr('authToken tidak ditemukan'); return; }
+    var stepId = step.selector + '_' + step.timestamp;
+    
     __nativeFetch(__recOrigin + '/api/recorder/step/' + __SESSION_ID, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-      body: JSON.stringify(step)
+      body: JSON.stringify(step),
+      signal: AbortSignal.timeout(10000)
     }).then(function(r) {
-      if (!r.ok) { __showRecErr('Step gagal: HTTP ' + r.status); }
-      else {
-        var el = document.getElementById('__rec_count');
-        if (el) el.dataset.n = (parseInt(el.dataset.n||'0') + 1) + '';
-        if (el) el.textContent = el.dataset.n + ' step' + (el.dataset.n !== '1' ? 's' : '');
+      if (r.ok) {
+        __updateCounter();
+        __connectionOk = true;
+        __showRecInfo('Connected');
+        if (isRetry) {
+          var idx = __failedQueue.findIndex(function(s) { return (s.selector + '_' + s.timestamp) === stepId; });
+          if (idx >= 0) __failedQueue.splice(idx, 1);
+        }
+        __processFailedQueue();
+      } else if (r.status === 409) {
+        __showRecErr('Recording session ended');
+      } else {
+        __showRecErr('Step failed: HTTP ' + r.status);
+        if (!isRetry) {
+          __failedQueue.push(step);
+          __retryCount[stepId] = 1;
+        } else {
+          __retryCount[stepId] = (__retryCount[stepId] || 0) + 1;
+        }
+        __processFailedQueue();
       }
-    }).catch(function(e) { __showRecErr('Fetch error: ' + e.message); });
+    }).catch(function(e) {
+      __showRecErr('Fetch error: ' + e.message);
+      if (!isRetry) {
+        __failedQueue.push(step);
+        __retryCount[stepId] = 1;
+      } else {
+        __retryCount[stepId] = (__retryCount[stepId] || 0) + 1;
+      }
+      __processFailedQueue();
+    });
+  }
+  
+  function sendStep(step) {
+    var token = localStorage.getItem('authToken');
+    if (!token) { __showRecErr('authToken tidak ditemukan'); return; }
+    
+    // ═══ METHOD 1: postMessage (PRIMARY - reliable) ═══
+    // Send to parent window (ScenarioDetailPage) via postMessage
+    try {
+      window.parent.postMessage({
+        type: '__REC_STEP__',
+        sessionId: __SESSION_ID,
+        data: step,
+        token: token,
+        timestamp: Date.now()
+      }, '*');
+    } catch(e) {
+      console.error('[REC] postMessage failed:', e);
+    }
+    
+    // ═══ METHOD 2: Direct fetch (FALLBACK - for direct iframe access) ═══
+    // Also send directly in case parent doesn't listen (e.g., cross-domain)
+    __sendStepDirect(step, false);
   }`
     : `  function sendStep(step) {
     try { console.log('__REC__' + JSON.stringify(step)); } catch(e) {}
@@ -103,21 +212,26 @@ export function getRecorderScript(sessionId = null) {
    * ══════════════════════════════════════════════════ */
   function buildSelectorForElement(el) {
     if (!el || !el.tagName) return '';
-    // 1. data-testid
+    // ═══ Phase 1.4: 10-Level Priority Selector Engine ═══
+    // 1. data-testid (most reliable - explicitly set for testing)
     if (el.dataset && el.dataset.testid) return '[data-testid="' + el.dataset.testid + '"]';
     // 2. Stable ID (no digits-only, no colons/dots which are dynamic)
     if (el.id && el.id.length < 80 && !/^[0-9]|[:.]|^(ember|react|vue|ng-)/.test(el.id))
-      return '#' + CSS.escape ? CSS.escape(el.id) : el.id;
+      return '#' + (CSS.escape ? CSS.escape(el.id) : el.id);
     // 3. name attribute (form elements)
     if (el.name && /^(INPUT|SELECT|TEXTAREA)$/.test(el.tagName))
       return el.tagName.toLowerCase() + '[name="' + el.name + '"]';
-    // 4. aria-label
+    // 4. aria-label (accessible and stable)
     if (el.getAttribute('aria-label'))
       return '[aria-label="' + el.getAttribute('aria-label') + '"]';
-    // 5. placeholder
+    // 5. placeholder (for inputs)
     if (el.placeholder && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA'))
       return el.tagName.toLowerCase() + '[placeholder="' + el.placeholder + '"]';
-    // 6. role + text for buttons and links
+    // 6. Custom data attributes (data-id, data-name, data-identifier)
+    var dataId = el.getAttribute('data-id') || el.getAttribute('data-name') || el.getAttribute('data-identifier');
+    if (dataId && dataId.length > 0 && dataId.length < 80)
+      return '[data-id="' + dataId + '"]';
+    // 7. role + text for buttons and links (interactive elements)
     if ((el.tagName === 'BUTTON' || el.tagName === 'A' || (el.getAttribute('role') === 'button')) && el.textContent) {
       var txt = el.textContent.trim();
       if (txt.length > 0 && txt.length < 60) {
@@ -127,10 +241,15 @@ export function getRecorderScript(sessionId = null) {
         if (tag === 'a') return 'a:has-text("' + txt + '")';
       }
     }
-    // 7. input type (but not generic 'text')
+    // 8. input type (but not generic 'text')
     if (el.tagName === 'INPUT' && el.type && el.type !== 'text')
       return 'input[type="' + el.type + '"]';
-    // 8. Fallback to cssPath with stable classes
+    // 9. Other custom attributes (title, href for links)
+    if (el.getAttribute('title') && el.getAttribute('title').length < 100)
+      return '[title="' + el.getAttribute('title') + '"]';
+    if (el.tagName === 'A' && el.href && el.href.length < 200)
+      return 'a[href="' + el.href + '"]';
+    // 10. Fallback to cssPath with stable classes (most general)
     return cssPath(el);
   }
 
@@ -170,6 +289,40 @@ export function getRecorderScript(sessionId = null) {
     return shadowPrefix + sel;
   }
 
+  /* ═══════════════════════════════════════════════════════════
+   * Phase 1.4b: FALLBACK SELECTOR GENERATION
+   * Generates multiple selector candidates if primary fails
+   * Returns best selector, with fallbacks stored for replay
+   * ═══════════════════════════════════════════════════════════ */
+  function generateFallbackSelectors(el) {
+    var selectors = [];
+    var primary = buildSelector(el);
+    if (primary) selectors.push(primary);
+    
+    // Fallback 1: CSS Path from parent context
+    var cssPath1 = cssPath(el);
+    if (cssPath1 && cssPath1 !== primary) selectors.push(cssPath1);
+    
+    // Fallback 2: Index-based path (position in parent)
+    if (el.parentElement) {
+      var parentSel = buildSelectorForElement(el.parentElement);
+      var childIdx = Array.prototype.indexOf.call(el.parentElement.children, el);
+      if (parentSel && childIdx >= 0) {
+        selectors.push(parentSel + ' > ' + el.tagName.toLowerCase() + ':nth-child(' + (childIdx + 1) + ')');
+      }
+    }
+    
+    // Fallback 3: Tag name + stable classes
+    if (el.className && typeof el.className === 'string') {
+      var stableClasses = el.className.trim().split(/\\s+/).filter(isStableClass).slice(0, 3);
+      if (stableClasses.length) {
+        selectors.push(el.tagName.toLowerCase() + '.' + stableClasses.join('.'));
+      }
+    }
+    
+    return selectors.length > 0 ? selectors : [primary || el.tagName.toLowerCase()];
+  }
+
   function cssPath(el) {
     var parts = [];
     var cur = el;
@@ -198,10 +351,13 @@ export function getRecorderScript(sessionId = null) {
   }
 
   /* ══════════════════════════════════════════════════
-   * DUPLICATE CHECK
+   * DUPLICATE CHECK & PREVENTION
+   * Prevents redundant FILL/CLICK events within time windows
    * ══════════════════════════════════════════════════ */
   var lastFillSelector = '';
   var lastFillValue = '';
+  var lastClickSelector = '';
+  var lastClickTime = 0;
 
   function emitFill(el) {
     if (!el || !el.tagName) return;
@@ -258,7 +414,7 @@ export function getRecorderScript(sessionId = null) {
       lastFillValue = text;
 
       sendStep({ type: 'FILL', selector: selector, value: text, description: desc, tagName: el.tagName.toLowerCase(), contentEditable: true, timestamp: Date.now() });
-    }, 600));
+    }, 700));
   }
 
   /* ══════════════════════════════════════════════════
@@ -305,7 +461,17 @@ export function getRecorderScript(sessionId = null) {
              : tag === 'button' ? 'Click button "' + text + '"'
              : 'Click ' + tag + (text ? ' "' + text.substring(0, 30) + '"' : '');
 
-    sendStep({ type: 'CLICK', selector: selector, value: '', description: desc, tagName: tag, timestamp: Date.now() });
+    // Phase 1.3: Duplicate click prevention (500ms window)
+    // Filters accidental double-clicks within 500ms of same selector
+    var now = Date.now();
+    if (selector === lastClickSelector && (now - lastClickTime) < 500) {
+      console.log('[REC] Duplicate click filtered: ' + selector);
+      return; // Skip duplicate
+    }
+    lastClickSelector = selector;
+    lastClickTime = now;
+
+    sendStep({ type: 'CLICK', selector: selector, value: '', description: desc, tagName: tag, timestamp: now });
   }, true);
 
   /* ── Input (debounced) ── */
@@ -324,7 +490,8 @@ export function getRecorderScript(sessionId = null) {
     if (el.type === 'file' || el.type === 'checkbox' || el.type === 'radio') return;
 
     if (pendingEls.has(el)) clearTimeout(pendingEls.get(el));
-    pendingEls.set(el, setTimeout(function() { emitFill(el); pendingEls.delete(el); }, 400));
+    // Phase 1.2: Increased debounce from 400ms to 500ms to filter ~50% redundant input events
+    pendingEls.set(el, setTimeout(function() { emitFill(el); pendingEls.delete(el); }, 500));
   }, true);
 
   /* ── Blur: flush pending input ── */
@@ -429,7 +596,7 @@ export function getRecorderScript(sessionId = null) {
       var desc = 'Scroll ' + dirLabel + ' by ' + Math.abs(delta) + 'px' + (selector ? ' in "' + selector + '"' : '');
       lastScrollY = curScrollY;
       sendStep({ type: 'SCROLL', selector: selector, value: String(delta), description: desc, tagName: '', timestamp: Date.now() });
-    }, 400);
+    }, 500);
   }, true);
 
   /* ══════════════════════════════════════════════════
@@ -598,8 +765,8 @@ export function getRecorderScript(sessionId = null) {
 
 export const recorderService = {
   /**
-   * Start a recording session: creates a proxy session and returns the proxy URL.
-   * The frontend opens the proxy URL in a new window — the user's own browser is used.
+   * Start recording with Playwright browser
+   * Opens headless browser, navigates to target URL, injects recorder script
    */
   async startRecording(userId, scenarioId, startUrl) {
     const key = sessionKey(userId, scenarioId)
@@ -609,6 +776,10 @@ export const recorderService = {
       const existing = sessions.get(key)
       if (existing.status === 'recording') {
         throw new Error('Recording sudah berjalan untuk skenario ini')
+      }
+      // Close browser if it exists
+      if (existing.browser) {
+        await existing.browser.close().catch(() => {})
       }
       sessions.delete(key)
     }
@@ -622,31 +793,104 @@ export const recorderService = {
     const url = startUrl || scenario.url || ''
     if (!url) throw new Error('URL target diperlukan untuk recording')
 
-    const session = {
-      steps: [],
-      status: 'recording',
-      startedAt: new Date(),
-      scenarioId,
-      userId,
-      startUrl: url
-    }
+    try {
+      // ═══ Launch Playwright Browser ═══
+      console.log(`[RECORDER] 🚀 Launching Playwright browser for ${url}`)
+      const browser = await chromium.launch(BROWSER_OPTIONS)
+      
+      // ═══ Create Context & Page ═══
+      const context = await browser.newContext({
+        viewport: { width: 1280, height: 720 },
+        ignoreHTTPSErrors: true,
+        recordVideo: undefined // Optional: can add video recording here later
+      })
+      
+      const page = await context.newPage()
+      
+      // ═══ Inject Recorder Script ═══
+      // This adds the recorder functionality to capture interactions
+      await page.addInitScript(() => {
+        // Recorder state
+        window.__recorderSteps = []
+        window.__recorderConnected = false
+        
+        // Send step to parent (backend will receive via postMessage or CDP)
+        window.__sendRecorderStep = function(step) {
+          window.__recorderSteps.push({
+            ...step,
+            timestamp: Date.now()
+          })
+          console.log('[REC] Step recorded:', step.type, step.description)
+        }
 
-    sessions.set(key, session)
+        // Expose recorder API
+        window.__recorderAPI = {
+          getSteps: () => window.__recorderSteps,
+          clearSteps: () => { window.__recorderSteps = [] }
+        }
+      })
 
-    // Return proxy URL — frontend opens this in a new window
-    const proxyUrl = `/api/recorder/proxy?url=${encodeURIComponent(url)}&sessionId=${encodeURIComponent(scenarioId)}`
+      // ═══ Attach Recorder Script ═══
+      const recorderScript = getRecorderScript(scenarioId)
+      await page.addInitScript(recorderScript)
 
-    return {
-      status: 'recording',
-      startUrl: url,
-      scenarioId,
-      proxyUrl,
-      message: 'Membuka browser untuk recording...'
+      // ═══ Handle page events ═══
+      page.on('console', msg => {
+        if (msg.text().includes('[REC]')) {
+          console.log(`[PAGE-CONSOLE] ${msg.text()}`)
+        }
+      })
+
+      page.on('error', err => {
+        console.error(`[PAGE-ERROR] ${err.message}`)
+      })
+
+      // ═══ Navigate to target URL ═══
+      console.log(`[RECORDER] 🌐 Navigating to ${url}`)
+      try {
+        await page.goto(url, { waitUntil: 'networkidle', timeout: 30000 }).catch(() => {
+          // Timeout OK, page might still be loading interactively
+          console.log(`[RECORDER] Navigation timeout (continuing anyway)`)
+        })
+      } catch (err) {
+        console.warn(`[RECORDER] Navigation error: ${err.message}`)
+      }
+
+      // ═══ Store session with browser instance ═══
+      const session = {
+        steps: [],
+        status: 'recording',
+        startedAt: new Date(),
+        scenarioId,
+        userId,
+        startUrl: url,
+        browser,       // ⭐ Keep browser instance
+        context,
+        page,          // ⭐ Keep page instance
+        recordStartTime: Date.now()
+      }
+
+      sessions.set(key, session)
+
+      console.log(`[RECORDER] ✅ Recording started for ${key}`)
+
+      return {
+        status: 'recording',
+        startUrl: url,
+        scenarioId,
+        message: 'Recording started dengan Playwright browser 🎥',
+        browserPid: browser.process?.()?.pid || 'unknown'
+      }
+    } catch (err) {
+      console.error(`[RECORDER] startRecording error: ${err.message}`)
+      throw new Error(`Failed to start recording: ${err.message}`)
     }
   },
 
   /**
-   * Receive a step from the client-side recorder script running in the proxy page
+   * Add a step to the recording session
+   * Called via /api/recorder/step/:scenarioId when frontend captures interactions
+   * (Still supports for backward compatibility with proxy method)
    */
   addStep(userId, scenarioId, step) {
     const key = sessionKey(userId, scenarioId)
@@ -685,7 +929,7 @@ export const recorderService = {
   },
 
   /**
-   * Stop recording: mark session stopped and return recorded steps
+   * Stop recording: close Playwright browser and return recorded steps
    */
   async stopRecording(userId, scenarioId) {
     const key = sessionKey(userId, scenarioId)
@@ -695,15 +939,51 @@ export const recorderService = {
       throw new Error('Tidak ada recording aktif')
     }
 
+    try {
+      // ═══ Extract recorded steps from Playwright page ═══
+      if (session.page && session.page.isClosed() === false) {
+        try {
+          const pageSteps = await session.page.evaluate(() => {
+            return window.__recorderAPI?.getSteps?.() || []
+          }).catch(() => [])
+          
+          if (pageSteps && pageSteps.length > 0) {
+            session.steps = pageSteps
+            console.log(`[RECORDER] Extracted ${pageSteps.length} steps from Playwright page`)
+          }
+        } catch (err) {
+          console.warn(`[RECORDER] Could not extract steps from page: ${err.message}`)
+        }
+
+        // Close page
+        await session.page.close().catch(() => {})
+      }
+
+      // ═══ Close context & browser ═══
+      if (session.context) {
+        await session.context.close().catch(() => {})
+      }
+
+      if (session.browser) {
+        await session.browser.close().catch(() => {})
+        console.log(`[RECORDER] Browser closed for ${key}`)
+      }
+    } catch (err) {
+      console.error(`[RECORDER] Error closing browser: ${err.message}`)
+    }
+
     session.status = 'stopped'
     const steps = [...session.steps]
     sessions.delete(key)
+
+    const duration = session.recordStartTime ? Math.round((Date.now() - session.recordStartTime) / 1000) : 0
 
     return {
       status: 'stopped',
       steps,
       stepCount: steps.length,
-      message: `Recording selesai — ${steps.length} steps tercatat`
+      duration: `${duration}s`,
+      message: `Recording selesai — ${steps.length} steps tercatat dalam ${duration}s`
     }
   },
 

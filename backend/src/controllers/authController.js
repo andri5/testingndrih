@@ -1,6 +1,8 @@
 import { PrismaClient } from '@prisma/client'
+import crypto from 'crypto'
 import { hashPassword, comparePassword } from '../utils/password.js'
 import { signToken } from '../utils/jwt.js'
+import { sendPasswordResetEmail } from '../services/emailService.js'
 
 const prisma = new PrismaClient()
 
@@ -166,6 +168,228 @@ export async function getCurrentUser(req, res, next) {
     res.json({
       success: true,
       user
+    })
+  } catch (error) {
+    next(error)
+  }
+}
+
+/**
+ * Request password reset
+ * POST /api/auth/forgot-password
+ * Body: { email }
+ */
+export async function forgotPassword(req, res, next) {
+  try {
+    const { email } = req.body
+
+    // Validation
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email is required'
+      })
+    }
+
+    // Find user
+    const user = await prisma.user.findUnique({
+      where: { email }
+    })
+
+    // Don't reveal if email exists (security best practice)
+    if (!user) {
+      return res.json({
+        success: true,
+        message: 'If an account exists with this email, you will receive a password reset link'
+      })
+    }
+
+    // Generate reset token (secure random token)
+    const resetToken = crypto.randomBytes(32).toString('hex')
+    const resetTokenHash = crypto.createHash('sha256').update(resetToken).digest('hex')
+    
+    // Token expires in 15 minutes
+    const expiryTime = new Date(Date.now() + 15 * 60 * 1000)
+
+    // Update user with reset token
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        resetToken: resetTokenHash,
+        resetTokenExpiry: expiryTime
+      }
+    })
+
+    // Send reset email
+    const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password/${resetToken}`
+    
+    try {
+      const emailResult = await sendPasswordResetEmail(email, resetToken, resetUrl)
+      
+      // In development mode, email might fail but we still want to allow testing
+      if (!emailResult.success && process.env.NODE_ENV === 'production') {
+        throw new Error(emailResult.message || 'Failed to send reset email')
+      }
+    } catch (emailError) {
+      console.error('Failed to send reset email:', emailError)
+      // Clear the reset token if email fails (only in production)
+      if (process.env.NODE_ENV === 'production') {
+        await prisma.user.update({
+          where: { id: user.id },
+          data: {
+            resetToken: null,
+            resetTokenExpiry: null
+          }
+        })
+        
+        return res.status(500).json({
+          success: false,
+          message: 'Failed to send reset email. Please try again later'
+        })
+      }
+    }
+
+    res.json({
+      success: true,
+      message: 'If an account exists with this email, you will receive a password reset link'
+    })
+  } catch (error) {
+    next(error)
+  }
+}
+
+/**
+ * Validate reset token
+ * GET /api/auth/validate-reset-token/:token
+ */
+export async function validateResetToken(req, res, next) {
+  try {
+    const { token } = req.params
+
+    if (!token) {
+      return res.status(400).json({
+        success: false,
+        message: 'Token is required'
+      })
+    }
+
+    // Hash the provided token
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex')
+
+    // Find user with this token
+    const user = await prisma.user.findFirst({
+      where: {
+        resetToken: tokenHash,
+        resetTokenExpiry: {
+          gt: new Date() // Token must not be expired
+        }
+      },
+      select: {
+        id: true,
+        email: true
+      }
+    })
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid or expired reset token'
+      })
+    }
+
+    res.json({
+      success: true,
+      message: 'Token is valid',
+      email: user.email
+    })
+  } catch (error) {
+    next(error)
+  }
+}
+
+/**
+ * Reset password with token
+ * POST /api/auth/reset-password/:token
+ * Body: { password, passwordConfirm }
+ */
+export async function resetPassword(req, res, next) {
+  try {
+    const { token } = req.params
+    const { password, passwordConfirm } = req.body
+
+    if (!token) {
+      return res.status(400).json({
+        success: false,
+        message: 'Token is required'
+      })
+    }
+
+    if (!password || !passwordConfirm) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password and password confirmation are required'
+      })
+    }
+
+    if (password !== passwordConfirm) {
+      return res.status(400).json({
+        success: false,
+        message: 'Passwords do not match'
+      })
+    }
+
+    // OWASP password validation
+    const passwordErrors = []
+    if (password.length < 8) passwordErrors.push('Minimal 8 karakter')
+    if (password.length > 64) passwordErrors.push('Maksimal 64 karakter')
+    if (!/[A-Z]/.test(password)) passwordErrors.push('Minimal 1 huruf besar')
+    if (!/[a-z]/.test(password)) passwordErrors.push('Minimal 1 huruf kecil')
+    if (!/[0-9]/.test(password)) passwordErrors.push('Minimal 1 angka')
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) passwordErrors.push('Minimal 1 karakter spesial (!@#$%^&*)')
+
+    if (passwordErrors.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password tidak memenuhi syarat: ' + passwordErrors.join(', ')
+      })
+    }
+
+    // Hash the provided token
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex')
+
+    // Find user with valid token
+    const user = await prisma.user.findFirst({
+      where: {
+        resetToken: tokenHash,
+        resetTokenExpiry: {
+          gt: new Date() // Token must not be expired
+        }
+      }
+    })
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid or expired reset token'
+      })
+    }
+
+    // Hash new password
+    const hashedPassword = await hashPassword(password)
+
+    // Update user password and clear reset token
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        password: hashedPassword,
+        resetToken: null,
+        resetTokenExpiry: null
+      }
+    })
+
+    res.json({
+      success: true,
+      message: 'Password reset successfully. You can now login with your new password.'
     })
   } catch (error) {
     next(error)

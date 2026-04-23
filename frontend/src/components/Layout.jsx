@@ -14,6 +14,9 @@ import {
   ChevronsUpDown,
   User,
   X,
+  Clock,
+  Zap,
+  Globe,
 } from 'lucide-react'
 
 export default function Layout({ children }) {
@@ -64,6 +67,9 @@ export default function Layout({ children }) {
   ]
 
   const workspaceItems = [
+    { name: 'Scheduler',    path: '/scheduler',       icon: <Clock size={16} /> },
+    { name: 'Parallel',     path: '/parallel',        icon: <Zap size={16} /> },
+    { name: 'Browser Test', path: '/browser-matrix',  icon: <Globe size={16} /> },
   ]
 
   const allItems = [...mainItems, ...workspaceItems]
