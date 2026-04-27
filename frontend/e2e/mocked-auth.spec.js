@@ -109,7 +109,7 @@ test.describe('E2E Tests with Mocked Auth', () => {
     await page.waitForLoadState('load').catch(() => {})
     await page.waitForTimeout(500)
 
-    // Verify page loaded - any page content (could be qase page or login redirect)
+    // Verify page loaded - any page content (could be settings page or login redirect)
     let pageContent = ''
     try {
       await page.waitForLoadState('domcontentloaded').catch(() => {})

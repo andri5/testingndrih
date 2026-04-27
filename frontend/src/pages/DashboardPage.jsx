@@ -16,10 +16,13 @@ import {
   TrendingUp,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { useSettingsStore } from '../store/settingsStore'
 
 export default function DashboardPage() {
   const navigate = useNavigate()
   const user = useAuthStore((state) => state.user)
+  const { language } = useSettingsStore()
+  const locale = language === 'id' ? 'id-ID' : 'en-US'
   const [stats, setStats] = useState({ scenarios: 0, executions: 0, successRate: 0, passed: 0, failed: 0, avgDuration: 0 })
   const [analytics, setAnalytics] = useState(null)
   const [recentScenarios, setRecentScenarios] = useState([])
@@ -73,7 +76,7 @@ export default function DashboardPage() {
 
   const formatDate = (date) => {
     if (!date) return '-'
-    return new Date(date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+    return new Date(date).toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
   }
 
   const handleExport = async (format) => {

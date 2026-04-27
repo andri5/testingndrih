@@ -4,11 +4,15 @@
 
 import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useSettingsStore } from '../store/settingsStore'
+import Layout from '../components/Layout'
 import { chainAPI } from '../services/api'
 import { Plus, Trash2, Edit, Play, Clock } from 'lucide-react'
 
 export default function ChainsPage() {
   const navigate = useNavigate()
+  const { theme, language } = useSettingsStore()
+  const isDark = theme !== 'light'
   const [chains, setChains] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -53,100 +57,142 @@ export default function ChainsPage() {
     }
   }
 
+  const i18n = {
+    en: {
+      title: 'Test Chains',
+      description: 'Link and execute scenarios in sequence',
+      createChain: 'Create Chain',
+      createFirst: 'Create your first chain',
+      noChains: 'No chains yet',
+      noChainsDesc: 'Create a chain to link scenarios together',
+      name: 'Name', steps: 'Steps', status: 'Status',
+      executions: 'Executions', created: 'Created', actions: 'Actions',
+      active: 'Active', inactive: 'Inactive',
+      previous: 'Previous', next: 'Next',
+      showing: 'Showing', of: 'of', page: 'Page',
+      loading: 'Loading chains...'
+    },
+    id: {
+      title: 'Test Chains',
+      description: 'Hubungkan dan jalankan skenario secara berurutan',
+      createChain: 'Buat Chain',
+      createFirst: 'Buat chain pertama Anda',
+      noChains: 'Belum ada chain',
+      noChainsDesc: 'Buat chain untuk menghubungkan skenario',
+      name: 'Nama', steps: 'Langkah', status: 'Status',
+      executions: 'Eksekusi', created: 'Dibuat', actions: 'Aksi',
+      active: 'Aktif', inactive: 'Tidak Aktif',
+      previous: 'Sebelumnya', next: 'Berikutnya',
+      showing: 'Menampilkan', of: 'dari', page: 'Halaman',
+      loading: 'Memuat chains...'
+    }
+  }
+  const t = i18n[language] || i18n.en
+
   const totalPages = Math.ceil(total / limit)
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-8">
+    <Layout>
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-4xl font-bold text-white mb-2">Test Chains</h1>
-            <p className="text-slate-400">Link and execute scenarios in sequence</p>
+            <h1 className={`text-3xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+              {t.title}
+            </h1>
+            <p className={isDark ? 'text-gray-400' : 'text-gray-600'}>{t.description}</p>
           </div>
           <Link
             to="/chains/new"
             className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition"
           >
             <Plus size={20} />
-            Create Chain
+            {t.createChain}
           </Link>
         </div>
 
         {/* Error Message */}
         {error && (
-          <div className="mb-6 p-4 bg-red-900/30 border border-red-600 text-red-300 rounded-lg">
+          <div className="mb-6 p-4 bg-red-500/10 border border-red-500 text-red-500 rounded-lg">
             {error}
+          </div>
+        )}
+
+        {/* Loading State */}
+        {loading && (
+          <div className="text-center py-12">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+            <p className={`mt-4 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t.loading}</p>
           </div>
         )}
 
         {/* Empty State */}
         {!loading && chains.length === 0 && (
           <div className="text-center py-16">
-            <div className="text-slate-400 mb-6 text-6xl">🔗</div>
-            <h2 className="text-2xl font-bold text-white mb-2">No chains yet</h2>
-            <p className="text-slate-400 mb-6">Create a chain to link scenarios together</p>
+            <div className="mb-6 text-6xl">🔗</div>
+            <h2 className={`text-2xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>{t.noChains}</h2>
+            <p className={`mb-6 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t.noChainsDesc}</p>
             <Link
               to="/chains/new"
               className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition"
             >
               <Plus size={20} />
-              Create your first chain
+              {t.createFirst}
             </Link>
           </div>
         )}
 
         {/* Chains Table */}
         {!loading && chains.length > 0 && (
-          <div className="bg-slate-800/50 border border-slate-700 rounded-lg overflow-hidden">
+          <div className={`border rounded-lg overflow-hidden ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
             <table className="w-full">
-              <thead className="bg-slate-900/50 border-b border-slate-700">
+              <thead className={`border-b ${isDark ? 'bg-gray-900 border-gray-700' : 'bg-gray-50 border-gray-200'}`}>
                 <tr>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Name</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Steps</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Status</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Executions</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Created</th>
-                  <th className="px-6 py-4 text-right text-sm font-semibold text-slate-300">Actions</th>
+                  <th className={`px-6 py-4 text-left text-sm font-semibold ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{t.name}</th>
+                  <th className={`px-6 py-4 text-left text-sm font-semibold ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{t.steps}</th>
+                  <th className={`px-6 py-4 text-left text-sm font-semibold ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{t.status}</th>
+                  <th className={`px-6 py-4 text-left text-sm font-semibold ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{t.executions}</th>
+                  <th className={`px-6 py-4 text-left text-sm font-semibold ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{t.created}</th>
+                  <th className={`px-6 py-4 text-right text-sm font-semibold ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{t.actions}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-700">
+              <tbody className={`divide-y ${isDark ? 'divide-gray-700' : 'divide-gray-200'}`}>
                 {chains.map((chain) => (
-                  <tr key={chain.id} className="hover:bg-slate-700/30 transition">
+                  <tr key={chain.id} className={`transition ${isDark ? 'hover:bg-gray-700/50' : 'hover:bg-gray-50'}`}>
                     <td className="px-6 py-4">
                       <Link
                         to={`/chains/${chain.id}`}
-                        className="text-blue-400 hover:text-blue-300 font-medium"
+                        className="text-blue-500 hover:text-blue-400 font-medium"
                       >
                         {chain.name}
                       </Link>
                     </td>
-                    <td className="px-6 py-4 text-slate-300">{chain.steps}</td>
+                    <td className={`px-6 py-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{chain.steps}</td>
                     <td className="px-6 py-4">
                       <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
                         chain.isActive
-                          ? 'bg-green-500/20 text-green-400'
-                          : 'bg-slate-600/50 text-slate-400'
+                          ? 'bg-green-500/20 text-green-500'
+                          : isDark ? 'bg-gray-700 text-gray-400' : 'bg-gray-200 text-gray-500'
                       }`}>
-                        {chain.isActive ? 'Active' : 'Inactive'}
+                        {chain.isActive ? t.active : t.inactive}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-slate-300">{chain._count?.chainExecutions || 0}</td>
-                    <td className="px-6 py-4 text-slate-400 text-sm">
+                    <td className={`px-6 py-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{chain._count?.chainExecutions || 0}</td>
+                    <td className={`px-6 py-4 text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                       {new Date(chain.createdAt).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
                         <Link
                           to={`/chains/${chain.id}`}
-                          className="p-2 hover:bg-slate-700 rounded-lg text-slate-300 hover:text-white transition"
+                          className={`p-2 rounded-lg transition ${isDark ? 'hover:bg-gray-700 text-gray-300 hover:text-white' : 'hover:bg-gray-100 text-gray-500 hover:text-gray-900'}`}
                           title="Edit"
                         >
                           <Edit size={18} />
                         </Link>
                         <button
                           onClick={() => navigate(`/chains/${chain.id}/execute`)}
-                          className="p-2 hover:bg-green-600/30 rounded-lg text-green-400 hover:text-green-300 transition"
+                          className="p-2 hover:bg-green-600/30 rounded-lg text-green-500 hover:text-green-400 transition"
                           title="Execute"
                         >
                           <Play size={18} />
@@ -154,7 +200,7 @@ export default function ChainsPage() {
                         <button
                           onClick={() => handleDelete(chain.id)}
                           disabled={deleting === chain.id}
-                          className="p-2 hover:bg-red-600/30 rounded-lg text-red-400 hover:text-red-300 transition disabled:opacity-50"
+                          className="p-2 hover:bg-red-600/30 rounded-lg text-red-500 hover:text-red-400 transition disabled:opacity-50"
                           title="Delete"
                         >
                           <Trash2 size={18} />
@@ -168,42 +214,34 @@ export default function ChainsPage() {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="px-6 py-4 bg-slate-900/50 border-t border-slate-700 flex items-center justify-between">
-                <div className="text-sm text-slate-400">
-                  Showing {page * limit + 1} to {Math.min((page + 1) * limit, total)} of {total}
+              <div className={`px-6 py-4 border-t flex items-center justify-between ${isDark ? 'bg-gray-900 border-gray-700' : 'bg-gray-50 border-gray-200'}`}>
+                <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                  {t.showing} {page * limit + 1} — {Math.min((page + 1) * limit, total)} {t.of} {total}
                 </div>
                 <div className="flex gap-2">
                   <button
                     onClick={() => setPage(Math.max(0, page - 1))}
                     disabled={page === 0}
-                    className="px-3 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-50 text-white rounded-lg transition"
+                    className={`px-3 py-2 disabled:opacity-50 rounded-lg transition ${isDark ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-white hover:bg-gray-100 text-gray-700 border border-gray-300'}`}
                   >
-                    Previous
+                    {t.previous}
                   </button>
-                  <span className="px-3 py-2 text-slate-300">
-                    Page {page + 1} of {totalPages}
+                  <span className={`px-3 py-2 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                    {t.page} {page + 1} / {totalPages}
                   </span>
                   <button
                     onClick={() => setPage(Math.min(totalPages - 1, page + 1))}
                     disabled={page >= totalPages - 1}
-                    className="px-3 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-50 text-white rounded-lg transition"
+                    className={`px-3 py-2 disabled:opacity-50 rounded-lg transition ${isDark ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-white hover:bg-gray-100 text-gray-700 border border-gray-300'}`}
                   >
-                    Next
+                    {t.next}
                   </button>
                 </div>
               </div>
             )}
           </div>
         )}
-
-        {/* Loading State */}
-        {loading && (
-          <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-            <p className="text-slate-400 mt-4">Loading chains...</p>
-          </div>
-        )}
       </div>
-    </div>
+    </Layout>
   )
 }

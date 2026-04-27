@@ -30,6 +30,14 @@ executionEvents.setMaxListeners(50)
 const activePages = new Map()
 
 /**
+ * Control signals for live viewer pause/stop
+ * cancelledExecutions: set of executionIds requested to stop
+ * pausedExecutions: set of executionIds currently paused
+ */
+export const cancelledExecutions = new Set()
+export const pausedExecutions = new Set()
+
+/**
  * Comprehensive execution service using Playwright
  * Handles test scenario execution and step-by-step automation
  */
@@ -242,9 +250,17 @@ export const executionService = {
 
       let passedSteps = 0
       let failedSteps = 0
+      let stopped = false
 
       // Execute each step
       for (const step of scenario.testSteps) {
+        // Check for stop signal from live viewer before starting step
+        if (cancelledExecutions.has(execution.id)) {
+          cancelledExecutions.delete(execution.id)
+          stopped = true
+          break
+        }
+
         const stepStartTime = Date.now()
         let stepStatus = 'PASSED'
         let errorMessage = null
@@ -537,6 +553,35 @@ export const executionService = {
         if (stepStatus === 'FAILED') {
           break
         }
+
+        // Check for pause signal from live viewer
+        if (pausedExecutions.has(execution.id)) {
+          executionEvents.emit(`exec:${execution.id}`, {
+            event: 'execution-paused',
+            stepNumber: step.stepNumber
+          })
+          while (pausedExecutions.has(execution.id)) {
+            if (cancelledExecutions.has(execution.id)) {
+              pausedExecutions.delete(execution.id)
+              cancelledExecutions.delete(execution.id)
+              stopped = true
+              break
+            }
+            await new Promise(r => setTimeout(r, 300))
+          }
+          if (stopped) break
+          executionEvents.emit(`exec:${execution.id}`, {
+            event: 'execution-resumed',
+            stepNumber: step.stepNumber
+          })
+        }
+
+        // Check stop again after potential pause exit
+        if (cancelledExecutions.has(execution.id)) {
+          cancelledExecutions.delete(execution.id)
+          stopped = true
+          break
+        }
       }
 
       // Update execution record
@@ -560,22 +605,24 @@ export const executionService = {
         console.error('Video save failed:', videoErr.message)
       }
 
+      const finalStatus = stopped ? 'FAILED' : (failedSteps > 0 ? 'FAILED' : 'PASSED')
       await prisma.execution.update({
         where: { id: execution.id },
         data: {
-          status: failedSteps > 0 ? 'FAILED' : 'PASSED',
+          status: finalStatus,
           endTime,
           duration,
           passedSteps,
           failedSteps,
-          videoPath
+          videoPath,
+          ...(stopped ? { errorMessage: 'Execution stopped by user' } : {})
         }
       })
 
       // Emit execution-done event for live viewer
       executionEvents.emit(`exec:${execution.id}`, {
         event: 'execution-done',
-        status: failedSteps > 0 ? 'FAILED' : 'PASSED',
+        status: finalStatus,
         passedSteps,
         failedSteps,
         totalSteps: scenario.testSteps.length,
@@ -586,7 +633,7 @@ export const executionService = {
       return {
         execution: {
           id: execution.id,
-          status: failedSteps > 0 ? 'FAILED' : 'PASSED',
+          status: finalStatus,
           passedSteps,
           failedSteps,
           totalSteps: scenario.testSteps.length,
@@ -1240,6 +1287,9 @@ export const executionService = {
       throw new Error('Cannot cancel completed execution')
     }
 
+    // Signal the running loop to stop immediately
+    cancelledExecutions.add(executionId)
+
     await prisma.execution.update({
       where: { id: executionId },
       data: {
@@ -1250,6 +1300,30 @@ export const executionService = {
     })
 
     return { message: 'Execution cancelled' }
+  },
+
+  /**
+   * Signal a running execution to stop (from live viewer, no auth required)
+   */
+  viewerStop(executionId) {
+    cancelledExecutions.add(executionId)
+    return { message: 'Stop signal sent' }
+  },
+
+  /**
+   * Signal a running execution to pause (from live viewer, no auth required)
+   */
+  viewerPause(executionId) {
+    pausedExecutions.add(executionId)
+    return { message: 'Pause signal sent' }
+  },
+
+  /**
+   * Resume a paused execution (from live viewer, no auth required)
+   */
+  viewerResume(executionId) {
+    pausedExecutions.delete(executionId)
+    return { message: 'Resume signal sent' }
   },
 
   /**

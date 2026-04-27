@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useSettingsStore } from '../store/settingsStore'
+import Layout from '../components/Layout'
 import api from '../services/api'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, Button, Alert } from '../components/ui'
 import { Loader } from 'lucide-react'
@@ -181,7 +182,7 @@ export default function SchedulerPage() {
   }
 
   return (
-    <div className={`min-h-screen ${isDark ? 'bg-gray-950' : 'bg-gray-50'} p-6`}>
+    <Layout>
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-8">
@@ -194,16 +195,8 @@ export default function SchedulerPage() {
         </div>
 
         {/* Alerts */}
-        {error && (
-          <Alert type="error" className="mb-6">
-            {error}
-          </Alert>
-        )}
-        {success && (
-          <Alert type="success" className="mb-6">
-            {success}
-          </Alert>
-        )}
+        {error && <Alert type="error" message={error} />}
+        {success && <Alert type="success" message={success} />}
 
         {/* Create Button */}
         {!showForm && (
@@ -375,6 +368,6 @@ export default function SchedulerPage() {
           </div>
         )}
       </div>
-    </div>
+    </Layout>
   )
 }

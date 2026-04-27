@@ -4,6 +4,8 @@
 
 import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { useSettingsStore } from '../store/settingsStore'
+import Layout from '../components/Layout'
 import { chainAPI, scenarioAPI } from '../services/api'
 import { Plus, Trash2, ChevronUp, ChevronDown, Save, X } from 'lucide-react'
 
@@ -11,6 +13,8 @@ export default function ChainBuilderPage() {
   const navigate = useNavigate()
   const { chainId } = useParams()
   const isNew = chainId === 'new'
+  const { theme, language } = useSettingsStore()
+  const isDark = theme !== 'light'
 
   const [chain, setChain] = useState({
     name: '',
@@ -131,26 +135,28 @@ export default function ChainBuilderPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-8 flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-          <p className="text-slate-400 mt-4">Loading chain...</p>
+      <Layout>
+        <div className="flex items-center justify-center py-24">
+          <div className="text-center">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+            <p className={`mt-4 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Loading chain...</p>
+          </div>
         </div>
-      </div>
+      </Layout>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-8">
+    <Layout>
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
-          <h1 className="text-4xl font-bold text-white">
+          <h1 className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
             {isNew ? 'Create Chain' : 'Edit Chain'}
           </h1>
           <button
             onClick={() => navigate('/chains')}
-            className="p-2 hover:bg-slate-700 rounded-lg text-slate-300 hover:text-white"
+            className={`p-2 rounded-lg transition ${isDark ? 'hover:bg-gray-700 text-gray-300 hover:text-white' : 'hover:bg-gray-100 text-gray-500 hover:text-gray-900'}`}
           >
             <X size={24} />
           </button>
@@ -158,18 +164,18 @@ export default function ChainBuilderPage() {
 
         {/* Error Message */}
         {error && (
-          <div className="mb-6 p-4 bg-red-900/30 border border-red-600 text-red-300 rounded-lg">
+          <div className="mb-6 p-4 bg-red-500/10 border border-red-500 text-red-500 rounded-lg">
             {error}
           </div>
         )}
 
         {/* Chain Details */}
-        <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-6 mb-6">
-          <h2 className="text-xl font-bold text-white mb-4">Chain Details</h2>
-          
+        <div className={`border rounded-lg p-6 mb-6 ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+          <h2 className={`text-xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Chain Details</h2>
+
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                 Name *
               </label>
               <input
@@ -177,12 +183,12 @@ export default function ChainBuilderPage() {
                 value={chain.name}
                 onChange={(e) => setChain({ ...chain, name: e.target.value })}
                 placeholder="My Test Chain"
-                className="w-full px-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
+                className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500 ${isDark ? 'bg-gray-900 border-gray-600 text-white placeholder-gray-500' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400'}`}
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                 Description
               </label>
               <textarea
@@ -190,7 +196,7 @@ export default function ChainBuilderPage() {
                 onChange={(e) => setChain({ ...chain, description: e.target.value })}
                 placeholder="Describe what this chain does..."
                 rows={3}
-                className="w-full px-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
+                className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500 ${isDark ? 'bg-gray-900 border-gray-600 text-white placeholder-gray-500' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400'}`}
               />
             </div>
 
@@ -202,26 +208,26 @@ export default function ChainBuilderPage() {
                   onChange={(e) => setChain({ ...chain, isActive: e.target.checked })}
                   className="w-4 h-4"
                 />
-                <span className="text-slate-300">Active</span>
+                <span className={isDark ? 'text-gray-300' : 'text-gray-700'}>Active</span>
               </label>
             </div>
           </div>
         </div>
 
         {/* Steps Section */}
-        <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-6 mb-6">
-          <h2 className="text-xl font-bold text-white mb-4">Chain Steps</h2>
+        <div className={`border rounded-lg p-6 mb-6 ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+          <h2 className={`text-xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Chain Steps</h2>
 
           {!isNew && (
             <div className="mb-4 space-y-4">
               {steps.length === 0 ? (
-                <p className="text-slate-400 text-center py-8">No steps added yet</p>
+                <p className={`text-center py-8 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>No steps added yet</p>
               ) : (
                 <div className="space-y-3">
                   {steps.map((step, index) => (
                     <div
                       key={step.id}
-                      className="bg-slate-900/50 border border-slate-600 rounded-lg p-4"
+                      className={`border rounded-lg p-4 ${isDark ? 'bg-gray-900/50 border-gray-600' : 'bg-gray-50 border-gray-300'}`}
                     >
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex-1">
@@ -229,30 +235,30 @@ export default function ChainBuilderPage() {
                             <span className="flex items-center justify-center w-8 h-8 bg-blue-600 rounded-full text-white font-bold text-sm">
                               {step.stepNumber}
                             </span>
-                            <span className="text-white font-medium">{step.scenario.name}</span>
+                            <span className={isDark ? 'text-white font-medium' : 'text-gray-900 font-medium'}>{step.scenario.name}</span>
                           </div>
                           {step.description && (
-                            <p className="text-slate-400 text-sm ml-11">{step.description}</p>
+                            <p className={`text-sm ml-11 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{step.description}</p>
                           )}
                         </div>
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => moveStep(index, 'up')}
                             disabled={index === 0}
-                            className="p-2 hover:bg-slate-700 disabled:opacity-50 rounded-lg text-slate-300 hover:text-white transition"
+                            className={`p-2 disabled:opacity-50 rounded-lg transition ${isDark ? 'hover:bg-gray-700 text-gray-300 hover:text-white' : 'hover:bg-gray-100 text-gray-500 hover:text-gray-900'}`}
                           >
                             <ChevronUp size={18} />
                           </button>
                           <button
                             onClick={() => moveStep(index, 'down')}
                             disabled={index === steps.length - 1}
-                            className="p-2 hover:bg-slate-700 disabled:opacity-50 rounded-lg text-slate-300 hover:text-white transition"
+                            className={`p-2 disabled:opacity-50 rounded-lg transition ${isDark ? 'hover:bg-gray-700 text-gray-300 hover:text-white' : 'hover:bg-gray-100 text-gray-500 hover:text-gray-900'}`}
                           >
                             <ChevronDown size={18} />
                           </button>
                           <button
                             onClick={() => setEditingStepId(step.id)}
-                            className="px-3 py-1 bg-slate-700 hover:bg-slate-600 rounded-lg text-slate-300 hover:text-white text-sm font-medium transition"
+                            className={`px-3 py-1 rounded-lg text-sm font-medium transition ${isDark ? 'bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white' : 'bg-gray-200 hover:bg-gray-300 text-gray-600 hover:text-gray-900'}`}
                           >
                             Edit
                           </button>
@@ -273,7 +279,7 @@ export default function ChainBuilderPage() {
                         />
                       )}
 
-                      <div className="grid grid-cols-3 gap-2 mt-3 text-xs text-slate-400">
+                      <div className={`grid grid-cols-3 gap-2 mt-3 text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                         <div>Wait: {step.waitTime}ms</div>
                         <div>Retry: {step.retryCount}x</div>
                         <div>Stop on fail: {step.stopOnFail ? 'Yes' : 'No'}</div>
@@ -305,13 +311,13 @@ export default function ChainBuilderPage() {
           </button>
           <button
             onClick={() => navigate('/chains')}
-            className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-medium transition"
+            className={`px-6 py-3 rounded-lg font-medium transition ${isDark ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-gray-200 hover:bg-gray-300 text-gray-700'}`}
           >
             Cancel
           </button>
         </div>
       </div>
-    </div>
+    </Layout>
   )
 }
 

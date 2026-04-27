@@ -5,6 +5,18 @@ import { Card, Button, Badge, Spinner, Alert } from '../components/ui'
 import { executionAPI } from '../services/api'
 import apiClient from '../services/api'
 import { PlayCircle, CheckCircle2, XCircle, TrendingUp } from 'lucide-react'
+import { useSettingsStore } from '../store/settingsStore'
+
+const i18n = {
+  en: {
+    loadError: 'Failed to load report data',
+    trendTitle: '📊 Pass/Fail Trend (last 14 days)',
+  },
+  id: {
+    loadError: 'Gagal memuat data laporan',
+    trendTitle: '📊 Pass/Fail Trend (14 hari terakhir)',
+  },
+}
 
 /** Pure SVG stacked bar chart for pass/fail trend */
 function TrendChart({ data }) {
@@ -73,6 +85,9 @@ function TrendChart({ data }) {
 
 export default function ReportsPage() {
   const navigate = useNavigate()
+  const { language } = useSettingsStore()
+  const t = i18n[language] || i18n.en
+  const locale = language === 'id' ? 'id-ID' : 'en-US'
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [stats, setStats] = useState(null)
@@ -91,19 +106,19 @@ export default function ReportsPage() {
     for (let i = days - 1; i >= 0; i--) {
       const d = new Date(now)
       d.setDate(d.getDate() - i)
-      const key = d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })
+      const key = d.toLocaleDateString(locale, { day: 'numeric', month: 'short' })
       buckets[key] = { label: key, passed: 0, failed: 0 }
     }
     executions.forEach(e => {
       if (!e.startTime) return
-      const key = new Date(e.startTime).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })
+      const key = new Date(e.startTime).toLocaleDateString(locale, { day: 'numeric', month: 'short' })
       if (buckets[key]) {
         if (e.status === 'PASSED') buckets[key].passed++
         else if (e.status === 'FAILED') buckets[key].failed++
       }
     })
     return Object.values(buckets)
-  }, [executions])
+  }, [executions, locale])
 
   useEffect(() => {
     loadReportData()
@@ -130,7 +145,7 @@ export default function ReportsPage() {
         setMostExecuted(mostExecRes.value.data.scenarios || [])
       }
     } catch (err) {
-      setError('Gagal memuat data laporan')
+      setError(t.loadError)
     } finally {
       setLoading(false)
     }
@@ -144,7 +159,7 @@ export default function ReportsPage() {
 
   const formatDate = (date) => {
     if (!date) return '-'
-    return new Date(date).toLocaleDateString('id-ID', {
+    return new Date(date).toLocaleDateString(locale, {
       day: 'numeric', month: 'short', year: 'numeric',
       hour: '2-digit', minute: '2-digit'
     })
@@ -281,7 +296,7 @@ export default function ReportsPage() {
             {/* Trend Chart — last 14 days */}
             {trendData.some(d => d.passed + d.failed > 0) && (
               <Card>
-                <h3 className="font-semibold text-[#E0E0E2] mb-4">📊 Pass/Fail Trend (14 hari terakhir)</h3>
+                <h3 className="font-semibold text-[#E0E0E2] mb-4">{t.trendTitle}</h3>
                 <TrendChart data={trendData} />
               </Card>
             )}

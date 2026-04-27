@@ -1,6 +1,6 @@
 # 📁 TestingNDRIH - Project Structure
 
-**Last Updated**: April 23, 2026  
+**Last Updated**: April 27, 2026  
 **Status**: Clean & Organized ✅
 
 ---
@@ -108,6 +108,15 @@ testingndrih/
 - `middleware/` - Auth, error handling, logging
 - `lib/` - Database client & utilities
 - `server.js` - Express app setup
+
+**Key Features Implemented:**
+- Live Execution Viewer with real-time SSE streaming
+- **Pause/Stop controls** from live viewer (viewer-pause, viewer-resume, viewer-stop endpoints — no auth)
+- Playwright Recorder (record & playback)
+- Self-Healing Selectors (Phase 2.1)
+- Screenshot Comparison (Phase 2.2)
+- Retry Engine for flaky steps
+- Cancel execution with real-time loop interrupt
 
 ### `/frontend/src/`
 **React application**

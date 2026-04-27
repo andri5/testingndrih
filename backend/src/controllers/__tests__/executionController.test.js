@@ -1,5 +1,6 @@
 import { executionController } from '../executionController.js'
 import { executionService } from '../../services/executionService.js'
+import { prisma } from '../../lib/prisma.js'
 
 jest.mock('../../services/executionService.js')
 
@@ -10,6 +11,7 @@ describe('ExecutionController', () => {
     req = {
       params: {},
       query: {},
+      body: {},
       user: { id: 'user-123' }
     }
     res = {
@@ -64,12 +66,16 @@ describe('ExecutionController', () => {
 
       expect(executionService.executeScenario).toHaveBeenCalledWith(
         'user-456',
-        'scenario-1'
+        'scenario-1',
+        expect.any(Object)
       )
     })
 
     it('should handle service errors', async () => {
       req.params.scenarioId = 'scenario-1'
+
+      // Force fallback path: no execution record found → controller awaits promise
+      prisma.execution.findFirst.mockResolvedValueOnce(null)
 
       executionService.executeScenario.mockRejectedValue(
         new Error('Scenario not found')

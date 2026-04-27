@@ -421,15 +421,15 @@ test.describe.serial('Complete Application E2E Testing', () => {
     await page.waitForLoadState('domcontentloaded')
     await page.waitForTimeout(2000)
     
-    // Verify we're on qase page or redirected to login (token may have expired in serial run)
+    // Verify we're on settings page or redirected to login (token may have expired in serial run)
     const currentUrl = page.url()
     const isOnSettings = currentUrl.includes('/settings')
     const isOnLogin = currentUrl.includes('/login')
     
-    expect(isOnQase || isOnLogin).toBe(true)
+    expect(isOnSettings || isOnLogin).toBe(true)
     
-    if (isOnQase) {
-      console.log('✅ Qase settings page loaded')
+    if (isOnSettings) {
+      console.log('✅ Settings page loaded')
     } else {
       console.log('⏭️  Redirected to login (token may have expired)')
     }

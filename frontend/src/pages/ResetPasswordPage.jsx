@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { AlertCircle, Lock, Loader2, CheckCircle2, ShieldCheck, Check, X } from 'lucide-react'
 import api from '../services/api'
+import { useSettingsStore } from '../store/settingsStore'
 
 const translations = {
   en: {
@@ -70,11 +71,8 @@ export default function ResetPasswordPage() {
   const [error, setError] = useState('')
   const [tokenValid, setTokenValid] = useState(false)
   const [email, setEmail] = useState('')
-  const [isDarkMode, setIsDarkMode] = useState(
-    localStorage.getItem('theme') === 'dark' ||
-    (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)
-  )
-  const [language, setLanguage] = useState(localStorage.getItem('language') || 'en')
+  const { theme, language, setTheme, setLanguage } = useSettingsStore()
+  const isDarkMode = theme !== 'light'
 
   const t = translations[language]
 
@@ -91,28 +89,11 @@ export default function ResetPasswordPage() {
 
   useEffect(() => {
     validateToken()
-    // Apply theme on mount
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark')
-    } else {
-      document.documentElement.classList.remove('dark')
-    }
-  }, [token, isDarkMode])
+  }, [token])
 
-  const handleLanguageChange = (lang) => {
-    setLanguage(lang)
-    localStorage.setItem('language', lang)
-  }
+  const handleLanguageChange = (lang) => setLanguage(lang)
 
-  const handleThemeChange = (isDark) => {
-    setIsDarkMode(isDark)
-    localStorage.setItem('theme', isDark ? 'dark' : 'light')
-    if (isDark) {
-      document.documentElement.classList.add('dark')
-    } else {
-      document.documentElement.classList.remove('dark')
-    }
-  }
+  const handleThemeChange = (isDark) => setTheme(isDark ? 'dark' : 'light')
 
   const validateToken = async () => {
     try {

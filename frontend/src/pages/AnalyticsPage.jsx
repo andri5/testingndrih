@@ -3,10 +3,13 @@ import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { analyticsAPI } from '../services/api'
 import toast from 'react-hot-toast'
+import { useSettingsStore } from '../store/settingsStore'
 import { Download, TrendingUp, Calendar, Zap } from 'lucide-react'
 
 export default function AnalyticsPage() {
   const navigate = useNavigate()
+  const { language } = useSettingsStore()
+  const locale = language === 'id' ? 'id-ID' : 'en-US'
   const [summary, setSummary] = useState(null)
   const [history, setHistory] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -77,7 +80,7 @@ export default function AnalyticsPage() {
 
   const formatDate = (date) => {
     if (!date) return '-'
-    return new Date(date).toLocaleDateString('id-ID', {
+    return new Date(date).toLocaleDateString(locale, {
       day: 'numeric',
       month: 'short',
       year: 'numeric',

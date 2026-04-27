@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { AlertCircle, Mail, ArrowLeft, Loader2, CheckCircle2, ShieldCheck, Moon, Sun, Globe } from 'lucide-react'
 import api from '../services/api'
+import { useSettingsStore } from '../store/settingsStore'
 
 const translations = {
   en: {
@@ -45,29 +46,11 @@ export default function ForgotPasswordPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [submitted, setSubmitted] = useState(false)
-  const [isDarkMode, setIsDarkMode] = useState(
-    localStorage.getItem('theme') === 'dark' ||
-    (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)
-  )
-  const [language, setLanguage] = useState(localStorage.getItem('language') || 'en')
   const navigate = useNavigate()
+  const { theme, language, setTheme, setLanguage } = useSettingsStore()
+  const isDarkMode = theme !== 'light'
 
   const t = translations[language]
-
-  const handleLanguageChange = (lang) => {
-    setLanguage(lang)
-    localStorage.setItem('language', lang)
-  }
-
-  const handleThemeChange = (isDark) => {
-    setIsDarkMode(isDark)
-    localStorage.setItem('theme', isDark ? 'dark' : 'light')
-    if (isDark) {
-      document.documentElement.classList.add('dark')
-    } else {
-      document.documentElement.classList.remove('dark')
-    }
-  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -129,7 +112,7 @@ export default function ForgotPasswordPage() {
           <div className="flex justify-center gap-2 mb-8">
             <div className="flex items-center gap-1 bg-gray-200 dark:bg-[#2A2A2D] rounded-lg p-1">
               <button
-                onClick={() => handleThemeChange(true)}
+                onClick={() => setTheme('dark')}
                 className={`px-3 py-2 rounded-md transition-all duration-200 flex items-center gap-1.5 ${
                   isDarkMode
                     ? 'bg-[#5E6AD2] text-white shadow-lg shadow-[#5E6AD2]/20'
@@ -139,7 +122,7 @@ export default function ForgotPasswordPage() {
                 <Moon size={16} />
               </button>
               <button
-                onClick={() => handleThemeChange(false)}
+                onClick={() => setTheme('light')}
                 className={`px-3 py-2 rounded-md transition-all duration-200 flex items-center gap-1.5 ${
                   !isDarkMode
                     ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20'
@@ -150,7 +133,7 @@ export default function ForgotPasswordPage() {
               </button>
             </div>
             <button
-              onClick={() => handleLanguageChange(language === 'en' ? 'id' : 'en')}
+              onClick={() => setLanguage(language === 'en' ? 'id' : 'en')}
               className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 flex items-center gap-2 ${
                 isDarkMode
                   ? 'bg-[#2A2A2D] text-white hover:bg-[#3A3A3D]'
@@ -248,7 +231,7 @@ export default function ForgotPasswordPage() {
         <div className="flex justify-center gap-2 mb-8">
           <div className="flex items-center gap-1 bg-gray-200 dark:bg-[#2A2A2D] rounded-lg p-1">
             <button
-              onClick={() => handleThemeChange(true)}
+              onClick={() => setTheme('dark')}
               className={`px-3 py-2 rounded-md transition-all duration-200 flex items-center gap-1.5 ${
                 isDarkMode
                   ? 'bg-[#5E6AD2] text-white shadow-lg shadow-[#5E6AD2]/20'
@@ -258,7 +241,7 @@ export default function ForgotPasswordPage() {
               <Moon size={16} />
             </button>
             <button
-              onClick={() => handleThemeChange(false)}
+              onClick={() => setTheme('light')}
               className={`px-3 py-2 rounded-md transition-all duration-200 flex items-center gap-1.5 ${
                 !isDarkMode
                   ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20'
@@ -269,7 +252,7 @@ export default function ForgotPasswordPage() {
             </button>
           </div>
           <button
-            onClick={() => handleLanguageChange(language === 'en' ? 'id' : 'en')}
+            onClick={() => setLanguage(language === 'en' ? 'id' : 'en')}
             className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 flex items-center gap-2 ${
               isDarkMode
                 ? 'bg-[#2A2A2D] text-white hover:bg-[#3A3A3D]'

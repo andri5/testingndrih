@@ -7,9 +7,23 @@ import { useExecutionStore } from '../store/executionStore'
 import { useScenarioStore } from '../store/scenarioStore'
 import { ExecuteScenarioButton } from '../components/ExecuteScenarioButton'
 import { PlayCircle, CheckCircle2, XCircle, TrendingUp, ClipboardList, Clock } from 'lucide-react'
+import { useSettingsStore } from '../store/settingsStore'
+
+const i18n = {
+  en: {
+    selectScenarioFirst: '← Select a scenario first',
+    viewScreenshot: 'View screenshot',
+  },
+  id: {
+    selectScenarioFirst: '← Pilih scenario terlebih dahulu',
+    viewScreenshot: 'Lihat screenshot',
+  },
+}
 
 export default function ExecutionPage() {
   const navigate = useNavigate()
+  const { language } = useSettingsStore()
+  const t = i18n[language] || i18n.en
   const [selectedScenarioId, setSelectedScenarioId] = useState(null)
   const [selectedScenarioName, setSelectedScenarioName] = useState('')
   const [screenshotModal, setScreenshotModal] = useState(null)
@@ -152,7 +166,7 @@ export default function ExecutionPage() {
                 <option value="" className="bg-[#161618]">Choose a scenario...</option>
                 {scenarios && scenarios.map((scenario) => (
                   <option key={scenario.id} value={scenario.id}>
-                    {scenario.name} ({scenario.testSteps?.length || 0} steps)
+                    {scenario.name} ({scenario.steps || 0} steps)
                   </option>
                 ))}
               </select>
@@ -193,13 +207,9 @@ export default function ExecutionPage() {
                   }}
                 />
               ) : (
-                <Button 
-                  variant="secondary" 
-                  disabled
-                  className="w-full"
-                >
-                  Select a scenario first
-                </Button>
+                <div className="w-full px-3.5 py-2 text-sm font-medium rounded-md border border-dashed border-[#3D3D40] text-[#8A8A8F] bg-[#161618] text-center select-none">
+                  {t.selectScenarioFirst}
+                </div>
               )}
             </div>
           </div>
@@ -377,7 +387,7 @@ export default function ExecutionPage() {
                                 description: result.testStep?.description || ''
                               })}
                               className="flex-shrink-0 border-2 border-gray-300 rounded overflow-hidden hover:border-indigo-500 transition cursor-pointer"
-                              title="Lihat screenshot"
+                              title={t.viewScreenshot}
                             >
                               <img
                                 src={result.screenshot.url}
@@ -472,30 +482,40 @@ export default function ExecutionPage() {
                         {new Date(execution.createdAt).toLocaleString()}
                       </td>
                       <td className="py-3 px-4 text-center">
-                        <div className="flex items-center justify-center gap-1 flex-wrap">
-                          <Button
-                            variant="secondary"
-                            size="sm"
+                        <div className="flex items-center justify-center gap-1.5 flex-wrap">
+                          <button
                             onClick={() => handleViewDetails(execution.id)}
+                            title="View execution details"
+                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-semibold
+                              bg-[#5E6AD2] hover:bg-[#6B78E0] text-white
+                              dark:bg-[#5E6AD2] dark:hover:bg-[#6B78E0] dark:text-white
+                              transition-colors cursor-pointer select-none"
                           >
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                             View
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            title="Download HTML report"
+                          </button>
+                          <button
                             onClick={() => handleExportReport(execution.id, 'html')}
+                            title="Download HTML report"
+                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-semibold
+                              bg-amber-500 hover:bg-amber-600 text-white
+                              dark:bg-amber-500 dark:hover:bg-amber-600 dark:text-white
+                              transition-colors cursor-pointer select-none"
                           >
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                             HTML
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            title="Download PDF report"
+                          </button>
+                          <button
                             onClick={() => handleExportReport(execution.id, 'pdf')}
+                            title="Download PDF report"
+                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-semibold
+                              bg-red-500 hover:bg-red-600 text-white
+                              dark:bg-red-500 dark:hover:bg-red-600 dark:text-white
+                              transition-colors cursor-pointer select-none"
                           >
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                             PDF
-                          </Button>
+                          </button>
                         </div>
                       </td>
                     </tr>

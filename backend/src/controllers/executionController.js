@@ -15,7 +15,7 @@ export const executionController = {
     try {
       const { scenarioId } = req.params
       const userId = req.user.id
-      const { browser, headless } = req.body
+      const { browser, headless } = req.body || {}
 
       if (!scenarioId) {
         return res.status(400).json({ message: 'Scenario ID is required' })
@@ -44,6 +44,8 @@ export const executionController = {
 
       // Fire and forget — execution runs in background
       const executionPromise = executionService.executeScenario(userId, scenarioId, options)
+      // Attach early catch to prevent unhandled rejection warning while we wait
+      executionPromise.catch(() => {})
 
       // Wait briefly for the execution record to be created (it's created at the start of executeScenario)
       // so we can get the execution ID
@@ -224,7 +226,7 @@ export const executionController = {
       }
 
       const execution = await reportService.fetchExecution(userId, executionId)
-      const html = reportService.buildHtml(execution)
+      const html = await reportService.buildHtml(execution)
 
       if (format === 'pdf') {
         const pdfBuffer = await reportService.buildPdf(html)
@@ -421,6 +423,7 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#0f172a;color:#e2
 .badge-running{background:#3b82f6;color:white;animation:pulse 1.5s infinite}
 .badge-passed{background:#22c55e;color:white}
 .badge-failed{background:#ef4444;color:white}
+.badge-paused{background:#f59e0b;color:white}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
 .main{display:flex;height:calc(100vh - 49px)}
 .viewer{flex:1;display:flex;align-items:center;justify-content:center;padding:16px;background:#0f172a}
@@ -449,6 +452,7 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#0f172a;color:#e2
 .done-banner.passed{background:rgba(34,197,94,.15);color:#4ade80}
 .done-banner.failed{background:rgba(239,68,68,.15);color:#fca5a5}
 .video-link{display:inline-block;margin-top:8px;padding:6px 16px;background:#3b82f6;color:white;border-radius:6px;text-decoration:none;font-size:13px}
+.ctrl-btn{padding:4px 12px;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;color:white;transition:opacity .15s}.ctrl-btn:hover{opacity:.8}
 </style>
 </head>
 <body>
@@ -457,6 +461,11 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#0f172a;color:#e2
   <h1>Live Execution Viewer</h1>
   <span id="statusBadge" class="badge badge-running">RUNNING</span>
   <span style="flex:1"></span>
+  <div id="controlBtns" style="display:flex;gap:8px;margin-right:12px">
+    <button id="btnPause" class="ctrl-btn" style="background:#f59e0b">⏸ Pause</button>
+    <button id="btnResume" class="ctrl-btn" style="background:#22c55e;display:none">▶ Resume</button>
+    <button id="btnStop" class="ctrl-btn" style="background:#ef4444">⏹ Stop</button>
+  </div>
   <span id="stepInfo" style="font-size:13px;color:#94a3b8">Menunggu...</span>
 </div>
 <div class="main">
@@ -487,6 +496,21 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#0f172a;color:#e2
   es.onmessage = function(e) {
     var d;
     try { d = JSON.parse(e.data); } catch(_){ return; }
+
+    if (d.event === 'execution-paused') {
+      document.getElementById('btnPause').style.display = 'none';
+      document.getElementById('btnResume').style.display = 'inline-block';
+      document.getElementById('statusBadge').textContent = 'PAUSED';
+      document.getElementById('statusBadge').className = 'badge' + ' badge-paused';
+      document.getElementById('stepInfo').textContent = '⏸ Paused after step ' + d.stepNumber;
+    }
+
+    if (d.event === 'execution-resumed') {
+      document.getElementById('btnPause').style.display = 'inline-block';
+      document.getElementById('btnResume').style.display = 'none';
+      document.getElementById('statusBadge').textContent = 'RUNNING';
+      document.getElementById('statusBadge').className = 'badge badge-running';
+    }
 
     if (d.event === 'step-start') {
       totalSteps = d.totalSteps || totalSteps;
@@ -532,6 +556,7 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#0f172a;color:#e2
 
     if (d.event === 'execution-done') {
       es.close();
+      document.getElementById('controlBtns').style.display = 'none';
       var badge = document.getElementById('statusBadge');
       badge.textContent = d.status;
       badge.className = 'badge badge-' + d.status.toLowerCase();
@@ -558,6 +583,22 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#0f172a;color:#e2
   es.onerror = function() {
     document.getElementById('stepInfo').textContent = 'Koneksi terputus';
   };
+
+  document.getElementById('btnPause').addEventListener('click', function() { sendCtrl('pause'); });
+  document.getElementById('btnResume').addEventListener('click', function() { sendCtrl('resume'); });
+  document.getElementById('btnStop').addEventListener('click', function() { sendCtrl('stop'); });
+
+  function sendCtrl(action) {
+    fetch('/api/executions/' + execId + '/viewer-' + action, { method: 'POST' })
+      .catch(function() {});
+    if (action === 'pause') {
+      document.getElementById('btnPause').disabled = true;
+      document.getElementById('btnPause').textContent = '⏸ Pausing...';
+    } else if (action === 'stop') {
+      document.getElementById('btnStop').disabled = true;
+      document.getElementById('btnStop').textContent = '⏹ Stopping...';
+    }
+  }
 
   function renderSteps() {
     var el = document.getElementById('stepsList');
@@ -658,6 +699,48 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#0f172a;color:#e2
         success: false,
         message: error.message
       })
+    }
+  },
+
+  /**
+   * Stop a running execution from live viewer (no auth required)
+   * POST /api/executions/:executionId/viewer-stop
+   */
+  async viewerStop(req, res) {
+    try {
+      const { executionId } = req.params
+      executionService.viewerStop(executionId)
+      res.status(200).json({ success: true, message: 'Stop signal sent' })
+    } catch (error) {
+      res.status(400).json({ success: false, message: error.message })
+    }
+  },
+
+  /**
+   * Pause a running execution from live viewer (no auth required)
+   * POST /api/executions/:executionId/viewer-pause
+   */
+  async viewerPause(req, res) {
+    try {
+      const { executionId } = req.params
+      executionService.viewerPause(executionId)
+      res.status(200).json({ success: true, message: 'Pause signal sent' })
+    } catch (error) {
+      res.status(400).json({ success: false, message: error.message })
+    }
+  },
+
+  /**
+   * Resume a paused execution from live viewer (no auth required)
+   * POST /api/executions/:executionId/viewer-resume
+   */
+  async viewerResume(req, res) {
+    try {
+      const { executionId } = req.params
+      executionService.viewerResume(executionId)
+      res.status(200).json({ success: true, message: 'Resume signal sent' })
+    } catch (error) {
+      res.status(400).json({ success: false, message: error.message })
     }
   }
 }

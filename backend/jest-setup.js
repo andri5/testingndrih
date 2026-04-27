@@ -73,7 +73,12 @@ jest.mock('./src/lib/prisma.js', () => {
         create: createMock,
         findMany: findManyMock,
         findUnique: findUniqueMock,
-        findFirst: findFirstMock,
+        findFirst: jest.fn(() => Promise.resolve({
+          id: 'test-id',
+          name: 'Test Scenario',
+          userId: 'user-1',
+          testSteps: [{ id: 'step-1', type: 'CLICK', description: 'Click test', stepNumber: 1 }]
+        })),
         update: updateMock,
         delete: deleteMock,
         count: countMock
@@ -100,19 +105,6 @@ jest.mock('./src/lib/prisma.js', () => {
         delete: jest.fn((args) => Promise.resolve({ id: args?.where?.id || 'step-1' })),
         deleteMany: jest.fn(() => Promise.resolve({ count: 1 })),
         count: jest.fn(() => Promise.resolve(3))
-      },
-      qaseIntegration: {
-        findUnique: jest.fn(() => Promise.resolve({ id: 'qi-1', connected: true })),
-        create: jest.fn(() => Promise.resolve({ id: 'qi-1', connected: true })),
-        update: jest.fn(() => Promise.resolve({ id: 'qi-1', connected: true })),
-        deleteMany: jest.fn(() => Promise.resolve({ count: 1 }))
-      },
-      qaseTestCase: {
-        createMany: jest.fn(() => Promise.resolve({ count: 2 })),
-        deleteMany: jest.fn(() => Promise.resolve({ count: 2 })),
-        findMany: jest.fn(() => Promise.resolve([{ id: 'qtc-1' }])),
-        count: jest.fn(() => Promise.resolve(1)),
-        upsert: jest.fn((args) => Promise.resolve({ id: 'qtc-1', ...args.create }))
       },
       user: {
         create: jest.fn((args) => Promise.resolve({ id: 'user-1', ...args.data })),

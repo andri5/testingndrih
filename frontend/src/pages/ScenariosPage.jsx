@@ -9,6 +9,26 @@ import { TemplatePickerModal } from '../components/TemplatePickerModal'
 import { QuickRecordModal } from '../components/QuickRecordModal'
 import { useScenarioStore } from '../store/scenarioStore'
 import { executionAPI } from '../services/api'
+import { useSettingsStore } from '../store/settingsStore'
+
+const i18n = {
+  en: {
+    selectedCount: (n) => `${n} scenario${n !== 1 ? 's' : ''} selected`,
+    runningBulk: 'Running executions sequentially (headless)...',
+    close: 'Close',
+    cancel: 'Cancel',
+    quickRecordTitle: 'Create scenario & start recording immediately',
+    templatesTitle: 'Create scenario from ready-made template',
+  },
+  id: {
+    selectedCount: (n) => `${n} scenario dipilih`,
+    runningBulk: 'Menjalankan eksekusi secara berurutan (headless)...',
+    close: 'Tutup',
+    cancel: 'Batal',
+    quickRecordTitle: 'Buat scenario & langsung mulai recording',
+    templatesTitle: 'Buat scenario dari template siap pakai',
+  },
+}
 
 export default function ScenariosPage() {
   const navigate = useNavigate()
@@ -36,6 +56,9 @@ export default function ScenariosPage() {
     setSelectedScenario,
     clearError
   } = useScenarioStore()
+
+  const { language } = useSettingsStore()
+  const t = i18n[language] || i18n.en
 
   // Load scenarios on mount
   useEffect(() => {
@@ -240,10 +263,10 @@ export default function ScenariosPage() {
           <div className="bg-[#5E6AD2]/10 border border-[#5E6AD2]/30 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center gap-4">
             <div className="flex-1">
               <p className="text-sm font-semibold text-[#E0E0E2]">
-                {selectedIds.size} scenario dipilih
+                {t.selectedCount(selectedIds.size)}
               </p>
               {bulkExecuteStatus === 'running' && (
-                <p className="text-xs text-[#8A8A8F] mt-1">Menjalankan eksekusi secara berurutan (headless)...</p>
+                <p className="text-xs text-[#8A8A8F] mt-1">{t.runningBulk}</p>
               )}
             </div>
 
@@ -286,7 +309,7 @@ export default function ScenariosPage() {
                 </Button>
               )}
               <Button variant="ghost" size="sm" onClick={clearBulkState}>
-                {bulkExecuteStatus === 'done' ? 'Tutup' : 'Batal'}
+                {bulkExecuteStatus === 'done' ? t.close : t.cancel}
               </Button>
             </div>
           </div>

@@ -7,6 +7,184 @@ import StepErrorDetail from '../components/StepErrorDetail'
 import TestStepList from '../components/TestStepList'
 import { scenarioAPI, executionAPI, recorderAPI } from '../services/api'
 import { CheckCircle2, XCircle, ClipboardList, Clock } from 'lucide-react'
+import { useSettingsStore } from '../store/settingsStore'
+
+const i18n = {
+  en: {
+    loadScenarioError: 'Failed to load scenario',
+    loadStepsError: 'Failed to load test steps',
+    typeRequired: 'Type and description are required',
+    invalidMetadata: 'Metadata must be valid JSON',
+    stepUpdated: 'Step updated successfully',
+    stepAdded: 'Step added successfully',
+    saveStepError: 'Failed to save step',
+    confirmDeleteStep: 'Delete this step?',
+    stepDeleted: 'Step deleted successfully',
+    deleteStepError: 'Failed to delete step',
+    confirmDeleteAll: (c) => `Delete ALL ${c} steps?`,
+    confirmDeleteSelected: (c) => `Delete ${c} selected steps?`,
+    stepsDeleted: (c) => `${c} steps deleted`,
+    deleteStepsError: 'Failed to delete steps',
+    reorderError: 'Failed to reorder steps',
+    addStepFirst: 'Add at least 1 step before running the scenario',
+    confirmExecute: (name) => `Run scenario "${name}"?`,
+    startingExecution: 'Starting execution, please wait...',
+    executionFailed: (n) => `Execution completed with status FAILED (${n} steps failed)`,
+    executionSuccess: (s) => `Execution completed - Status: ${s}`,
+    executionError: 'Execution failed',
+    executionTimeout: 'Request timeout — execution may still be running on the server. Check the Execution page for results.',
+    updateSelectorError: 'Failed to update selector',
+    locatorUpdated: (o, n) => `Locator updated: "${o}" → "${n}". Re-running...`,
+    locatorsBatchUpdated: (c) => `✓ ${c} locators updated. Re-running scenario...`,
+    batchFixError: 'Batch fix failed',
+    noFixableSteps: 'No steps can be automatically fixed',
+    enterUrlForRecording: 'Enter target URL for recording',
+    recordingStarted: (msg) => `Recording started with Playwright 🎥\nBackend: ${msg}`,
+    startRecordingError: 'Failed to start recording',
+    stepsSavedRecording: (c) => `${c} steps recorded and saved`,
+    recordingAutoSaveError: (c, e) => `Recording completed (${c} steps), but failed to auto-save: ${e}. Click "Save" to try again.`,
+    recordingNoSteps: 'Recording completed — no steps captured',
+    stopRecordingError: 'Failed to stop recording',
+    noStepsToSave: 'No steps to save',
+    stepsSaved: (c) => `${c} steps saved`,
+    saveRecordingError: 'Failed to save recorded steps',
+    confirmDiscardRecording: (c) => `Discard ${c} recorded steps?`,
+    scenarioNotFound: 'Scenario not found',
+    backToScenarios: '← Back to Scenarios',
+    running: 'Running...',
+    runScenario: '▶ Run Scenario',
+    recordingActive: 'Recording Active...',
+    recordingMode: 'Recording Mode',
+    startRecordingHint: 'Start recording to capture your browser interactions. Chromium will open automatically — every click, form fill, and navigation will be recorded as test steps.',
+    urlTarget: 'Target URL',
+    openingBrowser: 'Opening Browser...',
+    startRecording: '🔴 Start Recording',
+    stepsRecorded: (c) => `${c} step${c !== 1 ? 's' : ''} recorded`,
+    interactionHint: '— interact with the browser...',
+    waitingForInteraction: 'Waiting for interactions... Click, fill forms, or navigate in the opened browser.',
+    saving: 'Saving...',
+    saveSteps: (c) => `💾 Save ${c} Steps`,
+    discard: 'Discard',
+    deleting: 'Deleting...',
+    deleteSelectedSteps: (c) => `Delete ${c} Steps`,
+    addStep: '+ Add Step',
+    editStep: 'Edit Step',
+    addNewStep: 'Add New Step',
+    stepDescriptionPlaceholder: 'Step description',
+    saveStepBtn: 'Save Step',
+    updateStepBtn: 'Update Step',
+    cancel: 'Cancel',
+    executionResults: 'Execution Results',
+    fixAllSteps: 'Use AI to fix all failed steps at once',
+    batchFixAll: '🔧 Batch Fix All',
+    fixing: 'Fixing...',
+    autoRetryError: 'Auto-retry failed',
+    hints: {
+      NAVIGATE: '💡 Enter the target URL in the Value field',
+      CLICK: '💡 Enter the CSS selector or XPath of the element to click',
+      FILL: '💡 Enter the CSS selector or XPath of the input and the text to type',
+      SCREENSHOT: '💡 Will take a screenshot of the current page',
+      WAIT: '💡 Enter wait time in milliseconds (e.g., 1000 = 1 second)',
+      ASSERTION: '💡 Verify element exists on page, with optional text check',
+      API_CALL: '💡 Enter the endpoint URL and configuration in metadata (JSON)',
+    },
+    goBackToScenarios: 'Back to Scenarios',
+    fieldType: 'Type',
+    fieldDescription: 'Description',
+    fieldSelector: 'Selector',
+    fieldValue: 'Value',
+    fieldMetadata: 'Metadata (JSON)',
+    required: 'required',
+    closeDialog: 'Close dialog',
+  },
+  id: {
+    loadScenarioError: 'Gagal memuat scenario',
+    loadStepsError: 'Gagal memuat test steps',
+    typeRequired: 'Type dan description wajib diisi',
+    invalidMetadata: 'Metadata harus berupa JSON yang valid',
+    stepUpdated: 'Step berhasil diupdate',
+    stepAdded: 'Step berhasil ditambahkan',
+    saveStepError: 'Gagal menyimpan step',
+    confirmDeleteStep: 'Hapus step ini?',
+    stepDeleted: 'Step berhasil dihapus',
+    deleteStepError: 'Gagal menghapus step',
+    confirmDeleteAll: (c) => `Hapus SEMUA ${c} step?`,
+    confirmDeleteSelected: (c) => `Hapus ${c} step yang dipilih?`,
+    stepsDeleted: (c) => `${c} step berhasil dihapus`,
+    deleteStepsError: 'Gagal menghapus steps',
+    reorderError: 'Gagal mengubah urutan step',
+    addStepFirst: 'Tambahkan minimal 1 step sebelum menjalankan skenario',
+    confirmExecute: (name) => `Jalankan skenario "${name}"?`,
+    startingExecution: 'Memulai eksekusi, mohon tunggu...',
+    executionFailed: (n) => `Eksekusi selesai dengan status FAILED (${n} step gagal)`,
+    executionSuccess: (s) => `Eksekusi selesai - Status: ${s}`,
+    executionError: 'Eksekusi gagal',
+    executionTimeout: 'Request timeout — eksekusi mungkin masih berjalan di server. Cek halaman Execution untuk hasilnya.',
+    updateSelectorError: 'Gagal mengupdate selector',
+    locatorUpdated: (o, n) => `Locator diperbarui: "${o}" → "${n}". Menjalankan kembali...`,
+    locatorsBatchUpdated: (c) => `✓ ${c} locator diperbarui. Menjalankan kembali scenario...`,
+    batchFixError: 'Batch fix gagal',
+    noFixableSteps: 'Tidak ada step yang bisa diperbaiki secara otomatis',
+    enterUrlForRecording: 'Masukkan URL target untuk recording',
+    recordingStarted: (msg) => `Recording dimulai dengan Playwright 🎥\nBackend: ${msg}`,
+    startRecordingError: 'Gagal memulai recording',
+    stepsSavedRecording: (c) => `${c} steps berhasil direkam dan disimpan`,
+    recordingAutoSaveError: (c, e) => `Recording selesai (${c} steps), tapi gagal auto-save: ${e}. Klik "Simpan" untuk coba lagi.`,
+    recordingNoSteps: 'Recording selesai — tidak ada steps yang tercatat',
+    stopRecordingError: 'Gagal menghentikan recording',
+    noStepsToSave: 'Tidak ada steps yang tercatat untuk disimpan',
+    stepsSaved: (c) => `${c} steps berhasil disimpan`,
+    saveRecordingError: 'Gagal menyimpan recorded steps',
+    confirmDiscardRecording: (c) => `Buang ${c} recorded steps?`,
+    scenarioNotFound: 'Scenario tidak ditemukan',
+    backToScenarios: '← Kembali ke Scenarios',
+    running: 'Menjalankan...',
+    runScenario: '▶ Jalankan Skenario',
+    recordingActive: 'Recording Aktif...',
+    recordingMode: 'Mode Recording',
+    startRecordingHint: 'Mulai recording untuk merekam interaksi Anda di browser. Browser Chromium akan terbuka secara otomatis — setiap klik, isian form, dan navigasi akan tercatat sebagai test steps.',
+    urlTarget: 'URL Target',
+    openingBrowser: 'Membuka Browser...',
+    startRecording: '🔴 Mulai Recording',
+    stepsRecorded: (c) => `${c} step${c !== 1 ? 's' : ''} tercatat`,
+    interactionHint: '— berinteraksilah dengan browser...',
+    waitingForInteraction: 'Menunggu interaksi... Klik, isi form, atau navigasi di browser yang terbuka.',
+    saving: 'Menyimpan...',
+    saveSteps: (c) => `💾 Simpan ${c} Steps`,
+    discard: 'Buang',
+    deleting: 'Menghapus...',
+    deleteSelectedSteps: (c) => `Hapus ${c} Step`,
+    addStep: '+ Tambah Step',
+    editStep: 'Edit Step',
+    addNewStep: 'Tambah Step Baru',
+    stepDescriptionPlaceholder: 'Deskripsi langkah ini',
+    saveStepBtn: 'Simpan Step',
+    updateStepBtn: 'Update Step',
+    cancel: 'Batal',
+    executionResults: 'Hasil Eksekusi',
+    fixAllSteps: 'Gunakan AI untuk memperbaiki semua step yang gagal sekaligus',
+    batchFixAll: '🔧 Batch Fix All',
+    fixing: 'Memperbaiki...',
+    autoRetryError: 'Auto-retry gagal',
+    hints: {
+      NAVIGATE: '💡 Masukkan URL tujuan di field Value',
+      CLICK: '💡 Masukkan CSS selector atau XPath elemen yang akan di-klik',
+      FILL: '💡 Masukkan CSS selector atau XPath input dan text yang akan diketik',
+      SCREENSHOT: '💡 Akan mengambil screenshot halaman saat ini',
+      WAIT: '💡 Masukkan waktu tunggu dalam milidetik (contoh: 1000 = 1 detik)',
+      ASSERTION: '💡 Verifikasi elemen ada di halaman, dengan opsi pengecekan teks',
+      API_CALL: '💡 Masukkan URL endpoint dan konfigurasi di metadata (JSON)',
+    },
+    goBackToScenarios: 'Kembali ke Scenarios',
+    fieldType: 'Tipe',
+    fieldDescription: 'Deskripsi',
+    fieldSelector: 'Selector',
+    fieldValue: 'Value',
+    fieldMetadata: 'Metadata (JSON)',
+    required: 'wajib',
+    closeDialog: 'Tutup dialog',
+  },
+}
 
 const STEP_TYPES = [
   { value: 'NAVIGATE', label: 'Navigate', icon: '🌐', fields: ['value'], placeholder: { value: 'https://example.com' } },
@@ -93,12 +271,23 @@ export default function ScenarioDetailPage() {
     setTimeout(() => setSuccessMsg(null), 3000)
   }
 
+  const { language, theme } = useSettingsStore()
+  const t = i18n[language] || i18n.en
+  const isDark = theme !== 'light'
+
+  // Close step form modal on Escape
+  useEffect(() => {
+    const handleEsc = (e) => { if (e.key === 'Escape' && showStepForm) cancelForm() }
+    document.addEventListener('keydown', handleEsc)
+    return () => document.removeEventListener('keydown', handleEsc)
+  }, [showStepForm])
+
   const loadScenario = useCallback(async () => {
     try {
       const res = await scenarioAPI.getById(id)
       setScenario(res.data.scenario || res.data)
     } catch (err) {
-      setError(err.response?.data?.error || 'Gagal memuat scenario')
+      setError(err.response?.data?.error || t.loadScenarioError)
     }
   }, [id])
 
@@ -107,7 +296,7 @@ export default function ScenarioDetailPage() {
       const res = await scenarioAPI.getSteps(id, 0, 100)
       setSteps(res.data.steps || [])
     } catch (err) {
-      setError(err.response?.data?.error || 'Gagal memuat test steps')
+      setError(err.response?.data?.error || t.loadStepsError)
     }
   }, [id])
 
@@ -156,7 +345,7 @@ export default function ScenarioDetailPage() {
 
   const handleSaveStep = async () => {
     if (!stepForm.type || !stepForm.description.trim()) {
-      setError('Type dan description wajib diisi')
+      setError(t.typeRequired)
       return
     }
 
@@ -169,7 +358,7 @@ export default function ScenarioDetailPage() {
         try {
           parsedMetadata = JSON.parse(stepForm.metadata)
         } catch {
-          setError('Metadata harus berupa JSON yang valid')
+          setError(t.invalidMetadata)
           setIsSaving(false)
           return
         }
@@ -183,7 +372,7 @@ export default function ScenarioDetailPage() {
           value: stepForm.value || null,
           metadata: parsedMetadata
         })
-        showSuccess('Step berhasil diupdate')
+        showSuccess(t.stepUpdated)
       } else {
         const stepNumber = steps.length + 1
         await scenarioAPI.createStep(
@@ -195,28 +384,28 @@ export default function ScenarioDetailPage() {
           stepForm.value || null,
           parsedMetadata
         )
-        showSuccess('Step berhasil ditambahkan')
+        showSuccess(t.stepAdded)
       }
 
       cancelForm()
       await loadSteps()
     } catch (err) {
-      setError(err.response?.data?.error || 'Gagal menyimpan step')
+      setError(err.response?.data?.error || t.saveStepError)
     } finally {
       setIsSaving(false)
     }
   }
 
   const handleDeleteStep = async (stepId) => {
-    if (!window.confirm('Hapus step ini?')) return
+    if (!window.confirm(t.confirmDeleteStep)) return
 
     try {
       await scenarioAPI.deleteStep(id, stepId)
-      showSuccess('Step berhasil dihapus')
+      showSuccess(t.stepDeleted)
       setSelectedStepIds(prev => { const next = new Set(prev); next.delete(stepId); return next })
       await loadSteps()
     } catch (err) {
-      setError(err.response?.data?.error || 'Gagal menghapus step')
+      setError(err.response?.data?.error || t.deleteStepError)
     }
   }
 
@@ -242,19 +431,19 @@ export default function ScenarioDetailPage() {
     if (count === 0) return
 
     const confirmMsg = count === steps.length
-      ? `Hapus SEMUA ${count} step?`
-      : `Hapus ${count} step yang dipilih?`
+      ? t.confirmDeleteAll(count)
+      : t.confirmDeleteSelected(count)
 
     if (!window.confirm(confirmMsg)) return
 
     setIsDeletingBulk(true)
     try {
       await scenarioAPI.bulkDeleteSteps(id, Array.from(selectedStepIds))
-      showSuccess(`${count} step berhasil dihapus`)
+      showSuccess(t.stepsDeleted(count))
       setSelectedStepIds(new Set())
       await loadSteps()
     } catch (err) {
-      setError(err.response?.data?.error || 'Gagal menghapus steps')
+      setError(err.response?.data?.error || t.deleteStepsError)
     } finally {
       setIsDeletingBulk(false)
     }
@@ -278,7 +467,7 @@ export default function ScenarioDetailPage() {
       await scenarioAPI.reorderSteps(id, stepOrders)
       await loadSteps()
     } catch (err) {
-      setError(err.response?.data?.error || 'Gagal mengubah urutan step')
+      setError(err.response?.data?.error || t.reorderError)
       await loadSteps()
     }
   }
@@ -287,16 +476,16 @@ export default function ScenarioDetailPage() {
 
   const handleExecute = async () => {
     if (steps.length === 0) {
-      setError('Tambahkan minimal 1 step sebelum menjalankan skenario')
+      setError(t.addStepFirst)
       return
     }
 
-    if (!window.confirm(`Jalankan skenario "${scenario.name}"?`)) return
+    if (!window.confirm(t.confirmExecute(scenario.name))) return
 
-    // Buka window live viewer SEBELUM await untuk menghindari popup blocker
+    // Open live viewer window BEFORE await to avoid popup blocker
     const liveWindow = window.open('', '_blank', 'width=1280,height=800,menubar=no,toolbar=no,scrollbars=yes,resizable=yes')
     if (liveWindow) {
-      liveWindow.document.write('<html><body style="font-family:sans-serif;padding:40px;background:#0f172a;color:#e2e8f0"><p>Memulai eksekusi, mohon tunggu...</p></body></html>')
+      liveWindow.document.write(`<html><body style="font-family:sans-serif;padding:40px;background:#0f172a;color:#e2e8f0"><p>${t.startingExecution}</p></body></html>`)
     }
 
     setIsExecuting(true)
@@ -342,9 +531,9 @@ export default function ScenarioDetailPage() {
             setCurrentStepIndex(null)
             
             if (result.status === 'FAILED') {
-              setError(`Eksekusi selesai dengan status FAILED (${result.failedSteps} step gagal)`)
+              setError(t.executionFailed(result.failedSteps))
             } else {
-              showSuccess(`Eksekusi selesai - Status: ${result.status}`)
+              showSuccess(t.executionSuccess(result.status))
             }
 
             // Auto-scroll to results
@@ -363,11 +552,11 @@ export default function ScenarioDetailPage() {
       pollExecution()
     } catch (err) {
       const errData = err.response?.data
-      let errMsg = errData?.message || 'Eksekusi gagal'
+      let errMsg = errData?.message || t.executionError
 
       // Detect timeout
       if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
-        errMsg = 'Request timeout — eksekusi mungkin masih berjalan di server. Cek halaman Execution untuk hasilnya.'
+        errMsg = t.executionTimeout
       }
 
       setError(errMsg)
@@ -406,7 +595,7 @@ export default function ScenarioDetailPage() {
       showSuccess('Locator updated! Ready to run again.')
       await loadSteps()
     } catch (err) {
-      setError(err.response?.data?.error || 'Gagal mengupdate selector')
+      setError(err.response?.data?.error || t.updateSelectorError)
     }
   }
 
@@ -435,7 +624,7 @@ export default function ScenarioDetailPage() {
       })
       
       await loadSteps()
-      showSuccess(`Locator diperbarui: "${step.selector}" → "${topSuggestionSelector}". Menjalankan kembali...`)
+      showSuccess(t.locatorUpdated(step.selector, topSuggestionSelector))
       
       // Immediately re-execute scenario
       setTimeout(() => handleExecute(), 500)
@@ -486,7 +675,7 @@ export default function ScenarioDetailPage() {
       }
 
       if (updates.length === 0) {
-        setError('Tidak ada step yang bisa diperbaiki secara otomatis')
+        setError(t.noFixableSteps)
         setIsBatchFixing(false)
         return
       }
@@ -495,12 +684,12 @@ export default function ScenarioDetailPage() {
       await scenarioAPI.batchUpdateSteps(id, { updates })
       await loadSteps()
 
-      showSuccess(`✓ ${fixedCount} locator diperbarui. Menjalankan kembali scenario...`)
+      showSuccess(t.locatorsBatchUpdated(fixedCount))
 
       // Re-execute scenario
       setTimeout(() => handleExecute(), 500)
     } catch (err) {
-      setError(err.response?.data?.error || 'Batch fix gagal')
+      setError(err.response?.data?.error || t.batchFixError)
       setIsBatchFixing(false)
     }
   }
@@ -554,7 +743,7 @@ export default function ScenarioDetailPage() {
   const handleStartRecording = async () => {
     const url = recordingUrl.trim() || scenario?.url || ''
     if (!url) {
-      setError('Masukkan URL target untuk recording')
+      setError(t.enterUrlForRecording)
       return
     }
 
@@ -571,13 +760,13 @@ export default function ScenarioDetailPage() {
       // ═══ Show Status ═══
       // Dengan Playwright, browser dibuka di backend (headless)
       // Frontend tinggal menampilkan status dan polling steps
-      showSuccess(`Recording dimulai dengan Playwright 🎥\nBackend: ${res.data.message}`)
+      showSuccess(t.recordingStarted(res.data.message))
       
       // Start polling for recorded steps
       startPollingSteps()
 
     } catch (err) {
-      setError(err.response?.data?.error || 'Gagal memulai recording')
+      setError(err.response?.data?.error || t.startRecordingError)
       console.error('Recording start error:', err)
     } finally {
       setIsStartingRecording(false)
@@ -599,20 +788,20 @@ export default function ScenarioDetailPage() {
       if (stoppedSteps.length > 0) {
         try {
           const saveRes = await recorderAPI.save(id, stoppedSteps)
-          showSuccess(saveRes.data.message || `${stoppedSteps.length} steps berhasil direkam dan disimpan`)
+          showSuccess(saveRes.data.message || t.stepsSavedRecording(stoppedSteps.length))
           setRecordingSteps([])
           setShowRecordingPanel(false)
-          await loadSteps() // Refresh daftar steps
+          await loadSteps() // Refresh step list
         } catch (saveErr) {
-          // Jika gagal save, tampilkan steps untuk manual save
-          setError(`Recording selesai (${stoppedSteps.length} steps), tapi gagal auto-save: ${saveErr.response?.data?.error || saveErr.message}. Klik "Simpan" untuk coba lagi.`)
+          // If save failed, show steps for manual save
+          setError(t.recordingAutoSaveError(stoppedSteps.length, saveErr.response?.data?.error || saveErr.message))
         }
       } else {
-        showSuccess('Recording selesai — tidak ada steps yang tercatat')
+        showSuccess(t.recordingNoSteps)
         setShowRecordingPanel(false)
       }
     } catch (err) {
-      setError(err.response?.data?.error || 'Gagal menghentikan recording')
+      setError(err.response?.data?.error || t.stopRecordingError)
     } finally {
       setIsStoppingRecording(false)
     }
@@ -621,25 +810,25 @@ export default function ScenarioDetailPage() {
 
   const handleSaveRecordedSteps = async () => {
     if (recordingSteps.length === 0) {
-      setError('Tidak ada steps yang tercatat untuk disimpan')
+      setError(t.noStepsToSave)
       return
     }
     setIsSavingRecording(true)
     try {
       const res = await recorderAPI.save(id, recordingSteps)
-      showSuccess(res.data.message || `${recordingSteps.length} steps berhasil disimpan`)
+      showSuccess(res.data.message || t.stepsSaved(recordingSteps.length))
       setRecordingSteps([])
       setShowRecordingPanel(false)
       await loadSteps()
     } catch (err) {
-      setError(err.response?.data?.error || 'Gagal menyimpan recorded steps')
+      setError(err.response?.data?.error || t.saveRecordingError)
     } finally {
       setIsSavingRecording(false)
     }
   }
 
   const handleDiscardRecording = () => {
-    if (recordingSteps.length > 0 && !window.confirm(`Buang ${recordingSteps.length} recorded steps?`)) return
+    if (recordingSteps.length > 0 && !window.confirm(t.confirmDiscardRecording(recordingSteps.length))) return
     setRecordingSteps([])
     setShowRecordingPanel(false)
   }
@@ -659,9 +848,9 @@ export default function ScenarioDetailPage() {
       <Layout>
         <Card>
           <div className="text-center py-12">
-            <p className="text-[#888] text-lg">Scenario tidak ditemukan</p>
+            <p className="text-[#888] text-lg">{t.scenarioNotFound}</p>
             <Button variant="primary" className="mt-4" onClick={() => navigate('/scenarios')}>
-              Kembali ke Scenarios
+              {t.goBackToScenarios}
             </Button>
           </div>
         </Card>
@@ -679,7 +868,7 @@ export default function ScenarioDetailPage() {
               onClick={() => navigate('/scenarios')}
               className="text-[#5E6AD2] hover:text-[#6B7AE8] text-sm font-medium mb-2 flex items-center gap-1"
             >
-              ← Kembali ke Scenarios
+              {t.backToScenarios}
             </button>
             <h1 className="text-2xl sm:text-3xl font-bold text-[#E0E0E2] break-words">{scenario.name}</h1>
             {scenario.description && (
@@ -732,10 +921,10 @@ export default function ScenarioDetailPage() {
             >
               {isExecuting ? (
                 <span className="flex items-center gap-2">
-                  <Spinner size="sm" /> Menjalankan...
+                  <Spinner size="sm" /> {t.running}
                 </span>
               ) : (
-                '▶ Jalankan Skenario'
+                t.runScenario
               )}
             </Button>
           </div>
@@ -773,7 +962,7 @@ export default function ScenarioDetailPage() {
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-[#E0E0E2] flex items-center gap-2">
                 {isRecording && <span className="inline-block w-3 h-3 bg-red-500 rounded-full animate-pulse" />}
-                🎬 {isRecording ? 'Recording Aktif...' : 'Mode Recording'}
+                🎬 {isRecording ? t.recordingActive : t.recordingMode}
               </h2>
               {!isRecording && recordingSteps.length === 0 && (
                 <button
@@ -789,12 +978,11 @@ export default function ScenarioDetailPage() {
             {!isRecording && recordingSteps.length === 0 && (
               <div className="space-y-4">
                 <p className="text-[#A0A0A4] text-sm">
-                  Mulai recording untuk merekam interaksi Anda di browser. Browser Chromium akan terbuka secara otomatis —
-                  setiap klik, isian form, dan navigasi akan tercatat sebagai test steps.
+                  {t.startRecordingHint}
                 </p>
                 <div className="flex items-end gap-3">
                   <div className="flex-1">
-                    <label className="block text-sm font-medium text-[#A0A0A4] mb-1">URL Target</label>
+                    <label className="block text-sm font-medium text-[#A0A0A4] mb-1">{t.urlTarget}</label>
                     <input
                       type="url"
                       value={recordingUrl}
@@ -809,8 +997,8 @@ export default function ScenarioDetailPage() {
                     disabled={isStartingRecording}
                   >
                     {isStartingRecording ? (
-                      <span className="flex items-center gap-2"><Spinner size="sm" /> Membuka Browser...</span>
-                    ) : '🔴 Mulai Recording'}
+                      <span className="flex items-center gap-2"><Spinner size="sm" /> {t.openingBrowser}</span>
+                    ) : t.startRecording}
                   </Button>
                 </div>
               </div>
@@ -821,8 +1009,8 @@ export default function ScenarioDetailPage() {
               <div>
                 <div className="flex items-center justify-between mb-3">
                   <p className="text-sm text-[#888]">
-                    {recordingSteps.length} step{recordingSteps.length !== 1 ? 's' : ''} tercatat
-                    {isRecording && ' — berinteraksilah dengan browser...'}
+                    {t.stepsRecorded(recordingSteps.length)}
+                    {isRecording && ` ${t.interactionHint}`}
                   </p>
                   {!isRecording && recordingSteps.length > 0 && (
                     <div className="flex gap-2">
@@ -832,10 +1020,10 @@ export default function ScenarioDetailPage() {
                         onClick={handleSaveRecordedSteps}
                         disabled={isSavingRecording}
                       >
-                        {isSavingRecording ? 'Menyimpan...' : `💾 Simpan ${recordingSteps.length} Steps`}
+                        {isSavingRecording ? t.saving : t.saveSteps(recordingSteps.length)}
                       </Button>
                       <Button variant="secondary" size="sm" onClick={handleDiscardRecording}>
-                        Buang
+                        {t.discard}
                       </Button>
                     </div>
                   )}
@@ -863,7 +1051,7 @@ export default function ScenarioDetailPage() {
                   })}
                   {recordingSteps.length === 0 && isRecording && (
                     <div className="text-center py-6 text-[#555] text-sm">
-                      Menunggu interaksi... Klik, isi form, atau navigasi di browser yang terbuka.
+                      {t.waitingForInteraction}
                     </div>
                   )}
                 </div>
@@ -885,122 +1073,201 @@ export default function ScenarioDetailPage() {
                   onClick={handleBulkDelete}
                   disabled={isDeletingBulk}
                 >
-                  {isDeletingBulk ? 'Menghapus...' : `Hapus ${selectedStepIds.size} Step`}
+                  {isDeletingBulk ? t.deleting : t.deleteSelectedSteps(selectedStepIds.size)}
                 </Button>
               )}
               {!showStepForm && (
                 <Button variant="primary" onClick={openAddForm}>
-                  + Tambah Step
+                  {t.addStep}
                 </Button>
               )}
             </div>
           </div>
 
-          {/* Step Form */}
+          {/* Step Form Modal */}
           {showStepForm && (
-            <div ref={stepFormRef} className="mb-6 p-4 border border-[#5E6AD2]/30 rounded-lg bg-[#1A1A2E]">
-              <h3 className="text-lg font-semibold text-[#E0E0E2] mb-3">
-                {editingStep ? 'Edit Step' : 'Tambah Step Baru'}
-              </h3>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Type */}
-                <div>
-                  <label className="block text-sm font-medium text-[#A0A0A4] mb-1">
-                    Type *
-                  </label>
-                  <select
-                    value={stepForm.type}
-                    onChange={(e) => setStepForm({ ...stepForm, type: e.target.value })}
-                    className="w-full px-3 py-2 bg-[#161618] border border-[#2D2D2F] text-[#E0E0E2] rounded-lg focus:ring-1 focus:ring-[#5E6AD2] focus:outline-none"
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+              {/* Backdrop */}
+              <div
+                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                onClick={cancelForm}
+                aria-label={t.closeDialog}
+              />
+              {/* Dialog */}
+              <div
+                ref={stepFormRef}
+                role="dialog"
+                aria-modal="true"
+                aria-label={editingStep ? t.editStep : t.addNewStep}
+                className={`relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl border transition-colors ${
+                  isDark
+                    ? 'bg-[#1C1C1E] border-[#2D2D2F]'
+                    : 'bg-white border-gray-200'
+                }`}
+              >
+                {/* Header */}
+                <div className={`flex items-center justify-between px-6 py-4 border-b ${
+                  isDark ? 'border-[#2D2D2F]' : 'border-gray-100'
+                }`}>
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-[#5E6AD2]/15 flex items-center justify-center">
+                      <span className="text-[#5E6AD2] text-sm">{editingStep ? '✏️' : '+'}</span>
+                    </div>
+                    <h3 className={`text-lg font-semibold ${
+                      isDark ? 'text-[#E0E0E2]' : 'text-gray-900'
+                    }`}>
+                      {editingStep ? t.editStep : t.addNewStep}
+                    </h3>
+                  </div>
+                  <button
+                    onClick={cancelForm}
+                    aria-label={t.closeDialog}
+                    className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
+                      isDark
+                        ? 'text-[#888] hover:text-[#E0E0E2] hover:bg-[#2D2D2F]'
+                        : 'text-gray-400 hover:text-gray-700 hover:bg-gray-100'
+                    }`}
                   >
-                    {STEP_TYPES.map(t => (
-                      <option key={t.value} value={t.value}>
-                        {t.icon} {t.label}
-                      </option>
-                    ))}
-                  </select>
+                    ✕
+                  </button>
                 </div>
 
-                {/* Description */}
-                <div>
-                  <label className="block text-sm font-medium text-[#A0A0A4] mb-1">
-                    Description *
-                  </label>
-                  <input
-                    type="text"
-                    value={stepForm.description}
-                    onChange={(e) => setStepForm({ ...stepForm, description: e.target.value })}
-                    placeholder="Deskripsi langkah ini"
-                    className="w-full px-3 py-2 bg-[#161618] border border-[#2D2D2F] text-[#E0E0E2] placeholder-[#4A4A52] rounded-lg focus:ring-1 focus:ring-[#5E6AD2] focus:outline-none"
-                  />
+                {/* Body */}
+                <div className="px-6 py-5">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Type */}
+                    <div>
+                      <label className={`block text-sm font-medium mb-1 ${
+                        isDark ? 'text-[#A0A0A4]' : 'text-gray-600'
+                      }`}>
+                        {t.fieldType} <span className="text-[#5E6AD2] text-xs">*{t.required}</span>
+                      </label>
+                      <select
+                        value={stepForm.type}
+                        onChange={(e) => setStepForm({ ...stepForm, type: e.target.value })}
+                        className={`w-full px-3 py-2 rounded-lg border focus:ring-1 focus:ring-[#5E6AD2] focus:outline-none transition-colors ${
+                          isDark
+                            ? 'bg-[#161618] border-[#2D2D2F] text-[#E0E0E2]'
+                            : 'bg-gray-50 border-gray-300 text-gray-900'
+                        }`}
+                      >
+                        {STEP_TYPES.map(st => (
+                          <option key={st.value} value={st.value}>
+                            {st.icon} {st.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Description */}
+                    <div>
+                      <label className={`block text-sm font-medium mb-1 ${
+                        isDark ? 'text-[#A0A0A4]' : 'text-gray-600'
+                      }`}>
+                        {t.fieldDescription} <span className="text-[#5E6AD2] text-xs">*{t.required}</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={stepForm.description}
+                        onChange={(e) => setStepForm({ ...stepForm, description: e.target.value })}
+                        placeholder={t.stepDescriptionPlaceholder}
+                        autoFocus
+                        className={`w-full px-3 py-2 rounded-lg border focus:ring-1 focus:ring-[#5E6AD2] focus:outline-none transition-colors ${
+                          isDark
+                            ? 'bg-[#161618] border-[#2D2D2F] text-[#E0E0E2] placeholder-[#4A4A52]'
+                            : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-400'
+                        }`}
+                      />
+                    </div>
+
+                    {/* Selector */}
+                    {getStepTypeConfig(stepForm.type).fields.includes('selector') && (
+                      <div>
+                        <label className={`block text-sm font-medium mb-1 ${
+                          isDark ? 'text-[#A0A0A4]' : 'text-gray-600'
+                        }`}>
+                          {t.fieldSelector}
+                        </label>
+                        <input
+                          type="text"
+                          value={stepForm.selector}
+                          onChange={(e) => setStepForm({ ...stepForm, selector: e.target.value })}
+                          placeholder={getStepTypeConfig(stepForm.type).placeholder.selector}
+                          className={`w-full px-3 py-2 rounded-lg border focus:ring-1 focus:ring-[#5E6AD2] focus:outline-none transition-colors ${
+                            isDark
+                              ? 'bg-[#161618] border-[#2D2D2F] text-[#E0E0E2] placeholder-[#4A4A52]'
+                              : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-400'
+                          }`}
+                        />
+                      </div>
+                    )}
+
+                    {/* Value */}
+                    {getStepTypeConfig(stepForm.type).fields.includes('value') && (
+                      <div>
+                        <label className={`block text-sm font-medium mb-1 ${
+                          isDark ? 'text-[#A0A0A4]' : 'text-gray-600'
+                        }`}>
+                          {t.fieldValue}
+                        </label>
+                        <input
+                          type="text"
+                          value={stepForm.value}
+                          onChange={(e) => setStepForm({ ...stepForm, value: e.target.value })}
+                          placeholder={getStepTypeConfig(stepForm.type).placeholder.value}
+                          className={`w-full px-3 py-2 rounded-lg border focus:ring-1 focus:ring-[#5E6AD2] focus:outline-none transition-colors ${
+                            isDark
+                              ? 'bg-[#161618] border-[#2D2D2F] text-[#E0E0E2] placeholder-[#4A4A52]'
+                              : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-400'
+                          }`}
+                        />
+                      </div>
+                    )}
+
+                    {/* Metadata */}
+                    {getStepTypeConfig(stepForm.type).fields.includes('metadata') && (
+                      <div className="md:col-span-2">
+                        <label className={`block text-sm font-medium mb-1 ${
+                          isDark ? 'text-[#A0A0A4]' : 'text-gray-600'
+                        }`}>
+                          {t.fieldMetadata}
+                        </label>
+                        <textarea
+                          value={stepForm.metadata}
+                          onChange={(e) => setStepForm({ ...stepForm, metadata: e.target.value })}
+                          placeholder={getStepTypeConfig(stepForm.type).placeholder.metadata}
+                          rows={3}
+                          className={`w-full px-3 py-2 rounded-lg border focus:ring-1 focus:ring-[#5E6AD2] focus:outline-none font-mono text-sm transition-colors ${
+                            isDark
+                              ? 'bg-[#161618] border-[#2D2D2F] text-[#E0E0E2] placeholder-[#4A4A52]'
+                              : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-400'
+                          }`}
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Type hint */}
+                  {t.hints[stepForm.type] && (
+                    <div className={`mt-4 px-3 py-2 rounded-lg text-sm ${
+                      isDark ? 'bg-[#5E6AD2]/10 text-[#9BA3F0]' : 'bg-indigo-50 text-indigo-700'
+                    }`}>
+                      {t.hints[stepForm.type]}
+                    </div>
+                  )}
                 </div>
 
-                {/* Conditional fields based on type */}
-                {getStepTypeConfig(stepForm.type).fields.includes('selector') && (
-                  <div>
-                    <label className="block text-sm font-medium text-[#A0A0A4] mb-1">
-                      Selector
-                    </label>
-                    <input
-                      type="text"
-                      value={stepForm.selector}
-                      onChange={(e) => setStepForm({ ...stepForm, selector: e.target.value })}
-                      placeholder={getStepTypeConfig(stepForm.type).placeholder.selector}
-                      className="w-full px-3 py-2 bg-[#161618] border border-[#2D2D2F] text-[#E0E0E2] placeholder-[#4A4A52] rounded-lg focus:ring-1 focus:ring-[#5E6AD2] focus:outline-none"
-                    />
-                  </div>
-                )}
-
-                {getStepTypeConfig(stepForm.type).fields.includes('value') && (
-                  <div>
-                    <label className="block text-sm font-medium text-[#A0A0A4] mb-1">
-                      Value
-                    </label>
-                    <input
-                      type="text"
-                      value={stepForm.value}
-                      onChange={(e) => setStepForm({ ...stepForm, value: e.target.value })}
-                      placeholder={getStepTypeConfig(stepForm.type).placeholder.value}
-                      className="w-full px-3 py-2 bg-[#161618] border border-[#2D2D2F] text-[#E0E0E2] placeholder-[#4A4A52] rounded-lg focus:ring-1 focus:ring-[#5E6AD2] focus:outline-none"
-                    />
-                  </div>
-                )}
-
-                {getStepTypeConfig(stepForm.type).fields.includes('metadata') && (
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-[#A0A0A4] mb-1">
-                      Metadata (JSON)
-                    </label>
-                    <textarea
-                      value={stepForm.metadata}
-                      onChange={(e) => setStepForm({ ...stepForm, metadata: e.target.value })}
-                      placeholder={getStepTypeConfig(stepForm.type).placeholder.metadata}
-                      rows={3}
-                      className="w-full px-3 py-2 bg-[#161618] border border-[#2D2D2F] text-[#E0E0E2] placeholder-[#4A4A52] rounded-lg focus:ring-1 focus:ring-[#5E6AD2] focus:outline-none font-mono text-sm"
-                    />
-                  </div>
-                )}
-              </div>
-
-              {/* Type hint */}
-              <div className="mt-3 text-sm text-[#888]">
-                {stepForm.type === 'NAVIGATE' && '💡 Masukkan URL tujuan di field Value'}
-                {stepForm.type === 'CLICK' && '💡 Masukkan CSS selector atau XPath elemen yang akan di-klik'}
-                {stepForm.type === 'FILL' && '💡 Masukkan CSS selector atau XPath input dan text yang akan diketik'}
-                {stepForm.type === 'SCREENSHOT' && '💡 Akan mengambil screenshot halaman saat ini'}
-                {stepForm.type === 'WAIT' && '💡 Masukkan waktu tunggu dalam milidetik (contoh: 1000 = 1 detik)'}
-                {stepForm.type === 'ASSERTION' && '💡 Verifikasi elemen ada di halaman, dengan opsi pengecekan teks'}
-                {stepForm.type === 'API_CALL' && '💡 Masukkan URL endpoint dan konfigurasi di metadata (JSON)'}
-              </div>
-
-              <div className="flex gap-2 mt-4">
-                <Button variant="primary" onClick={handleSaveStep} disabled={isSaving}>
-                  {isSaving ? 'Menyimpan...' : editingStep ? 'Update Step' : 'Simpan Step'}
-                </Button>
-                <Button variant="secondary" onClick={cancelForm}>
-                  Batal
-                </Button>
+                {/* Footer */}
+                <div className={`flex gap-3 px-6 py-4 border-t ${
+                  isDark ? 'border-[#2D2D2F]' : 'border-gray-100'
+                }`}>
+                  <Button variant="primary" onClick={handleSaveStep} disabled={isSaving} className="flex-1 sm:flex-none">
+                    {isSaving ? t.saving : editingStep ? t.updateStepBtn : t.saveStepBtn}
+                  </Button>
+                  <Button variant="secondary" onClick={cancelForm} className="flex-1 sm:flex-none">
+                    {t.cancel}
+                  </Button>
+                </div>
               </div>
             </div>
           )}
@@ -1026,7 +1293,7 @@ export default function ScenarioDetailPage() {
           <div ref={executionResultRef}>
           <Card>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-[#E0E0E2]">Hasil Eksekusi</h2>
+              <h2 className="text-xl font-bold text-[#E0E0E2]">{t.executionResults}</h2>
               <Badge variant={executionResult.status === 'PASSED' ? 'success' : 'danger'}>
                 {executionResult.status === 'PASSED' ? '✓' : '✗'} {executionResult.status}
               </Badge>
@@ -1076,7 +1343,7 @@ export default function ScenarioDetailPage() {
               <div className="mb-4 p-3 bg-[#0F170F] border border-[#5E6AD2]/30 rounded-lg flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="text-[#5E6AD2]">⚡</span>
-                  <span className="text-sm text-[#E0E0E2]">Gunakan AI untuk memperbaiki semua step yang gagal sekaligus</span>
+                  <span className="text-sm text-[#E0E0E2]">{t.fixAllSteps}</span>
                 </div>
                 <Button
                   variant="primary"
@@ -1087,10 +1354,10 @@ export default function ScenarioDetailPage() {
                   {isBatchFixing ? (
                     <>
                       <Spinner size="xs" className="inline mr-2" />
-                      Memperbaiki...
+                      {t.fixing}
                     </>
                   ) : (
-                    '🔧 Batch Fix All'
+                    t.batchFixAll
                   )}
                 </Button>
               </div>

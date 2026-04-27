@@ -6,6 +6,7 @@
 import { Router } from 'express'
 import { authenticateToken } from '../middleware/auth.js'
 import { schedulerService } from '../services/schedulerService.js'
+import { prisma } from '../lib/prisma.js'
 
 const router = Router()
 

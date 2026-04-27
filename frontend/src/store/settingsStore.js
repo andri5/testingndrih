@@ -8,6 +8,9 @@ const applyTheme = (theme) => {
   }
 }
 
+// Apply theme immediately on module load (before React first render)
+applyTheme(localStorage.getItem('theme') || 'light')
+
 const useSettingsStore = create((set) => ({
   theme: localStorage.getItem('theme') || 'light',
   language: localStorage.getItem('language') || 'en',

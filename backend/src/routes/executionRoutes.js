@@ -15,6 +15,11 @@ executionRoutes.get('/browsers', executionController.getAvailableBrowsers)
 executionRoutes.post('/:executionId/test-selector', executionController.testSelector)
 executionRoutes.post('/:executionId/clear-highlight', executionController.clearHighlight)
 
+// Live viewer control endpoints — no auth (called from live viewer popup)
+executionRoutes.post('/:executionId/viewer-stop', executionController.viewerStop)
+executionRoutes.post('/:executionId/viewer-pause', executionController.viewerPause)
+executionRoutes.post('/:executionId/viewer-resume', executionController.viewerResume)
+
 // All remaining routes require authentication
 executionRoutes.use(authenticateToken)
 

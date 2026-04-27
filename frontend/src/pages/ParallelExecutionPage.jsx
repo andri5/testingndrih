@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useSettingsStore } from '../store/settingsStore'
+import Layout from '../components/Layout'
 import api from '../services/api'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, Button, Alert } from '../components/ui'
 import { Loader, CheckCircle2, XCircle, Clock } from 'lucide-react'
@@ -166,7 +167,7 @@ export default function ParallelExecutionPage() {
   }
 
   return (
-    <div className={`min-h-screen ${isDark ? 'bg-gray-950' : 'bg-gray-50'} p-6`}>
+    <Layout>
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-8">
@@ -179,8 +180,8 @@ export default function ParallelExecutionPage() {
         </div>
 
         {/* Alerts */}
-        {error && <Alert type="error" className="mb-6">{error}</Alert>}
-        {success && <Alert type="success" className="mb-6">{success}</Alert>}
+        {error && <Alert type="error" message={error} />}
+        {success && <Alert type="success" message={success} />}
 
         {/* Selection Panel */}
         <Card className={`mb-6 border ${isDark ? 'border-gray-800 bg-gray-900' : 'border-gray-200 bg-white'}`}>
@@ -371,6 +372,6 @@ export default function ParallelExecutionPage() {
           )}
         </div>
       </div>
-    </div>
+    </Layout>
   )
 }

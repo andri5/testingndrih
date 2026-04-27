@@ -4,12 +4,16 @@
 
 import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { useSettingsStore } from '../store/settingsStore'
+import Layout from '../components/Layout'
 import { chainAPI } from '../services/api'
 import { Play, ChevronDown, ChevronUp, Clock, Check, X, Loader } from 'lucide-react'
 
 export default function ChainExecutorPage() {
   const navigate = useNavigate()
   const { chainId } = useParams()
+  const { theme } = useSettingsStore()
+  const isDark = theme !== 'light'
 
   const [chain, setChain] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -65,20 +69,22 @@ export default function ChainExecutorPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-8 flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-          <p className="text-slate-400 mt-4">Loading chain...</p>
+      <Layout>
+        <div className="flex items-center justify-center py-24">
+          <div className="text-center">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+            <p className={`mt-4 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Loading chain...</p>
+          </div>
         </div>
-      </div>
+      </Layout>
     )
   }
 
   if (!chain) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-8">
+      <Layout>
         <div className="max-w-6xl mx-auto text-center py-16">
-          <p className="text-red-400 mb-4">Chain not found</p>
+          <p className="text-red-500 mb-4">Chain not found</p>
           <button
             onClick={() => navigate('/chains')}
             className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
@@ -86,22 +92,22 @@ export default function ChainExecutorPage() {
             Back to Chains
           </button>
         </div>
-      </div>
+      </Layout>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-8">
+    <Layout>
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-4xl font-bold text-white mb-2">{chain.name}</h1>
-            <p className="text-slate-400">{chain.description}</p>
+            <h1 className={`text-3xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>{chain.name}</h1>
+            <p className={isDark ? 'text-gray-400' : 'text-gray-600'}>{chain.description}</p>
           </div>
           <button
             onClick={() => navigate('/chains')}
-            className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-medium transition"
+            className={`px-6 py-3 rounded-lg font-medium transition ${isDark ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-gray-200 hover:bg-gray-300 text-gray-700'}`}
           >
             Back
           </button>
@@ -109,7 +115,7 @@ export default function ChainExecutorPage() {
 
         {/* Error Message */}
         {error && (
-          <div className="mb-6 p-4 bg-red-900/30 border border-red-600 text-red-300 rounded-lg">
+          <div className="mb-6 p-4 bg-red-500/10 border border-red-500 text-red-500 rounded-lg">
             {error}
           </div>
         )}
@@ -117,8 +123,8 @@ export default function ChainExecutorPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Execution Control */}
           <div className="lg:col-span-1">
-            <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-6 sticky top-8">
-              <h2 className="text-xl font-bold text-white mb-4">Execute Chain</h2>
+            <div className={`border rounded-lg p-6 sticky top-8 ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+              <h2 className={`text-xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Execute Chain</h2>
 
               <div className="space-y-4 mb-6">
                 <label className="flex items-center gap-3 cursor-pointer">
@@ -129,7 +135,7 @@ export default function ChainExecutorPage() {
                     disabled={executing}
                     className="w-4 h-4"
                   />
-                  <span className="text-slate-300">Headless Mode</span>
+                  <span className={isDark ? 'text-gray-300' : 'text-gray-700'}>Headless Mode</span>
                 </label>
               </div>
 
@@ -157,20 +163,20 @@ export default function ChainExecutorPage() {
                 </p>
               )}
 
-              <div className="mt-6 pt-6 border-t border-slate-700">
-                <h3 className="text-lg font-bold text-white mb-3">Chain Overview</h3>
+              <div className={`mt-6 pt-6 border-t ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
+                <h3 className={`text-lg font-bold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>Chain Overview</h3>
                 <div className="space-y-2 text-sm">
                   <div>
-                    <span className="text-slate-400">Total Steps:</span>
-                    <span className="text-white ml-2 font-medium">{chain.steps}</span>
+                    <span className={isDark ? 'text-gray-400' : 'text-gray-500'}>Total Steps:</span>
+                    <span className={`ml-2 font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{chain.steps}</span>
                   </div>
                   <div>
-                    <span className="text-slate-400">Total Executions:</span>
-                    <span className="text-white ml-2 font-medium">{executions.length}</span>
+                    <span className={isDark ? 'text-gray-400' : 'text-gray-500'}>Total Executions:</span>
+                    <span className={`ml-2 font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{executions.length}</span>
                   </div>
                   <div>
-                    <span className="text-slate-400">Status:</span>
-                    <span className={`ml-2 font-medium ${chain.isActive ? 'text-green-400' : 'text-slate-400'}`}>
+                    <span className={isDark ? 'text-gray-400' : 'text-gray-500'}>Status:</span>
+                    <span className={`ml-2 font-medium ${chain.isActive ? 'text-green-500' : isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                       {chain.isActive ? 'Active' : 'Inactive'}
                     </span>
                   </div>
@@ -183,34 +189,34 @@ export default function ChainExecutorPage() {
           <div className="lg:col-span-2 space-y-6">
             {/* Current Execution */}
             {currentExecution && (
-              <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-6">
-                <h2 className="text-xl font-bold text-white mb-4">Current Execution</h2>
+              <div className={`border rounded-lg p-6 ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+                <h2 className={`text-xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Current Execution</h2>
                 <ExecutionResults execution={currentExecution} expandedSteps={expandedSteps} setExpandedSteps={setExpandedSteps} />
               </div>
             )}
 
             {/* Chain Steps */}
-            <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-6">
-              <h2 className="text-xl font-bold text-white mb-4">Chain Steps ({chain.chainSteps?.length || 0})</h2>
+            <div className={`border rounded-lg p-6 ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+              <h2 className={`text-xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Chain Steps ({chain.chainSteps?.length || 0})</h2>
               
               {chain.chainSteps && chain.chainSteps.length > 0 ? (
                 <div className="space-y-3">
                   {chain.chainSteps.map((step) => (
                     <div
                       key={step.id}
-                      className="bg-slate-900/50 border border-slate-600 rounded-lg p-4"
+                      className={`border rounded-lg p-4 ${isDark ? 'bg-gray-900/50 border-gray-600' : 'bg-gray-50 border-gray-300'}`}
                     >
                       <div className="flex items-center gap-3">
                         <span className="flex items-center justify-center w-8 h-8 bg-blue-600 rounded-full text-white font-bold text-sm">
                           {step.stepNumber}
                         </span>
                         <div className="flex-1">
-                          <div className="text-white font-medium">{step.scenario.name}</div>
+                          <div className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{step.scenario.name}</div>
                           {step.description && (
-                            <div className="text-slate-400 text-sm">{step.description}</div>
+                            <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{step.description}</div>
                           )}
                         </div>
-                        <div className="flex items-center gap-4 text-xs text-slate-400">
+                        <div className={`flex items-center gap-4 text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                           <span>Wait: {step.waitTime}ms</span>
                           <span>Retry: {step.retryCount}x</span>
                         </div>
@@ -219,34 +225,34 @@ export default function ChainExecutorPage() {
                   ))}
                 </div>
               ) : (
-                <p className="text-slate-400 text-center py-8">No steps in this chain</p>
+                <p className={`text-center py-8 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>No steps in this chain</p>
               )}
             </div>
 
             {/* Execution History */}
             {executions.length > 0 && (
-              <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-6">
-                <h2 className="text-xl font-bold text-white mb-4">Recent Executions</h2>
+              <div className={`border rounded-lg p-6 ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+                <h2 className={`text-xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Recent Executions</h2>
                 <div className="space-y-3">
                   {executions.map((exec) => (
                     <div
                       key={exec.id}
-                      className="bg-slate-900/50 border border-slate-600 rounded-lg p-4"
+                      className={`border rounded-lg p-4 ${isDark ? 'bg-gray-900/50 border-gray-600' : 'bg-gray-50 border-gray-300'}`}
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                           <StatusIcon status={exec.status} />
                           <div>
-                            <div className="text-white font-medium">
+                            <div className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
                               {exec.totalSteps} steps • {exec.passedSteps} passed • {exec.failedSteps} failed
                             </div>
-                            <div className="text-slate-400 text-sm">
+                            <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                               {new Date(exec.createdAt).toLocaleString()}
                             </div>
                           </div>
                         </div>
                         {exec.duration && (
-                          <div className="text-slate-400 text-sm flex items-center gap-1">
+                          <div className={`text-sm flex items-center gap-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                             <Clock size={14} />
                             {(exec.duration / 1000).toFixed(1)}s
                           </div>
@@ -260,7 +266,7 @@ export default function ChainExecutorPage() {
           </div>
         </div>
       </div>
-    </div>
+    </Layout>
   )
 }
 
