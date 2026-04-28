@@ -1,4 +1,4 @@
-# 🧪 Ini Test Sambil Ngopi Coy - Record & Playback Testing Platform
+# 🧪 Test Sambil Ngopi Coy - Record & Playback Testing Platform
 
 **Intelligent Test Recording & Playback Engine** — Record user interactions using Playwright headless browser, convert to test steps, and execute with smart error handling and cross-browser testing support.
 

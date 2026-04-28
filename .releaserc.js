@@ -17,7 +17,7 @@ export default {
     // Update CHANGELOG.md
     ['@semantic-release/changelog', {
       changelogFile: 'CHANGELOG.md',
-      changelogTitle: '# Ini Test Sambil Ngopi Coy Changelog\n\nAll notable changes to this project will be documented in this file.',
+      changelogTitle: '# Test Sambil Ngopi Coy Changelog\n\nAll notable changes to this project will be documented in this file.',
     }],
     
     // Create GitHub release

@@ -50,7 +50,7 @@ const translations = {
     workspace: 'Masuk ke workspace Anda',
     passwordMismatch: 'Password tidak cocok',
     passwordTooShort: 'Password harus minimal 8 karakter',
-    copyright: 'Ini Test Sambil Ngopi Coy',
+    copyright: 'Test Sambil Ngopi Coy',
     successMessage: 'Password berhasil direset. Silakan login dengan password baru Anda.',
     requirements: 'Persyaratan Password',
     req8Chars: 'Minimal 8 karakter',
@@ -182,7 +182,7 @@ export default function ResetPasswordPage() {
             <div className="w-9 h-9 rounded-lg bg-[#5E6AD2] flex items-center justify-center mb-4">
               <ShieldCheck size={20} className="text-white" />
             </div>
-            <h1 className={`text-lg font-semibold ${textPrimaryClass}`}>Ini Test Sambil Ngopi Coy</h1>
+            <h1 className={`text-lg font-semibold ${textPrimaryClass}`}>Test Sambil Ngopi Coy</h1>
             <p className={`text-sm ${textSecondaryClass} mt-0.5`}>{t.workspace}</p>
           </div>
 
@@ -244,7 +244,7 @@ export default function ResetPasswordPage() {
           <div className="w-9 h-9 rounded-lg bg-[#5E6AD2] flex items-center justify-center mb-4">
             <ShieldCheck size={20} className="text-white" />
           </div>
-          <h1 className={`text-lg font-semibold ${textPrimaryClass}`}>Ini Test Sambil Ngopi Coy</h1>
+          <h1 className={`text-lg font-semibold ${textPrimaryClass}`}>Test Sambil Ngopi Coy</h1>
           <p className={`text-sm ${textSecondaryClass} mt-0.5`}>{t.workspace}</p>
         </div>
 

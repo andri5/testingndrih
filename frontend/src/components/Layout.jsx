@@ -127,7 +127,7 @@ export default function Layout({ children }) {
           {showLabels && (
             <div className="flex-1 min-w-0 flex items-center justify-between">
               <div className="min-w-0">
-                <p className="font-semibold text-[#E0E0E2] text-sm leading-tight truncate">Ini Test Sambil Ngopi Coy</p>
+                <p className="font-semibold text-[#E0E0E2] text-sm leading-tight truncate">Test Sambil Ngopi Coy</p>
                 <p className="text-[10px] text-[#8A8A8F] leading-tight">Workspace</p>
               </div>
               <div className="flex items-center gap-1 shrink-0">
