@@ -15,7 +15,7 @@ const translations = {
     backToLogin: 'Back to Login',
     noAccount: "Remember your password? ",
     noAccountLink: 'Login here',
-    copyright: 'testingndrih',
+    copyright: 'Ini Test Sambil Ngopi Coy',
     successTitle: 'Email Sent!',
     successMessage: 'We have sent a password reset link to your email. Please check your inbox (including spam folder).',
     errorOccurred: 'An error occurred',
@@ -32,7 +32,7 @@ const translations = {
     backToLogin: 'Kembali ke Login',
     noAccount: 'Ingat passwordnya? ',
     noAccountLink: 'Login di sini',
-    copyright: 'testingndrih',
+    copyright: 'Ini Test Sambil Ngopi Coy',
     successTitle: 'Email Terkirim!',
     successMessage: 'Kami telah mengirim link reset password ke email Anda. Silakan cek inbox Anda (termasuk folder spam).',
     errorOccurred: 'Terjadi kesalahan',
@@ -104,7 +104,7 @@ export default function ForgotPasswordPage() {
             <div className="w-9 h-9 rounded-lg bg-[#5E6AD2] flex items-center justify-center mb-4">
               <ShieldCheck size={20} className="text-white" />
             </div>
-            <h1 className={`text-lg font-semibold ${textPrimaryClass}`}>testingndrih</h1>
+            <h1 className={`text-lg font-semibold ${textPrimaryClass}`}>Ini Test Sambil Ngopi Coy</h1>
             <p className={`text-sm ${textSecondaryClass} mt-0.5`}>{t.workspace}</p>
           </div>
 
@@ -223,11 +223,11 @@ export default function ForgotPasswordPage() {
           <div className="w-9 h-9 rounded-lg bg-[#5E6AD2] flex items-center justify-center mb-4">
             <ShieldCheck size={20} className="text-white" />
           </div>
-          <h1 className={`text-lg font-semibold ${textPrimaryClass}`}>testingndrih</h1>
+          <h1 className={`text-lg font-semibold ${textPrimaryClass}`}>Ini Test Sambil Ngopi Coy</h1>
           <p className={`text-sm ${textSecondaryClass} mt-0.5`}>{t.workspace}</p>
         </div>
 
-        {/* Theme & Language Toggle */}
+        {/* Theme & Language Toggle */>
         <div className="flex justify-center gap-2 mb-8">
           <div className="flex items-center gap-1 bg-gray-200 dark:bg-[#2A2A2D] rounded-lg p-1">
             <button

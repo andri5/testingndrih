@@ -47,7 +47,7 @@ export default function LoginPage() {
           <div className="w-9 h-9 rounded-lg bg-[#5E6AD2] flex items-center justify-center mb-4">
             <ShieldCheck size={20} className="text-white" />
           </div>
-          <h1 className="text-lg font-semibold text-[#E0E0E2]">testingndrih</h1>
+          <h1 className="text-lg font-semibold text-[#E0E0E2]">Ini Test Sambil Ngopi Coy</h1>
           <p className="text-sm text-[#8A8A8F] mt-0.5">Sign in to your workspace</p>
         </div>
 
@@ -154,7 +154,7 @@ export default function LoginPage() {
         </div>
 
         <p className="text-center text-xs text-[#4A4A52] mt-5">
-          testingndrih &copy; {new Date().getFullYear()}
+          Ini Test Sambil Ngopi Coy &copy; {new Date().getFullYear()}
         </p>
       </div>
     </div>
