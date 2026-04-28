@@ -1,4 +1,4 @@
-# 📁 TestingNDRIH - Project Structure
+# 📁 Ini Test Sambil Ngopi Coy - Project Structure
 
 **Last Updated**: April 27, 2026  
 **Status**: Clean & Organized ✅
