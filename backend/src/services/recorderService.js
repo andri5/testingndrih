@@ -14,8 +14,9 @@ import { chromium, firefox, webkit } from 'playwright'
  */
 const sessions = new Map()
 
+// headless: false so user can see and interact with the browser during recording
 const BROWSER_OPTIONS = {
-  headless: true,
+  headless: false,
   args: [
     '--disable-blink-features=AutomationControlled',
     '--disable-dev-shm-usage',
@@ -992,32 +993,39 @@ export const recorderService = {
    */
   async saveRecordedSteps(userId, scenarioId, recordedSteps) {
     const scenario = await prisma.scenario.findFirst({
-      where: { id: scenarioId, userId },
-      include: { testSteps: { orderBy: { stepNumber: 'asc' } } }
+      where: { id: scenarioId, userId }
     })
     if (!scenario) throw new Error('Scenario tidak ditemukan')
 
-    // Start numbering after existing steps
-    const existingCount = scenario.testSteps.length
+    // Use DB transaction to safely get MAX(stepNumber) and create steps atomically
+    const created = await prisma.$transaction(async (tx) => {
+      const lastStep = await tx.testStep.findFirst({
+        where: { scenarioId },
+        orderBy: { stepNumber: 'desc' },
+        select: { stepNumber: true }
+      })
+      let nextStepNumber = (lastStep?.stepNumber || 0) + 1
 
-    const stepsToCreate = recordedSteps.map((step, idx) => ({
-      scenarioId,
-      stepNumber: existingCount + idx + 1,
-      type: step.type,
-      description: step.description || `${step.type} step`,
-      selector: step.selector || null,
-      value: step.value || null,
-      metadata: null
-    }))
-
-    // Batch create
-    const created = await prisma.$transaction(
-      stepsToCreate.map(s => prisma.testStep.create({ data: s }))
-    )
+      const results = []
+      for (const step of recordedSteps) {
+        const created = await tx.testStep.create({
+          data: {
+            scenarioId,
+            stepNumber: nextStepNumber++,
+            type: step.type,
+            description: step.description || `${step.type} step`,
+            selector: step.selector || null,
+            value: step.value || null,
+            metadata: null
+          }
+        })
+        results.push(created)
+      }
+      return results
+    })
 
     return {
       stepsCreated: created.length,
-      totalSteps: existingCount + created.length,
       message: `${created.length} recorded steps berhasil disimpan`
     }
   }
