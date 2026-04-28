@@ -1,4 +1,4 @@
-# Ini Test Sambil Ngopi Coy Changelog
+# Test Sambil Ngopi Coy Changelog
 
 All notable changes to this project will be documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
@@ -69,4 +69,4 @@ Please follow [Semantic Commit Conventions](./COMMIT_CONVENTIONS.md) when contri
 
 ## License
 
-MIT © 2026 Ini Test Sambil Ngopi Coy
+MIT © 2026 Test Sambil Ngopi Coy

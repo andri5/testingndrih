@@ -4,12 +4,12 @@ const options = {
   definition: {
     openapi: '3.0.0',
     info: {
-      title: 'testingndrih API',
+      title: 'Test Sambil Ngopi Coy API',
       version: '1.0.0',
       description:
-        'REST API for testingndrih — Automated Web Testing Platform. ' +
+        'REST API for Test Sambil Ngopi Coy — Automated Web Testing Platform. ' +
         'Record browser interactions, execute test scenarios, and view results.',
-      contact: { name: 'Ini Test Sambil Ngopi Coy' }
+      contact: { name: 'Test Sambil Ngopi Coy' }
     },
     servers: [
       { url: 'http://localhost:5001', description: 'Local development' },
