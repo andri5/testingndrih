@@ -468,7 +468,55 @@ For more help, see:
 
 ---
 
-## 📞 Support
+## � Commit Guidelines
+
+This project uses **Semantic Versioning** and **Conventional Commits** for automated versioning and release management.
+
+### Commit Format
+All commits follow this format:
+```
+<type>(<scope>): <description>
+
+<optional body>
+<optional footer>
+```
+
+### Commit Types
+- **feat**: New feature (bumps MINOR version)
+- **fix**: Bug fix (bumps PATCH version)
+- **docs**: Documentation changes
+- **test**: Test additions or updates
+- **refactor**: Code refactoring
+- **perf**: Performance improvements
+- **ci**: CI/CD configuration
+- **chore**: Dependencies, build config
+
+### Examples
+```bash
+# Feature
+git commit -m "feat(recorder): add shadow DOM support for complex selectors"
+
+# Bug fix
+git commit -m "fix(executor): resolve timeout issue in wait strategy"
+
+# Multiple lines
+git commit -m "feat(scheduler): implement daily test scheduling
+
+- Add cron job support
+- Create database schema
+- Implement retry logic"
+
+# Breaking change (bumps MAJOR)
+git commit -m "feat(api)!: restructure scenario response format
+
+BREAKING CHANGE: scenario.steps now returns objects instead of IDs"
+```
+
+📖 **Full guidelines**: See [COMMIT_CONVENTIONS.md](COMMIT_CONVENTIONS.md)
+
+---
+
+## �📞 Support
 
 ### Documentation
 - **Full Guides**: [`docs/guides/`](docs/guides/)
