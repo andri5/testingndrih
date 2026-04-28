@@ -9,7 +9,7 @@ const options = {
       description:
         'REST API for testingndrih — Automated Web Testing Platform. ' +
         'Record browser interactions, execute test scenarios, and view results.',
-      contact: { name: 'testingndrih' }
+      contact: { name: 'Ini Test Sambil Ngopi Coy' }
     },
     servers: [
       { url: 'http://localhost:5001', description: 'Local development' },

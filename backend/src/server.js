@@ -69,7 +69,7 @@ app.use('/api/browser-matrix', browserMatrixRoutes)
 
 // Swagger API docs — available at /api/docs
 app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
-  customSiteTitle: 'testingndrih API Docs',
+  customSiteTitle: 'Ini Test Sambil Ngopi Coy API Docs',
   swaggerOptions: { persistAuthorization: true }
 }))
 app.get('/api/docs.json', (req, res) => {
