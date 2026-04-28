@@ -227,7 +227,7 @@ export default function ForgotPasswordPage() {
           <p className={`text-sm ${textSecondaryClass} mt-0.5`}>{t.workspace}</p>
         </div>
 
-        {/* Theme & Language Toggle */>
+        {/* Theme & Language Toggle */}
         <div className="flex justify-center gap-2 mb-8">
           <div className="flex items-center gap-1 bg-gray-200 dark:bg-[#2A2A2D] rounded-lg p-1">
             <button

@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate, Link, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
+import { useSettingsStore } from '../store/settingsStore'
+import HelpModal from './HelpModal'
 import {
   LayoutDashboard,
   ClipboardList,
@@ -17,6 +19,7 @@ import {
   Clock,
   Zap,
   Globe,
+  HelpCircle,
 } from 'lucide-react'
 
 export default function Layout({ children }) {
@@ -27,7 +30,9 @@ export default function Layout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const [helpOpen, setHelpOpen] = useState(false)
   const userMenuRef = useRef(null)
+  const { language, setLanguage } = useSettingsStore()
 
   const handleLogout = () => {
     logout()
@@ -191,6 +196,24 @@ export default function Layout({ children }) {
               {allItems.find(m => location.pathname.startsWith(m.path))?.name ?? ''}
             </span>
 
+            {/* Language toggle */}
+            <button
+              onClick={() => setLanguage(language === 'id' ? 'en' : 'id')}
+              title={language === 'id' ? 'Switch to English' : 'Ganti ke Bahasa Indonesia'}
+              className="h-7 px-2 flex items-center justify-center rounded-md text-[#8A8A8F] hover:text-[#E0E0E2] hover:bg-[rgba(255,255,255,0.06)] transition-all text-[11px] font-semibold tracking-wide border border-transparent hover:border-[rgba(255,255,255,0.08)]"
+            >
+              {language === 'id' ? 'ID' : 'EN'}
+            </button>
+
+            {/* Help icon */}
+            <button
+              onClick={() => setHelpOpen(true)}
+              title="How to use"
+              className="w-7 h-7 flex items-center justify-center rounded-md text-[#4A4A52] hover:text-[#E0E0E2] hover:bg-[rgba(255,255,255,0.06)] transition-all"
+            >
+              <HelpCircle size={15} />
+            </button>
+
             {/* Settings icon */}
             <Link
               to="/settings"
@@ -248,6 +271,9 @@ export default function Layout({ children }) {
           {children}
         </main>
       </div>
+
+      {/* Help Modal */}
+      {helpOpen && <HelpModal onClose={() => setHelpOpen(false)} />}
     </div>
   )
 }

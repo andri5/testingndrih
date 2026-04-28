@@ -1,0 +1,213 @@
+import { useState } from 'react'
+import { X, ClipboardList, PlayCircle, Link2, Clock, Zap, ChevronRight } from 'lucide-react'
+import { useSettingsStore } from '../store/settingsStore'
+
+const content = {
+  en: {
+    title: 'How to Use',
+    subtitle: 'Get started with Test Sambil Ngopi Coy',
+    tabs: [
+      {
+        id: 'scenario',
+        label: 'Scenarios',
+        icon: <ClipboardList size={14} />,
+        steps: [
+          { num: 1, title: 'Create a Scenario', desc: 'Go to Scenarios → click "+ New Scenario". Fill in name, URL, and description.' },
+          { num: 2, title: 'Add Test Steps', desc: 'Open a scenario → click "+ Add Step". Choose step type: click, fill, navigate, wait, assert, etc.' },
+          { num: 3, title: 'Use Quick Record', desc: 'Click "Quick Record" button → enter URL → browser actions are recorded automatically as steps.' },
+          { num: 4, title: 'Use Templates', desc: 'Click "Templates" to load a pre-built scenario (Login, E-Commerce, Navigation, Form).' },
+          { num: 5, title: 'Clone / Edit', desc: 'Hover a scenario card → use Clone to duplicate, or Edit to modify name/description/URL.' },
+        ],
+      },
+      {
+        id: 'execution',
+        label: 'Execution',
+        icon: <PlayCircle size={14} />,
+        steps: [
+          { num: 1, title: 'Run a Scenario', desc: 'Open a scenario → click "Run". Choose browser (Chrome/Firefox/Safari) and headless mode.' },
+          { num: 2, title: 'Live Viewer', desc: 'During execution, a live viewer shows each step result in real-time with screenshots.' },
+          { num: 3, title: 'Pause / Stop', desc: 'Use Pause or Stop buttons in the live viewer to control the running execution.' },
+          { num: 4, title: 'View History', desc: 'Go to Execution page to see all past runs, filter by status, and download reports.' },
+          { num: 5, title: 'Bulk Execute', desc: 'On the Scenarios page, select multiple scenarios → click "Run Selected" to execute in batch.' },
+        ],
+      },
+      {
+        id: 'chain',
+        label: 'Chains',
+        icon: <Link2 size={14} />,
+        steps: [
+          { num: 1, title: 'Create a Chain', desc: 'Go to Chains → click "+ New Chain". A chain groups multiple scenarios into one sequential run.' },
+          { num: 2, title: 'Add Scenarios', desc: 'Open a chain → add scenarios as steps. Set order with the up/down arrows.' },
+          { num: 3, title: 'Configure Steps', desc: 'Click Edit on a chain step to set wait time, retry count, and stop-on-fail behavior.' },
+          { num: 4, title: 'Execute Chain', desc: 'Click "Execute Chain" to run all scenarios in order. View results per scenario.' },
+        ],
+      },
+      {
+        id: 'tools',
+        label: 'Tools',
+        icon: <Zap size={14} />,
+        steps: [
+          { num: 1, title: 'Scheduler', desc: 'Go to Scheduler → set a cron schedule to run a scenario automatically at a specific time.' },
+          { num: 2, title: 'Parallel Execution', desc: 'Run multiple scenarios simultaneously. Useful for regression testing across many tests.' },
+          { num: 3, title: 'Browser Matrix', desc: 'Test one scenario across Chrome, Firefox, and Safari at the same time to catch browser-specific bugs.' },
+          { num: 4, title: 'Analytics', desc: 'View pass/fail trends, execution time charts, and most-failed steps on the Analytics page.' },
+          { num: 5, title: 'Reports', desc: 'Download test results as PDF or CSV from the Reports page for sharing with your team.' },
+        ],
+      },
+      {
+        id: 'tips',
+        label: 'Tips',
+        icon: <Clock size={14} />,
+        steps: [
+          { num: 1, title: 'Theme', desc: 'Go to Settings → toggle between Dark (default) and Light theme. Changes apply immediately.' },
+          { num: 2, title: 'Language', desc: 'Settings → Language to switch between English and Indonesian (Bahasa Indonesia).' },
+          { num: 3, title: 'Tooltips', desc: 'Hover any action button (View, Edit, Clone, Delete) to see a quick description of what it does.' },
+          { num: 4, title: 'Headless Mode', desc: 'Enable Headless in browser selector for faster execution without opening a visible browser window.' },
+          { num: 5, title: 'Step Types', desc: 'Supported steps: click, fill, navigate, wait, assert text, assert element, screenshot, scroll, hover, select, clear, type.' },
+        ],
+      },
+    ],
+  },
+  id: {
+    title: 'Cara Penggunaan',
+    subtitle: 'Mulai menggunakan Test Sambil Ngopi Coy',
+    tabs: [
+      {
+        id: 'scenario',
+        label: 'Scenario',
+        icon: <ClipboardList size={14} />,
+        steps: [
+          { num: 1, title: 'Buat Scenario', desc: 'Buka menu Scenarios → klik "+ New Scenario". Isi nama, URL, dan deskripsi.' },
+          { num: 2, title: 'Tambah Test Step', desc: 'Buka scenario → klik "+ Add Step". Pilih tipe step: click, fill, navigate, wait, assert, dsb.' },
+          { num: 3, title: 'Quick Record', desc: 'Klik tombol "Quick Record" → masukkan URL → aksi di browser direkam otomatis menjadi step.' },
+          { num: 4, title: 'Pakai Template', desc: 'Klik "Templates" untuk memuat scenario siap pakai (Login, E-Commerce, Navigasi, Form).' },
+          { num: 5, title: 'Clone / Edit', desc: 'Hover kartu scenario → gunakan Clone untuk menduplikat, atau Edit untuk mengubah nama/deskripsi/URL.' },
+        ],
+      },
+      {
+        id: 'execution',
+        label: 'Eksekusi',
+        icon: <PlayCircle size={14} />,
+        steps: [
+          { num: 1, title: 'Jalankan Scenario', desc: 'Buka scenario → klik "Run". Pilih browser (Chrome/Firefox/Safari) dan mode headless.' },
+          { num: 2, title: 'Live Viewer', desc: 'Saat eksekusi berjalan, live viewer menampilkan hasil setiap step secara real-time beserta screenshot.' },
+          { num: 3, title: 'Pause / Stop', desc: 'Gunakan tombol Pause atau Stop di live viewer untuk mengontrol eksekusi yang berjalan.' },
+          { num: 4, title: 'Lihat Riwayat', desc: 'Buka halaman Execution untuk melihat semua riwayat run, filter berdasarkan status, dan unduh laporan.' },
+          { num: 5, title: 'Bulk Execute', desc: 'Di halaman Scenarios, pilih beberapa scenario → klik "Run Selected" untuk eksekusi sekaligus.' },
+        ],
+      },
+      {
+        id: 'chain',
+        label: 'Chain',
+        icon: <Link2 size={14} />,
+        steps: [
+          { num: 1, title: 'Buat Chain', desc: 'Buka menu Chains → klik "+ New Chain". Chain menggabungkan beberapa scenario menjadi satu run berurutan.' },
+          { num: 2, title: 'Tambah Scenario', desc: 'Buka chain → tambahkan scenario sebagai step. Atur urutan dengan tombol naik/turun.' },
+          { num: 3, title: 'Konfigurasi Step', desc: 'Klik Edit pada step chain untuk mengatur waktu tunggu, jumlah retry, dan perilaku stop-on-fail.' },
+          { num: 4, title: 'Eksekusi Chain', desc: 'Klik "Execute Chain" untuk menjalankan semua scenario secara berurutan. Lihat hasil per scenario.' },
+        ],
+      },
+      {
+        id: 'tools',
+        label: 'Tools',
+        icon: <Zap size={14} />,
+        steps: [
+          { num: 1, title: 'Scheduler', desc: 'Buka Scheduler → atur jadwal cron untuk menjalankan scenario otomatis di waktu tertentu.' },
+          { num: 2, title: 'Parallel Execution', desc: 'Jalankan beberapa scenario sekaligus. Berguna untuk regression testing dalam jumlah banyak.' },
+          { num: 3, title: 'Browser Matrix', desc: 'Test satu scenario di Chrome, Firefox, dan Safari sekaligus untuk menemukan bug spesifik browser.' },
+          { num: 4, title: 'Analytics', desc: 'Lihat tren pass/fail, grafik waktu eksekusi, dan step yang paling sering gagal di halaman Analytics.' },
+          { num: 5, title: 'Reports', desc: 'Unduh hasil test sebagai PDF atau CSV dari halaman Reports untuk dibagikan ke tim.' },
+        ],
+      },
+      {
+        id: 'tips',
+        label: 'Tips',
+        icon: <Clock size={14} />,
+        steps: [
+          { num: 1, title: 'Tema', desc: 'Buka Settings → pilih tema Dark (default) atau Light. Perubahan langsung berlaku.' },
+          { num: 2, title: 'Bahasa', desc: 'Settings → Language untuk beralih antara English dan Bahasa Indonesia.' },
+          { num: 3, title: 'Tooltip', desc: 'Arahkan kursor ke tombol aksi (View, Edit, Clone, Delete) untuk melihat deskripsi singkat fungsinya.' },
+          { num: 4, title: 'Mode Headless', desc: 'Aktifkan Headless di pemilih browser untuk eksekusi lebih cepat tanpa membuka jendela browser yang terlihat.' },
+          { num: 5, title: 'Tipe Step', desc: 'Step yang didukung: click, fill, navigate, wait, assert text, assert element, screenshot, scroll, hover, select, clear, type.' },
+        ],
+      },
+    ],
+  },
+}
+
+export default function HelpModal({ onClose }) {
+  const { language } = useSettingsStore()
+  const lang = language === 'id' ? 'id' : 'en'
+  const c = content[lang]
+  const [activeTab, setActiveTab] = useState('scenario')
+
+  const activeTabData = c.tabs.find(t => t.id === activeTab)
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+      <div
+        className="relative w-full max-w-xl rounded-xl shadow-2xl overflow-hidden help-modal"
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-start justify-between px-5 pt-5 pb-4 help-modal-header">
+          <div>
+            <h2 className="text-base font-semibold help-modal-title">{c.title}</h2>
+            <p className="text-xs help-modal-subtitle mt-0.5">{c.subtitle}</p>
+          </div>
+          <button
+            onClick={onClose}
+            className="w-7 h-7 flex items-center justify-center rounded-md help-modal-close transition-colors"
+          >
+            <X size={15} />
+          </button>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex gap-1 px-5 pb-0 pt-1 help-modal-tabs-bar overflow-x-auto">
+          {c.tabs.map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition-all
+                ${activeTab === tab.id ? 'help-tab-active' : 'help-tab-inactive'}`}
+            >
+              {tab.icon}
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Steps */}
+        <div className="px-5 py-4 space-y-3 max-h-80 overflow-y-auto help-modal-body">
+          {activeTabData?.steps.map(step => (
+            <div key={step.num} className="flex gap-3">
+              <div className="shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold help-step-num">
+                {step.num}
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-medium help-step-title leading-snug">{step.title}</p>
+                <p className="text-xs help-step-desc mt-0.5 leading-relaxed">{step.desc}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Footer */}
+        <div className="px-5 py-3 flex items-center justify-between help-modal-footer">
+          <p className="text-[11px] help-footer-text">
+            {lang === 'id' ? 'Gunakan tooltip pada tombol untuk panduan cepat.' : 'Hover buttons for quick inline tooltips.'}
+          </p>
+          <button
+            onClick={onClose}
+            className="flex items-center gap-1 text-xs font-medium help-footer-btn transition-colors"
+          >
+            {lang === 'id' ? 'Mengerti' : 'Got it'}
+            <ChevronRight size={12} />
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
