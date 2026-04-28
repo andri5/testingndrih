@@ -60,7 +60,7 @@ export default function RegisterPage() {
           <div className="w-9 h-9 rounded-lg bg-[#5E6AD2] flex items-center justify-center mb-4">
             <ShieldCheck size={20} className="text-white" />
           </div>
-          <h1 className="text-lg font-semibold text-[#E0E0E2]">testingndrih</h1>
+          <h1 className="text-lg font-semibold text-[#E0E0E2]">Ini Test Sambil Ngopi Coy</h1>
           <p className="text-sm text-[#8A8A8F] mt-0.5">Create your account</p>
         </div>
         <div className="auth-card bg-[#161618] border border-[rgba(255,255,255,0.08)] rounded-xl p-6">
@@ -129,7 +129,7 @@ export default function RegisterPage() {
             <Link to="/login" className="text-xs text-[#9BA3F0] hover:text-[#5E6AD2] font-medium transition-colors">Sign in</Link>
           </div>
         </div>
-        <p className="text-center text-xs text-[#4A4A52] mt-5">testingndrih &copy; {new Date().getFullYear()}</p>
+        <p className="text-center text-xs text-[#4A4A52] mt-5">Ini Test Sambil Ngopi Coy &copy; {new Date().getFullYear()}</p>
       </div>
     </div>
   )

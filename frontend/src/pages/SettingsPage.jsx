@@ -263,11 +263,11 @@ export default function SettingsPage() {
             {/* About Tab */}
             {activeTab === 'about' && (
               <div className={cardCls}>
-                <p className={sectionTitleCls}>About testingndrih</p>
+                <p className={sectionTitleCls}>About Ini Test Sambil Ngopi Coy</p>
                 <div className="space-y-4">
                   <div className="bg-[#0F0E11] rounded-lg p-4 space-y-3">
                     {[
-                      ['Application', 'testingndrih'],
+                      ['Application', 'Ini Test Sambil Ngopi Coy'],
                       ['Version', '1.0.0'],
                       ['Description', 'Automated Web Testing Platform'],
                     ].map(([k, v]) => (
