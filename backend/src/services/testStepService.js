@@ -21,28 +21,45 @@ export async function createTestStep(scenarioId, userId, data) {
       throw new Error('Step type and description are required')
     }
 
-    // Get the next step number if not provided
-    let nextStepNumber = stepNumber
-    if (!nextStepNumber) {
-      const lastStep = await prisma.testStep.findFirst({
-        where: { scenarioId },
-        orderBy: { stepNumber: 'desc' }
-      })
-      nextStepNumber = (lastStep?.stepNumber || 0) + 1
-    }
+    // Get the next step number if not provided, using a transaction to avoid
+    // race conditions and unique constraint collisions
+    let step
+    let retries = 3
+    while (retries > 0) {
+      try {
+        step = await prisma.$transaction(async (tx) => {
+          let nextStepNumber = stepNumber
+          if (!nextStepNumber) {
+            const lastStep = await tx.testStep.findFirst({
+              where: { scenarioId },
+              orderBy: { stepNumber: 'desc' }
+            })
+            nextStepNumber = (lastStep?.stepNumber || 0) + 1
+          }
 
-    // Create the step
-    const step = await prisma.testStep.create({
-      data: {
-        scenarioId,
-        stepNumber: nextStepNumber,
-        type,
-        description,
-        selector: selector || null,
-        value: value || null,
-        metadata: metadata ? JSON.stringify(metadata) : null
+          return tx.testStep.create({
+            data: {
+              scenarioId,
+              stepNumber: nextStepNumber,
+              type,
+              description,
+              selector: selector || null,
+              value: value || null,
+              metadata: metadata ? JSON.stringify(metadata) : null
+            }
+          })
+        })
+        break // success
+      } catch (err) {
+        if (err.code === 'P2002' && retries > 1) {
+          // Unique constraint on stepNumber — recalculate and retry
+          retries--
+          stepNumber = null // force recalculate on next attempt
+          continue
+        }
+        throw err
       }
-    })
+    }
 
     // Update scenario steps count
     const stepCount = await prisma.testStep.count({

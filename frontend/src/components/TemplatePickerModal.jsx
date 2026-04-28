@@ -103,7 +103,7 @@ export function TemplatePickerModal({ onClose, onCreated }) {
       for (const step of template.steps) {
         await scenarioAPI.createStep(
           scenario.id,
-          step.stepNumber,
+          null,
           step.type,
           step.description,
           step.selector,

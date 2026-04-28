@@ -374,10 +374,9 @@ export default function ScenarioDetailPage() {
         })
         showSuccess(t.stepUpdated)
       } else {
-        const stepNumber = steps.length + 1
         await scenarioAPI.createStep(
           id,
-          stepNumber,
+          null,
           stepForm.type,
           stepForm.description.trim(),
           stepForm.selector || null,
