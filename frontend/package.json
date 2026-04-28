@@ -1,7 +1,7 @@
 {
   "name": "testingndrih-frontend",
-  "version": "1.0.0",
-  "description": "Automated Web Testing Platform - Frontend UI",
+  "version": "2.0.0",
+  "description": "Automated Web Testing Platform - Frontend UI (Playwright v2.0)",
   "type": "module",
   "scripts": {
     "dev": "vite",

@@ -1,0 +1,49 @@
+{
+  "name": "testingndrih",
+  "version": "2.0.0",
+  "description": "TestingNDRIH - Intelligent Test Recording & Playback Engine",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/andri5/testingndrih.git"
+  },
+  "scripts": {
+    "dev": "npm run dev --workspace=backend & npm run dev --workspace=frontend",
+    "dev:backend": "npm run dev --workspace=backend",
+    "dev:frontend": "npm run dev --workspace=frontend",
+    "build": "npm run build --workspace=backend && npm run build --workspace=frontend",
+    "test": "npm run test --workspace=backend && npm run test --workspace=frontend",
+    "test:backend": "npm run test --workspace=backend",
+    "test:frontend": "npm run test --workspace=frontend",
+    "lint": "npm run lint --workspace=backend && npm run lint --workspace=frontend",
+    "format": "npm run format:write --workspace=backend && npm run format:write --workspace=frontend",
+    "prepare": "husky install"
+  },
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "devDependencies": {
+    "@commitlint/cli": "^18.0.0",
+    "@commitlint/config-conventional": "^18.0.0",
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/commit-analyzer": "^11.0.0",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/github": "^9.2.1",
+    "@semantic-release/release-notes-generator": "^12.0.0",
+    "husky": "^9.0.0",
+    "semantic-release": "^22.0.0"
+  },
+  "keywords": [
+    "testing",
+    "automation",
+    "playwright",
+    "recording",
+    "testing-platform"
+  ],
+  "author": "andri5",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
