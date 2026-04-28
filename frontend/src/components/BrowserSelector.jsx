@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Monitor, AlertCircle, Loader } from 'lucide-react';
+import { Tooltip } from './ui'
+import { useSettingsStore } from '../store/settingsStore'
+
+const headlessI18n = {
+  en: 'Browser will not appear on screen — faster and ideal for CI/CD',
+  id: 'Browser tidak akan tampil di layar — lebih cepat dan cocok untuk CI/CD',
+}
 
 /**
  * BrowserSelector - Component for selecting which browser to run tests on
@@ -11,6 +18,7 @@ export default function BrowserSelector({
   headless = false,
   disabled = false 
 }) {
+  const { language } = useSettingsStore()
   const [browsers, setBrowsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -85,6 +93,7 @@ export default function BrowserSelector({
       </div>
 
       <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
+        <Tooltip text={headlessI18n[language] ?? headlessI18n.en} position="right">
         <input
           type="checkbox"
           id="headless"
@@ -93,6 +102,7 @@ export default function BrowserSelector({
           disabled={disabled}
           className="w-4 h-4 rounded cursor-pointer"
         />
+        </Tooltip>
         <label htmlFor="headless" className="flex-1 cursor-pointer">
           <div className="text-sm font-medium text-slate-900">Headless Mode</div>
           <div className="text-xs text-slate-600">Run without visible browser UI</div>

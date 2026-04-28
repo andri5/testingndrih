@@ -113,6 +113,95 @@ html.theme-light .hover\:text-\[\#E0E0E2\]:hover { color: #1A1A1C !important; }
 html.theme-light .placeholder-\[\#4A4A52\]::placeholder { color: #AAAAAC !important; }
 html.theme-light .placeholder-\[\#666\]::placeholder     { color: #AAAAAC !important; }
 
+/* ─── Tooltip ─── */
+.tooltip-popup {
+  background-color: #2A2A2E;
+  color: #E0E0E2;
+  border-color: rgba(255,255,255,0.1);
+}
+html.theme-light .tooltip-popup {
+  background-color: #1A1A1C !important;
+  color: #F5F5F7 !important;
+  border-color: rgba(0,0,0,0.15) !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15) !important;
+}
+
+/* ─── Help Modal ─── */
+.help-modal {
+  background: #1C1B1F;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+.help-modal-header {
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.help-modal-title { color: #E0E0E2; }
+.help-modal-subtitle { color: #8A8A8F; }
+.help-modal-close {
+  color: #4A4A52;
+}
+.help-modal-close:hover { color: #E0E0E2; background: rgba(255,255,255,0.06); }
+.help-modal-tabs-bar {
+  background: #1C1B1F;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.help-tab-active {
+  background: rgba(94,106,210,0.15);
+  color: #8B9CF4;
+}
+.help-tab-inactive {
+  color: #8A8A8F;
+}
+.help-tab-inactive:hover { color: #E0E0E2; background: rgba(255,255,255,0.04); }
+.help-modal-body { background: #1C1B1F; }
+.help-step-num {
+  background: rgba(94,106,210,0.2);
+  color: #8B9CF4;
+}
+.help-step-title { color: #E0E0E2; }
+.help-step-desc { color: #8A8A8F; }
+.help-modal-footer {
+  border-top: 1px solid rgba(255,255,255,0.06);
+  background: #17161A;
+}
+.help-footer-text { color: #4A4A52; }
+.help-footer-btn { color: #8B9CF4; }
+.help-footer-btn:hover { color: #A5B0FF; }
+
+/* Help Modal — Light theme */
+html.theme-light .help-modal {
+  background: #FFFFFF;
+  border-color: rgba(0,0,0,0.1);
+}
+html.theme-light .help-modal-header { border-bottom-color: rgba(0,0,0,0.07); }
+html.theme-light .help-modal-title { color: #111113; }
+html.theme-light .help-modal-subtitle { color: #6B6B70; }
+html.theme-light .help-modal-close { color: #9A9AA0; }
+html.theme-light .help-modal-close:hover { color: #111113; background: rgba(0,0,0,0.06); }
+html.theme-light .help-modal-tabs-bar {
+  background: #FFFFFF;
+  border-bottom-color: rgba(0,0,0,0.07);
+}
+html.theme-light .help-tab-active {
+  background: rgba(94,106,210,0.1);
+  color: #4A5ABF;
+}
+html.theme-light .help-tab-inactive { color: #6B6B70; }
+html.theme-light .help-tab-inactive:hover { color: #111113; background: rgba(0,0,0,0.04); }
+html.theme-light .help-modal-body { background: #FFFFFF; }
+html.theme-light .help-step-num {
+  background: rgba(94,106,210,0.1);
+  color: #4A5ABF;
+}
+html.theme-light .help-step-title { color: #111113; }
+html.theme-light .help-step-desc { color: #6B6B70; }
+html.theme-light .help-modal-footer {
+  border-top-color: rgba(0,0,0,0.07);
+  background: #F8F8FA;
+}
+html.theme-light .help-footer-text { color: #9A9AA0; }
+html.theme-light .help-footer-btn { color: #4A5ABF; }
+html.theme-light .help-footer-btn:hover { color: #3347A8; }
+
 /* ─── User dropdown ─── */
 .user-dropdown {
   background: #1A1A1C;

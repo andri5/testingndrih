@@ -7,13 +7,30 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useSettingsStore } from '../store/settingsStore'
 import Layout from '../components/Layout'
 import { chainAPI, scenarioAPI } from '../services/api'
+import { Tooltip } from '../components/ui'
 import { Plus, Trash2, ChevronUp, ChevronDown, Save, X } from 'lucide-react'
+
+const chainTooltipI18n = {
+  en: {
+    moveUp:    'Move step up',
+    moveDown:  'Move step down',
+    editStep:  'Edit step config (wait, retry, stop on fail)',
+    deleteStep:'Remove this step from the chain',
+  },
+  id: {
+    moveUp:    'Pindahkan step ke atas',
+    moveDown:  'Pindahkan step ke bawah',
+    editStep:  'Edit konfigurasi step ini (wait, retry, stop on fail)',
+    deleteStep:'Hapus step ini dari chain',
+  },
+}
 
 export default function ChainBuilderPage() {
   const navigate = useNavigate()
   const { chainId } = useParams()
   const isNew = chainId === 'new'
   const { theme, language } = useSettingsStore()
+  const ct = chainTooltipI18n[language] ?? chainTooltipI18n.en
   const isDark = theme !== 'light'
 
   const [chain, setChain] = useState({
@@ -242,6 +259,7 @@ export default function ChainBuilderPage() {
                           )}
                         </div>
                         <div className="flex items-center gap-2">
+                          <Tooltip text={ct.moveUp}>
                           <button
                             onClick={() => moveStep(index, 'up')}
                             disabled={index === 0}
@@ -249,6 +267,8 @@ export default function ChainBuilderPage() {
                           >
                             <ChevronUp size={18} />
                           </button>
+                          </Tooltip>
+                          <Tooltip text={ct.moveDown}>
                           <button
                             onClick={() => moveStep(index, 'down')}
                             disabled={index === steps.length - 1}
@@ -256,18 +276,23 @@ export default function ChainBuilderPage() {
                           >
                             <ChevronDown size={18} />
                           </button>
+                          </Tooltip>
+                          <Tooltip text={ct.editStep}>
                           <button
                             onClick={() => setEditingStepId(step.id)}
                             className={`px-3 py-1 rounded-lg text-sm font-medium transition ${isDark ? 'bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white' : 'bg-gray-200 hover:bg-gray-300 text-gray-600 hover:text-gray-900'}`}
                           >
                             Edit
                           </button>
+                          </Tooltip>
+                          <Tooltip text={ct.deleteStep}>
                           <button
                             onClick={() => handleDeleteStep(step.id)}
                             className="p-2 hover:bg-red-600/30 rounded-lg text-red-400 hover:text-red-300 transition"
                           >
                             <Trash2 size={18} />
                           </button>
+                          </Tooltip>
                         </div>
                       </div>
 

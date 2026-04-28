@@ -1,4 +1,20 @@
-import { Button, Badge, Spinner, Card } from './ui'
+import { Button, Badge, Spinner, Card, Tooltip } from './ui'
+import { useSettingsStore } from '../store/settingsStore'
+
+const tooltipI18n = {
+  en: {
+    view:   'View details & steps',
+    edit:   'Edit name, description, and URL',
+    clone:  'Duplicate scenario with all its steps',
+    delete: 'Permanently delete this scenario',
+  },
+  id: {
+    view:   'Lihat detail & langkah-langkah scenario',
+    edit:   'Edit nama, deskripsi, dan URL scenario',
+    clone:  'Duplikat scenario beserta semua langkah-langkahnya',
+    delete: 'Hapus scenario ini secara permanen',
+  },
+}
 
 export function ScenariosList({ 
   scenarios, 
@@ -15,6 +31,8 @@ export function ScenariosList({
   onSelectAll = null,
   bulkSelectEnabled = false,
 }) {
+  const { language } = useSettingsStore()
+  const tt = tooltipI18n[language] ?? tooltipI18n.en
   if (isLoading && scenarios.length === 0) {
     return (
       <Card>
@@ -96,6 +114,7 @@ export function ScenariosList({
 
               {/* Actions */}
               <div className="flex flex-wrap gap-2 ml-2 shrink-0">
+                <Tooltip text={tt.view}>
                 <Button
                   variant="primary"
                   size="sm"
@@ -104,6 +123,8 @@ export function ScenariosList({
                 >
                   View
                 </Button>
+                </Tooltip>
+                <Tooltip text={tt.edit}>
                 <Button
                   variant="secondary"
                   size="sm"
@@ -112,15 +133,18 @@ export function ScenariosList({
                 >
                   Edit
                 </Button>
+                </Tooltip>
+                <Tooltip text={tt.clone}>
                 <Button
                   variant="cyan"
                   size="sm"
                   onClick={() => onDuplicate(scenario.id)}
                   disabled={isLoading}
-                  title="Clone scenario beserta semua steps-nya"
                 >
                   📋 Clone
                 </Button>
+                </Tooltip>
+                <Tooltip text={tt.delete}>
                 <Button
                   variant="danger"
                   size="sm"
@@ -133,6 +157,7 @@ export function ScenariosList({
                 >
                   Delete
                 </Button>
+                </Tooltip>
               </div>
             </div>
           </Card>
