@@ -16,7 +16,7 @@ testingndrih/
 ├── .env.example                    # Environment template
 ├── README.md                       # Project overview & quick start
 ├── PROJECT_STRUCTURE.md            # This file
-├── plan.md                         # Development roadmap & task log
+├── docs/guides/PROJECT_PLAN.md     # Development roadmap & task log
 │
 ├── backend/                        # Node.js + Express API (ESM modules, port 5001)
 │   ├── package.json
@@ -334,7 +334,7 @@ testingndrih/
 │   ├── Dockerfile                        # Frontend Docker image
 │   └── index.html                        # HTML entry point
 │
-├── 📁 docs/                              # Documentation (NEW)
+├── 📁 docs/                              # Documentation
 │   └── guides/                           # All documentation files
 │       ├── 00_INDEX.md                   # Master documentation index
 │       ├── RECORDER_2.0_GUIDE.md         # Playwright recorder architecture
@@ -345,19 +345,7 @@ testingndrih/
 │       ├── IMPLEMENTATION_STATUS.md      # Implementation details
 │       ├── SUMMARY_REPORT.md             # Executive summary
 │       ├── PLAYWRIGHT_RECORDER_E2E_GUIDE.md # E2E testing guide
-│       ├── PROJECT_PLAN.md               # Original project plan
-│       └── RECORDER_1.1_GUIDE_DEPRECATED.md # Old recorder v1.1 docs
-│
-├── 📁 tests/                             # Test files (NEW)
-│   ├── backend/                          # Backend tests
-│   │   ├── test-playwright-recorder.js   # Playwright recorder unit tests
-│   │   ├── debug-test-recorder.js        # API endpoint tests
-│   │   ├── simulation-test-recorder.js   # E2E flow simulation
-│   │   ├── integration-test-recorder.js  # Full integration tests
-│   │   ├── test-playwright-recorder-root.js # Root test (duplicate)
-│   │   └── coverage/                     # Jest coverage reports
-│   │
-│   └── test-comprehensive.ps1            # Comprehensive test script
+│       └── PROJECT_PLAN.md               # Project plan
 │
 ├── 📁 .github/                           # GitHub configuration
 │   └── workflows/                        # CI/CD workflows
@@ -404,12 +392,16 @@ testingndrih/
 - For testing: `MANUAL_TESTING_GUIDE.md`
 - For implementation: `RECORDER_2.0_GUIDE.md`
 
-### `/tests/backend/`
-**All test files organized**
-- Unit tests for recording engine
-- API integration tests
-- E2E simulation tests
-- Test coverage reports
+### `/frontend/e2e/`
+**End-to-end tests (Playwright)**
+- Auth, scenario, execution, and search flows
+- Integrated with `frontend/playwright.config.js`
+
+### `/backend/uploads/`
+**Runtime artifacts (gitignored)**
+- `screenshots/` for execution and step captures
+- `videos/` for Playwright recordings
+- `.gitkeep` files are tracked to preserve folder structure
 
 ---
 
@@ -431,18 +423,7 @@ testingndrih/
 - ✅ IMPLEMENTATION_STATUS.md
 - ✅ SUMMARY_REPORT.md
 - ✅ PLAYWRIGHT_RECORDER_E2E_GUIDE.md
-- ✅ RECORDER_1.1_GUIDE.md → `RECORDER_1.1_GUIDE_DEPRECATED.md`
 - ✅ plan.md → `PROJECT_PLAN.md`
-
-### Moved to `/tests/backend/`
-- ✅ test-playwright-recorder.js
-- ✅ debug-test-recorder.js
-- ✅ simulation-test-recorder.js
-- ✅ integration-test-recorder.js
-- ✅ coverage/ folder
-
-### Moved to `/tests/`
-- ✅ test-comprehensive.ps1
 
 ---
 
@@ -485,17 +466,15 @@ testingndrih/
 
 ### Backend Tests
 ```bash
-# From /tests/backend/ directory
-node test-playwright-recorder.js
-node debug-test-recorder.js
-node simulation-test-recorder.js
-node integration-test-recorder.js
+# From root
+npm run test --workspace=backend
 ```
 
-### Full Test Suite
+### Frontend Tests
 ```bash
 # From root
-powershell -ExecutionPolicy Bypass -File tests/test-comprehensive.ps1
+npm run test --workspace=frontend
+npm run e2e --workspace=frontend
 ```
 
 ---
@@ -531,7 +510,6 @@ Root now has only:
 - backend/ (source code)
 - frontend/ (source code)
 - docs/ (all documentation)
-- tests/ (all test files)
 - Configuration files only
 ```
 
@@ -546,9 +524,9 @@ Root now has only:
 
 ## ⚙️ Next Steps
 
-1. **Update imports** in test files if needed (path changed)
-2. **Read documentation** from `/docs/guides/00_INDEX.md`
-3. **Run tests** from `/tests/` directory
+1. **Read documentation** from `/docs/guides/00_INDEX.md`
+2. **Run tests** via workspace scripts in `package.json`
+3. **Keep runtime artifacts** inside `/backend/uploads/` (already gitignored)
 4. **Deploy with confidence** - structure is now production-ready
 
 ---
@@ -560,7 +538,7 @@ Root now has only:
 | Backend source code | ✅ Intact & organized |
 | Frontend source code | ✅ Intact & organized |
 | Documentation | ✅ Centralized in `/docs/` |
-| Tests | ✅ Organized in `/tests/` |
+| Tests | ✅ Organized in backend/frontend workspaces |
 | Configuration | ✅ All config files preserved |
 | .env & secrets | ✅ In appropriate locations |
 | Build & deployment | ✅ Ready to go |

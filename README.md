@@ -1,215 +1,17 @@
-# 🧪 Test Sambil Ngopi Coy - Record & Playback Testing Platform
+# 🧪 TestingNDRIH - Record & Playback Testing Platform
 
 **Intelligent Test Recording & Playback Engine** — Record user interactions using Playwright headless browser, convert to test steps, and execute with smart error handling and cross-browser testing support.
 
-![Version](https://img.shields.io/badge/version-2.1.0-blue.svg)
+> **🎯 Getting Started**: Read [`docs/guides/00_INDEX.md`](docs/guides/00_INDEX.md) for complete documentation  
+> **⚡ Quick Reference**: [`docs/guides/QUICK_REFERENCE.md`](docs/guides/QUICK_REFERENCE.md) for commands and APIs  
+> **📖 Architecture**: [`docs/guides/RECORDER_2.0_GUIDE.md`](docs/guides/RECORDER_2.0_GUIDE.md) for implementation details
+
+![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)
 ![Status](https://img.shields.io/badge/status-production--ready-brightgreen.svg)
-![Node](https://img.shields.io/badge/node-24.x-brightgreen.svg)
+![Node](https://img.shields.io/badge/node-20.x-brightgreen.svg)
 ![React](https://img.shields.io/badge/React-18.2-blue.svg)
 ![Playwright](https://img.shields.io/badge/Playwright-1.40%2B-blue.svg)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791.svg)
-
----
-
-## ✨ Key Features (v2.1 - April 2026)
-
-### 🎥 Playwright v2.0 Recording Engine
-- ✅ **Headless Browser Recording** — Backend-controlled Playwright chromium
-- ✅ **No Proxy Window** — Server-side recording (no window pop-ups or CSP issues)
-- ✅ **Real-time Step Polling** — Frontend polls status every 1.5 seconds
-- ✅ **Reliable Capture** — 95%+ accuracy with step verification
-- ✅ **Session Management** — Multiple concurrent recording sessions supported
-
-### 🔄 Recording Engine Features
-- ✅ **Interactive Recording** — Record clicks, fills, selections, navigation in real-time
-- ✅ **Intelligent Selector Building** — Auto-generate selectors: data-testid → id → CSS Path → XPath
-- ✅ **Shadow DOM Support** — Full support via DOM traversal
-- ✅ **Form Field Auto-Detection** — Checkbox, Radio, Select dropdown, Contenteditable handling
-- ✅ **Step Types** — NAVIGATE, CLICK, FILL, HOVER, SCROLL, FILE_UPLOAD, DRAG, MOCK_ROUTE, SCREENSHOT, WAIT, ASSERTION, API_CALL
-
-### ⚡ Execution Engine with Error Recovery
-- ✅ **Smart Wait Strategy** — Intelligent polling with fallback chains
-- ✅ **Rich Error Capture** — Step details, page URL, console errors, screenshots
-- ✅ **Contextual Error Suggestions** — 20+ patterns for common issues
-- ✅ **Dialog Auto-Handling** — Auto-accept alert/confirm/prompt dialogs
-
-### 🌐 Advanced Testing Features
-- ✅ **Cross-Browser Testing** — Run same scenario on Chromium, Firefox, WebKit, Edge
-- ✅ **Parallel Execution** — Execute multiple scenarios simultaneously with concurrency control
-- ✅ **Test Scheduling** — Schedule test runs (Once, Hourly, Daily, Weekly)
-- ✅ **Retry Engine** — Smart retry mechanism for flaky tests
-- ✅ **Browser Matrix** — Execute tests across browser/OS combinations
-
-### 🛠️ QA Workflow Suite (NEW in v2.1)
-- ✅ **Template Library** — 4 pre-made scenario templates (Login, E-Commerce, Navigation, Form)
-- ✅ **Quick Record Mode** — URL → instant recording with auto-panel open
-- ✅ **Bulk Execute** — Multi-select scenarios, sequential headless execution with live status
-- ✅ **Clone Scenario** — Duplicate scenario with all steps in one click
-- ✅ **Test Chains** — Chain multiple scenarios into sequential test suites
-- ✅ **Chain Builder** — Visual drag-and-drop chain step reordering
-
-### 💡 UI Tooltip System (NEW in v2.1)
-- ✅ **Contextual Tooltips** — Hover guidance on all action buttons
-- ✅ **Theme-Aware** — Tooltip colors follow dark/light theme setting
-- ✅ **Bilingual** — Tooltip text follows EN/ID language setting
-- ✅ **Positioned** — top/bottom/left/right positioning with arrow indicators
-- ✅ **Delay Support** — Configurable delay before tooltip appears
-
-### 🔐 Authentication & Security
-- ✅ **Forgot Password Flow** — Email-based password reset with 15-minute token expiry
-- ✅ **JWT Authentication** — Secure session management with configurable expiry
-- ✅ **OWASP Compliance** — Industry-standard security practices
-
-### 🎨 User Interface
-- ✅ **Dark/Light Theme** — Full theme support with persistent preference
-- ✅ **Bilingual UI** — English / Bahasa Indonesia language switching
-- ✅ **Responsive Design** — Mobile-first layout with collapsible navigation
-- ✅ **Report Export** — Download execution reports (PDF/HTML)
-- ✅ **Custom Error Pages** — 404, 403, 500, Session Expired, Maintenance pages
-
----
-
-## 🏗️ Tech Stack (v2.1)
-
-| Component | Technology | Version | Purpose |
-|-----------|-----------|---------|---------|
-| **Frontend** | React + Vite | 18.2 + 5.4 | Modern SPA with fast HMR |
-| **Backend** | Node.js + Express | 24.x + 4.x | RESTful API (ESM modules) |
-| **Database** | PostgreSQL + Prisma | 16 + 5.x | Relational DB with ORM |
-| **Recording** | Playwright | 1.40+ | Headless browser recording engine |
-| **State Management** | Zustand | 4.4 | Frontend state |
-| **Styling** | TailwindCSS | 3.4 | Utility-first CSS |
-| **Authentication** | JWT + bcryptjs | Latest | Secure auth & hashing |
-| **Email** | Nodemailer | 8.x | SMTP email service |
-| **API Client** | Axios | Latest | HTTP with timeout/retry |
-| **Container** | Docker + Compose | Latest | App + PostgreSQL orchestration |
-
----
-
-## 📊 Current Status (April 2026)
-
-```
-✅ Playwright v2.0 Recording Engine  100% Complete
-✅ Core Recording Features           100% Complete
-✅ Execution Engine                  100% Complete
-✅ Advanced Features                 100% Complete
-✅ QA Workflow Suite (v2.1)          100% Complete
-   └─ Template Library (4 templates)
-   └─ Quick Record Mode
-   └─ Bulk Execute
-   └─ Clone Scenario
-   └─ Test Chains & Chain Builder
-✅ Tooltip System (v2.1)             100% Complete
-   └─ Theme-aware (dark/light)
-   └─ Bilingual (EN/ID)
-   └─ All action buttons covered
-✅ UI/UX & Themes                    100% Complete
-✅ Authentication & Security         100% Complete
-
-Overall Status: 100% Production Ready ✅
-```
-
----
-
-## 🚀 Quick Start
-
-### Prerequisites
-- Node.js 20.x+
-- PostgreSQL 16 (or Docker)
-
-### 1. Install
-```bash
-git clone https://github.com/andri5/testingndrih.git
-cd testingndrih
-npm install
-```
-
-### 2. Setup Database
-```bash
-cd backend
-npx prisma migrate dev
-npm run seed
-```
-
-### 3. Configure Environment
-Create `backend/.env`:
-```env
-DATABASE_URL=postgresql://testuser:testpass123@localhost:5432/testingndrih
-JWT_SECRET=your-secret-key-here
-JWT_EXPIRES_IN=7d
-PORT=5001
-
-# Optional: Email for password reset
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=your-email@gmail.com
-SMTP_PASSWORD=your-app-password
-SMTP_FROM="TestingNDRIH <noreply@testingndrih.local>"
-```
-
-### 4. Start
-```bash
-# Start both backend + frontend
-npm run dev
-
-# Or separately:
-npm run dev:backend    # http://localhost:5001
-npm run dev:frontend   # http://localhost:3001
-```
-
-### 5. Login
-- **URL**: http://localhost:3001
-- **Email**: `admin@testingndrih.local`
-- **Password**: `changeme123`
-
----
-
-## 🐳 Docker (Recommended)
-
-```bash
-cp .env.example .env
-docker-compose up -d
-# http://localhost:3000
-```
-
----
-
-## 🐛 Troubleshooting
-
-### Port Already in Use (Windows)
-```powershell
-# Free port 5001
-Stop-Process -Id (Get-NetTCPConnection -LocalPort 5001).OwningProcess -Force
-
-# Free port 3001
-Stop-Process -Id (Get-NetTCPConnection -LocalPort 3001).OwningProcess -Force
-```
-
-### Database Connection Failed
-```bash
-cd backend
-npx prisma db push --force-reset
-npm run seed
-```
-
----
-
-## 🧪 Testing
-
-```bash
-cd backend && npm test         # Jest unit tests
-cd frontend && npx playwright test  # E2E tests
-```
-
----
-
-## 📄 License
-
-MIT License
-
----
-
-**Project Structure**: see [`PROJECT_STRUCTURE.md`](PROJECT_STRUCTURE.md)
 
 ---
 
@@ -486,20 +288,16 @@ Start here based on your needs:
 
 ### Run Tests
 ```bash
+# Backend unit/integration (Jest)
 cd backend
+npm test
 
-# Unit tests
-node ../tests/backend/test-playwright-recorder.js
+# Frontend unit (Vitest)
+cd ../frontend
+npm test
 
-# API tests
-node ../tests/backend/debug-test-recorder.js
-
-# E2E simulation
-npm run dev &  # start backend first
-node ../tests/backend/simulation-test-recorder.js
-
-# All tests
-powershell -ExecutionPolicy Bypass -File ../tests/test-comprehensive.ps1
+# Frontend E2E (Playwright)
+npm run e2e
 ```
 
 ### Test Results
@@ -586,7 +384,8 @@ See [`PROJECT_STRUCTURE.md`](PROJECT_STRUCTURE.md) for detailed folder organizat
 backend/src/           # Backend source code
 frontend/src/          # Frontend React code
 docs/guides/           # All documentation
-tests/backend/         # Test files
+frontend/e2e/          # E2E test files
+backend/uploads/       # Runtime screenshots/videos (ignored by git)
 ```
 
 ### Making Changes
@@ -666,55 +465,7 @@ For more help, see:
 
 ---
 
-## � Commit Guidelines
-
-This project uses **Semantic Versioning** and **Conventional Commits** for automated versioning and release management.
-
-### Commit Format
-All commits follow this format:
-```
-<type>(<scope>): <description>
-
-<optional body>
-<optional footer>
-```
-
-### Commit Types
-- **feat**: New feature (bumps MINOR version)
-- **fix**: Bug fix (bumps PATCH version)
-- **docs**: Documentation changes
-- **test**: Test additions or updates
-- **refactor**: Code refactoring
-- **perf**: Performance improvements
-- **ci**: CI/CD configuration
-- **chore**: Dependencies, build config
-
-### Examples
-```bash
-# Feature
-git commit -m "feat(recorder): add shadow DOM support for complex selectors"
-
-# Bug fix
-git commit -m "fix(executor): resolve timeout issue in wait strategy"
-
-# Multiple lines
-git commit -m "feat(scheduler): implement daily test scheduling
-
-- Add cron job support
-- Create database schema
-- Implement retry logic"
-
-# Breaking change (bumps MAJOR)
-git commit -m "feat(api)!: restructure scenario response format
-
-BREAKING CHANGE: scenario.steps now returns objects instead of IDs"
-```
-
-📖 **Full guidelines**: See [COMMIT_CONVENTIONS.md](COMMIT_CONVENTIONS.md)
-
----
-
-## �📞 Support
+## 📞 Support
 
 ### Documentation
 - **Full Guides**: [`docs/guides/`](docs/guides/)

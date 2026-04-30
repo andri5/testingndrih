@@ -43,7 +43,14 @@ blob-report/
 
 # Screenshot & uploads
 backend/screenshots/
-backend/uploads/
+backend/uploads/*
+backend/uploads/screenshots/**
+backend/uploads/videos/**
+!backend/uploads/.gitkeep
+!backend/uploads/screenshots/
+!backend/uploads/screenshots/.gitkeep
+!backend/uploads/videos/
+!backend/uploads/videos/.gitkeep
 backend/logs/
 
 # Database

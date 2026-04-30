@@ -267,7 +267,7 @@ setRecordingSteps(res.data.steps)
 ## 📚 Additional Resources
 
 ### Related Files
-- **Old Architecture**: `backend/RECORDER_1.1_GUIDE.md` (v1.1 reference)
+- **Migration Notes**: [MIGRATION_GUIDE.md](MIGRATION_GUIDE.md) (v1.1 -> v2.0 changes)
 - **Architecture Diagram**: See [RECORDER_2.0_GUIDE.md#system-diagram](RECORDER_2.0_GUIDE.md#system-diagram)
 - **API Details**: See [RECORDER_2.0_GUIDE.md#api-reference](RECORDER_2.0_GUIDE.md#api-reference)
 

@@ -16,7 +16,7 @@ All notable changes to this project will be documented in this file. The format 
 - 🔀 **Parallel Execution** — Execute multiple scenarios simultaneously
 - 🔐 **Password Reset** — Email-based password reset with Nodemailer SMTP integration
 - 🎨 **Dark/Light Theme** — Full theme support across all pages
-- 📁 **Project Organization** — Clean folder structure with `/docs/guides/` and `/tests/backend/`
+- 📁 **Project Organization** — Clean folder structure with `/docs/guides/` and workspace-based test scripts (`backend`/`frontend`)
 
 #### Changed
 - 🔄 **Migration from v1.1** — Replaced proxy-based recording with Playwright headless browser
