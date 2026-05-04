@@ -75,8 +75,9 @@ const i18n = {
     updateStepBtn: 'Update Step',
     cancel: 'Cancel',
     executionResults: 'Execution Results',
-    fixAllSteps: 'Use AI to fix all failed steps at once',
-    batchFixAll: '🔧 Batch Fix All',
+    passed: 'Passed',
+    failed: 'Failed',
+    duration: 'Duration',
     fixing: 'Fixing...',
     autoRetryError: 'Auto-retry failed',
     hints: {
@@ -162,8 +163,9 @@ const i18n = {
     updateStepBtn: 'Update Step',
     cancel: 'Batal',
     executionResults: 'Hasil Eksekusi',
-    fixAllSteps: 'Gunakan AI untuk memperbaiki semua step yang gagal sekaligus',
-    batchFixAll: '🔧 Batch Fix All',
+    passed: 'Lolos',
+    failed: 'Gagal',
+    duration: 'Durasi',
     fixing: 'Memperbaiki...',
     autoRetryError: 'Auto-retry gagal',
     hints: {
@@ -1298,69 +1300,38 @@ export default function ScenarioDetailPage() {
               </Badge>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-              <div className="flex items-center gap-3 p-3 rounded-xl bg-[#0F170F] border border-[#34D399]/20">
-                <div className="w-9 h-9 rounded-lg bg-[#34D399]/10 flex items-center justify-center shrink-0">
-                  <CheckCircle2 size={16} className="text-[#34D399]" />
-                </div>
-                <div>
-                  <p className="text-xl font-bold text-[#34D399] leading-none">{executionResult.passedSteps || 0}</p>
-                  <p className="text-xs text-[#8A8A8F] mt-1 uppercase tracking-wider">Passed</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 p-3 rounded-xl bg-[#170F0F] border border-[#F87171]/20">
-                <div className="w-9 h-9 rounded-lg bg-[#F87171]/10 flex items-center justify-center shrink-0">
-                  <XCircle size={16} className="text-[#F87171]" />
-                </div>
-                <div>
-                  <p className="text-xl font-bold text-[#F87171] leading-none">{executionResult.failedSteps || 0}</p>
-                  <p className="text-xs text-[#8A8A8F] mt-1 uppercase tracking-wider">Failed</p>
+            {/* Simple 2-Column Stats Row */}
+            <div className="flex flex-wrap gap-3 mb-4">
+              <div className="flex-1 min-w-[200px] p-4 rounded-lg bg-green-50 dark:bg-[#0F170F] border border-green-200 dark:border-[#34D399]/20">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-green-600 dark:text-[#8A8A8F] font-medium">{t.passed || 'Passed'}</p>
+                    <p className="text-2xl font-bold text-green-700 dark:text-[#34D399] mt-1">{executionResult.passedSteps || 0}</p>
+                  </div>
+                  <CheckCircle2 size={24} className="text-green-600 dark:text-[#34D399] opacity-50" />
                 </div>
               </div>
-              <div className="flex items-center gap-3 p-3 rounded-xl bg-[#161618] border border-[#2A2A2D]">
-                <div className="w-9 h-9 rounded-lg bg-[#5E6AD2]/10 flex items-center justify-center shrink-0">
-                  <ClipboardList size={16} className="text-[#9BA3F0]" />
-                </div>
-                <div>
-                  <p className="text-xl font-bold text-[#E0E0E2] leading-none">{executionResult.totalSteps || 0}</p>
-                  <p className="text-xs text-[#8A8A8F] mt-1 uppercase tracking-wider">Total Steps</p>
+              <div className="flex-1 min-w-[200px] p-4 rounded-lg bg-red-50 dark:bg-[#170F0F] border border-red-200 dark:border-[#F87171]/20">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-red-600 dark:text-[#8A8A8F] font-medium">{t.failed || 'Failed'}</p>
+                    <p className="text-2xl font-bold text-red-700 dark:text-[#F87171] mt-1">{executionResult.failedSteps || 0}</p>
+                  </div>
+                  <XCircle size={24} className="text-red-600 dark:text-[#F87171] opacity-50" />
                 </div>
               </div>
-              <div className="flex items-center gap-3 p-3 rounded-xl bg-[#161618] border border-[#2A2A2D]">
-                <div className="w-9 h-9 rounded-lg bg-[#FBBF24]/10 flex items-center justify-center shrink-0">
-                  <Clock size={16} className="text-[#FBBF24]" />
-                </div>
-                <div>
-                  <p className="text-xl font-bold text-[#E0E0E2] leading-none">{executionResult.duration ? `${(executionResult.duration / 1000).toFixed(2)}s` : '-'}</p>
-                  <p className="text-xs text-[#8A8A8F] mt-1 uppercase tracking-wider">Duration</p>
+              <div className="flex-1 min-w-[200px] p-4 rounded-lg bg-blue-50 dark:bg-[#161618] border border-blue-200 dark:border-[#2A2A2D]">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-blue-600 dark:text-[#8A8A8F] font-medium">{t.duration || 'Duration'}</p>
+                    <p className="text-2xl font-bold text-blue-700 dark:text-[#E0E0E2] mt-1">{executionResult.duration ? `${(executionResult.duration / 1000).toFixed(2)}s` : '−'}</p>
+                  </div>
+                  <Clock size={24} className="text-blue-600 dark:text-[#FBBF24] opacity-50" />
                 </div>
               </div>
             </div>
 
-            {/* Batch Fix All Button */}
-            {executionResult.status === 'FAILED' && executionResult.failedSteps > 0 && executionResult.stepResults && (
-              <div className="mb-4 p-3 bg-[#0F170F] border border-[#5E6AD2]/30 rounded-lg flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-[#5E6AD2]">⚡</span>
-                  <span className="text-sm text-[#E0E0E2]">{t.fixAllSteps}</span>
-                </div>
-                <Button
-                  variant="primary"
-                  size="sm"
-                  onClick={handleBatchFix}
-                  disabled={isBatchFixing || isExecuting}
-                >
-                  {isBatchFixing ? (
-                    <>
-                      <Spinner size="xs" className="inline mr-2" />
-                      {t.fixing}
-                    </>
-                  ) : (
-                    t.batchFixAll
-                  )}
-                </Button>
-              </div>
-            )}
+
 
             {executionResult.errorMessage && (
               <div className="p-3 bg-red-950/30 border border-red-700/40 rounded-lg text-red-400 text-sm mb-4">

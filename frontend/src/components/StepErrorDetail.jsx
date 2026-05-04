@@ -207,24 +207,45 @@ export default function StepErrorDetail({ errorMessage, onRetest, size = 'normal
             ))}
           </div>
 
-          {/* Technical Detail */}
-          <div className="bg-[#1A1A1C] text-gray-100 rounded-lg p-3 font-mono space-y-2 overflow-x-auto">
-            {/* Step Info */}
-            <div>
-              <span className="text-yellow-400 font-bold">▸ STEP (Payload)</span>
-              <div className="ml-2 mt-1 space-y-0.5">
-                <p><span className="text-gray-400">Type:</span> {detail.step.type}</p>
-                <p><span className="text-gray-400">Selector:</span> {detail.step.selector || '—'}</p>
-                <p><span className="text-gray-400">Value:</span> {detail.step.value || '—'}</p>
-                <p><span className="text-gray-400">Description:</span> {detail.step.description || '—'}</p>
+          {/* Technical Details */}
+          <div className="space-y-2 mt-3">
+            {/* Step Payload */}
+            <div className="bg-yellow-50 dark:bg-yellow-950/30 border border-yellow-200 dark:border-yellow-700/40 rounded-lg p-3">
+              <p className="font-semibold text-yellow-900 dark:text-yellow-400 mb-2 text-sm">📋 Step Payload</p>
+              <div className="space-y-1 text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="text-yellow-800 dark:text-yellow-300 font-medium w-16">Type:</span>
+                  <code className="bg-white dark:bg-black/30 px-2 py-1 rounded font-mono text-yellow-900 dark:text-yellow-100">{detail.step.type}</code>
+                </div>
+                {detail.step.selector && (
+                  <div className="flex items-start gap-2">
+                    <span className="text-yellow-800 dark:text-yellow-300 font-medium w-16 mt-1">Selector:</span>
+                    <code className="bg-white dark:bg-black/30 px-2 py-1 rounded font-mono text-yellow-900 dark:text-yellow-100 break-all flex-1">{detail.step.selector}</code>
+                  </div>
+                )}
+                {detail.step.value && (
+                  <div className="flex items-start gap-2">
+                    <span className="text-yellow-800 dark:text-yellow-300 font-medium w-16 mt-1">Value:</span>
+                    <code className="bg-white dark:bg-black/30 px-2 py-1 rounded font-mono text-yellow-900 dark:text-yellow-100 break-all flex-1">{detail.step.value}</code>
+                  </div>
+                )}
+                {detail.step.description && (
+                  <div className="flex items-start gap-2">
+                    <span className="text-yellow-800 dark:text-yellow-300 font-medium w-16 mt-1">Desc:</span>
+                    <span className="text-yellow-900 dark:text-yellow-100 flex-1">{detail.step.description}</span>
+                  </div>
+                )}
               </div>
             </div>
 
             {/* Page State */}
-            <div>
-              <span className="text-cyan-400 font-bold">▸ PAGE STATE</span>
-              <div className="ml-2 mt-1">
-                <p><span className="text-gray-400">URL:</span> {detail.page?.url || '—'}</p>
+            <div className="bg-cyan-50 dark:bg-cyan-950/30 border border-cyan-200 dark:border-cyan-700/40 rounded-lg p-3">
+              <p className="font-semibold text-cyan-900 dark:text-cyan-400 mb-2 text-sm">🌐 Page State</p>
+              <div className="text-xs">
+                <div className="flex items-start gap-2">
+                  <span className="text-cyan-800 dark:text-cyan-300 font-medium w-16">URL:</span>
+                  <code className="bg-white dark:bg-black/30 px-2 py-1 rounded font-mono text-cyan-900 dark:text-cyan-100 break-all flex-1">{detail.page?.url || '−'}</code>
+                </div>
               </div>
             </div>
 
