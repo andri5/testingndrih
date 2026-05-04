@@ -12,11 +12,11 @@ const content = {
         label: 'Scenarios',
         icon: <ClipboardList size={14} />,
         steps: [
-          { num: 1, title: 'Create a Scenario', desc: 'Go to Scenarios → click "+ New Scenario". Fill in name, URL, and description.' },
+          { num: 1, title: 'Create a Scenario', desc: 'Go to Scenarios → click "+ Create Scenario" dropdown. Choose "Create Manual" to fill in name, URL, and description manually.' },
           { num: 2, title: 'Add Test Steps', desc: 'Open a scenario → click "+ Add Step". Choose step type: click, fill, navigate, wait, assert, etc.' },
-          { num: 3, title: 'Use Quick Record', desc: 'Click "Quick Record" button → enter URL → browser actions are recorded automatically as steps.' },
-          { num: 4, title: 'Use Templates', desc: 'Click "Templates" to load a pre-built scenario (Login, E-Commerce, Navigation, Form).' },
-          { num: 5, title: 'Clone / Edit', desc: 'Hover a scenario card → use Clone to duplicate, or Edit to modify name/description/URL.' },
+          { num: 3, title: 'Use Quick Record', desc: 'Click "+ Create Scenario" → "Quick Record" → enter URL → browser actions are recorded automatically as steps.' },
+          { num: 4, title: 'Use Templates', desc: 'Click "+ Create Scenario" → "Templates" to load a pre-built scenario (Login, E-Commerce, Navigation, Form).' },
+          { num: 5, title: 'Import / Clone', desc: 'Import Excel: Click "+ Create Scenario" → "Import Excel" (Ctrl+Click to view template). Clone: Hover a scenario card → use Clone to duplicate.' },
         ],
       },
       {
@@ -77,11 +77,11 @@ const content = {
         label: 'Scenario',
         icon: <ClipboardList size={14} />,
         steps: [
-          { num: 1, title: 'Buat Scenario', desc: 'Buka menu Scenarios → klik "+ New Scenario". Isi nama, URL, dan deskripsi.' },
+          { num: 1, title: 'Buat Scenario', desc: 'Buka Scenarios → klik "+ Create Scenario" dropdown. Pilih "Buat Manual" untuk mengisi nama, URL, dan deskripsi.' },
           { num: 2, title: 'Tambah Test Step', desc: 'Buka scenario → klik "+ Add Step". Pilih tipe step: click, fill, navigate, wait, assert, dsb.' },
-          { num: 3, title: 'Quick Record', desc: 'Klik tombol "Quick Record" → masukkan URL → aksi di browser direkam otomatis menjadi step.' },
-          { num: 4, title: 'Pakai Template', desc: 'Klik "Templates" untuk memuat scenario siap pakai (Login, E-Commerce, Navigasi, Form).' },
-          { num: 5, title: 'Clone / Edit', desc: 'Hover kartu scenario → gunakan Clone untuk menduplikat, atau Edit untuk mengubah nama/deskripsi/URL.' },
+          { num: 3, title: 'Rekam Cepat', desc: 'Klik "+ Create Scenario" → "Rekam Cepat" → masukkan URL → aksi di browser direkam otomatis menjadi step.' },
+          { num: 4, title: 'Pakai Template', desc: 'Klik "+ Create Scenario" → "Template" untuk memuat scenario siap pakai (Login, E-Commerce, Navigasi, Form).' },
+          { num: 5, title: 'Impor / Duplikat', desc: 'Impor Excel: Klik "+ Create Scenario" → "Impor Excel" (Ctrl+Klik untuk lihat template). Duplikat: Hover kartu scenario → gunakan Clone.' },
         ],
       },
       {
