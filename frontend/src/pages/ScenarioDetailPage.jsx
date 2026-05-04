@@ -238,6 +238,9 @@ export default function ScenarioDetailPage() {
   // Screenshot modal state
   const [screenshotModal, setScreenshotModal] = useState(null)
 
+  // Step details collapse state
+  const [showStepDetails, setShowStepDetails] = useState(false)
+
   // Recording state
   const [isRecording, setIsRecording] = useState(false)
   const [recordingSteps, setRecordingSteps] = useState([])
@@ -1349,68 +1352,77 @@ export default function ScenarioDetailPage() {
               </div>
             )}
 
-            {/* Step Results */}
+            {/* Step Results - Collapsible */}
             {executionResult.stepResults && executionResult.stepResults.length > 0 && (
               <div>
-                <h3 className="font-semibold text-[#E0E0E2] mb-2">Detail Per-Step</h3>
-                <div className="space-y-3">
-                  {executionResult.stepResults.map((result, idx) => (
-                    <div
-                      key={result.id || idx}
-                      className={`p-3 rounded-lg border ${
-                        result.status === 'PASSED'
-                          ? 'bg-green-900/20 border-green-700/30'
-                          : 'bg-red-900/20 border-red-700/30'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <span className={`text-lg ${result.status === 'PASSED' ? 'text-green-400' : 'text-red-400'}`}>
-                          {result.status === 'PASSED' ? '✓' : '✗'}
-                        </span>
-                        <div className="flex-1">
-                          <p className="font-medium text-[#E0E0E2]">
-                            Step {result.testStep?.stepNumber || idx + 1}: {result.testStep?.type || result.type} — {result.testStep?.description || result.description || '-'}
-                          </p>
-                          <p className="text-xs text-[#888]">
-                            {result.testStep?.type || result.type} 
-                            {result.testStep?.selector ? ` • ${result.testStep.selector}` : ''}
-                            {result.duration ? ` • ${result.duration}ms` : ''}
-                          </p>
-                          {result.errorMessage && (
-                            <StepErrorDetail 
-                              errorMessage={result.errorMessage} 
-                              onRetest={handleExecute}
-                              step={result.testStep}
-                              pageUrl={scenario?.url}
-                              onApplyAIFix={result.testStep ? (locator) => handleApplyAIFix(result.testStep.id, locator) : null}
-                              onAutoRetry={result.testStep ? (selector) => handleAutoRetry(result.testStep.id, selector) : null}
-                              isAutoRetrying={isAutoRetrying}
-                              executionId={executionResult.id}
-                            />
+                <button
+                  onClick={() => setShowStepDetails(!showStepDetails)}
+                  className="flex items-center gap-2 text-sm font-medium text-[#5E6AD2] hover:text-[#8B95E3] transition mb-3"
+                >
+                  <span>{showStepDetails ? '▼' : '▶'}</span>
+                  <span>Detail Per-Step ({executionResult.stepResults.length})</span>
+                </button>
+
+                {showStepDetails && (
+                  <div className="space-y-3">
+                    {executionResult.stepResults.map((result, idx) => (
+                      <div
+                        key={result.id || idx}
+                        className={`p-3 rounded-lg border ${
+                          result.status === 'PASSED'
+                            ? 'bg-green-900/20 border-green-700/30'
+                            : 'bg-red-900/20 border-red-700/30'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className={`text-lg ${result.status === 'PASSED' ? 'text-green-400' : 'text-red-400'}`}>
+                            {result.status === 'PASSED' ? '✓' : '✗'}
+                          </span>
+                          <div className="flex-1">
+                            <p className="font-medium text-[#E0E0E2]">
+                              Step {result.testStep?.stepNumber || idx + 1}: {result.testStep?.type || result.type} — {result.testStep?.description || result.description || '-'}
+                            </p>
+                            <p className="text-xs text-[#888]">
+                              {result.testStep?.type || result.type} 
+                              {result.testStep?.selector ? ` • ${result.testStep.selector}` : ''}
+                              {result.duration ? ` • ${result.duration}ms` : ''}
+                            </p>
+                            {result.errorMessage && (
+                              <StepErrorDetail 
+                                errorMessage={result.errorMessage} 
+                                onRetest={handleExecute}
+                                step={result.testStep}
+                                pageUrl={scenario?.url}
+                                onApplyAIFix={result.testStep ? (locator) => handleApplyAIFix(result.testStep.id, locator) : null}
+                                onAutoRetry={result.testStep ? (selector) => handleAutoRetry(result.testStep.id, selector) : null}
+                                isAutoRetrying={isAutoRetrying}
+                                executionId={executionResult.id}
+                              />
+                            )}
+                          </div>
+                          {/* Screenshot thumbnail */}
+                          {result.screenshot && (
+                            <button
+                              onClick={() => setScreenshotModal({
+                                url: result.screenshot.url,
+                                stepNumber: result.testStep?.stepNumber || idx + 1,
+                                description: result.testStep?.description || ''
+                              })}
+                              className="flex-shrink-0 border-2 border-[#2D2D2F] rounded-lg overflow-hidden hover:border-[#5E6AD2] transition cursor-pointer"
+                              title="Klik untuk memperbesar screenshot"
+                            >
+                              <img
+                                src={result.screenshot.url}
+                                alt={`Screenshot step ${result.testStep?.stepNumber || idx + 1}`}
+                                className="w-24 h-16 object-cover"
+                              />
+                            </button>
                           )}
                         </div>
-                        {/* Screenshot thumbnail */}
-                        {result.screenshot && (
-                          <button
-                            onClick={() => setScreenshotModal({
-                              url: result.screenshot.url,
-                              stepNumber: result.testStep?.stepNumber || idx + 1,
-                              description: result.testStep?.description || ''
-                            })}
-                            className="flex-shrink-0 border-2 border-[#2D2D2F] rounded-lg overflow-hidden hover:border-[#5E6AD2] transition cursor-pointer"
-                            title="Klik untuk memperbesar screenshot"
-                          >
-                            <img
-                              src={result.screenshot.url}
-                              alt={`Screenshot step ${result.testStep?.stepNumber || idx + 1}`}
-                              className="w-24 h-16 object-cover"
-                            />
-                          </button>
-                        )}
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </Card>
