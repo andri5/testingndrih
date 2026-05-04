@@ -131,6 +131,19 @@ export function getRecorderScript(sessionId = null) {
   }
   
   function sendStep(step) {
+    // ═══ METHOD 0: Playwright exposeFunction (PRIMARY when running in Playwright browser) ═══
+    // This is called when recording via Playwright — no HTTP, no auth token needed
+    if (typeof window.__playwrightAddStep === 'function') {
+      try {
+        window.__playwrightAddStep(step);
+        __updateCounter();
+        __showRecInfo('Recording');
+      } catch(e) {
+        console.error('[REC] __playwrightAddStep failed:', e);
+      }
+      return;
+    }
+
     var token = localStorage.getItem('authToken');
     if (!token) { __showRecErr('authToken tidak ditemukan'); return; }
     
@@ -808,6 +821,15 @@ export const recorderService = {
       
       const page = await context.newPage()
       
+      // ═══ Expose step callback — steps sent from page JS → Node.js directly ═══
+      // This bypasses HTTP/auth entirely, no need for authToken in the Playwright browser
+      await page.exposeFunction('__playwrightAddStep', (step) => {
+        const sess = sessions.get(key)
+        if (!sess || sess.status !== 'recording') return
+        sess.steps.push({ ...step, stepNumber: sess.steps.length + 1 })
+        console.log(`[RECORDER] ✓ Step ${sess.steps.length}: ${step.type} "${(step.description || '').substring(0, 60)}"`)
+      })
+
       // ═══ Inject Recorder Script ═══
       // This adds the recorder functionality to capture interactions
       await page.addInitScript(() => {
@@ -872,6 +894,17 @@ export const recorderService = {
       }
 
       sessions.set(key, session)
+
+      // ═══ Add initial NAVIGATE step ═══
+      session.steps.push({
+        type: 'NAVIGATE',
+        selector: '',
+        value: url,
+        description: `Navigate to ${url}`,
+        tagName: '',
+        timestamp: Date.now(),
+        stepNumber: 1
+      })
 
       console.log(`[RECORDER] ✅ Recording started for ${key}`)
 
@@ -941,22 +974,9 @@ export const recorderService = {
     }
 
     try {
-      // ═══ Extract recorded steps from Playwright page ═══
-      if (session.page && session.page.isClosed() === false) {
-        try {
-          const pageSteps = await session.page.evaluate(() => {
-            return window.__recorderAPI?.getSteps?.() || []
-          }).catch(() => [])
-          
-          if (pageSteps && pageSteps.length > 0) {
-            session.steps = pageSteps
-            console.log(`[RECORDER] Extracted ${pageSteps.length} steps from Playwright page`)
-          }
-        } catch (err) {
-          console.warn(`[RECORDER] Could not extract steps from page: ${err.message}`)
-        }
-
-        // Close page
+      // ═══ Close page, context & browser ═══
+      // Steps are already in session.steps via __playwrightAddStep exposeFunction
+      if (session.page && !session.page.isClosed()) {
         await session.page.close().catch(() => {})
       }
 

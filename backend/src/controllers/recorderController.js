@@ -397,7 +397,7 @@ window.__targetBase=${JSON.stringify(url)};
       }
 
       // Validate step type
-      const validTypes = ['CLICK', 'FILL', 'HOVER', 'SCROLL', 'DRAG', 'FILE_UPLOAD', 'SUBMIT', 'PASTE', 'CHANGE']
+      const validTypes = ['CLICK', 'FILL', 'HOVER', 'SCROLL', 'DRAG', 'FILE_UPLOAD', 'SUBMIT', 'PASTE', 'CHANGE', 'NAVIGATE']
       if (!validTypes.includes(step.type)) {
         return res.status(400).json({ ok: false, error: `Invalid step type: ${step.type}` })
       }
