@@ -57,7 +57,7 @@
 - ✅ **JWT Authentication** — Secure session management with configurable expiry
 - ✅ **OWASP Compliance** — Industry-standard security practices
 
-### 🎨 User Interface
+### 🎨 User Interface & Data Management
 - ✅ **Scenario Management** — Create, edit, delete test scenarios
 - ✅ **Step Editor** — Form-based step creation and editing
 - ✅ **Execution Viewer** — Real-time execution with screenshot streaming
@@ -65,6 +65,12 @@
 - ✅ **Dark/Light Theme** — Full theme support with persistent preference
 - ✅ **Responsive Design** — Mobile-first layout with collapsible navigation
 - ✅ **Report Export** — Download execution reports (PDF/HTML)
+- ✅ **Excel Bulk Import** — Import scenarios from Excel with preview/edit (NEW)
+  - Download template to see exact format
+  - Preview data before creating
+  - Edit inline (names, descriptions, URLs, steps)
+  - Batch create with validation
+  - Dark/Light theme support with tooltips
 
 ### 🛡️ Error Handling & Resilience
 - ✅ **Custom Error Pages** — 404, 403, 500, Session Expired, Maintenance pages
