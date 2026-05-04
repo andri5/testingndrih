@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { ChevronDown, HelpCircle } from 'lucide-react'
 import Layout from '../components/Layout'
 import { Card, Button, Alert, Spinner } from '../components/ui'
 import { ScenarioForm } from '../components/ScenarioForm'
@@ -7,6 +8,8 @@ import { ScenarioSearch } from '../components/ScenarioSearch'
 import { ScenariosList } from '../components/ScenariosList'
 import { TemplatePickerModal } from '../components/TemplatePickerModal'
 import { QuickRecordModal } from '../components/QuickRecordModal'
+import { ImportPreviewModal } from '../components/ImportPreviewModal'
+import { Tooltip } from '../components/ui'
 import { useScenarioStore } from '../store/scenarioStore'
 import { executionAPI } from '../services/api'
 import { useSettingsStore } from '../store/settingsStore'
@@ -19,6 +22,19 @@ const i18n = {
     cancel: 'Cancel',
     quickRecordTitle: 'Create scenario & start recording immediately',
     templatesTitle: 'Create scenario from ready-made template',
+    // Menu items
+    createManual: 'Create Manual',
+    createManualDesc: 'Form-based creation',
+    createManualTooltip: 'Create a new scenario using the form. Fill in name, URL, and add steps manually.',
+    quickRecord: 'Quick Record',
+    quickRecordDesc: 'Record interactions',
+    quickRecordTooltip: 'Enter a URL and start recording user interactions to create test steps automatically.',
+    templates: 'Templates',
+    templatesDesc: 'Pre-made templates',
+    templatesMenuTooltip: 'Choose from ready-made scenario templates (Login, E-Commerce, Navigation, Form Testing).',
+    importExcel: 'Import Excel',
+    importExcelDesc: 'Bulk import',
+    importExcelTooltip: 'Upload an Excel file with test scenarios. Use Ctrl+Click to view template.',
   },
   id: {
     selectedCount: (n) => `${n} scenario dipilih`,
@@ -27,18 +43,36 @@ const i18n = {
     cancel: 'Batal',
     quickRecordTitle: 'Buat scenario & langsung mulai recording',
     templatesTitle: 'Buat scenario dari template siap pakai',
+    // Menu items
+    createManual: 'Buat Manual',
+    createManualDesc: 'Buat dengan form',
+    createManualTooltip: 'Buat scenario baru menggunakan form. Isi nama, URL, dan tambah langkah secara manual.',
+    quickRecord: 'Rekam Cepat',
+    quickRecordDesc: 'Rekam interaksi',
+    quickRecordTooltip: 'Masukkan URL dan mulai rekam interaksi pengguna untuk membuat langkah uji secara otomatis.',
+    templates: 'Template',
+    templatesDesc: 'Template siap pakai',
+    templatesMenuTooltip: 'Pilih dari template scenario siap pakai (Login, E-Commerce, Navigasi, Form Testing).',
+    importExcel: 'Impor Excel',
+    importExcelDesc: 'Impor massal',
+    importExcelTooltip: 'Unggah file Excel dengan scenario uji. Gunakan Ctrl+Klik untuk melihat template.',
   },
 }
 
 export default function ScenariosPage() {
   const navigate = useNavigate()
+  const menuRef = useRef(null)
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [editingScenario, setEditingScenario] = useState(null)
   const [searchTimeout, setSearchTimeout] = useState(null)
+  const [showCreateMenu, setShowCreateMenu] = useState(false)
 
   // New feature state
   const [showTemplatePicker, setShowTemplatePicker] = useState(false)
   const [showQuickRecord, setShowQuickRecord] = useState(false)
+  const [showImportModal, setShowImportModal] = useState(false)
+  const [importPreviewData, setImportPreviewData] = useState(null)
+  const [importIsLoading, setImportIsLoading] = useState(false)
   const [selectedIds, setSelectedIds] = useState(new Set())
   const [bulkExecuteStatus, setBulkExecuteStatus] = useState(null) // null | 'running' | 'done'
   const [bulkResults, setBulkResults] = useState([]) // [{id, name, status, executionId}]
@@ -57,8 +91,20 @@ export default function ScenariosPage() {
     clearError
   } = useScenarioStore()
 
-  const { language } = useSettingsStore()
+  const language = useSettingsStore((state) => state.language)
+  const theme = useSettingsStore((state) => state.theme)
   const t = i18n[language] || i18n.en
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setShowCreateMenu(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   // Load scenarios on mount
   useEffect(() => {
@@ -149,6 +195,103 @@ export default function ScenariosPage() {
     navigate(`/scenarios/${scenario.id}?autoRecord=1`)
   }
 
+  // ── Excel Import ────────────────────────────────────────────────────────────
+  const handleFileUpload = async (file) => {
+    if (!file) return
+
+    setImportIsLoading(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const response = await fetch('/api/import/preview', {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        }
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to preview Excel file')
+      }
+
+      const data = await response.json()
+      setImportPreviewData(data.preview)
+    } catch (error) {
+      alert(`Error: ${error.message}`)
+    } finally {
+      setImportIsLoading(false)
+    }
+  }
+
+  const handleConfirmImport = async (editedData) => {
+    setImportIsLoading(true)
+    try {
+      const response = await fetch('/api/import/confirm', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        },
+        body: JSON.stringify(editedData)
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to import scenarios')
+      }
+
+      const result = await response.json()
+      setShowImportModal(false)
+      setImportPreviewData(null)
+      fetchScenarios() // Refresh list
+      alert(`Success! Created ${result.scenarios.length} scenario(s)`)
+    } catch (error) {
+      alert(`Error: ${error.message}`)
+    } finally {
+      setImportIsLoading(false)
+    }
+  }
+
+  const handleCloseImport = () => {
+    if (!importIsLoading) {
+      setShowImportModal(false)
+      setImportPreviewData(null)
+    }
+  }
+
+  const handleDownloadTemplate = async () => {
+    try {
+      const response = await fetch('/api/import/template', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        }
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to download template')
+      }
+
+      // Get the blob from response
+      const blob = await response.blob()
+      
+      // Create a temporary URL and download
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'scenario-template.xlsx'
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+    } catch (error) {
+      alert(`Error: ${error.message}`)
+    }
+  }
+
   // ── Bulk Select ─────────────────────────────────────────────────────────────
   const handleToggleSelect = (id) => {
     setSelectedIds(prev => {
@@ -201,34 +344,128 @@ export default function ScenariosPage() {
             <p className="text-[#A0A0A4] mt-1">Create and manage your test scenarios</p>
           </div>
           {!showCreateForm && !editingScenario && (
-            <div className="flex flex-wrap gap-2 self-start">
-              {/* Quick Record */}
-              <Button
-                onClick={() => setShowQuickRecord(true)}
-                variant="success"
-                size="md"
-                title="Buat scenario & langsung mulai recording"
-              >
-                ⚡ Quick Record
-              </Button>
-              {/* Template Library */}
-              <Button
-                onClick={() => setShowTemplatePicker(true)}
-                variant="secondary"
-                size="md"
-                title="Buat scenario dari template siap pakai"
-              >
-                📋 Templates
-              </Button>
-              {/* Create Manual */}
-              <Button
-                onClick={() => setShowCreateForm(true)}
-                variant="primary"
-                size="md"
-                data-testid="create-scenario-btn"
-              >
-                + Create Scenario
-              </Button>
+            <div className="flex flex-wrap gap-2 self-start" ref={menuRef}>
+              {/* Create Scenario Dropdown Menu */}
+              <div className="relative">
+                <input
+                  type="file"
+                  id="excel-upload"
+                  accept=".xlsx,.xls"
+                  onChange={(e) => {
+                    if (e.target.files?.[0]) {
+                      handleFileUpload(e.target.files[0])
+                      setShowImportModal(true)
+                      setShowCreateMenu(false)
+                    }
+                  }}
+                  className="hidden"
+                />
+                <Button
+                  onClick={() => setShowCreateMenu(!showCreateMenu)}
+                  variant="primary"
+                  size="md"
+                  className="flex items-center gap-1"
+                  data-testid="create-scenario-btn"
+                >
+                  + Create Scenario
+                  <ChevronDown size={18} className={`transition-transform ${showCreateMenu ? 'rotate-180' : ''}`} />
+                </Button>
+                
+                {/* Dropdown Menu */}
+                {showCreateMenu && (
+                  <div className="absolute top-full right-0 mt-2 w-56 bg-[#1F1E22] border border-[rgba(255,255,255,0.12)] rounded-lg shadow-lg z-10 overflow-hidden">
+                    {/* Create Manual */}
+                    <button
+                      onClick={() => {
+                        setShowCreateForm(true)
+                        setShowCreateMenu(false)
+                      }}
+                      title={t.createManualTooltip}
+                      className="w-full px-4 py-2.5 text-left text-[#E0E0E2] hover:bg-[#2A2A2D] transition-colors border-b border-[rgba(255,255,255,0.08)] flex items-center gap-2 group relative"
+                    >
+                      <span>📝</span>
+                      <div className="flex-1">
+                        <div className="font-medium flex items-center gap-1">
+                          {t.createManual}
+                          <Tooltip text={t.createManualTooltip} position="right">
+                            <HelpCircle size={14} className="text-[#8A8A8F] opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </Tooltip>
+                        </div>
+                        <div className="text-xs text-[#8A8A8F]">{t.createManualDesc}</div>
+                      </div>
+                    </button>
+
+                    {/* Quick Record */}
+                    <button
+                      onClick={() => {
+                        setShowQuickRecord(true)
+                        setShowCreateMenu(false)
+                      }}
+                      title={t.quickRecordTooltip}
+                      className="w-full px-4 py-2.5 text-left text-[#E0E0E2] hover:bg-[#2A2A2D] transition-colors border-b border-[rgba(255,255,255,0.08)] flex items-center gap-2 group relative"
+                    >
+                      <span>⚡</span>
+                      <div className="flex-1">
+                        <div className="font-medium flex items-center gap-1">
+                          {t.quickRecord}
+                          <Tooltip text={t.quickRecordTooltip} position="right">
+                            <HelpCircle size={14} className="text-[#8A8A8F] opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </Tooltip>
+                        </div>
+                        <div className="text-xs text-[#8A8A8F]">{t.quickRecordDesc}</div>
+                      </div>
+                    </button>
+
+                    {/* Templates */}
+                    <button
+                      onClick={() => {
+                        setShowTemplatePicker(true)
+                        setShowCreateMenu(false)
+                      }}
+                      title={t.templatesMenuTooltip}
+                      className="w-full px-4 py-2.5 text-left text-[#E0E0E2] hover:bg-[#2A2A2D] transition-colors border-b border-[rgba(255,255,255,0.08)] flex items-center gap-2 group relative"
+                    >
+                      <span>📋</span>
+                      <div className="flex-1">
+                        <div className="font-medium flex items-center gap-1">
+                          {t.templates}
+                          <Tooltip text={t.templatesMenuTooltip} position="right">
+                            <HelpCircle size={14} className="text-[#8A8A8F] opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </Tooltip>
+                        </div>
+                        <div className="text-xs text-[#8A8A8F]">{t.templatesDesc}</div>
+                      </div>
+                    </button>
+
+                    {/* Import Excel (Merged with View Template) */}
+                    <button
+                      onClick={(e) => {
+                        if (e.ctrlKey || e.metaKey) {
+                          // Ctrl+Click: View template
+                          handleDownloadTemplate()
+                        } else {
+                          // Regular click: Import Excel
+                          document.getElementById('excel-upload').click()
+                        }
+                        setShowCreateMenu(false)
+                      }}
+                      title={t.importExcelTooltip}
+                      className="w-full px-4 py-2.5 text-left text-[#E0E0E2] hover:bg-[#2A2A2D] transition-colors flex items-center gap-2 group relative"
+                    >
+                      <span>📥</span>
+                      <div className="flex-1">
+                        <div className="font-medium flex items-center gap-1">
+                          {t.importExcel}
+                          <Tooltip text={t.importExcelTooltip} position="right">
+                            <HelpCircle size={14} className="text-[#8A8A8F] opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </Tooltip>
+                        </div>
+                        <div className="text-xs text-[#8A8A8F]">{t.importExcelDesc}</div>
+                      </div>
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>
@@ -399,6 +636,14 @@ export default function ScenariosPage() {
         <QuickRecordModal
           onClose={() => setShowQuickRecord(false)}
           onCreated={handleQuickRecordCreated}
+        />
+      )}
+      {showImportModal && importPreviewData && (
+        <ImportPreviewModal
+          data={importPreviewData}
+          isLoading={importIsLoading}
+          onConfirm={handleConfirmImport}
+          onCancel={handleCloseImport}
         />
       )}
     </Layout>
