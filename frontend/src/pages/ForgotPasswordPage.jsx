@@ -32,7 +32,7 @@ const translations = {
     backToLogin: 'Kembali ke Login',
     noAccount: 'Ingat passwordnya? ',
     noAccountLink: 'Login di sini',
-    copyright: 'Ini Test Sambil Ngopi Coy',
+    copyright: 'Test Sambil Ngopi Coy',
     successTitle: 'Email Terkirim!',
     successMessage: 'Kami telah mengirim link reset password ke email Anda. Silakan cek inbox Anda (termasuk folder spam).',
     errorOccurred: 'Terjadi kesalahan',

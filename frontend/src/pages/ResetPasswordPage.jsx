@@ -23,7 +23,7 @@ const translations = {
     workspace: 'Sign in to your workspace',
     passwordMismatch: 'Passwords do not match',
     passwordTooShort: 'Password must be at least 8 characters',
-    copyright: 'testingndrih',
+    copyright: 'Test Sambil Ngopi Coy',
     successMessage: 'Password reset successful. Please login with your new password.',
     requirements: 'Password Requirements',
     req8Chars: 'At least 8 characters',
