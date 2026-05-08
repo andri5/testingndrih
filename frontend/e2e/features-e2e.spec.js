@@ -292,6 +292,26 @@ test.describe.serial('Complete Feature E2E Testing', () => {
     }
   })
 
+  test('Auth token persists in localStorage', async ({ page }) => {
+    console.log('Starting: Auth token persistence test')
+    
+    if (!authToken) {
+      console.log('⏭️ Skipping - no token available')
+      return
+    }
+    
+    await page.goto(`${BASE_URL}/scenarios`, { waitUntil: 'networkidle' })
+    await page.waitForTimeout(1000)
+    
+    // Verify token still present in localStorage
+    const savedToken = await page.evaluate(() => 
+      localStorage.getItem('authToken')
+    )
+    
+    expect(savedToken).toBeTruthy()
+    console.log('✅ Auth token persisted successfully')
+  })
+
   // ============================================
   // 4. SUMMARY TEST
   // ============================================
