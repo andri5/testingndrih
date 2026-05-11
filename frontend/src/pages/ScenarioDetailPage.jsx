@@ -229,9 +229,11 @@ export default function ScenarioDetailPage() {
   const [currentStepIndex, setCurrentStepIndex] = useState(null)
   const [isAutoRetrying, setIsAutoRetrying] = useState(false)
   const [isBatchFixing, setIsBatchFixing] = useState(false)
+  const [executionIteration, setExecutionIteration] = useState(0)
 
   // Browser selection state
   const [selectedBrowser, setSelectedBrowser] = useState('chromium')
+  const [selectedDevice, setSelectedDevice] = useState(null)
   const [headlessMode, setHeadlessMode] = useState(false)
   const [showBrowserSelector, setShowBrowserSelector] = useState(false)
 
@@ -310,9 +312,15 @@ export default function ScenarioDetailPage() {
       setIsLoading(true)
       await Promise.all([loadScenario(), loadSteps()])
       setIsLoading(false)
+      // Load jumlah eksekusi sebelumnya untuk iterasi counter
+      try {
+        const histRes = await executionAPI.getHistory(id, 100, 0)
+        const total = histRes.data?.total ?? (histRes.data?.executions?.length ?? 0)
+        setExecutionIteration(total)
+      } catch { /* abaikan jika gagal */ }
     }
     load()
-  }, [loadScenario, loadSteps])
+  }, [loadScenario, loadSteps, id])
 
   // Get step type config
   const getStepTypeConfig = (type) => STEP_TYPES.find(t => t.value === type) || STEP_TYPES[0]
@@ -496,11 +504,13 @@ export default function ScenarioDetailPage() {
     setExecutionResult(null)
     setCurrentStepIndex(null)
     setError(null)
+    setExecutionIteration(prev => prev + 1)
 
     try {
       const res = await executionAPI.executeScenario(id, {
         browser: selectedBrowser,
-        headless: headlessMode
+        headless: headlessMode,
+        device: selectedDevice || undefined
       })
       const execution = res.data.execution
 
@@ -891,7 +901,7 @@ export default function ScenarioDetailPage() {
               onClick={() => setShowBrowserSelector(!showBrowserSelector)}
               disabled={isExecuting}
             >
-              🌐 Browser: {selectedBrowser}
+              {selectedDevice ? `📱 ${selectedDevice}` : `🌐 ${selectedBrowser}`}
             </Button>
             {!isRecording ? (
               <Button
@@ -941,18 +951,20 @@ export default function ScenarioDetailPage() {
         {/* Browser Selector */}
         {showBrowserSelector && (
           <Card>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold text-slate-900">Cross-Browser Testing</h2>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className={`text-base font-bold ${isDark ? 'text-[#E0E0E2]' : 'text-slate-900'}`}>Browser &amp; Device</h2>
               <button
                 onClick={() => setShowBrowserSelector(false)}
-                className="text-slate-400 hover:text-slate-600 text-xl leading-none"
+                className={`text-xl leading-none ${isDark ? 'text-[#8A8A8F] hover:text-[#E0E0E2]' : 'text-slate-400 hover:text-slate-600'}`}
               >
                 ✕
               </button>
             </div>
             <BrowserSelector
               selectedBrowser={selectedBrowser}
-              onBrowserChange={setSelectedBrowser}
+              selectedDevice={selectedDevice}
+              onBrowserChange={(b) => { setSelectedBrowser(b); setSelectedDevice(null) }}
+              onDeviceChange={setSelectedDevice}
               headless={headlessMode}
               onHeadlessChange={setHeadlessMode}
               disabled={isExecuting}
@@ -1297,7 +1309,12 @@ export default function ScenarioDetailPage() {
           <div ref={executionResultRef}>
           <Card>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-[#E0E0E2]">{t.executionResults}</h2>
+              <div>
+                <h2 className={`text-xl font-bold ${isDark ? 'text-[#E0E0E2]' : 'text-gray-900'}`}>{t.executionResults}</h2>
+                <p className={`text-xs mt-0.5 ${isDark ? 'text-[#8A8A8F]' : 'text-gray-500'}`}>
+                  {language === 'id' ? `Percobaan ke-${executionIteration}` : `Run #${executionIteration}`}
+                </p>
+              </div>
               <Badge variant={executionResult.status === 'PASSED' ? 'success' : 'danger'}>
                 {executionResult.status === 'PASSED' ? '✓' : '✗'} {executionResult.status}
               </Badge>
@@ -1305,31 +1322,31 @@ export default function ScenarioDetailPage() {
 
             {/* Simple 2-Column Stats Row */}
             <div className="flex flex-wrap gap-3 mb-4">
-              <div className="flex-1 min-w-[200px] p-4 rounded-lg bg-green-50 dark:bg-[#0F170F] border border-green-200 dark:border-[#34D399]/20">
+              <div className={`flex-1 min-w-[200px] p-4 rounded-lg border ${isDark ? 'bg-[#0F170F] border-[#34D399]/20' : 'bg-green-50 border-green-200'}`}>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-green-600 dark:text-[#8A8A8F] font-medium">{t.passed || 'Passed'}</p>
-                    <p className="text-2xl font-bold text-green-700 dark:text-[#34D399] mt-1">{executionResult.passedSteps || 0}</p>
+                    <p className={`text-sm font-medium ${isDark ? 'text-[#8A8A8F]' : 'text-green-600'}`}>{t.passed || 'Passed'}</p>
+                    <p className={`text-2xl font-bold mt-1 ${isDark ? 'text-[#34D399]' : 'text-green-700'}`}>{executionResult.passedSteps || 0}</p>
                   </div>
-                  <CheckCircle2 size={24} className="text-green-600 dark:text-[#34D399] opacity-50" />
+                  <CheckCircle2 size={24} className={`opacity-50 ${isDark ? 'text-[#34D399]' : 'text-green-600'}`} />
                 </div>
               </div>
-              <div className="flex-1 min-w-[200px] p-4 rounded-lg bg-red-50 dark:bg-[#170F0F] border border-red-200 dark:border-[#F87171]/20">
+              <div className={`flex-1 min-w-[200px] p-4 rounded-lg border ${isDark ? 'bg-[#170F0F] border-[#F87171]/20' : 'bg-red-50 border-red-200'}`}>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-red-600 dark:text-[#8A8A8F] font-medium">{t.failed || 'Failed'}</p>
-                    <p className="text-2xl font-bold text-red-700 dark:text-[#F87171] mt-1">{executionResult.failedSteps || 0}</p>
+                    <p className={`text-sm font-medium ${isDark ? 'text-[#8A8A8F]' : 'text-red-600'}`}>{t.failed || 'Failed'}</p>
+                    <p className={`text-2xl font-bold mt-1 ${isDark ? 'text-[#F87171]' : 'text-red-700'}`}>{executionResult.failedSteps || 0}</p>
                   </div>
-                  <XCircle size={24} className="text-red-600 dark:text-[#F87171] opacity-50" />
+                  <XCircle size={24} className={`opacity-50 ${isDark ? 'text-[#F87171]' : 'text-red-600'}`} />
                 </div>
               </div>
-              <div className="flex-1 min-w-[200px] p-4 rounded-lg bg-blue-50 dark:bg-[#161618] border border-blue-200 dark:border-[#2A2A2D]">
+              <div className={`flex-1 min-w-[200px] p-4 rounded-lg border ${isDark ? 'bg-[#161618] border-[#2A2A2D]' : 'bg-blue-50 border-blue-200'}`}>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-blue-600 dark:text-[#8A8A8F] font-medium">{t.duration || 'Duration'}</p>
-                    <p className="text-2xl font-bold text-blue-700 dark:text-[#E0E0E2] mt-1">{executionResult.duration ? `${(executionResult.duration / 1000).toFixed(2)}s` : '−'}</p>
+                    <p className={`text-sm font-medium ${isDark ? 'text-[#8A8A8F]' : 'text-blue-600'}`}>{t.duration || 'Duration'}</p>
+                    <p className={`text-2xl font-bold mt-1 ${isDark ? 'text-[#E0E0E2]' : 'text-blue-700'}`}>{executionResult.duration ? `${(executionResult.duration / 1000).toFixed(2)}s` : '−'}</p>
                   </div>
-                  <Clock size={24} className="text-blue-600 dark:text-[#FBBF24] opacity-50" />
+                  <Clock size={24} className={`opacity-50 ${isDark ? 'text-[#FBBF24]' : 'text-blue-600'}`} />
                 </div>
               </div>
             </div>
@@ -1370,19 +1387,19 @@ export default function ScenarioDetailPage() {
                         key={result.id || idx}
                         className={`p-3 rounded-lg border ${
                           result.status === 'PASSED'
-                            ? 'bg-green-900/20 border-green-700/30'
-                            : 'bg-red-900/20 border-red-700/30'
+                            ? isDark ? 'bg-green-900/20 border-green-700/30' : 'bg-green-50 border-green-200'
+                            : isDark ? 'bg-red-900/20 border-red-700/30' : 'bg-red-50 border-red-200'
                         }`}
                       >
                         <div className="flex items-center gap-3">
-                          <span className={`text-lg ${result.status === 'PASSED' ? 'text-green-400' : 'text-red-400'}`}>
+                          <span className={`text-lg ${result.status === 'PASSED' ? isDark ? 'text-green-400' : 'text-green-600' : isDark ? 'text-red-400' : 'text-red-600'}`}>
                             {result.status === 'PASSED' ? '✓' : '✗'}
                           </span>
                           <div className="flex-1">
-                            <p className="font-medium text-[#E0E0E2]">
+                            <p className={`font-medium ${isDark ? 'text-[#E0E0E2]' : 'text-gray-900'}`}>
                               Step {result.testStep?.stepNumber || idx + 1}: {result.testStep?.type || result.type} — {result.testStep?.description || result.description || '-'}
                             </p>
-                            <p className="text-xs text-[#888]">
+                            <p className={`text-xs ${isDark ? 'text-[#888]' : 'text-gray-500'}`}>
                               {result.testStep?.type || result.type} 
                               {result.testStep?.selector ? ` • ${result.testStep.selector}` : ''}
                               {result.duration ? ` • ${result.duration}ms` : ''}

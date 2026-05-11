@@ -177,15 +177,27 @@ export const executionService = {
       const useHeadless = options.headless === true
       const slowMo = options.slowMo ?? (useHeadless ? 0 : 300)
 
-      // Browser selection: firefox (default), chromium, webkit
-      const { chromium: chromiumBrowser, firefox, webkit } = await import('playwright')
+      // Mobile device emulation: look up Playwright device descriptor if requested
+      const { chromium: chromiumBrowser, firefox, webkit, devices: playwrightDevices } = await import('playwright')
       const browserEngines = { chromium: chromiumBrowser, firefox, webkit }
+
+      let deviceDescriptor = null
+      if (options.device) {
+        const { MOBILE_DEVICES } = await import('./browserService.js')
+        const mobilePreset = MOBILE_DEVICES.find(d => d.key === options.device)
+        if (mobilePreset && playwrightDevices[mobilePreset.playwrightDevice]) {
+          deviceDescriptor = playwrightDevices[mobilePreset.playwrightDevice]
+          // Use the engine required by the device (webkit for iPhone/iPad, chromium for Android)
+          options.browser = mobilePreset.engine
+        }
+      }
+
       const selectedBrowserName = options.browser && browserEngines[options.browser] ? options.browser : 'chromium'
       const browserEngine = browserEngines[selectedBrowserName]
 
       browser = await browserEngine.launch({
         headless: useHeadless,
-        args: selectedBrowserName === 'chromium' ? ['--start-maximized', '--no-sandbox'] : [],
+        args: selectedBrowserName === 'chromium' ? ['--no-sandbox'] : [],
         slowMo
       })
 
@@ -195,10 +207,11 @@ export const executionService = {
         fs.mkdirSync(videoDir, { recursive: true })
       }
 
-      context = await browser.newContext({
-        viewport: null,
-        recordVideo: { dir: videoDir, size: { width: 1280, height: 720 } }
-      })
+      const contextOptions = deviceDescriptor
+        ? { ...deviceDescriptor, recordVideo: { dir: videoDir, size: { width: 1280, height: 720 } } }
+        : { viewport: null, recordVideo: { dir: videoDir, size: { width: 1280, height: 720 } } }
+
+      context = await browser.newContext(contextOptions)
       page = await context.newPage()
 
       // Store page for live selector testing

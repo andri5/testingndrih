@@ -15,7 +15,7 @@ export const executionController = {
     try {
       const { scenarioId } = req.params
       const userId = req.user.id
-      const { browser, headless } = req.body || {}
+      const { browser, headless, device } = req.body || {}
 
       if (!scenarioId) {
         return res.status(400).json({ message: 'Scenario ID is required' })
@@ -39,7 +39,8 @@ export const executionController = {
       // Execution runs in the background
       const options = {
         browser: browser || 'chromium',
-        headless: headless === true || headless === 'true'
+        headless: headless === true || headless === 'true',
+        device: device || null
       }
 
       // Fire and forget — execution runs in background
@@ -681,7 +682,7 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#0f172a;color:#e2
    */
   async getAvailableBrowsers(req, res) {
     try {
-      const { getAvailableBrowsers } = await import('../services/browserService.js')
+      const { getAvailableBrowsers, MOBILE_DEVICES } = await import('../services/browserService.js')
       const browsers = getAvailableBrowsers()
       
       res.status(200).json({
@@ -691,6 +692,14 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#0f172a;color:#e2
           displayName: b.displayName,
           description: b.description,
           isDefault: b.isDefault
+        })),
+        mobileDevices: MOBILE_DEVICES.map(d => ({
+          key: d.key,
+          displayName: d.displayName,
+          description: d.description,
+          engine: d.engine,
+          type: d.type,
+          viewport: d.viewport
         }))
       })
     } catch (error) {

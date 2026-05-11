@@ -30,6 +30,55 @@ const AVAILABLE_BROWSERS = {
   }
 };
 
+// Mobile device emulation presets (uses Playwright built-in device descriptors)
+export const MOBILE_DEVICES = [
+  {
+    key: 'iphone-14',
+    displayName: 'iPhone 14',
+    playwrightDevice: 'iPhone 14',
+    engine: 'webkit',
+    type: 'phone',
+    viewport: '390×844',
+    description: 'Apple iPhone 14 — WebKit, 390×844'
+  },
+  {
+    key: 'iphone-14-pro-max',
+    displayName: 'iPhone 14 Pro Max',
+    playwrightDevice: 'iPhone 14 Pro Max',
+    engine: 'webkit',
+    type: 'phone',
+    viewport: '430×932',
+    description: 'Apple iPhone 14 Pro Max — WebKit, 430×932'
+  },
+  {
+    key: 'pixel-7',
+    displayName: 'Pixel 7',
+    playwrightDevice: 'Pixel 7',
+    engine: 'chromium',
+    type: 'phone',
+    viewport: '412×915',
+    description: 'Google Pixel 7 — Chromium, 412×915'
+  },
+  {
+    key: 'galaxy-s9',
+    displayName: 'Galaxy S9+',
+    playwrightDevice: 'Galaxy S9+',
+    engine: 'chromium',
+    type: 'phone',
+    viewport: '320×658',
+    description: 'Samsung Galaxy S9+ — Chromium, 320×658'
+  },
+  {
+    key: 'ipad-pro-11',
+    displayName: 'iPad Pro 11"',
+    playwrightDevice: 'iPad Pro 11',
+    engine: 'webkit',
+    type: 'tablet',
+    viewport: '834×1194',
+    description: 'Apple iPad Pro 11" — WebKit, 834×1194'
+  }
+];
+
 /**
  * Get all available browsers
  */

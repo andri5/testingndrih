@@ -70,7 +70,7 @@ export async function confirmImportHandler(req, res, next) {
  */
 export async function downloadTemplateHandler(req, res, next) {
   try {
-    const buffer = generateTemplateExcel()
+    const buffer = await generateTemplateExcel()
 
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     res.setHeader('Content-Disposition', 'attachment; filename="test-scenarios-template.xlsx"')
