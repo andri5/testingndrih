@@ -240,7 +240,7 @@ npm run dev           # http://localhost:3001
 ## 🐳 Quick Start (Docker - Recommended)
 
 ### Prerequisites
-- Docker Desktop
+- Docker Desktop (https://www.docker.com/products/docker-desktop/)
 - Git
 
 ### Setup (One Command)
@@ -249,27 +249,48 @@ npm run dev           # http://localhost:3001
 git clone https://github.com/andri5/testingndrih.git
 cd testingndrih
 
-# Copy environment template
+# Windows: run setup-docker.bat
+setup-docker.bat setup
+setup-docker.bat start
+
+# Mac/Linux: run setup-docker.sh
+bash setup-docker.sh setup
+bash setup-docker.sh start
+
+# Or manually:
 cp .env.example .env
-# Edit .env with your database credentials if needed
-
-# Start services
 docker-compose up -d
+```
 
-# Wait 10 seconds for initialization, then access:
-# Frontend: http://localhost:3001
-# API: http://localhost:5001/api/docs
+**Wait 15 seconds**, then access:
+- 🌐 Frontend: http://localhost:3000
+- 📚 API Docs: http://localhost:3000/api/docs
+- 🔐 Login: `admin@testingndrih.local` / `changeme123`
 
-# View logs
-docker-compose logs -f
+### Stop Services
+```bash
+# Windows
+setup-docker.bat stop
 
-# Stop services
+# Mac/Linux
+bash setup-docker.sh stop
+
+# Or manually
 docker-compose down
 ```
 
-**Default Login** *(from seed)*:
-- Email: `admin@testingndrih.local`
-- Password: `changeme123`
+### ⚡ Multi-Laptop Setup
+
+**Using 2 or more laptops?** Read [**MULTI_LAPTOP_SETUP.md**](MULTI_LAPTOP_SETUP.md) for:
+- ✅ How to sync database between laptops
+- ✅ Sharing test scenarios across devices
+- ✅ Docker remote database configuration
+- ✅ Network troubleshooting guide
+
+**Quick reference:**
+- **Laptop 1**: Run `docker-compose up -d` (hosts DB + App)
+- **Laptop 2**: Edit `.env` DATABASE_URL to point to Laptop 1 IP
+- **Both**: Access at `http://localhost:3000` — automatically synced
 
 ---
 
@@ -279,6 +300,7 @@ Start here based on your needs:
 
 | Need | Document |
 |------|----------|
+| **Multi-Laptop Setup** | [`MULTI_LAPTOP_SETUP.md`](MULTI_LAPTOP_SETUP.md) 🆕 |
 | **Getting started** | [`docs/guides/00_INDEX.md`](docs/guides/00_INDEX.md) |
 | **Quick commands** | [`docs/guides/QUICK_REFERENCE.md`](docs/guides/QUICK_REFERENCE.md) |
 | **Manual testing** | [`docs/guides/MANUAL_TESTING_GUIDE.md`](docs/guides/MANUAL_TESTING_GUIDE.md) |
