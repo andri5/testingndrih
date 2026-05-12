@@ -257,22 +257,14 @@ npm run dev           # http://localhost:3001
 - Docker Desktop (https://www.docker.com/products/docker-desktop/)
 - Git
 
-### Setup (One Command)
+### Setup & Start (2 Steps)
 ```bash
-# Clone repository
+# Step 1: Clone & Configure
 git clone https://github.com/andri5/testingndrih.git
 cd testingndrih
-
-# Windows: run setup-docker.bat
-setup-docker.bat setup
-setup-docker.bat start
-
-# Mac/Linux: run setup-docker.sh
-bash setup-docker.sh setup
-bash setup-docker.sh start
-
-# Or manually:
 cp .env.example .env
+
+# Step 2: Start services
 docker-compose up -d
 ```
 
@@ -281,16 +273,29 @@ docker-compose up -d
 - 📚 API Docs: http://localhost:3000/api/docs
 - 🔐 Login: `admin@testingndrih.local` / `changeme123`
 
-### Stop Services
+### Common Docker Commands
 ```bash
-# Windows
-setup-docker.bat stop
+# Start services
+docker-compose up -d
 
-# Mac/Linux
-bash setup-docker.sh stop
-
-# Or manually
+# Stop services (data preserved)
 docker-compose down
+
+# View real-time logs
+docker-compose logs -f
+
+# View specific service logs
+docker-compose logs -f app        # Application logs
+docker-compose logs -f db         # Database logs
+
+# Check service status
+docker-compose ps
+
+# Rebuild after code changes
+docker-compose up -d --build
+
+# Clean everything (removes data)
+docker-compose down -v
 ```
 
 ### ⚡ Multi-Laptop Setup
