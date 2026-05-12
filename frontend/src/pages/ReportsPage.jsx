@@ -29,7 +29,7 @@ const i18n = {
 }
 
 /** Pure SVG stacked bar chart for pass/fail trend */
-function TrendChart({ data }) {
+function TrendChart({ data, passedLabel = 'Passed', failedLabel = 'Failed' }) {
   const chartH = 120
   const barW = 24
   const gap = 8
@@ -54,7 +54,7 @@ function TrendChart({ data }) {
                   width={barW} height={failH}
                   fill="#ef4444" rx="2"
                 >
-                  <title>{d.label}: {d.failed} failed</title>
+                  <title>{d.label}: {d.failed} {failedLabel}</title>
                 </rect>
               )}
               {/* pass bar (top of fail) */}
@@ -64,7 +64,7 @@ function TrendChart({ data }) {
                   width={barW} height={passH}
                   fill="#22c55e" rx="2"
                 >
-                  <title>{d.label}: {d.passed} passed</title>
+                  <title>{d.label}: {d.passed} {passedLabel}</title>
                 </rect>
               )}
               {/* empty bar placeholder */}
@@ -86,8 +86,8 @@ function TrendChart({ data }) {
         })}
       </svg>
       <div className="flex gap-4 mt-2 text-xs text-gray-500">
-        <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 bg-green-500 rounded" /> {t.passed}</span>
-        <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 bg-red-500 rounded" /> {t.failed}</span>
+        <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 bg-green-500 rounded" /> {passedLabel}</span>
+        <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 bg-red-500 rounded" /> {failedLabel}</span>
       </div>
     </div>
   )
@@ -307,7 +307,7 @@ export default function ReportsPage() {
             {trendData.some(d => d.passed + d.failed > 0) && (
               <Card>
                 <h3 className="font-semibold text-[#E0E0E2] mb-4">{t.trendTitle}</h3>
-                <TrendChart data={trendData} />
+                <TrendChart data={trendData} passedLabel={t.passed} failedLabel={t.failed} />
               </Card>
             )}
 
