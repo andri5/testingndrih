@@ -39,7 +39,7 @@ export default function SmokeTestRunner({ scenarioId, scenarioName, onTestComple
   const [lastResult, setLastResult] = useState(null)
   const [notifyOnComplete, setNotifyOnComplete] = useState(false)
   const { language } = useSettingsStore()
-  const t = i18n[language] || i18n.en
+  const t = i18n[language] || i18n.id
 
   const handleStartTest = async () => {
     try {
@@ -72,15 +72,15 @@ export default function SmokeTestRunner({ scenarioId, scenarioName, onTestComple
   }
 
   return (
-    <div className="bg-white rounded-lg shadow p-6 border border-gray-200">
+    <div className="bg-[#1A1A1C] html.theme-light:bg-white rounded-lg shadow p-6 border border-[#2D2D2F] html.theme-light:border-[#DDDDE0]">
       <div className="flex items-center justify-between mb-6 gap-3">
         <div className="flex items-center gap-3 flex-1 min-w-0">
           <Zap className="w-6 h-6 text-orange-500 flex-shrink-0" />
           <div className="min-w-0">
-            <h3 className="text-lg font-semibold text-gray-900 truncate">
+            <h3 className="text-lg font-semibold text-[#E0E0E2] html.theme-light:text-[#1A1A1C] truncate">
               {t.smokeTest}
             </h3>
-            <p className="text-sm text-gray-600 truncate">{t.description}</p>
+            <p className="text-sm text-[#8A8A8F] html.theme-light:text-[#666] truncate">{t.description}</p>
           </div>
         </div>
       </div>
@@ -89,19 +89,19 @@ export default function SmokeTestRunner({ scenarioId, scenarioName, onTestComple
       {lastResult && (
         <div className={`mb-6 p-4 rounded-lg border-2 ${
           lastResult.status === 'SMOKE_PASSED'
-            ? 'bg-green-50 border-green-200'
-            : 'bg-red-50 border-red-200'
+            ? 'bg-[#0F170F] html.theme-light:bg-[#ECFDF5] border-green-600 html.theme-light:border-green-200'
+            : 'bg-[#170F0F] html.theme-light:bg-[#FEF2F2] border-red-600 html.theme-light:border-red-200'
         }`}>
           <div className="flex items-center gap-3 mb-2">
             {lastResult.status === 'SMOKE_PASSED' ? (
-              <CheckCircle className="w-5 h-5 text-green-600" />
+              <CheckCircle className="w-5 h-5 text-green-500 html.theme-light:text-green-600" />
             ) : (
-              <AlertCircle className="w-5 h-5 text-red-600" />
+              <AlertCircle className="w-5 h-5 text-red-500 html.theme-light:text-red-600" />
             )}
             <span className={`font-semibold ${
               lastResult.status === 'SMOKE_PASSED'
-                ? 'text-green-700'
-                : 'text-red-700'
+                ? 'text-green-400 html.theme-light:text-green-700'
+                : 'text-red-400 html.theme-light:text-red-700'
             }`}>
               Test {lastResult.status === 'SMOKE_PASSED' ? t.testPassed : t.testFailed}
             </span>
@@ -109,21 +109,21 @@ export default function SmokeTestRunner({ scenarioId, scenarioName, onTestComple
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4 text-sm">
             <div>
-              <span className="text-gray-600">{t.stepsPassed}:</span>
-              <p className="font-semibold text-lg text-green-600">
+              <span className="text-[#8A8A8F] html.theme-light:text-[#666]">{t.stepsPassed}:</span>
+              <p className="font-semibold text-lg text-green-500 html.theme-light:text-green-600">
                 {lastResult.passed}/{lastResult.passed + lastResult.failed}
               </p>
             </div>
             <div>
-              <span className="text-gray-600">{t.duration}:</span>
-              <p className="font-semibold text-lg text-blue-600 flex items-center gap-1">
+              <span className="text-[#8A8A8F] html.theme-light:text-[#666]">{t.duration}:</span>
+              <p className="font-semibold text-lg text-blue-500 html.theme-light:text-blue-600 flex items-center gap-1">
                 <Clock className="w-4 h-4" />
                 {(lastResult.duration / 1000).toFixed(2)}s
               </p>
             </div>
             <div>
-              <span className="text-gray-600">{t.timestamp}:</span>
-              <p className="font-semibold text-sm text-gray-700 truncate">
+              <span className="text-[#8A8A8F] html.theme-light:text-[#666]">{t.timestamp}:</span>
+              <p className="font-semibold text-sm text-[#A0A0A4] html.theme-light:text-[#777] truncate">
                 {new Date(lastResult.timestamp).toLocaleTimeString()}
               </p>
             </div>
@@ -133,10 +133,10 @@ export default function SmokeTestRunner({ scenarioId, scenarioName, onTestComple
 
       {/* Error Display */}
       {error && (
-        <div className="mb-6 p-4 rounded-lg bg-red-50 border border-red-200">
+        <div className="mb-6 p-4 rounded-lg bg-[#2D0D0D] html.theme-light:bg-[#FEF2F2] border border-[#5E1515] html.theme-light:border-[#FCA5A5]">
           <div className="flex items-center gap-2">
-            <AlertCircle className="w-5 h-5 text-red-600" />
-            <span className="text-red-700">{error}</span>
+            <AlertCircle className="w-5 h-5 text-red-500 html.theme-light:text-red-600" />
+            <span className="text-red-400 html.theme-light:text-red-700">{error}</span>
           </div>
         </div>
       )}
@@ -149,9 +149,9 @@ export default function SmokeTestRunner({ scenarioId, scenarioName, onTestComple
           checked={notifyOnComplete}
           onChange={(e) => setNotifyOnComplete(e.target.checked)}
           disabled={isRunning}
-          className="w-4 h-4 rounded border-gray-300 text-orange-500 focus:ring-orange-500"
+          className="w-4 h-4 rounded border-[#2D2D2F] html.theme-light:border-[#CCCCCC] text-orange-500 focus:ring-orange-500"
         />
-        <label htmlFor="notifyCheckbox" className="text-sm text-gray-700">
+        <label htmlFor="notifyCheckbox" className="text-sm text-[#A0A0A4] html.theme-light:text-[#777]">
           {t.notifyCheckbox}
         </label>
       </div>
@@ -163,7 +163,7 @@ export default function SmokeTestRunner({ scenarioId, scenarioName, onTestComple
           disabled={isRunning || isLoading}
           className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium shadow hover:shadow-md transition-all ${
             isRunning || isLoading
-              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+              ? 'bg-[#2D2D2F] html.theme-light:bg-[#DDDDE0] text-[#8A8A8F] html.theme-light:text-[#888] cursor-not-allowed'
               : 'bg-orange-500 text-white hover:bg-orange-600 active:bg-orange-700'
           }`}
         >
@@ -175,7 +175,7 @@ export default function SmokeTestRunner({ scenarioId, scenarioName, onTestComple
           <button
             onClick={handleResetTest}
             disabled={isRunning}
-            className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 shadow hover:shadow-md transition-all"
+            className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium text-[#A0A0A4] html.theme-light:text-[#777] bg-[#2D2D2F] html.theme-light:bg-[#DDDDE0] hover:bg-[#3D3D3F] html.theme-light:hover:bg-[#CCCCCC] shadow hover:shadow-md transition-all"
           >
             <RotateCcw className="w-4 h-4" />
             {t.reset}
@@ -184,7 +184,7 @@ export default function SmokeTestRunner({ scenarioId, scenarioName, onTestComple
       </div>
 
       {/* Info Text */}
-      <p className="text-xs text-gray-500 mt-4">
+      <p className="text-xs text-[#8A8A8F] html.theme-light:text-[#888] mt-4">
         💡 Smoke tests run critical paths only (~2-5 minutes). Perfect for quick deployment validation.
       </p>
     </div>

@@ -83,7 +83,7 @@ export default function SettingsPage() {
   const [email] = useState(user?.email || '')
   const [profilePicture, setProfilePicture] = useState(JSON.parse(localStorage.getItem('profilePicture') || 'null'))
 
-  const t = i18n[language] || i18n.en
+  const t = i18n[language] || i18n.id
 
   const tabs = [
     { id: 'profile', label: t.profile },

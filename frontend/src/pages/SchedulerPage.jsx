@@ -86,7 +86,7 @@ export default function SchedulerPage() {
     }
   }
 
-  const t = i18n[language] || i18n.en
+  const t = i18n[language] || i18n.id
 
   useEffect(() => {
     loadSchedules()

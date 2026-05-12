@@ -89,7 +89,7 @@ export default function BrowserMatrixPage() {
     }
   }
 
-  const t = i18n[language] || i18n.en
+  const t = i18n[language] || i18n.id
 
   useEffect(() => {
     loadScenarios()

@@ -13,7 +13,7 @@ export default function SmokeTestHistory({ scenarioId }) {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
   const { language } = useSettingsStore()
-  const t = i18n[language] || i18n.en
+  const t = i18n[language] || i18n.id
 
   useEffect(() => {
     loadHistory()

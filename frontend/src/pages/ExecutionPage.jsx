@@ -23,7 +23,7 @@ const i18n = {
 export default function ExecutionPage() {
   const navigate = useNavigate()
   const { language } = useSettingsStore()
-  const t = i18n[language] || i18n.en
+  const t = i18n[language] || i18n.id
   const [selectedScenarioId, setSelectedScenarioId] = useState(null)
   const [selectedScenarioName, setSelectedScenarioName] = useState('')
   const [screenshotModal, setScreenshotModal] = useState(null)

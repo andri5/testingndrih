@@ -30,7 +30,7 @@ export default function StressTestSummary() {
   const [summary, setSummary] = useState(null)
   const [loading, setLoading] = useState(true)
   const { language } = useSettingsStore()
-  const t = i18n[language] || i18n.en
+  const t = i18n[language] || i18n.id
 
   useEffect(() => {
     loadSummary()

@@ -54,7 +54,7 @@ export default function StressTestPage() {
   const [error, setError] = useState(null)
   const [summaryData, setSummaryData] = useState(null)
   const { language } = useSettingsStore()
-  const t = i18n[language] || i18n.en
+  const t = i18n[language] || i18n.id
 
   useEffect(() => {
     loadScenarios()

@@ -55,7 +55,7 @@ export default function SmokeTestPage() {
   const [runningAllTests, setRunningAllTests] = useState(false)
   const [summaryData, setSummaryData] = useState(null)
   const { language } = useSettingsStore()
-  const t = i18n[language] || i18n.en
+  const t = i18n[language] || i18n.id
 
   useEffect(() => {
     loadSmokeScenarios()
@@ -111,16 +111,16 @@ export default function SmokeTestPage() {
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
             <Zap className="w-8 h-8 text-orange-500" />
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{t.title}</h1>
+            <h1 className="text-3xl font-bold text-[#E0E0E2] html.theme-light:text-[#1A1A1C]">{t.title}</h1>
           </div>
-          <p className="text-gray-600 dark:text-gray-300">{t.description}</p>
+          <p className="text-[#A0A0A4] html.theme-light:text-[#666]">{t.description}</p>
         </div>
 
         {/* Error Display */}
         {error && (
-          <div className="mb-6 p-4 rounded-lg bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 flex items-center gap-3">
-            <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0" />
-            <span className="text-red-700 dark:text-red-200">{error}</span>
+          <div className="mb-6 p-4 rounded-lg bg-[#2D0D0D] html.theme-light:bg-[#FEF2F2] border border-[#5E1515] html.theme-light:border-[#FCA5A5] flex items-center gap-3">
+            <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
+            <span className="text-red-400 html.theme-light:text-red-700">{error}</span>
           </div>
         )}
 
@@ -153,8 +153,9 @@ export default function SmokeTestPage() {
           {/* Left Column - Scenario Selection & Test Runner */}
           <div className="lg:col-span-2 space-y-6">
             {/* Scenario Selector */}
-            <div className="bg-gray-800 dark:bg-gray-800 rounded-lg shadow p-6 border border-gray-700 dark:border-gray-700">
-              <h2 className="text-lg font-semibold text-white dark:text-white mb-4">
+            <div className="bg-[#1A1A1C] html.theme-light:bg-white rounded-lg shadow p-6 border border-[#2D2D2F] html.theme-light:border-[#DDDDE0]">
+              <h2 className="text-lg font-semibold text-[#E0E0E2] html.theme-light:text-[#1A1A1C] mb-4 flex items-center gap-2">
+                <Zap className="w-5 h-5 text-orange-500" />
                 {t.selectScenario}
               </h2>
 
@@ -163,25 +164,25 @@ export default function SmokeTestPage() {
                   <Loader className="w-6 h-6 text-orange-500 animate-spin" />
                 </div>
               ) : smokeScenarios.length === 0 ? (
-                <p className="text-center text-gray-400 dark:text-gray-400 py-8">
+                <p className="text-center text-[#8A8A8F] html.theme-light:text-[#888] py-8">
                   {t.noScenarios}
                 </p>
               ) : (
-                <div className="space-y-2 bg-gray-700 dark:bg-gray-700 rounded-lg p-4 max-h-64 overflow-y-auto">
+                <div className="space-y-2 bg-[#0F0E11] html.theme-light:bg-[#F5F5F7] rounded-lg p-4 max-h-64 overflow-y-auto">
                   {smokeScenarios.map(scenario => (
                     <button
                       key={scenario.id}
                       onClick={() => setSelectedScenario(scenario)}
                       className={`w-full text-left p-4 rounded-lg border-2 shadow-sm transition-all ${
                         selectedScenario?.id === scenario.id
-                          ? 'border-orange-500 bg-orange-900 dark:bg-orange-900 dark:border-orange-600 shadow'
-                          : 'border-gray-600 dark:border-gray-600 bg-gray-800 dark:bg-gray-800 hover:border-gray-500 dark:hover:border-gray-500 hover:shadow'
+                          ? 'border-orange-500 bg-[#2D0F00] html.theme-light:bg-[#FEF2F2] html.theme-light:border-orange-400'
+                          : 'border-[#2D2D2F] html.theme-light:border-[#DDDDE0] bg-[#1A1A1C] html.theme-light:bg-white hover:border-[#3D3D3F] html.theme-light:hover:border-[#CCCCCC] hover:shadow'
                       }`}
                     >
-                      <h3 className="font-semibold text-white break-words">
+                      <h3 className="font-semibold text-[#E0E0E2] html.theme-light:text-[#1A1A1C] break-words">
                         {scenario.name}
                       </h3>
-                      <p className="text-sm text-gray-300 mt-1">
+                      <p className="text-sm text-[#8A8A8F] html.theme-light:text-[#666] mt-1">
                         {scenario.testSteps?.length || scenario.steps?.length || 0} {t.steps}
                       </p>
                     </button>
@@ -216,8 +217,8 @@ export default function SmokeTestPage() {
               disabled={runningAllTests}
               className={`px-6 py-3 rounded-lg font-semibold shadow hover:shadow-md transition-all ${
                 runningAllTests
-                  ? 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed'
-                  : 'bg-orange-500 text-white hover:bg-orange-600 dark:hover:bg-orange-700 active:bg-orange-700'
+                  ? 'bg-[#2D2D2F] html.theme-light:bg-[#DDDDE0] text-[#8A8A8F] html.theme-light:text-[#888] cursor-not-allowed'
+                  : 'bg-orange-500 text-white hover:bg-orange-600 active:bg-orange-700'
               }`}
             >
               {runningAllTests ? (
@@ -233,12 +234,12 @@ export default function SmokeTestPage() {
         )}
 
         {/* Info Section */}
-        <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 mt-8">
-          <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
+        <div className="bg-[#1A1A1C] html.theme-light:bg-white border border-[#2D2D2F] html.theme-light:border-[#DDDDE0] rounded-lg p-6 mt-8">
+          <h3 className="font-semibold text-[#E0E0E2] html.theme-light:text-[#1A1A1C] mb-4 flex items-center gap-2">
             <Rocket className="w-5 h-5 text-orange-500" />
             {t.aboutTitle}
           </h3>
-          <ul className="text-sm text-gray-700 dark:text-gray-300 space-y-3">
+          <ul className="text-sm text-[#A0A0A4] html.theme-light:text-[#666] space-y-3">
             <li className="flex items-start gap-3">
               <ZapIcon className="w-4 h-4 text-orange-500 flex-shrink-0 mt-0.5" />
               <span>{t.feature1}</span>

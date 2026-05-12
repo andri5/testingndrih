@@ -279,7 +279,7 @@ export default function ScenarioDetailPage() {
   }
 
   const { language, theme } = useSettingsStore()
-  const t = i18n[language] || i18n.en
+  const t = i18n[language] || i18n.id
   const isDark = theme !== 'light'
 
   // Close step form modal on Escape

@@ -34,7 +34,7 @@ export default function SecurityScanRunner({ scenario, onScanComplete }) {
   const [selectedVulnTypes, setSelectedVulnTypes] = useState([])
   const [progress, setProgress] = useState(0)
   const { language } = useSettingsStore()
-  const t = i18n[language] || i18n.en
+  const t = i18n[language] || i18n.id
 
   const vulnerabilityTypes = [
     { id: 'SQL_INJECTION', name: 'SQL Injection', severity: 'CRITICAL' },

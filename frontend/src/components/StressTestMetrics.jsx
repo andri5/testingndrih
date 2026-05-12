@@ -26,7 +26,7 @@ const i18n = {
 
 export default function StressTestMetrics({ metrics }) {
   const { language } = useSettingsStore()
-  const t = i18n[language] || i18n.en
+  const t = i18n[language] || i18n.id
   
   if (!metrics) return null
 

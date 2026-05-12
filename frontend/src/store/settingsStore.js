@@ -2,18 +2,20 @@ import { create } from 'zustand'
 
 const applyTheme = (theme) => {
   if (theme === 'light') {
-    document.documentElement.classList.remove('dark')
+    document.documentElement.classList.add('theme-light')
+    document.documentElement.classList.remove('theme-dark')
   } else {
-    document.documentElement.classList.add('dark')
+    document.documentElement.classList.add('theme-dark')
+    document.documentElement.classList.remove('theme-light')
   }
 }
 
 // Apply theme immediately on module load (before React first render)
-applyTheme(localStorage.getItem('theme') || 'light')
+applyTheme(localStorage.getItem('theme') || 'dark')
 
 const useSettingsStore = create((set) => ({
-  theme: localStorage.getItem('theme') || 'light',
-  language: localStorage.getItem('language') || 'en',
+  theme: localStorage.getItem('theme') || 'dark',
+  language: localStorage.getItem('language') || 'id',
   executionTimeout: localStorage.getItem('executionTimeout') || '30',
   autoScreenshot: localStorage.getItem('autoScreenshot') !== 'false',
 

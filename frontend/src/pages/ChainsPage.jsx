@@ -87,7 +87,7 @@ export default function ChainsPage() {
       loading: 'Memuat chains...'
     }
   }
-  const t = i18n[language] || i18n.en
+  const t = i18n[language] || i18n.id
 
   const totalPages = Math.ceil(total / limit)
 

@@ -93,7 +93,7 @@ export default function ScenariosPage() {
 
   const language = useSettingsStore((state) => state.language)
   const theme = useSettingsStore((state) => state.theme)
-  const t = i18n[language] || i18n.en
+  const t = i18n[language] || i18n.id
 
   // Close menu when clicking outside
   useEffect(() => {

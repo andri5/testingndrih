@@ -12,7 +12,7 @@ export default function StressTestHistory({ scenario }) {
   const [history, setHistory] = useState([])
   const [loading, setLoading] = useState(true)
   const { language } = useSettingsStore()
-  const t = i18n[language] || i18n.en
+  const t = i18n[language] || i18n.id
 
   useEffect(() => {
     if (scenario?.id) {
