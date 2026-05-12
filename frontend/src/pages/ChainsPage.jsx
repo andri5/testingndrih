@@ -73,7 +73,7 @@ export default function ChainsPage() {
       loading: 'Loading chains...'
     },
     id: {
-      title: 'Test Chains',
+      title: 'Rantai Skenario',
       description: 'Hubungkan dan jalankan skenario secara berurutan',
       createChain: 'Buat Chain',
       createFirst: 'Buat chain pertama Anda',

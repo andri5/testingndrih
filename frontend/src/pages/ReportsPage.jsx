@@ -9,12 +9,22 @@ import { useSettingsStore } from '../store/settingsStore'
 
 const i18n = {
   en: {
+    title: '📈 Reports',
+    subtitle: 'Execution reports and analytics',
+    exportCSV: '📥 Export CSV',
     loadError: 'Failed to load report data',
     trendTitle: '📊 Pass/Fail Trend (last 14 days)',
+    passed: 'Passed',
+    failed: 'Failed',
   },
   id: {
+    title: '📈 Laporan',
+    subtitle: 'Laporan eksekusi dan analitik',
+    exportCSV: '📥 Ekspor CSV',
     loadError: 'Gagal memuat data laporan',
     trendTitle: '📊 Pass/Fail Trend (14 hari terakhir)',
+    passed: 'Lulus',
+    failed: 'Gagal',
   },
 }
 
@@ -76,8 +86,8 @@ function TrendChart({ data }) {
         })}
       </svg>
       <div className="flex gap-4 mt-2 text-xs text-gray-500">
-        <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 bg-green-500 rounded" /> Passed</span>
-        <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 bg-red-500 rounded" /> Failed</span>
+        <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 bg-green-500 rounded" /> {t.passed}</span>
+        <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 bg-red-500 rounded" /> {t.failed}</span>
       </div>
     </div>
   )
@@ -209,11 +219,11 @@ export default function ReportsPage() {
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-[#E0E0E2]">📈 Reports</h1>
-            <p className="text-[#A0A0A4] mt-1">Execution reports and analytics</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-[#E0E0E2]">{t.title}</h1>
+            <p className="text-[#A0A0A4] mt-1">{t.subtitle}</p>
           </div>
           <Button onClick={() => handleExportCSV(null)} variant="secondary" className="self-start sm:self-auto">
-            📥 Export CSV
+            {t.exportCSV}
           </Button>
         </div>
 

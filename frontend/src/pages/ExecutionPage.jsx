@@ -11,12 +11,52 @@ import { useSettingsStore } from '../store/settingsStore'
 
 const i18n = {
   en: {
+    title: 'Test Execution',
+    subtitle: 'Run and monitor test scenarios',
+    runScenario: 'Run Scenario',
+    selectScenario: 'Select Scenario',
+    selectScenarioPlaceholder: 'Choose a scenario...',
+    status: 'Status',
+    action: 'Action',
     selectScenarioFirst: '← Select a scenario first',
     viewScreenshot: 'View screenshot',
+    executionHistory: 'Execution History',
+    scenario: 'Scenario',
+    steps: 'Steps (P/F)',
+    duration: 'Duration',
+    date: 'Date',
+    totalExecutions: 'TOTAL EXECUTIONS',
+    passed: 'PASSED',
+    failed: 'FAILED',
+    successRate: 'SUCCESS RATE',
+    view: 'View',
+    html: 'HTML',
+    pdf: 'PDF',
+    export: 'Export',
   },
   id: {
+    title: 'Eksekusi Pengujian',
+    subtitle: 'Jalankan dan pantau skenario pengujian',
+    runScenario: 'Jalankan Skenario',
+    selectScenario: 'Pilih Skenario',
+    selectScenarioPlaceholder: 'Pilih skenario...',
+    status: 'Status',
+    action: 'Aksi',
     selectScenarioFirst: '← Pilih scenario terlebih dahulu',
     viewScreenshot: 'Lihat screenshot',
+    executionHistory: 'Riwayat Eksekusi',
+    scenario: 'Skenario',
+    steps: 'Langkah (B/G)',
+    duration: 'Durasi',
+    date: 'Tanggal',
+    totalExecutions: 'TOTAL EKSEKUSI',
+    passed: 'LULUS',
+    failed: 'GAGAL',
+    successRate: 'TINGKAT KEBERHASILAN',
+    view: 'Lihat',
+    html: 'HTML',
+    pdf: 'PDF',
+    export: 'Ekspor',
   },
 }
 
@@ -128,9 +168,9 @@ export default function ExecutionPage() {
       <div className="space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold text-[#E0E0E2]">Test Execution</h1>
+          <h1 className="text-3xl font-bold text-[#E0E0E2]">{t.title}</h1>
           <p className="text-[#A0A0A4] mt-2">
-            Run and monitor test scenarios
+            {t.subtitle}
           </p>
         </div>
 
@@ -145,13 +185,13 @@ export default function ExecutionPage() {
 
         {/* Execution Control Panel */}
         <Card>
-          <h2 className="text-lg sm:text-xl font-bold text-[#E0E0E2] mb-4">Run Scenario</h2>
+          <h2 className="text-lg sm:text-xl font-bold text-[#E0E0E2] mb-4">{t.runScenario}</h2>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Scenario Selector */}
             <div>
               <label className="block text-sm font-semibold text-[#A0A0A4] mb-2">
-                Select Scenario
+                {t.selectScenario}
               </label>
               <select
                 value={selectedScenarioId || ''}
@@ -163,7 +203,7 @@ export default function ExecutionPage() {
                 }}
                 className="w-full px-3 py-2 bg-[#161618] border border-[#2D2D2F] text-[#E0E0E2] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5E6AD2]"
               >
-                <option value="" className="bg-[#161618]">Choose a scenario...</option>
+                <option value="" className="bg-[#161618]">{t.selectScenarioPlaceholder}</option>
                 {scenarios && scenarios.map((scenario) => (
                   <option key={scenario.id} value={scenario.id}>
                     {scenario.name} ({scenario.steps || 0} steps)
@@ -175,7 +215,7 @@ export default function ExecutionPage() {
             {/* Status Info */}
             <div>
               <label className="block text-sm font-semibold text-[#A0A0A4] mb-2">
-                Status
+                {t.status}
               </label>
               <div className="px-3 py-2 bg-[#1A1A1C] rounded-lg">
                 {isRunning ? (
@@ -192,7 +232,7 @@ export default function ExecutionPage() {
             {/* Execute Button */}
             <div>
               <label className="block text-sm font-semibold text-[#A0A0A4] mb-2">
-                Action
+                {t.action}
               </label>
               {selectedScenarioId ? (
                 <ExecuteScenarioButton 
@@ -225,7 +265,7 @@ export default function ExecutionPage() {
                 </div>
                 <div>
                   <p className="text-2xl font-bold text-[#E0E0E2] leading-none">{stats.total || 0}</p>
-                  <p className="text-xs text-[#8A8A8F] mt-1.5 font-medium uppercase tracking-wider">Total Executions</p>
+                  <p className="text-xs text-[#8A8A8F] mt-1.5 font-medium uppercase tracking-wider">{t.totalExecutions}</p>
                 </div>
               </div>
             </div>
@@ -236,7 +276,7 @@ export default function ExecutionPage() {
                 </div>
                 <div>
                   <p className="text-2xl font-bold text-[#E0E0E2] leading-none">{stats.passed || 0}</p>
-                  <p className="text-xs text-[#8A8A8F] mt-1.5 font-medium uppercase tracking-wider">Passed</p>
+                  <p className="text-xs text-[#8A8A8F] mt-1.5 font-medium uppercase tracking-wider">{t.passed}</p>
                 </div>
               </div>
             </div>
@@ -247,7 +287,7 @@ export default function ExecutionPage() {
                 </div>
                 <div>
                   <p className="text-2xl font-bold text-[#E0E0E2] leading-none">{stats.failed || 0}</p>
-                  <p className="text-xs text-[#8A8A8F] mt-1.5 font-medium uppercase tracking-wider">Failed</p>
+                  <p className="text-xs text-[#8A8A8F] mt-1.5 font-medium uppercase tracking-wider">{t.failed}</p>
                 </div>
               </div>
             </div>
@@ -258,7 +298,7 @@ export default function ExecutionPage() {
                 </div>
                 <div>
                   <p className="text-2xl font-bold text-[#E0E0E2] leading-none">{stats.successRate || 0}%</p>
-                  <p className="text-xs text-[#8A8A8F] mt-1.5 font-medium uppercase tracking-wider">Success Rate</p>
+                  <p className="text-xs text-[#8A8A8F] mt-1.5 font-medium uppercase tracking-wider">{t.successRate}</p>
                 </div>
               </div>
             </div>
@@ -415,7 +455,7 @@ export default function ExecutionPage() {
 
         {/* Execution History */}
         <Card>
-          <h2 className="text-xl font-bold text-[#E0E0E2] mb-4">Execution History</h2>
+          <h2 className="text-xl font-bold text-[#E0E0E2] mb-4\">{t.executionHistory}</h2>
 
           {isLoading && executions.length === 0 ? (
             <div className="flex justify-center py-12">
@@ -431,22 +471,22 @@ export default function ExecutionPage() {
                 <thead>
                   <tr className="border-b border-[#2D2D2F]">
                     <th className="text-left py-3 px-4 font-semibold text-[#A0A0A4]">
-                      Scenario
+                      {t.scenario}
                     </th>
                     <th className="text-left py-3 px-4 font-semibold text-[#A0A0A4]">
-                      Status
+                      {t.status}
                     </th>
                     <th className="text-center py-3 px-4 font-semibold text-[#A0A0A4]">
-                      Steps (P/F)
+                      {t.steps}
                     </th>
                     <th className="text-center py-3 px-4 font-semibold text-[#A0A0A4]">
-                      Duration
+                      {t.duration}
                     </th>
                     <th className="text-left py-3 px-4 font-semibold text-[#A0A0A4]">
-                      Date
+                      {t.date}
                     </th>
                     <th className="text-center py-3 px-4 font-semibold text-[#A0A0A4]">
-                      Action
+                      {t.action}
                     </th>
                   </tr>
                 </thead>
@@ -492,7 +532,7 @@ export default function ExecutionPage() {
                               transition-colors cursor-pointer select-none"
                           >
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                            View
+                            {t.view}
                           </button>
                           <button
                             onClick={() => handleExportReport(execution.id, 'html')}
@@ -503,7 +543,7 @@ export default function ExecutionPage() {
                               transition-colors cursor-pointer select-none"
                           >
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                            HTML
+                            {t.html}
                           </button>
                           <button
                             onClick={() => handleExportReport(execution.id, 'pdf')}
@@ -514,7 +554,7 @@ export default function ExecutionPage() {
                               transition-colors cursor-pointer select-none"
                           >
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                            PDF
+                            {t.pdf}
                           </button>
                         </div>
                       </td>

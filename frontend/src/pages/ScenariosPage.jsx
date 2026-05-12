@@ -16,6 +16,8 @@ import { useSettingsStore } from '../store/settingsStore'
 
 const i18n = {
   en: {
+    title: 'Test Scenarios',
+    subtitle: 'Create and manage your test scenarios',
     selectedCount: (n) => `${n} scenario${n !== 1 ? 's' : ''} selected`,
     runningBulk: 'Running executions sequentially (headless)...',
     close: 'Close',
@@ -37,6 +39,8 @@ const i18n = {
     importExcelTooltip: 'Upload an Excel file with test scenarios. Use Ctrl+Click to view template.',
   },
   id: {
+    title: 'Skenario Pengujian',
+    subtitle: 'Buat dan kelola skenario pengujian Anda',
     selectedCount: (n) => `${n} scenario dipilih`,
     runningBulk: 'Menjalankan eksekusi secara berurutan (headless)...',
     close: 'Tutup',
@@ -424,8 +428,8 @@ export default function ScenariosPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-[#E0E0E2]">Test Scenarios</h1>
-            <p className="text-[#A0A0A4] mt-1">Create and manage your test scenarios</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-[#E0E0E2]">{t.title}</h1>
+            <p className="text-[#A0A0A4] mt-1">{t.subtitle}</p>
           </div>
           {!showCreateForm && !editingScenario && (
             <div className="flex flex-wrap gap-2 self-start" ref={menuRef}>
