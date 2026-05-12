@@ -23,7 +23,7 @@ const translations = {
     workspace: 'Sign in to your workspace',
     passwordMismatch: 'Passwords do not match',
     passwordTooShort: 'Password must be at least 8 characters',
-    copyright: 'Test Sambil Ngopi Coy',
+    copyright: 'Test Sambil Ngopi',
     successMessage: 'Password reset successful. Please login with your new password.',
     requirements: 'Password Requirements',
     req8Chars: 'At least 8 characters',
@@ -50,7 +50,7 @@ const translations = {
     workspace: 'Masuk ke workspace Anda',
     passwordMismatch: 'Password tidak cocok',
     passwordTooShort: 'Password harus minimal 8 karakter',
-    copyright: 'Test Sambil Ngopi Coy',
+    copyright: 'Test Sambil Ngopi',
     successMessage: 'Password berhasil direset. Silakan login dengan password baru Anda.',
     requirements: 'Persyaratan Password',
     req8Chars: 'Minimal 8 karakter',
@@ -179,10 +179,12 @@ export default function ResetPasswordPage() {
         <div className="w-full max-w-sm animate-slide-up">
           {/* Logo mark */}
           <div className="flex flex-col items-center mb-8">
-            <div className="w-9 h-9 rounded-lg bg-[#5E6AD2] flex items-center justify-center mb-4">
-              <ShieldCheck size={20} className="text-white" />
-            </div>
-            <h1 className={`text-lg font-semibold ${textPrimaryClass}`}>Test Sambil Ngopi Coy</h1>
+            <img 
+              src="/logo-icon.png" 
+              alt="Logo" 
+              className="w-9 h-9 mb-4 rounded"
+            />
+            <h1 className={`text-lg font-semibold ${textPrimaryClass}`}>Test Sambil Ngopi</h1>
             <p className={`text-sm ${textSecondaryClass} mt-0.5`}>{t.workspace}</p>
           </div>
 
@@ -241,10 +243,12 @@ export default function ResetPasswordPage() {
       <div className="w-full max-w-sm animate-slide-up">
         {/* Logo mark */}
         <div className="flex flex-col items-center mb-8">
-          <div className="w-9 h-9 rounded-lg bg-[#5E6AD2] flex items-center justify-center mb-4">
-            <ShieldCheck size={20} className="text-white" />
-          </div>
-          <h1 className={`text-lg font-semibold ${textPrimaryClass}`}>Test Sambil Ngopi Coy</h1>
+          <img 
+            src="/logo-icon.png" 
+            alt="Logo" 
+            className="w-9 h-9 mb-4 rounded"
+          />
+          <h1 className={`text-lg font-semibold ${textPrimaryClass}`}>Test Sambil Ngopi</h1>
           <p className={`text-sm ${textSecondaryClass} mt-0.5`}>{t.workspace}</p>
         </div>
 

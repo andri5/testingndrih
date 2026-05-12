@@ -83,8 +83,6 @@ html.theme-light .bg-opacity-75 { background-color: rgba(0,0,0,0.5) !important; 
 /* ─── Card / component borders ─── */
 html.theme-light .linear-card  { background: #FFFFFF !important; border-color: #DDDDE0 !important; }
 html.theme-light .glass-card   { background: #FFFFFF !important; border-color: #DDDDE0 !important; }
-html.theme-light .action-btn   { background: #F5F5F7 !important; border-color: #DDDDE0 !important; }
-html.theme-light .action-btn:hover { background: #EAEAEC !important; border-color: #BBBBBC !important; }
 html.theme-light .nav-item-active  { background: rgba(94,106,210,0.1) !important; color: #1A1A1C !important; }
 html.theme-light .gradient-text    { color: #5E6AD2 !important; }
 
@@ -342,15 +340,25 @@ html.theme-light .modal-backdrop {
 
 /* ─── Quick action button ─── */
 .action-btn {
-  background: #1A1A1C;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 8px;
-  transition: background 0.15s, border-color 0.15s;
+  transition: all 0.15s ease;
 }
 
 .action-btn:hover {
-  border-color: rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.24);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+html.theme-light .action-btn {
+  background: #F5F5F7 !important;
+  border-color: #DDDDE0 !important;
+}
+
+html.theme-light .action-btn:hover {
+  background: #EAEAEC !important;
+  border-color: #BBBBBC !important;
 }
 
 /* ─── Responsive utilities ─── */

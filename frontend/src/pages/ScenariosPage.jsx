@@ -175,6 +175,90 @@ export default function ScenariosPage() {
     } catch (error) {}
   }
 
+  const handleMarkSmoke = async (scenarioId, isSmoking) => {
+    try {
+      const token = localStorage.getItem('authToken')
+      const endpoint = isSmoking 
+        ? `/api/smoke/mark/${scenarioId}` 
+        : `/api/smoke/mark/${scenarioId}`
+      const method = isSmoking ? 'POST' : 'DELETE'
+      
+      const response = await fetch(endpoint, {
+        method,
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.message || 'Failed to mark scenario')
+      }
+
+      // Refresh scenarios list
+      fetchScenarios()
+    } catch (error) {
+      alert(`Error: ${error.message}`)
+    }
+  }
+
+  const handleMarkStress = async (scenarioId, isStressing) => {
+    try {
+      const token = localStorage.getItem('authToken')
+      const endpoint = isStressing 
+        ? `/api/stress/mark/${scenarioId}` 
+        : `/api/stress/mark/${scenarioId}`
+      const method = isStressing ? 'POST' : 'DELETE'
+      
+      const response = await fetch(endpoint, {
+        method,
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.message || 'Failed to mark scenario')
+      }
+
+      // Refresh scenarios list
+      fetchScenarios()
+    } catch (error) {
+      alert(`Error: ${error.message}`)
+    }
+  }
+
+  const handleMarkSecurity = async (scenarioId, isSecurity) => {
+    try {
+      const token = localStorage.getItem('authToken')
+      const endpoint = isSecurity 
+        ? `/api/security/mark/${scenarioId}` 
+        : `/api/security/mark/${scenarioId}`
+      const method = isSecurity ? 'POST' : 'DELETE'
+      
+      const response = await fetch(endpoint, {
+        method,
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.message || 'Failed to mark scenario')
+      }
+
+      // Refresh scenarios list
+      fetchScenarios()
+    } catch (error) {
+      alert(`Error: ${error.message}`)
+    }
+  }
+
   const handleLoadMore = () => {
     const newSkip = pagination.skip + pagination.take
     fetchScenarios(newSkip, pagination.take)
@@ -571,6 +655,9 @@ export default function ScenariosPage() {
             onDelete={handleDeleteScenario}
             onDuplicate={handleDuplicateScenario}
             onView={handleViewScenario}
+            onMarkSmoke={handleMarkSmoke}
+            onMarkStress={handleMarkStress}
+            onMarkSecurity={handleMarkSecurity}
             isLoading={isLoading}
             hasMore={pagination.hasMore}
             onLoadMore={handleLoadMore}

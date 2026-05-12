@@ -6,7 +6,7 @@
 > **⚡ Quick Reference**: [`docs/guides/QUICK_REFERENCE.md`](docs/guides/QUICK_REFERENCE.md) for commands and APIs  
 > **📖 Architecture**: [`docs/guides/RECORDER_2.0_GUIDE.md`](docs/guides/RECORDER_2.0_GUIDE.md) for implementation details
 
-![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)
+![Version](https://img.shields.io/badge/version-3.0.0-blue.svg)
 ![Status](https://img.shields.io/badge/status-production--ready-brightgreen.svg)
 ![Node](https://img.shields.io/badge/node-20.x-brightgreen.svg)
 ![React](https://img.shields.io/badge/React-18.2-blue.svg)
@@ -15,7 +15,7 @@
 
 ---
 
-## ✨ Key Features (v2.0 - April 2026)
+## ✨ Key Features (v3.0 - May 2026)
 
 ### 🎥 Playwright v2.0 Recording Engine (NEW)
 - ✅ **Headless Browser Recording** — Backend-controlled Playwright chromium for reliable recording
@@ -65,7 +65,13 @@
 - ✅ **Dark/Light Theme** — Full theme support with persistent preference
 - ✅ **Responsive Design** — Mobile-first layout with collapsible navigation
 - ✅ **Report Export** — Download execution reports (PDF/HTML)
-- ✅ **Excel Bulk Import** — Import scenarios from Excel with preview/edit (NEW)
+- ✅ **Profile Picture Upload** — User avatar with file size validation (max 5MB) (NEW)
+  - Dark/Light theme-aware styling
+  - Multi-language support (EN + ID)
+  - Profile picture preview with initials fallback
+  - Change/upload controls with visual feedback
+  - Persistent storage via localStorage
+- ✅ **Excel Bulk Import** — Import scenarios from Excel with preview/edit
   - Download template to see exact format
   - Preview data before creating
   - Edit inline (names, descriptions, URLs, steps)
@@ -98,7 +104,7 @@
 
 ---
 
-## 📊 Current Status (April 2026)
+## 📊 Current Status (May 2026)
 
 ### Project Completion
 ```
@@ -145,6 +151,13 @@
    └─ Organized test files
    └─ Production-ready layout
 
+✅ User Profile Management         100% Complete
+   └─ Profile picture upload
+   └─ File size validation (5MB)
+   └─ Dark/Light theme support
+   └─ Multi-language support (EN/ID)
+   └─ localStorage persistence
+
 Overall Status: **100% Production Ready** ✅
 ```
 
@@ -159,6 +172,7 @@ Overall Status: **100% Production Ready** ✅
 | Parallel execution | ✅ | Concurrent test runs |
 | Test scheduling | ✅ | Once, Hourly, Daily, Weekly |
 | Password reset | ✅ | Email-based with token |
+| Profile picture | ✅ | Avatar upload & preview |
 | Error handling | ✅ | 20+ suggestion patterns |
 | Database | ✅ | PostgreSQL with Prisma |
 

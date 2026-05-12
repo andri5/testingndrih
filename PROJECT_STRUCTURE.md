@@ -1,548 +1,480 @@
-# 📁 Test Sambil Ngopi Coy - Project Structure
+# 📁 Test Sambil Ngopi - Project Structure
 
-**Last Updated**: April 28, 2026
-**Version**: 2.1.0
+**Last Updated**: May 12, 2026  
+**Version**: 3.0.0  
 **Status**: Production Ready ✅
 
 ---
 
-## 📂 Directory Tree
+## 🎯 Project Overview
+
+**Test Sambil Ngopi** adalah platform automated testing yang memungkinkan pengguna merekam interaksi browser dan memutar ulang sebagai test cases. Dibangun dengan React 18 frontend dan Node.js/Express backend.
+
+- **Tech Stack**: React 18 + Vite + TailwindCSS + Node.js 20 + Express.js + PostgreSQL 16 + Playwright
+- **Architecture**: Monorepo (backend + frontend) dengan Docker orchestration
+- **Database**: Prisma ORM + PostgreSQL
+- **Key Features**: Recording, Playback, Scheduling, Cross-browser testing, Smart error recovery
+
+---
+
+## 📂 Directory Structure
 
 ```
 testingndrih/
-├── docker-compose.yml              # PostgreSQL + App container orchestration
-├── Dockerfile                      # Production image (React build + Express)
-├── package.json                    # Root workspace (monorepo: backend + frontend)
-├── .env.example                    # Environment template
-├── README.md                       # Project overview & quick start
-├── PROJECT_STRUCTURE.md            # This file
-├── docs/guides/PROJECT_PLAN.md     # Development roadmap & task log
 │
-├── backend/                        # Node.js + Express API (ESM modules, port 5001)
-│   ├── package.json
-│   ├── jest.config.js
-│   ├── babel.config.js
-│   ├── nodemon.json
-│   ├── seed.js                     # DB seed (creates default admin user)
+├── 📄 README.md                    # Project overview & getting started
+├── 📄 PROJECT_STRUCTURE.md         # This file - project organization
+├── 📄 docker-compose.yml           # Docker compose config (PostgreSQL + App)
+├── 📄 Dockerfile                   # Multi-stage Docker build
+├── 📄 .env.example                 # Environment variables template
+├── 📄 .gitignore                   # Git ignore rules
+├── 📄 .dockerignore                # Docker ignore rules
+├── 📄 setup-docker.sh              # Docker setup script (Linux/Mac)
+├── 📄 setup-docker.bat             # Docker setup script (Windows)
+│
+├── 📁 backend/                     # Node.js Express API Server
+│   ├── 📄 package.json             # Dependencies & npm scripts
+│   ├── 📄 Dockerfile               # Backend Docker image
+│   ├── 📄 jest.config.js           # Jest testing configuration
+│   ├── 📄 jest-setup.js            # Jest setup file
+│   ├── 📄 babel.config.js          # Babel transpiler config
+│   ├── 📄 nodemon.json             # Nodemon auto-reload config
+│   ├── 📄 seed.js                  # Database seed script
 │   │
-│   ├── prisma/
-│   │   ├── schema.prisma           # Full DB schema
-│   │   └── migrations/             # Prisma migration history
-│   │
-│   ├── src/
-│   │   ├── server.js               # Express entry point (middleware + route registration)
+│   ├── 📁 src/                     # Source code
+│   │   ├── 📄 server.js            # Express app entry point
 │   │   │
-│   │   ├── controllers/            # HTTP request handlers (thin layer, calls services)
-│   │   │   ├── authController.js
-│   │   │   ├── scenarioController.js
-│   │   │   ├── testStepController.js
-│   │   │   ├── executionController.js
-│   │   │   ├── recorderController.js
-│   │   │   ├── chainController.js
-│   │   │   ├── analyticsController.js
-│   │   │   ├── searchController.js
-│   │   │   └── fileController.js
+│   │   ├── 📁 controllers/         # HTTP request handlers
+│   │   │   ├── authController.js           # Authentication
+│   │   │   ├── scenarioController.js       # Scenario CRUD
+│   │   │   ├── testStepController.js       # Test step management
+│   │   │   ├── executionController.js      # Test execution
+│   │   │   ├── recorderController.js       # Playwright recording
+│   │   │   ├── chainController.js          # Test chain management
+│   │   │   ├── analyticsController.js      # Analytics & reports
+│   │   │   ├── searchController.js         # Search functionality
+│   │   │   ├── fileController.js           # File operations
+│   │   │   ├── importController.js         # Import scenarios
+│   │   │   ├── smokeTestController.js      # Smoke tests
+│   │   │   ├── stressTestController.js     # Stress tests
+│   │   │   ├── securityTestController.js   # Security tests
+│   │   │   └── __tests__/                  # Controller unit tests
 │   │   │
-│   │   ├── services/               # Business logic layer
-│   │   │   ├── scenarioService.js
-│   │   │   ├── testStepService.js      # ⚠️ stepNumber uses DB transaction (race-condition safe)
-│   │   │   ├── executionService.js     # Step-by-step Playwright execution
-│   │   │   ├── recorderService.js      # Playwright headless recording engine
-│   │   │   ├── browserService.js       # Browser availability detection
-│   │   │   ├── chainService.js         # Test chain management
-│   │   │   ├── analyticsService.js
-│   │   │   ├── searchService.js
-│   │   │   ├── emailService.js         # Nodemailer SMTP (password reset)
-│   │   │   ├── reportService.js
-│   │   │   ├── schedulerService.js     # Cron-based recurring test runs
-│   │   │   ├── parallelExecutionService.js
-│   │   │   ├── browserMatrixService.js
-│   │   │   ├── retryEngineService.js
-│   │   │   ├── locatorRepairService.js
-│   │   │   ├── locatorSuggestionService.js
-│   │   │   ├── screenshotComparisonService.js
-│   │   │   └── fileService.js
+│   │   ├── 📁 services/            # Business logic layer
+│   │   │   ├── authService.js              # Auth & user management
+│   │   │   ├── scenarioService.js          # Scenario operations
+│   │   │   ├── testStepService.js          # Step management (atomic DB transactions)
+│   │   │   ├── executionService.js         # Playwright step-by-step execution
+│   │   │   ├── recorderService.js          # Headless browser recording engine
+│   │   │   ├── browserService.js           # Browser availability detection
+│   │   │   ├── chainService.js             # Test chain execution
+│   │   │   ├── analyticsService.js         # Analytics & metrics
+│   │   │   ├── searchService.js            # Search & filtering
+│   │   │   ├── emailService.js             # Email (password reset via Nodemailer)
+│   │   │   ├── reportService.js            # Report generation
+│   │   │   ├── schedulerService.js         # Cron-based scheduling
+│   │   │   ├── parallelExecutionService.js # Parallel test runs
+│   │   │   ├── browserMatrixService.js     # Cross-browser testing
+│   │   │   ├── retryEngineService.js       # Smart retry logic
+│   │   │   ├── fileService.js              # File operations
+│   │   │   └── __tests__/                  # Service unit tests
 │   │   │
-│   │   ├── routes/                 # Express route definitions
-│   │   │   ├── authRoutes.js
-│   │   │   ├── scenarioRoutes.js
-│   │   │   ├── testStepRoutes.js
-│   │   │   ├── executionRoutes.js
-│   │   │   ├── recorderRoutes.js
-│   │   │   ├── chainRoutes.js
-│   │   │   ├── analyticsRoutes.js
-│   │   │   ├── searchRoutes.js
-│   │   │   ├── schedulerRoutes.js
+│   │   ├── 📁 routes/              # Express route definitions
+│   │   │   ├── authRoutes.js       # Auth endpoints
+│   │   │   ├── scenarioRoutes.js   # Scenario endpoints
+│   │   │   ├── testStepRoutes.js   # Step endpoints
+│   │   │   ├── executionRoutes.js  # Execution endpoints
+│   │   │   ├── recorderRoutes.js   # Recorder endpoints
+│   │   │   ├── chainRoutes.js      # Chain endpoints
+│   │   │   ├── analyticsRoutes.js  # Analytics endpoints
+│   │   │   ├── searchRoutes.js     # Search endpoints
+│   │   │   ├── schedulerRoutes.js  # Scheduler endpoints
+│   │   │   ├── fileRoutes.js       # File endpoints
+│   │   │   ├── importRoutes.js     # Import endpoints
 │   │   │   ├── parallelExecutionRoutes.js
 │   │   │   ├── browserMatrixRoutes.js
-│   │   │   ├── fileRoutes.js
-│   │   │   └── stepTypeRoutes.js
+│   │   │   └── stepTypeRoutes.js   # Step type reference
 │   │   │
-│   │   ├── middleware/
-│   │   │   └── auth.js             # JWT authentication middleware
+│   │   ├── 📁 middleware/          # Express middleware
+│   │   │   ├── auth.js             # JWT authentication
+│   │   │   └── __tests__/          # Middleware tests
 │   │   │
-│   │   ├── lib/
+│   │   ├── 📁 lib/                 # Library & utilities
 │   │   │   ├── prisma.js           # Prisma client singleton
-│   │   │   └── swagger.js          # Swagger/OpenAPI docs setup
+│   │   │   └── swagger.js          # Swagger/OpenAPI docs
 │   │   │
-│   │   └── utils/
-│   │       ├── jwt.js              # JWT sign/verify
-│   │       ├── password.js         # bcrypt hash/compare
-│   │       └── errorHandler.js     # Global Express error handler
+│   │   └── 📁 utils/               # Helper utilities
+│   │       ├── jwt.js              # JWT token utilities
+│   │       ├── password.js         # Password hashing (bcrypt)
+│   │       └── errorHandler.js     # Error handling utilities
 │   │
-│   └── uploads/
-│       ├── screenshots/            # Step & execution screenshots
-│       └── videos/                 # Playwright video recordings
+│   ├── 📁 prisma/                  # Database schema & migrations
+│   │   ├── schema.prisma           # Prisma data model
+│   │   └── migrations/             # Migration history
+│   │       └── [timestamp]_*/      # Individual migrations
+│   │
+│   ├── 📁 templates/               # Test scenario templates (CSV)
+│   │   ├── login-test.csv          # Login flow template
+│   │   ├── ecommerce-flow.csv      # E-commerce template
+│   │   ├── basic-navigation.csv    # Navigation template
+│   │   └── form-test.csv           # Form submission template
+│   │
+│   ├── 📁 uploads/                 # Runtime generated files (gitignored)
+│   │   ├── 📁 screenshots/         # Execution & step screenshots
+│   │   └── 📁 videos/              # Playwright video recordings
+│   │
+│   └── 📁 public/                  # Static assets
+│       └── logo-icon.png           # Logo icon for UI
 │
-├── frontend/                       # React 18 + Vite + TailwindCSS (port 3001)
-│   ├── package.json
-│   ├── vite.config.js              # Port 3001, /api proxy → localhost:5001
-│   ├── tailwind.config.js          # Custom colors + animations (fade-in, slide-up)
-│   ├── postcss.config.js
-│   ├── index.html
-│   ├── playwright.config.js        # E2E test config
+├── 📁 frontend/                    # React 18 Frontend (Vite + TailwindCSS)
+│   ├── 📄 package.json             # Dependencies & npm scripts
+│   ├── 📄 Dockerfile               # Frontend Docker image (multi-stage build)
+│   ├── 📄 index.html               # HTML entry point
+│   ├── 📄 vite.config.js           # Vite bundler configuration
+│   ├── 📄 tailwind.config.js       # TailwindCSS configuration
+│   ├── 📄 postcss.config.js        # PostCSS configuration
+│   ├── 📄 playwright.config.js     # E2E test configuration
+│   ├── 📄 .eslintrc.cjs            # ESLint rules
 │   │
-│   ├── src/
-│   │   ├── main.jsx                # React DOM entry
-│   │   ├── App.jsx                 # Router + ProtectedRoute setup
-│   │   ├── index.css               # Global styles + html.theme-light overrides
-│   │   │
-│   │   ├── pages/                  # Route-level components (one per page)
-│   │   │   ├── DashboardPage.jsx
-│   │   │   ├── ScenariosPage.jsx       # List + Quick Record + Templates + Bulk Execute
-│   │   │   ├── ScenarioDetailPage.jsx  # Step editor + recorder + execution
-│   │   │   ├── ChainsPage.jsx
-│   │   │   ├── ChainBuilderPage.jsx    # Chain step reorder/edit (w/ tooltips)
-│   │   │   ├── ChainExecutorPage.jsx
-│   │   │   ├── ExecutionPage.jsx
-│   │   │   ├── ParallelExecutionPage.jsx
-│   │   │   ├── AnalyticsPage.jsx
-│   │   │   ├── ReportsPage.jsx
-│   │   │   ├── SchedulerPage.jsx
-│   │   │   ├── BrowserMatrixPage.jsx
-│   │   │   ├── SettingsPage.jsx        # Theme (dark/light) + Language (EN/ID)
-│   │   │   ├── LoginPage.jsx
-│   │   │   ├── RegisterPage.jsx
-│   │   │   ├── ForgotPasswordPage.jsx
-│   │   │   ├── ResetPasswordPage.jsx
-│   │   │   ├── NotFoundPage.jsx        # 404
-│   │   │   ├── ForbiddenPage.jsx       # 403
-│   │   │   ├── ServerErrorPage.jsx     # 500
-│   │   │   ├── SessionExpiredPage.jsx
-│   │   │   └── MaintenancePage.jsx
-│   │   │
-│   │   ├── components/             # Reusable UI components
-│   │   │   ├── ui/
-│   │   │   │   └── index.jsx       # Button, Input, Card, Badge, Spinner, Alert,
-│   │   │   │                       # CardHeader/Title/Description/Content,
-│   │   │   │                       # Tooltip ← theme-aware + bilingual (EN/ID)
-│   │   │   ├── Layout.jsx              # App shell (sidebar + top header)
-│   │   │   ├── ScenariosList.jsx       # Scenario cards + tooltips on all action buttons
-│   │   │   ├── ScenarioForm.jsx        # Create/edit scenario form
-│   │   │   ├── ScenarioSearch.jsx      # Search + filter bar
-│   │   │   ├── TestStepList.jsx        # Step list with drag-reorder
-│   │   │   ├── ExecuteScenarioButton.jsx
-│   │   │   ├── BrowserSelector.jsx     # Browser picker + headless toggle w/ tooltip
-│   │   │   ├── SmartSuggestionPanel.jsx
-│   │   │   ├── StepErrorDetail.jsx
-│   │   │   ├── QuickRecordModal.jsx    # Quick Record Mode: URL → instant recording
-│   │   │   ├── TemplatePickerModal.jsx # Template Library (Login, E-Commerce, Nav, Form)
-│   │   │   ├── OfflineBanner.jsx
-│   │   │   ├── ProtectedRoute.jsx
-│   │   │   └── ErrorBoundary.jsx
-│   │   │
-│   │   ├── store/                  # Zustand global state
-│   │   │   ├── authStore.js        # user, token, login(), logout()
-│   │   │   ├── scenarioStore.js
-│   │   │   ├── executionStore.js
-│   │   │   └── settingsStore.js    # theme ('dark'|'light'), language ('en'|'id')
-│   │   │
-│   │   └── services/
-│   │       └── api.js              # Axios client + all API call wrappers
+│   ├── 📁 public/                  # Static assets
+│   │   ├── logo-icon.png           # Logo icon
+│   │   └── favicon.ico             # Browser favicon
 │   │
-│   └── e2e/                        # Playwright E2E tests
-│       ├── auth.spec.js
-│       ├── scenarios.spec.js
-│       ├── execution.spec.js
-│       ├── search.spec.js
-│       ├── core-features.spec.js
-│       ├── comprehensive.spec.js
-│       └── ...
+│   ├── 📁 src/                     # React source code
+│   │   ├── 📄 main.jsx             # React DOM entry point
+│   │   ├── 📄 App.jsx              # Root component (Router setup)
+│   │   ├── 📄 index.css            # Global styles & theme overrides
+│   │   │
+│   │   ├── 📁 pages/               # Route-level components (Page components)
+│   │   │   ├── LoginPage.jsx              # Authentication
+│   │   │   ├── RegisterPage.jsx           # User registration
+│   │   │   ├── ForgotPasswordPage.jsx     # Password reset request
+│   │   │   ├── ResetPasswordPage.jsx      # Password reset form
+│   │   │   ├── DashboardPage.jsx          # Main dashboard
+│   │   │   ├── ScenariosPage.jsx          # Scenario list & management
+│   │   │   ├── ScenarioDetailPage.jsx     # Scenario editor & recorder
+│   │   │   ├── ChainsPage.jsx             # Test chain list
+│   │   │   ├── ChainBuilderPage.jsx       # Chain builder/editor
+│   │   │   ├── ChainExecutorPage.jsx      # Chain execution view
+│   │   │   ├── ExecutionPage.jsx          # Execution history & live viewer
+│   │   │   ├── ParallelExecutionPage.jsx  # Parallel execution setup
+│   │   │   ├── AnalyticsPage.jsx          # Analytics & metrics
+│   │   │   ├── ReportsPage.jsx            # Test reports
+│   │   │   ├── SchedulerPage.jsx          # Test scheduling
+│   │   │   ├── BrowserMatrixPage.jsx      # Cross-browser testing
+│   │   │   ├── SettingsPage.jsx           # User settings (theme, language, profile)
+│   │   │   ├── NotFoundPage.jsx           # 404 error page
+│   │   │   ├── ForbiddenPage.jsx          # 403 error page
+│   │   │   ├── ServerErrorPage.jsx        # 500 error page
+│   │   │   ├── SessionExpiredPage.jsx     # Session timeout page
+│   │   │   └── MaintenancePage.jsx        # Maintenance page
+│   │   │
+│   │   ├── 📁 components/          # Reusable React components
+│   │   │   ├── 📁 ui/              # Base UI components
+│   │   │   │   └── index.jsx       # Exported UI components:
+│   │   │   │                       # - Button, Input, Card, Badge
+│   │   │   │                       # - Spinner, Alert, Tooltip
+│   │   │   │                       # - CardHeader, CardTitle, etc
+│   │   │   │                       # All components: theme & i18n aware
+│   │   │   │
+│   │   │   ├── Layout.jsx               # App shell (sidebar + header)
+│   │   │   ├── ProtectedRoute.jsx       # Route protection wrapper
+│   │   │   ├── ErrorBoundary.jsx        # Error fallback component
+│   │   │   ├── OfflineBanner.jsx        # Offline indicator
+│   │   │   │
+│   │   │   ├── 📁 Scenario Management/
+│   │   │   │   ├── ScenariosList.jsx    # Scenario card grid
+│   │   │   │   ├── ScenarioForm.jsx     # Create/edit form
+│   │   │   │   ├── ScenarioSearch.jsx   # Search & filter bar
+│   │   │   │   ├── TemplatePickerModal.jsx # Template library
+│   │   │   │   └── ImportPreviewModal.jsx
+│   │   │   │
+│   │   │   ├── 📁 Test Execution/
+│   │   │   │   ├── TestStepList.jsx     # Step list with reorder
+│   │   │   │   ├── ExecuteScenarioButton.jsx
+│   │   │   │   ├── BrowserSelector.jsx  # Browser picker
+│   │   │   │   ├── StepErrorDetail.jsx  # Error details view
+│   │   │   │   └── SmartSuggestionPanel.jsx
+│   │   │   │
+│   │   │   ├── 📁 Recording/
+│   │   │   │   └── QuickRecordModal.jsx # Quick record mode
+│   │   │   │
+│   │   │   ├── 📁 Testing Features/
+│   │   │   │   ├── SmokeTestRunner.jsx
+│   │   │   │   ├── SmokeTestSummary.jsx
+│   │   │   │   ├── SmokeTestHistory.jsx
+│   │   │   │   ├── StressTestRunner.jsx
+│   │   │   │   ├── StressTestSummary.jsx
+│   │   │   │   ├── StressTestMetrics.jsx
+│   │   │   │   ├── StressTestHistory.jsx
+│   │   │   │   ├── SecurityScanRunner.jsx
+│   │   │   │   ├── SecuritySummary.jsx
+│   │   │   │   ├── SecurityHistory.jsx
+│   │   │   │   └── SecurityFindings.jsx
+│   │   │   │
+│   │   │   ├── ExportButtons.jsx        # Export scenario
+│   │   │   ├── HelpModal.jsx            # Help modal
+│   │   │   └── ...
+│   │   │
+│   │   ├── 📁 services/            # API service layer
+│   │   │   └── api.js              # Axios instance + all API wrappers
+│   │   │
+│   │   ├── 📁 store/               # Zustand global state
+│   │   │   ├── authStore.js        # Auth state (user, token, login/logout)
+│   │   │   ├── scenarioStore.js    # Scenario state
+│   │   │   ├── executionStore.js   # Execution state
+│   │   │   └── settingsStore.js    # Settings (theme, language, persist to localStorage)
+│   │   │
+│   │   ├── 📁 utils/               # Utility functions
+│   │   │   └── [utility files]
+│   │   │
+│   │   └── 📁 assets/              # Static assets
 │
-└── templates/                      # CSV scenario import templates
-    ├── login-test.csv
-    ├── ecommerce-flow.csv
-    ├── basic-navigation.csv
-    └── form-test.csv
+│   ├── 📁 e2e/                     # Playwright E2E tests
+│   │   ├── auth.spec.js            # Auth flow tests
+│   │   ├── scenarios.spec.js        # Scenario CRUD tests
+│   │   ├── execution-api.spec.js    # Execution tests
+│   │   ├── features-e2e.spec.js     # Feature tests
+│   │   ├── search.spec.js           # Search tests
+│   │   ├── forgot-password.spec.js  # Password reset tests
+│   │   ├── mocked-auth.spec.js      # Mock auth tests
+│   │   └── comprehensive.spec.js    # Full workflow tests
+│
+│   └── 📁 node_modules/            # Dependencies (gitignored)
+│
+├── 📁 .github/                     # GitHub configuration
+│   └── 📁 workflows/               # CI/CD workflows
+│
+└── 📁 .vscode/                     # VS Code workspace settings
+    └── settings.json               # Development environment config
 ```
 
 ---
 
 ## 🔑 Key Files Reference
 
-| File | Keterangan |
-|------|------------|
-| `backend/src/server.js` | Express app entry, semua middleware & routes |
+| File | Purpose |
+|------|---------|
+| `backend/src/server.js` | Express entry point - middleware & route registration |
 | `backend/src/services/recorderService.js` | Playwright headless recording engine |
-| `backend/src/services/executionService.js` | Eksekusi step-by-step dengan screenshot |
-| `backend/src/services/testStepService.js` | CRUD step — `stepNumber` atomic via DB transaction |
-| `backend/src/services/schedulerService.js` | Cron-based recurring test runs |
-| `backend/prisma/schema.prisma` | Full DB schema |
-| `frontend/src/components/ui/index.jsx` | Shared UI components termasuk **Tooltip** |
-| `frontend/src/index.css` | Theme overrides (`html.theme-light .class`) |
-| `frontend/src/store/settingsStore.js` | Theme + language state (persist ke localStorage) |
-| `frontend/src/services/api.js` | Semua panggilan API ke backend (Axios) |
-| `frontend/src/App.jsx` | React Router setup + ProtectedRoute |
+| `backend/src/services/executionService.js` | Step-by-step execution with screenshots |
+| `backend/prisma/schema.prisma` | Complete database schema |
+| `frontend/src/App.jsx` | React Router setup & protected routes |
+| `frontend/src/store/settingsStore.js` | Global theme & language state (localStorage) |
+| `frontend/src/services/api.js` | All Axios API calls to backend |
+| `frontend/src/components/ui/index.jsx` | Base UI components (theme & i18n aware) |
+| `frontend/src/index.css` | Global styles & light theme overrides |
 
 ---
 
-## 🎨 Sistem Tema (Dark / Light)
+## 🎨 Theme System
 
-Tema dikendalikan via CSS class di `<html>`:
-- **Dark** (default): tidak ada class
-- **Light**: `html.theme-light` ditambahkan → semua warna gelap di-override di `index.css`
+### Implementation
+- **Dark Mode** (default): No HTML class
+- **Light Mode**: `class="theme-light"` on `<html>`
+- **Toggle**: Settings page → Theme selector
+- **Persistence**: Stored in `localStorage` via `settingsStore`
+- **Component Support**: All UI components detect theme via CSS class
 
-Ganti via **Settings → Theme** → disimpan di `localStorage`.
+### Color Palette
+
+| Color | Dark | Light |
+|-------|------|-------|
+| Background | `#1A1A1C` | `#FFFFFF` |
+| Text Primary | `#E0E0E2` | `#1A1A1C` |
+| Text Secondary | `#8A8A8F` | `#666666` |
+| Border | `#2D2D2F` | `#E0E0E2` |
+| Accent | `#5E6AD2` | `#5E6AD2` |
 
 ---
 
-## 🌐 Sistem Bahasa (EN / ID)
+## 🌐 Multi-Language Support
 
-Bahasa disimpan di `settingsStore` (`'en'` | `'id'`).
-Komponen yang mendukung i18n memakai objek terjemahan lokal dan baca `language` dari store.
+### Implementation
+- **Languages**: English (EN) & Indonesian (ID)
+- **Storage**: Zustand store + localStorage
+- **Switch**: Settings page → Language selector
+- **Components**: All pages support i18n via local translation objects
 
----
-
-## 💡 Tooltip Component
-
+### Example Pattern
 ```jsx
-import { Tooltip } from '../components/ui'
+const i18n = {
+  en: { title: 'Settings', ... },
+  id: { title: 'Pengaturan', ... }
+}
 
-<Tooltip text="Keterangan fitur" position="top" delay={300}>
-  <Button>Klik</Button>
-</Tooltip>
+const { language } = useSettingsStore()
+const t = i18n[language] || i18n.en
+
+return <h1>{t.title}</h1>
 ```
 
-| Prop | Default | Keterangan |
-|------|---------|------------|
-| `text` | — | Teks tooltip |
-| `position` | `'top'` | `top` \| `bottom` \| `left` \| `right` |
-| `delay` | `300` | Delay muncul (ms) |
+---
 
-Warna otomatis mengikuti tema aktif via CSS class `.tooltip-popup`.
-Teks mengikuti bahasa via `useSettingsStore` + local i18n object.
+## 📊 Database Models
+
+| Model | Purpose |
+|-------|---------|
+| `User` | Authentication & user management |
+| `Scenario` | Test scenario metadata |
+| `TestStep` | Individual test steps with atomic ordering |
+| `Execution` | Test run record |
+| `ExecutionStep` | Step result with screenshot/error |
+| `TestChain` | Grouped scenarios |
+| `ChainStep` | Scenario within chain |
+| `TestSchedule` | Cron-based test scheduling |
 
 ---
 
-## 🗄️ Database Schema (Model Utama)
+## 🛠️ Development Commands
 
-| Model | Deskripsi |
-|-------|-----------|
-| `User` | Akun auth (email, password hash, reset token) |
-| `Scenario` | Test scenario (name, url, description, stepCount) |
-| `TestStep` | Langkah test (type, selector, value, stepNumber) |
-| `Execution` | Satu kali eksekusi (status, duration, browser) |
-| `ExecutionStep` | Hasil per-step (passed/failed, screenshot, error) |
-| `TestChain` | Urutan scenario (sequential suite) |
-| `ChainStep` | Scenario dalam chain (stepNumber, runMode, retryCount) |
-| `TestSchedule` | Jadwal berulang (cron expression, scenario, isActive) |
-
----
-
-## 🛠️ Dev Commands
-
+### Setup & Installation
 ```bash
-# Dari root
-npm install              # Install semua workspace
-npm run dev              # Jalankan backend + frontend bersamaan
-npm run dev:backend      # Backend saja (http://localhost:5001)
-npm run dev:frontend     # Frontend saja (http://localhost:3001)
+# Install all dependencies
+npm install
 
-# Backend
-cd backend
-npm test                 # Jest unit tests
-npx prisma studio        # GUI database browser
-npx prisma migrate dev   # Jalankan migrasi pending
-
-# Frontend
-cd frontend
-npx playwright test      # E2E tests
-npm run build            # Production build → dist/
-
-# Docker (production)
-docker compose up -d     # Jalankan DB + App (http://localhost:3000)
-docker compose down      # Stop semua
+# Setup Docker environment
+./setup-docker.sh          # Linux/Mac
+./setup-docker.bat         # Windows
 ```
 
----
-
-## 📂 Directory Overview
-
-```
-testingndrih/
-├── 📄 README.md                          # Main project documentation
-├── 📄 docker-compose.yml                 # Docker compose configuration
-├── 📄 Dockerfile                         # Root Dockerfile (optional)
-│
-├── 📁 backend/                           # Node.js Backend (Port 5001)
-│   ├── src/                              # Source code
-│   │   ├── controllers/                  # Request handlers
-│   │   ├── services/                     # Business logic
-│   │   ├── routes/                       # API routes
-│   │   ├── middleware/                   # Express middleware
-│   │   ├── lib/                          # Utilities & helpers
-│   │   └── server.js                     # Express app entry point
-│   │
-│   ├── prisma/                           # Database schema & migrations
-│   │   ├── schema.prisma                 # Data model
-│   │   └── migrations/                   # Migration history
-│   │
-│   ├── templates/                        # Test scenario templates
-│   ├── uploads/                          # Screenshot uploads
-│   │
-│   ├── package.json                      # Dependencies & scripts
-│   ├── jest.config.js                    # Jest testing config
-│   ├── jest-setup.js                     # Jest setup
-│   ├── nodemon.json                      # Nodemon auto-reload config
-│   ├── babel.config.js                   # Babel transpiler config
-│   ├── Dockerfile                        # Backend Docker image
-│   └── seed.js                           # Database seeding script
-│
-├── 📁 frontend/                          # React Frontend (Port 3001)
-│   ├── src/                              # React source code
-│   │   ├── components/                   # Reusable React components
-│   │   │   └── ui/                       # UI components (Button, Card, etc)
-│   │   ├── pages/                        # Page components (routing)
-│   │   ├── services/                     # API service layer
-│   │   ├── store/                        # Zustand state management
-│   │   ├── App.jsx                       # Root component
-│   │   ├── main.jsx                      # React entry point
-│   │   └── index.css                     # Global styles
-│   │
-│   ├── e2e/                              # E2E tests (Playwright)
-│   │   ├── auth.spec.js
-│   │   ├── scenarios.spec.js
-│   │   └── ... (other e2e tests)
-│   │
-│   ├── public/                           # Static assets (if exists)
-│   ├── package.json                      # Dependencies & scripts
-│   ├── vite.config.js                    # Vite bundler config
-│   ├── tailwind.config.js                # TailwindCSS config
-│   ├── postcss.config.js                 # PostCSS config
-│   ├── playwright.config.js              # Playwright E2E config
-│   ├── .eslintrc.cjs                     # ESLint config
-│   ├── Dockerfile                        # Frontend Docker image
-│   └── index.html                        # HTML entry point
-│
-├── 📁 docs/                              # Documentation
-│   └── guides/                           # All documentation files
-│       ├── 00_INDEX.md                   # Master documentation index
-│       ├── RECORDER_2.0_GUIDE.md         # Playwright recorder architecture
-│       ├── MIGRATION_GUIDE.md            # V1.1 → V2.0 migration
-│       ├── QUICK_REFERENCE.md            # Quick cheat sheet
-│       ├── MANUAL_TESTING_GUIDE.md       # Manual testing procedures
-│       ├── FINAL_TEST_REPORT.md          # Test results & validation
-│       ├── IMPLEMENTATION_STATUS.md      # Implementation details
-│       ├── SUMMARY_REPORT.md             # Executive summary
-│       ├── PLAYWRIGHT_RECORDER_E2E_GUIDE.md # E2E testing guide
-│       └── PROJECT_PLAN.md               # Project plan
-│
-├── 📁 .github/                           # GitHub configuration
-│   └── workflows/                        # CI/CD workflows
-│
-├── 📁 .vscode/                           # VS Code settings
-│
-└── 📁 node_modules/                      # (gitignored) Dependencies
-```
-
----
-
-## 🎯 Key Directories Explained
-
-### `/backend/src/`
-**Core application logic**
-- `controllers/` - Handle HTTP requests
-- `services/` - Business logic (recording, execution, etc)
-- `routes/` - API route definitions
-- `middleware/` - Auth, error handling, logging
-- `lib/` - Database client & utilities
-- `server.js` - Express app setup
-
-**Key Features Implemented:**
-- Live Execution Viewer with real-time SSE streaming
-- **Pause/Stop controls** from live viewer (viewer-pause, viewer-resume, viewer-stop endpoints — no auth)
-- Playwright Recorder (record & playback)
-- Self-Healing Selectors (Phase 2.1)
-- Screenshot Comparison (Phase 2.2)
-- Retry Engine for flaky steps
-- Cancel execution with real-time loop interrupt
-
-### `/frontend/src/`
-**React application**
-- `components/` - Reusable UI components
-- `pages/` - Full page components (routed)
-- `services/` - API client & data fetching
-- `store/` - Global state (Zustand)
-- `App.jsx` - Root component with routing
-
-### `/docs/guides/`
-**Complete documentation**
-- Start with: `00_INDEX.md`
-- For quick start: `QUICK_REFERENCE.md`
-- For testing: `MANUAL_TESTING_GUIDE.md`
-- For implementation: `RECORDER_2.0_GUIDE.md`
-
-### `/frontend/e2e/`
-**End-to-end tests (Playwright)**
-- Auth, scenario, execution, and search flows
-- Integrated with `frontend/playwright.config.js`
-
-### `/backend/uploads/`
-**Runtime artifacts (gitignored)**
-- `screenshots/` for execution and step captures
-- `videos/` for Playwright recordings
-- `.gitkeep` files are tracked to preserve folder structure
-
----
-
-## 🗑️ What Was Removed/Moved
-
-### Removed (Not needed)
-- ❌ `test-debounce.html` - Old test file
-- ❌ `test-double-click.html` - Old test file
-- ❌ `test-recorder.html` - Old test file
-- ❌ `test-selector.html` - Old test file
-
-### Moved to `/docs/guides/`
-- ✅ DOCUMENTATION_INDEX.md → `00_INDEX.md`
-- ✅ RECORDER_2.0_GUIDE.md
-- ✅ MIGRATION_GUIDE.md
-- ✅ QUICK_REFERENCE.md
-- ✅ MANUAL_TESTING_GUIDE.md
-- ✅ FINAL_TEST_REPORT.md
-- ✅ IMPLEMENTATION_STATUS.md
-- ✅ SUMMARY_REPORT.md
-- ✅ PLAYWRIGHT_RECORDER_E2E_GUIDE.md
-- ✅ plan.md → `PROJECT_PLAN.md`
-
----
-
-## 📋 File Organization Rules
-
-### Root Level (Keep Minimal)
-```
-✅ README.md              - Project overview
-✅ docker-compose.yml     - Docker setup
-✅ Dockerfile             - Root docker config
-✅ .env files            - Environment variables
-✅ .gitignore            - Git ignore rules
-```
-
-### Backend Root (Clean)
-```
-✅ package.json          - Dependencies
-✅ jest.config.js        - Testing config
-✅ nodemon.json          - Dev server config
-✅ babel.config.js       - Transpiler config
-✅ src/                  - All source code
-✅ prisma/               - Database schema
-✅ templates/            - Test templates
-✅ uploads/              - File uploads
-```
-
-### Frontend Root (Clean)
-```
-✅ package.json          - Dependencies
-✅ vite.config.js        - Build config
-✅ tailwind.config.js    - Styling config
-✅ src/                  - All source code
-✅ e2e/                  - E2E tests
-✅ index.html            - Entry point
-```
-
----
-
-## 🔄 Running Tests
-
-### Backend Tests
+### Development
 ```bash
-# From root
+# Run entire stack (backend + frontend)
+npm run dev
+
+# Backend only
+npm run dev:backend        # http://localhost:5001
+
+# Frontend only
+npm run dev:frontend       # http://localhost:3000
+```
+
+### Testing
+```bash
+# Backend tests
 npm run test --workspace=backend
-```
 
-### Frontend Tests
-```bash
-# From root
-npm run test --workspace=frontend
+# Frontend E2E tests
 npm run e2e --workspace=frontend
+
+# Frontend unit tests
+npm run test --workspace=frontend
+```
+
+### Database
+```bash
+cd backend
+npx prisma studio        # GUI database browser
+npx prisma migrate dev   # Run pending migrations
+npx prisma db seed       # Seed default data
+```
+
+### Docker (Production)
+```bash
+# Start services
+docker compose up -d
+
+# Stop services
+docker compose down
+
+# View logs
+docker compose logs -f app
+docker compose logs -f db
 ```
 
 ---
 
-## 📚 Documentation Quick Links
+## 📁 Organization Principles
 
-| Need | File |
-|------|------|
-| Start here | `/docs/guides/00_INDEX.md` |
-| Quick commands | `/docs/guides/QUICK_REFERENCE.md` |
-| Manual testing | `/docs/guides/MANUAL_TESTING_GUIDE.md` |
-| Architecture | `/docs/guides/RECORDER_2.0_GUIDE.md` |
-| Upgrading | `/docs/guides/MIGRATION_GUIDE.md` |
-| Test results | `/docs/guides/FINAL_TEST_REPORT.md` |
+### Root Level
+✅ Keep minimal: Only README, docker-compose.yml, Dockerfile, .env files, setup scripts
 
----
+### Backend
+- ✅ Clear separation: controllers → services → database
+- ✅ All business logic in services
+- ✅ Atomic transactions for critical operations (e.g., step numbering)
 
-## 🎯 Project Organization Summary
+### Frontend
+- ✅ Components organized by feature/domain
+- ✅ Pages for routes, Components for reusables
+- ✅ All API calls through services layer
+- ✅ Global state via Zustand stores
 
-### Before ❌
-```
-Root had 19+ files including:
-- Docs scattered everywhere
-- Test files in wrong places
-- Old coverage folders
-- HTML test files not needed
-```
-
-### After ✅
-```
-Root now has only:
-- README.md (main doc)
-- backend/ (source code)
-- frontend/ (source code)
-- docs/ (all documentation)
-- Configuration files only
-```
-
-### Benefits
-✅ Cleaner project structure  
-✅ Easier to navigate  
-✅ Documentation centralized  
-✅ Test files organized  
-✅ Production-ready layout  
+### Database
+- ✅ Prisma ORM for type safety
+- ✅ Migrations tracked in version control
+- ✅ Seed script for initial data
 
 ---
 
-## ⚙️ Next Steps
+## 📝 File Organization Stats
 
-1. **Read documentation** from `/docs/guides/00_INDEX.md`
-2. **Run tests** via workspace scripts in `package.json`
-3. **Keep runtime artifacts** inside `/backend/uploads/` (already gitignored)
-4. **Deploy with confidence** - structure is now production-ready
-
----
-
-## 📞 Structure Maintained
-
-| Component | Status |
-|-----------|--------|
-| Backend source code | ✅ Intact & organized |
-| Frontend source code | ✅ Intact & organized |
-| Documentation | ✅ Centralized in `/docs/` |
-| Tests | ✅ Organized in backend/frontend workspaces |
-| Configuration | ✅ All config files preserved |
-| .env & secrets | ✅ In appropriate locations |
-| Build & deployment | ✅ Ready to go |
+- **Backend Packages**: ~25 npm dependencies
+- **Frontend Packages**: ~30 npm dependencies
+- **Controllers**: 13 files
+- **Services**: 20+ files
+- **Components**: 30+ React components
+- **Database Models**: 8 core models
+- **E2E Tests**: 8 test suites
 
 ---
 
-**Project is now clean, organized, and production-ready! 🚀**
+## ✅ Cleanup Status (May 12, 2026)
+
+### Removed (Not Needed)
+- ❌ Old analysis/strategy documents
+- ❌ Implementation/testing checklists
+- ❌ Query scripts
+- ❌ Draft component files
+- ❌ Release config (.releaserc.js)
+
+### Organized
+- ✅ Components grouped by domain
+- ✅ Services layer clearly separated
+- ✅ Routes well-organized
+- ✅ Documentation in clear structure
+- ✅ Static assets in public folders
+
+### Current Features
+- ✅ Profile picture upload with file size validation
+- ✅ Dark/light theme with conditional styling
+- ✅ Multi-language support (EN + ID)
+- ✅ Docker containerization with health checks
+- ✅ Comprehensive E2E test suite
+
+---
+
+## 🚀 Quick Start
+
+1. **Clone & Setup**
+   ```bash
+   git clone <repo>
+   cd testingndrih
+   ./setup-docker.bat  # Windows
+   ```
+
+2. **Development**
+   ```bash
+   npm install
+   npm run dev
+   ```
+
+3. **Access Application**
+   - Frontend: http://localhost:3000
+   - API Docs: http://localhost:3000/api/docs
+
+4. **Database Management**
+   ```bash
+   cd backend
+   npx prisma studio
+   ```
+
+---
+
+## 📞 Support
+
+For issues or questions about project structure, refer to:
+- README.md - Project overview
+- backend/README.md - Backend specific docs
+- frontend/README.md - Frontend specific docs

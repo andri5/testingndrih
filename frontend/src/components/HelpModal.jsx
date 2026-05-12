@@ -1,11 +1,11 @@
 import { useState } from 'react'
-import { X, ClipboardList, PlayCircle, Link2, Clock, Zap, ChevronRight } from 'lucide-react'
+import { X, ClipboardList, PlayCircle, Link2, Clock, Zap, ChevronRight, Flame, Gauge, Lock } from 'lucide-react'
 import { useSettingsStore } from '../store/settingsStore'
 
 const content = {
   en: {
     title: 'How to Use',
-    subtitle: 'Get started with Test Sambil Ngopi Coy',
+    subtitle: 'Get started with Test Sambil Ngopi',
     tabs: [
       {
         id: 'scenario',
@@ -43,6 +43,42 @@ const content = {
         ],
       },
       {
+        id: 'smoke',
+        label: 'Smoke Test',
+        icon: <Flame size={14} />,
+        steps: [
+          { num: 1, title: 'Mark for Smoke Testing', desc: 'Go to Scenarios → select scenarios you want to test → mark them for smoke testing. These become quick validation tests.' },
+          { num: 2, title: 'View Summary', desc: 'Smoke Test page shows total tests, pass rate, and average execution duration. Real-time metrics update after each run.' },
+          { num: 3, title: 'Run Single Test', desc: 'Select a scenario from the list → click "Run" to execute that smoke test and see live results.' },
+          { num: 4, title: 'Run All Tests', desc: 'Click the "Run All Smoke Tests" button to execute all marked scenarios at once.' },
+          { num: 5, title: 'View History', desc: 'Check test history on the right sidebar. View past runs, results, timestamps, and detailed logs.' },
+        ],
+      },
+      {
+        id: 'stress',
+        label: 'Stress Test',
+        icon: <Gauge size={14} />,
+        steps: [
+          { num: 1, title: 'Mark for Stress Testing', desc: 'Go to Scenarios → select scenarios → mark them for stress testing. These measure system performance under load.' },
+          { num: 2, title: 'Choose Load Profile', desc: 'Stress Test supports 4 profiles: Light (2x3), Medium (5x5), Heavy (10x10), Extreme (20x20) concurrent users.' },
+          { num: 3, title: 'View Performance Metrics', desc: 'Summary shows total tests, pass rate, average response time (ms), and throughput (executions/sec).' },
+          { num: 4, title: 'Run Single Scenario', desc: 'Select a scenario → click "Run" to stress test that scenario with the default light profile.' },
+          { num: 5, title: 'Run All Scenarios', desc: 'Click the "Run All" button with play icon to run stress tests on all scenarios with light profile.' },
+        ],
+      },
+      {
+        id: 'security',
+        label: 'Security Test',
+        icon: <Lock size={14} />,
+        steps: [
+          { num: 1, title: 'Mark for Security Testing', desc: 'Go to Scenarios → mark scenarios for security testing to scan for vulnerabilities.' },
+          { num: 2, title: 'Choose Scan Type', desc: '3 scan types available: Full Scan (comprehensive), Quick Scan (fast), Custom (select specific checks).' },
+          { num: 3, title: 'View Vulnerability Summary', desc: 'Shows total scans, avg risk score, count of critical/high/medium+low severity vulnerabilities.' },
+          { num: 4, title: 'Start a Scan', desc: 'Select a scenario → choose scan type → click "Start Security Scan". View findings as they are discovered.' },
+          { num: 5, title: 'Review Findings', desc: 'Filter findings by severity. Each finding shows vulnerability type, location, CVSS score, and remediation steps.' },
+        ],
+      },
+      {
         id: 'tools',
         label: 'Tools',
         icon: <Zap size={14} />,
@@ -63,14 +99,14 @@ const content = {
           { num: 2, title: 'Language', desc: 'Settings → Language to switch between English and Indonesian (Bahasa Indonesia).' },
           { num: 3, title: 'Tooltips', desc: 'Hover any action button (View, Edit, Clone, Delete) to see a quick description of what it does.' },
           { num: 4, title: 'Headless Mode', desc: 'Enable Headless in browser selector for faster execution without opening a visible browser window.' },
-          { num: 5, title: 'Step Types', desc: 'Supported steps: click, fill, navigate, wait, assert text, assert element, screenshot, scroll, hover, select, clear, type.' },
+          { num: 5, title: 'Export Reports', desc: 'Use Export buttons on Smoke/Stress/Security pages to download test results as PDF or Excel for analysis.' },
         ],
       },
     ],
   },
   id: {
     title: 'Cara Penggunaan',
-    subtitle: 'Mulai menggunakan Test Sambil Ngopi Coy',
+    subtitle: 'Mulai menggunakan Test Sambil Ngopi',
     tabs: [
       {
         id: 'scenario',
@@ -108,6 +144,42 @@ const content = {
         ],
       },
       {
+        id: 'smoke',
+        label: 'Pengujian Smoke',
+        icon: <Flame size={14} />,
+        steps: [
+          { num: 1, title: 'Tandai untuk Smoke Test', desc: 'Buka Scenarios → pilih scenario yang ingin diuji → tandai untuk smoke testing. Ini menjadi tes validasi cepat.' },
+          { num: 2, title: 'Lihat Ringkasan', desc: 'Halaman Smoke Test menampilkan total tes, tingkat keberhasilan, dan durasi eksekusi rata-rata secara real-time.' },
+          { num: 3, title: 'Jalankan Satu Tes', desc: 'Pilih scenario dari daftar → klik "Run" untuk menjalankan smoke test itu dan melihat hasil langsung.' },
+          { num: 4, title: 'Jalankan Semua Tes', desc: 'Klik tombol "Jalankan" dengan ikon play untuk menjalankan semua scenario smoke test sekaligus.' },
+          { num: 5, title: 'Lihat Riwayat', desc: 'Periksa riwayat tes di sidebar kanan. Lihat run sebelumnya, hasil, waktu, dan log terperinci.' },
+        ],
+      },
+      {
+        id: 'stress',
+        label: 'Pengujian Stress',
+        icon: <Gauge size={14} />,
+        steps: [
+          { num: 1, title: 'Tandai untuk Stress Test', desc: 'Buka Scenarios → pilih scenario → tandai untuk stress testing. Ini mengukur kinerja sistem di bawah beban.' },
+          { num: 2, title: 'Pilih Profil Beban', desc: 'Stress Test memiliki 4 profil: Ringan (2x3), Sedang (5x5), Berat (10x10), Ekstrem (20x20) user bersamaan.' },
+          { num: 3, title: 'Lihat Metrik Kinerja', desc: 'Ringkasan menampilkan total tes, tingkat keberhasilan, waktu respons rata-rata (ms), dan throughput (eksekusi/detik).' },
+          { num: 4, title: 'Jalankan Scenario Tunggal', desc: 'Pilih scenario → klik "Run" untuk stress test scenario itu dengan profil ringan default.' },
+          { num: 5, title: 'Jalankan Semua Scenario', desc: 'Klik tombol "Jalankan" dengan ikon play untuk menjalankan stress test pada semua scenario dengan profil ringan.' },
+        ],
+      },
+      {
+        id: 'security',
+        label: 'Pengujian Keamanan',
+        icon: <Lock size={14} />,
+        steps: [
+          { num: 1, title: 'Tandai untuk Security Test', desc: 'Buka Scenarios → tandai scenario untuk security testing guna memindai kerentanan.' },
+          { num: 2, title: 'Pilih Jenis Scan', desc: '3 jenis scan tersedia: Full Scan (menyeluruh), Quick Scan (cepat), Custom (pilih pemeriksaan spesifik).' },
+          { num: 3, title: 'Lihat Ringkasan Kerentanan', desc: 'Menampilkan total scan, skor risiko rata-rata, jumlah kerentanan kritis/tinggi/sedang+rendah.' },
+          { num: 4, title: 'Mulai Scan', desc: 'Pilih scenario → pilih jenis scan → klik "Start Security Scan". Lihat temuan saat ditemukan.' },
+          { num: 5, title: 'Tinjau Temuan', desc: 'Filter temuan berdasarkan keparahan. Setiap temuan menampilkan jenis kerentanan, lokasi, skor CVSS, dan langkah remediasi.' },
+        ],
+      },
+      {
         id: 'tools',
         label: 'Tools',
         icon: <Zap size={14} />,
@@ -128,7 +200,7 @@ const content = {
           { num: 2, title: 'Bahasa', desc: 'Settings → Language untuk beralih antara English dan Bahasa Indonesia.' },
           { num: 3, title: 'Tooltip', desc: 'Arahkan kursor ke tombol aksi (View, Edit, Clone, Delete) untuk melihat deskripsi singkat fungsinya.' },
           { num: 4, title: 'Mode Headless', desc: 'Aktifkan Headless di pemilih browser untuk eksekusi lebih cepat tanpa membuka jendela browser yang terlihat.' },
-          { num: 5, title: 'Tipe Step', desc: 'Step yang didukung: click, fill, navigate, wait, assert text, assert element, screenshot, scroll, hover, select, clear, type.' },
+          { num: 5, title: 'Ekspor Laporan', desc: 'Gunakan tombol Ekspor di halaman Smoke/Stress/Security untuk mengunduh hasil tes sebagai PDF atau Excel untuk analisis.' },
         ],
       },
     ],

@@ -1,7 +1,67 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
-import { AlertCircle, Eye, EyeOff, Loader2, ShieldCheck } from 'lucide-react'
+import { useSettingsStore } from '../store/settingsStore'
+import { AlertCircle, Eye, EyeOff, Loader2, ShieldCheck, Globe } from 'lucide-react'
+
+const translations = {
+  en: {
+    createAccount: 'Create your account',
+    fullName: 'Full Name',
+    fullNamePlaceholder: 'John Doe',
+    email: 'Email',
+    emailPlaceholder: 'your@email.com',
+    password: 'Password',
+    confirmPassword: 'Confirm Password',
+    passwordStrengthWeak: 'Weak',
+    passwordStrengthFair: 'Fair',
+    passwordStrengthStrong: 'Strong',
+    passwordStrengthVeryStrong: 'Very Strong',
+    passwordsDoNotMatch: 'Passwords do not match',
+    createAccountBtn: 'Create Account',
+    creatingAccount: 'Creating account...',
+    alreadyHaveAccount: 'Already have an account? ',
+    signIn: 'Sign in',
+    copyright: 'Test Sambil Ngopi',
+    fieldRequired: 'All fields are required',
+    passwordNotMeet: 'Password does not meet all security requirements',
+    passwordDoNotMatch: 'Passwords do not match',
+    rule8Chars: 'At least 8 characters',
+    ruleMax64: 'Maximum 64 characters',
+    ruleUppercase: 'At least 1 uppercase letter (A-Z)',
+    ruleLowercase: 'At least 1 lowercase letter (a-z)',
+    ruleNumber: 'At least 1 number (0-9)',
+    ruleSpecial: 'At least 1 special character (!@#$%^&*)',
+  },
+  id: {
+    createAccount: 'Buat akun Anda',
+    fullName: 'Nama Lengkap',
+    fullNamePlaceholder: 'John Doe',
+    email: 'Email',
+    emailPlaceholder: 'anda@email.com',
+    password: 'Password',
+    confirmPassword: 'Konfirmasi Password',
+    passwordStrengthWeak: 'Lemah',
+    passwordStrengthFair: 'Cukup',
+    passwordStrengthStrong: 'Kuat',
+    passwordStrengthVeryStrong: 'Sangat Kuat',
+    passwordsDoNotMatch: 'Password tidak cocok',
+    createAccountBtn: 'Buat Akun',
+    creatingAccount: 'Membuat akun...',
+    alreadyHaveAccount: 'Sudah punya akun? ',
+    signIn: 'Masuk',
+    copyright: 'Test Sambil Ngopi',
+    fieldRequired: 'Semua field wajib diisi',
+    passwordNotMeet: 'Password tidak memenuhi semua persyaratan keamanan',
+    passwordDoNotMatch: 'Password tidak cocok',
+    rule8Chars: 'Setidaknya 8 karakter',
+    ruleMax64: 'Maksimal 64 karakter',
+    ruleUppercase: 'Setidaknya 1 huruf besar (A-Z)',
+    ruleLowercase: 'Setidaknya 1 huruf kecil (a-z)',
+    ruleNumber: 'Setidaknya 1 angka (0-9)',
+    ruleSpecial: 'Setidaknya 1 karakter spesial (!@#$%^&*)',
+  }
+}
 
 export default function RegisterPage() {
   const navigate = useNavigate()
@@ -9,6 +69,8 @@ export default function RegisterPage() {
   const isLoading = useAuthStore((state) => state.isLoading)
   const error = useAuthStore((state) => state.error)
   const clearError = useAuthStore((state) => state.clearError)
+  const { language, setLanguage } = useSettingsStore()
+  const t = translations[language] || translations.en
 
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -19,21 +81,21 @@ export default function RegisterPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
   const passwordRules = [
-    { test: (p) => p.length >= 8,                                               label: 'At least 8 characters' },
-    { test: (p) => p.length <= 64,                                              label: 'Maximum 64 characters' },
-    { test: (p) => /[A-Z]/.test(p),                                             label: 'At least 1 uppercase letter (A-Z)' },
-    { test: (p) => /[a-z]/.test(p),                                             label: 'At least 1 lowercase letter (a-z)' },
-    { test: (p) => /[0-9]/.test(p),                                             label: 'At least 1 number (0-9)' },
-    { test: (p) => /[!@#$%^&*()_+\-=\[\]{};'"\\|,.<>\/?]/.test(p),            label: 'At least 1 special character (!@#$%^&*)' },
+    { test: (p) => p.length >= 8,                                               label: t.rule8Chars },
+    { test: (p) => p.length <= 64,                                              label: t.ruleMax64 },
+    { test: (p) => /[A-Z]/.test(p),                                             label: t.ruleUppercase },
+    { test: (p) => /[a-z]/.test(p),                                             label: t.ruleLowercase },
+    { test: (p) => /[0-9]/.test(p),                                             label: t.ruleNumber },
+    { test: (p) => /[!@#$%^&*()_+\-=\[\]{};'"\\|,.<>\/?]/.test(p),            label: t.ruleSpecial },
   ]
 
   const getPasswordStrength = () => {
     if (!password) return { score: 0, label: '', color: '' }
     const passed = passwordRules.filter((r) => r.test(password)).length
-    if (passed <= 2) return { score: passed, label: 'Weak',        color: 'bg-[#F87171]' }
-    if (passed <= 4) return { score: passed, label: 'Fair',        color: 'bg-[#FBBF24]' }
-    if (passed <= 5) return { score: passed, label: 'Strong',      color: 'bg-[#5E6AD2]' }
-    return             { score: passed, label: 'Very Strong', color: 'bg-[#34D399]' }
+    if (passed <= 2) return { score: passed, label: t.passwordStrengthWeak,        color: 'bg-[#F87171]' }
+    if (passed <= 4) return { score: passed, label: t.passwordStrengthFair,        color: 'bg-[#FBBF24]' }
+    if (passed <= 5) return { score: passed, label: t.passwordStrengthStrong,      color: 'bg-[#5E6AD2]' }
+    return             { score: passed, label: t.passwordStrengthVeryStrong, color: 'bg-[#34D399]' }
   }
 
   const strength = getPasswordStrength()
@@ -43,9 +105,9 @@ export default function RegisterPage() {
     e.preventDefault()
     setLocalError('')
     clearError()
-    if (!name || !email || !password || !confirmPassword) { setLocalError('All fields are required'); return }
-    if (!allRulesPassed) { setLocalError('Password does not meet all security requirements'); return }
-    if (password !== confirmPassword) { setLocalError('Passwords do not match'); return }
+    if (!name || !email || !password || !confirmPassword) { setLocalError(t.fieldRequired); return }
+    if (!allRulesPassed) { setLocalError(t.passwordNotMeet); return }
+    if (password !== confirmPassword) { setLocalError(t.passwordDoNotMatch); return }
     try { await register(email, password, name); navigate('/dashboard') }
     catch (err) { setLocalError(err.message) }
   }
@@ -60,9 +122,22 @@ export default function RegisterPage() {
           <div className="w-9 h-9 rounded-lg bg-[#5E6AD2] flex items-center justify-center mb-4">
             <ShieldCheck size={20} className="text-white" />
           </div>
-          <h1 className="text-lg font-semibold text-[#E0E0E2]">Test Sambil Ngopi Coy</h1>
-          <p className="text-sm text-[#8A8A8F] mt-0.5">Create your account</p>
+          <h1 className="text-lg font-semibold text-[#E0E0E2]">Test Sambil Ngopi</h1>
+          <p className="text-sm text-[#8A8A8F] mt-0.5">{t.createAccount}</p>
         </div>
+
+        {/* Language Toggle */}
+        <div className="flex justify-center mb-6">
+          <button
+            onClick={() => setLanguage(language === 'en' ? 'id' : 'en')}
+            className="px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 flex items-center gap-2 bg-[#2A2A2D] text-white hover:bg-[#3A3A3D]"
+            title={language === 'en' ? 'Ganti ke Bahasa Indonesia' : 'Switch to English'}
+          >
+            <Globe size={16} />
+            {language === 'en' ? 'ID' : 'EN'}
+          </button>
+        </div>
+
         <div className="auth-card bg-[#161618] border border-[rgba(255,255,255,0.08)] rounded-xl p-6">
           {(localError || error) && (
             <div className="mb-4 p-3 rounded-md bg-[#1F0F0F] border border-[#F87171]/30 text-[#F87171] text-sm flex items-center gap-2">
@@ -71,15 +146,15 @@ export default function RegisterPage() {
           )}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label htmlFor="name" className={labelCls}>Full Name</label>
-              <input id="name" type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="John Doe" disabled={isLoading} className={inputCls} />
+              <label htmlFor="name" className={labelCls}>{t.fullName}</label>
+              <input id="name" type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder={t.fullNamePlaceholder} disabled={isLoading} className={inputCls} />
             </div>
             <div>
-              <label htmlFor="email" className={labelCls}>Email</label>
-              <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="your@email.com" disabled={isLoading} className={inputCls} />
+              <label htmlFor="email" className={labelCls}>{t.email}</label>
+              <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t.emailPlaceholder} disabled={isLoading} className={inputCls} />
             </div>
             <div>
-              <label htmlFor="password" className={labelCls}>Password</label>
+              <label htmlFor="password" className={labelCls}>{t.password}</label>
               <div className="relative">
                 <input id="password" type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" disabled={isLoading} maxLength={64} className={inputCls + ' pr-10'} />
                 <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 flex items-center pr-3 text-[#4A4A52] hover:text-[#8A8A8F] transition-colors" tabIndex={-1}>
@@ -109,7 +184,7 @@ export default function RegisterPage() {
               )}
             </div>
             <div>
-              <label htmlFor="confirmPassword" className={labelCls}>Confirm Password</label>
+              <label htmlFor="confirmPassword" className={labelCls}>{t.confirmPassword}</label>
               <div className="relative">
                 <input id="confirmPassword" type={showConfirmPassword ? 'text' : 'password'} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" disabled={isLoading} maxLength={64} className={inputCls + ' pr-10'} />
                 <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute inset-y-0 right-0 flex items-center pr-3 text-[#4A4A52] hover:text-[#8A8A8F] transition-colors" tabIndex={-1}>
@@ -117,19 +192,19 @@ export default function RegisterPage() {
                 </button>
               </div>
               {confirmPassword && password !== confirmPassword && (
-                <p className="mt-1 text-xs text-[#F87171]">Passwords do not match</p>
+                <p className="mt-1 text-xs text-[#F87171]">{t.passwordsDoNotMatch}</p>
               )}
             </div>
             <button type="submit" disabled={isLoading} className="w-full py-2 px-4 rounded-md font-medium text-sm text-white bg-[#5E6AD2] hover:bg-[#6B7AE8] transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-[#5E6AD2] focus:ring-offset-2 focus:ring-offset-[#161618] disabled:opacity-50 disabled:cursor-not-allowed">
-              {isLoading ? <span className="flex items-center justify-center gap-2"><Loader2 size={15} className="animate-spin" />Creating account...</span> : 'Create Account'}
+              {isLoading ? <span className="flex items-center justify-center gap-2"><Loader2 size={15} className="animate-spin" />{t.creatingAccount}</span> : t.createAccountBtn}
             </button>
           </form>
           <div className="mt-5 pt-5 border-t border-[rgba(255,255,255,0.06)] text-center">
-            <span className="text-xs text-[#8A8A8F]">Already have an account? </span>
-            <Link to="/login" className="text-xs text-[#9BA3F0] hover:text-[#5E6AD2] font-medium transition-colors">Sign in</Link>
+            <span className="text-xs text-[#8A8A8F]">{t.alreadyHaveAccount}</span>
+            <Link to="/login" className="text-xs text-[#9BA3F0] hover:text-[#5E6AD2] font-medium transition-colors">{t.signIn}</Link>
           </div>
         </div>
-        <p className="text-center text-xs text-[#4A4A52] mt-5">Test Sambil Ngopi Coy &copy; {new Date().getFullYear()}</p>
+        <p className="text-center text-xs text-[#4A4A52] mt-5">{t.copyright} &copy; {new Date().getFullYear()}</p>
       </div>
     </div>
   )

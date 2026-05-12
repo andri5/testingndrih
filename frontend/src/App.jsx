@@ -17,6 +17,9 @@ import ChainExecutorPage from './pages/ChainExecutorPage'
 import SchedulerPage from './pages/SchedulerPage'
 import ParallelExecutionPage from './pages/ParallelExecutionPage'
 import BrowserMatrixPage from './pages/BrowserMatrixPage'
+import SmokeTestPage from './pages/SmokeTest'
+import StressTestPage from './pages/StressTestPage'
+import SecurityTestPage from './pages/SecurityTestPage'
 import ProtectedRoute from './components/ProtectedRoute'
 import NotFoundPage from './pages/NotFoundPage'
 import MaintenancePage from './pages/MaintenancePage'
@@ -161,6 +164,30 @@ export default function App() {
           element={
             <ProtectedRoute>
               <BrowserMatrixPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/smoke-test"
+          element={
+            <ProtectedRoute>
+              <SmokeTestPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/stress-test"
+          element={
+            <ProtectedRoute>
+              <StressTestPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/security-test"
+          element={
+            <ProtectedRoute>
+              <SecurityTestPage />
             </ProtectedRoute>
           }
         />

@@ -45,5 +45,5 @@ RUN npx prisma generate
 
 EXPOSE 3000
 
-# On container start: start virtual display, run migrations, then launch server
-CMD ["sh", "-c", "Xvfb :99 -screen 0 1280x720x24 -nolisten tcp &  export DISPLAY=:99 && npx prisma migrate deploy && node src/server.js"]
+# On container start: start virtual display, run migrations, seed database, then launch server
+CMD ["sh", "-c", "Xvfb :99 -screen 0 1280x720x24 -nolisten tcp &  export DISPLAY=:99 && npx prisma migrate deploy && node seed.js && node src/server.js"]

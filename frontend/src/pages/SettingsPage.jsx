@@ -18,6 +18,9 @@ const i18n = {
     application: 'Application',
     about: 'About',
     userProfile: 'USER PROFILE',
+    profilePicture: 'Profile Picture',
+    changePhoto: 'Change Photo',
+    uploadPhoto: 'Upload Photo',
     name: 'Name',
     email: 'Email',
     saveProfile: 'Save Profile',
@@ -34,6 +37,7 @@ const i18n = {
     saveSettings: 'Save Settings',
     profileSaved: 'Profile updated successfully',
     settingsSaved: 'Settings saved successfully',
+    photoSizeError: 'Image size must be less than 5MB',
   },
   id: {
     settings: 'Pengaturan',
@@ -42,6 +46,9 @@ const i18n = {
     application: 'Aplikasi',
     about: 'Tentang',
     userProfile: 'PROFIL PENGGUNA',
+    profilePicture: 'Foto Profil',
+    changePhoto: 'Ubah Foto',
+    uploadPhoto: 'Unggah Foto',
     name: 'Nama',
     email: 'Email',
     saveProfile: 'Simpan Profil',
@@ -58,6 +65,7 @@ const i18n = {
     saveSettings: 'Simpan Pengaturan',
     profileSaved: 'Profil berhasil diperbarui',
     settingsSaved: 'Pengaturan berhasil disimpan',
+    photoSizeError: 'Ukuran gambar harus kurang dari 5MB',
   },
 }
 
@@ -73,6 +81,7 @@ export default function SettingsPage() {
   const [error, setError] = useState(null)
   const [name, setName] = useState(user?.name || '')
   const [email] = useState(user?.email || '')
+  const [profilePicture, setProfilePicture] = useState(JSON.parse(localStorage.getItem('profilePicture') || 'null'))
 
   const t = i18n[language] || i18n.en
 
@@ -81,6 +90,29 @@ export default function SettingsPage() {
     { id: 'app', label: t.application },
     { id: 'about', label: t.about },
   ]
+
+  const handleProfilePictureChange = (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setError(t.photoSizeError)
+      setTimeout(() => setError(null), 3000)
+      return
+    }
+
+    // Read file as base64
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      const base64String = reader.result
+      setProfilePicture(base64String)
+      localStorage.setItem('profilePicture', JSON.stringify(base64String))
+      setSuccess(t.profileSaved)
+      setTimeout(() => setSuccess(null), 3000)
+    }
+    reader.readAsDataURL(file)
+  }
 
   const handleSaveProfile = () => {
     const updatedUser = { ...user, name }
@@ -138,15 +170,71 @@ export default function SettingsPage() {
               <>
                 <div className={cardCls}>
                   <p className={sectionTitleCls}>{t.userProfile}</p>
-                  <div className="space-y-4 max-w-md">
+                  <div className="space-y-6 max-w-md">
+                    {/* Profile Picture Section */}
+                    <div>
+                      <label className={labelCls}>{t.profilePicture}</label>
+                      <div className="flex items-center gap-4">
+                        <div className={`w-24 h-24 rounded-lg flex items-center justify-center border-2 border-dashed ${
+                          theme === 'dark' 
+                            ? 'border-[#2D2D2F] bg-[#0F0E11]' 
+                            : 'border-[#E0E0E2] bg-white'
+                        } overflow-hidden`}>
+                          {profilePicture ? (
+                            <img 
+                              src={profilePicture} 
+                              alt="Profile" 
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className={`text-3xl font-bold ${
+                              theme === 'dark' 
+                                ? 'text-[#4A4A52]' 
+                                : 'text-[#A0A0A4]'
+                            }`}>
+                              {user?.name?.charAt(0)?.toUpperCase() || 'U'}
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <label htmlFor="profile-picture-input" className="cursor-pointer">
+                            <div className={`px-4 py-2 rounded-lg text-sm font-medium text-center transition ${
+                              theme === 'dark'
+                                ? 'bg-[#5E6AD2] hover:bg-[#6872e5] text-white'
+                                : 'bg-[#5E6AD2] hover:bg-[#6872e5] text-white'
+                            }`}>
+                              {profilePicture ? t.changePhoto : t.uploadPhoto}
+                            </div>
+                          </label>
+                          <input
+                            id="profile-picture-input"
+                            type="file"
+                            accept="image/*"
+                            onChange={handleProfilePictureChange}
+                            className="hidden"
+                          />
+                          <p className={`text-xs mt-2 ${
+                            theme === 'dark' 
+                              ? 'text-[#555]' 
+                              : 'text-[#999]'
+                          }`}>JPG, PNG or GIF (Max 5MB)</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Name Field */}
                     <div>
                       <label className={labelCls}>{t.name}</label>
                       <input className={inputCls} value={name} onChange={(e) => setName(e.target.value)} placeholder={t.name} />
                     </div>
+
+                    {/* Email Field */}
                     <div>
                       <label className={labelCls}>{t.email}</label>
                       <input className={inputCls + ' opacity-50 cursor-not-allowed'} value={email} disabled />
                     </div>
+
+                    {/* Save Button */}
                     <button
                       onClick={handleSaveProfile}
                       className="px-4 py-2 bg-[#5E6AD2] hover:bg-[#6872e5] text-white text-sm font-medium rounded-lg transition"
@@ -263,11 +351,11 @@ export default function SettingsPage() {
             {/* About Tab */}
             {activeTab === 'about' && (
               <div className={cardCls}>
-                <p className={sectionTitleCls}>About Test Sambil Ngopi Coy</p>
+                <p className={sectionTitleCls}>About Test Sambil Ngopi</p>
                 <div className="space-y-4">
                   <div className="bg-[#0F0E11] rounded-lg p-4 space-y-3">
                     {[
-                      ['Application', 'Test Sambil Ngopi Coy'],
+                      ['Application', 'Test Sambil Ngopi'],
                       ['Version', '1.0.0'],
                       ['Description', 'Automated Web Testing Platform'],
                     ].map(([k, v]) => (

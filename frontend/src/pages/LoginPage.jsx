@@ -1,7 +1,41 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
-import { CheckCircle2, AlertCircle, Eye, EyeOff, Loader2, ShieldCheck } from 'lucide-react'
+import { useSettingsStore } from '../store/settingsStore'
+import { CheckCircle2, AlertCircle, Eye, EyeOff, Loader2, ShieldCheck, Globe } from 'lucide-react'
+
+const translations = {
+  en: {
+    title: 'Sign in to your workspace',
+    emailLabel: 'Email',
+    emailPlaceholder: 'your@email.com',
+    passwordLabel: 'Password',
+    passwordPlaceholder: '••••••••',
+    signingIn: 'Signing in...',
+    continue: 'Continue',
+    noAccount: "Don't have an account? ",
+    createOne: 'Create one',
+    forgotPassword: 'Forgot password?',
+    copyright: 'Test Sambil Ngopi',
+    signedIn: 'Signed in successfully',
+    emailRequired: 'Email and password are required',
+  },
+  id: {
+    title: 'Masuk ke workspace Anda',
+    emailLabel: 'Email',
+    emailPlaceholder: 'anda@email.com',
+    passwordLabel: 'Password',
+    passwordPlaceholder: '••••••••',
+    signingIn: 'Masuk...',
+    continue: 'Lanjutkan',
+    noAccount: 'Belum punya akun? ',
+    createOne: 'Buat satu',
+    forgotPassword: 'Lupa password?',
+    copyright: 'Test Sambil Ngopi',
+    signedIn: 'Masuk berhasil',
+    emailRequired: 'Email dan password wajib diisi',
+  }
+}
 
 export default function LoginPage() {
   const navigate = useNavigate()
@@ -9,6 +43,8 @@ export default function LoginPage() {
   const isLoading = useAuthStore((state) => state.isLoading)
   const error = useAuthStore((state) => state.error)
   const clearError = useAuthStore((state) => state.clearError)
+  const { language, setLanguage } = useSettingsStore()
+  const t = translations[language] || translations.en
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -21,7 +57,7 @@ export default function LoginPage() {
     setSuccessMessage('')
 
     if (!email || !password) {
-      setLocalError('Email and password are required')
+      setLocalError(t.emailRequired)
       return
     }
 
@@ -29,7 +65,7 @@ export default function LoginPage() {
       setLocalError('')
       clearError()
       await login(email, password)
-      setSuccessMessage('Signed in successfully')
+      setSuccessMessage(t.signedIn)
       setTimeout(() => {
         navigate('/dashboard')
       }, 1000)
@@ -44,11 +80,25 @@ export default function LoginPage() {
 
         {/* Logo mark */}
         <div className="flex flex-col items-center mb-8">
-          <div className="w-9 h-9 rounded-lg bg-[#5E6AD2] flex items-center justify-center mb-4">
-            <ShieldCheck size={20} className="text-white" />
-          </div>
-          <h1 className="text-lg font-semibold text-[#E0E0E2]">Test Sambil Ngopi Coy</h1>
-          <p className="text-sm text-[#8A8A8F] mt-0.5">Sign in to your workspace</p>
+          <img 
+            src="/logo-icon.png" 
+            alt="Logo" 
+            className="w-9 h-9 mb-4 rounded"
+          />
+          <h1 className="text-lg font-semibold text-[#E0E0E2]">Test Sambil Ngopi</h1>
+          <p className="text-sm text-[#8A8A8F] mt-0.5">{t.title}</p>
+        </div>
+
+        {/* Language Toggle */}
+        <div className="flex justify-center mb-6">
+          <button
+            onClick={() => setLanguage(language === 'en' ? 'id' : 'en')}
+            className="px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 flex items-center gap-2 bg-[#2A2A2D] text-white hover:bg-[#3A3A3D]"
+            title={language === 'en' ? 'Ganti ke Bahasa Indonesia' : 'Switch to English'}
+          >
+            <Globe size={16} />
+            {language === 'en' ? 'ID' : 'EN'}
+          </button>
         </div>
 
         {/* Card */}
@@ -74,14 +124,14 @@ export default function LoginPage() {
             {/* Email */}
             <div>
               <label htmlFor="email" className="block text-xs font-medium text-[#8A8A8F] mb-1.5 uppercase tracking-wider">
-                Email
+                {t.emailLabel}
               </label>
               <input
                 id="email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="your@email.com"
+                placeholder={t.emailPlaceholder}
                 disabled={isLoading}
                 className="auth-input w-full px-3 py-2 bg-[#0F0E11] border border-[rgba(255,255,255,0.1)] rounded-md focus:ring-1 focus:ring-[#5E6AD2] focus:border-[#5E6AD2] outline-none transition-all text-[#E0E0E2] placeholder-[#4A4A52] text-sm disabled:opacity-50"
               />
@@ -90,7 +140,7 @@ export default function LoginPage() {
             {/* Password */}
             <div>
               <label htmlFor="password" className="block text-xs font-medium text-[#8A8A8F] mb-1.5 uppercase tracking-wider">
-                Password
+                {t.passwordLabel}
               </label>
               <div className="relative">
                 <input
@@ -98,7 +148,7 @@ export default function LoginPage() {
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
+                  placeholder={t.passwordPlaceholder}
                   disabled={isLoading}
                   className="auth-input w-full px-3 py-2 pr-10 bg-[#0F0E11] border border-[rgba(255,255,255,0.1)] rounded-md focus:ring-1 focus:ring-[#5E6AD2] focus:border-[#5E6AD2] outline-none transition-all text-[#E0E0E2] placeholder-[#4A4A52] text-sm disabled:opacity-50"
                 />
@@ -109,9 +159,9 @@ export default function LoginPage() {
                   tabIndex={-1}
                 >
                   {showPassword ? (
-                  <EyeOff size={15} />
+                    <EyeOff size={15} />
                   ) : (
-                  <Eye size={15} />
+                    <Eye size={15} />
                   )}
                 </button>
               </div>
@@ -126,20 +176,20 @@ export default function LoginPage() {
               {isLoading ? (
                 <span className="flex items-center justify-center gap-2">
                   <Loader2 size={15} className="animate-spin" />
-                  Signing in...
+                  {t.signingIn}
                 </span>
-              ) : 'Continue'}
+              ) : t.continue}
             </button>
           </form>
 
           <div className="mt-5 pt-5 border-t border-[rgba(255,255,255,0.06)] space-y-3">
             <div className="text-center">
-              <span className="text-xs text-[#8A8A8F]">Don't have an account? </span>
+              <span className="text-xs text-[#8A8A8F]">{t.noAccount}</span>
               <Link
                 to="/register"
                 className="text-xs font-semibold text-[#9BA3F0] hover:text-[#5E6AD2] underline cursor-pointer hover:underline-offset-2 transition-all"
               >
-                Create one
+                {t.createOne}
               </Link>
             </div>
             <div className="text-center">
@@ -147,14 +197,14 @@ export default function LoginPage() {
                 to="/forgot-password"
                 className="text-xs font-semibold text-[#9BA3F0] hover:text-[#5E6AD2] underline cursor-pointer hover:underline-offset-2 transition-all"
               >
-                Forgot password?
+                {t.forgotPassword}
               </Link>
             </div>
           </div>
         </div>
 
         <p className="text-center text-xs text-[#4A4A52] mt-5">
-          Test Sambil Ngopi Coy &copy; {new Date().getFullYear()}
+          {t.copyright} &copy; {new Date().getFullYear()}
         </p>
       </div>
     </div>

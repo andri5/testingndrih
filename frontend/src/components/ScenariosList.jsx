@@ -7,12 +7,24 @@ const tooltipI18n = {
     edit:   'Edit name, description, and URL',
     clone:  'Duplicate scenario with all its steps',
     delete: 'Permanently delete this scenario',
+    smoke:  'Mark as smoke test for deployment validation',
+    unsmoke: 'Remove smoke test marker',
+    stress: 'Mark as stress test for performance testing',
+    unstress: 'Remove stress test marker',
+    security: 'Mark for security testing and vulnerability scanning',
+    unsecurity: 'Remove security testing marker',
   },
   id: {
     view:   'Lihat detail & langkah-langkah scenario',
     edit:   'Edit nama, deskripsi, dan URL scenario',
     clone:  'Duplikat scenario beserta semua langkah-langkahnya',
     delete: 'Hapus scenario ini secara permanen',
+    smoke:  'Tandai sebagai smoke test untuk validasi deployment',
+    unsmoke: 'Hapus penanda smoke test',
+    stress: 'Tandai sebagai stress test untuk pengujian performa',
+    unstress: 'Hapus penanda stress test',
+    security: 'Tandai untuk pengujian keamanan dan pemindaian kerentanan',
+    unsecurity: 'Hapus penanda pengujian keamanan',
   },
 }
 
@@ -22,6 +34,9 @@ export function ScenariosList({
   onDelete, 
   onDuplicate, 
   onView,
+  onMarkSmoke,
+  onMarkStress,
+  onMarkSecurity,
   isLoading = false,
   hasMore = false,
   onLoadMore = null,
@@ -109,6 +124,11 @@ export function ScenariosList({
                 <div className="flex items-center gap-4 mt-2 text-xs text-[#666] flex-wrap">
                   <span className="truncate max-w-[240px]">🌐 {scenario.url}</span>
                   <span>Created: {new Date(scenario.createdAt).toLocaleDateString()}</span>
+                  {scenario.isSmoke && (
+                    <span className="px-2 py-1 rounded-full bg-orange-500/20 text-orange-400 font-medium text-xs">
+                      ⚡ Smoke Test
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -144,6 +164,42 @@ export function ScenariosList({
                   📋 Clone
                 </Button>
                 </Tooltip>
+                {onMarkSmoke && (
+                  <Tooltip text={scenario.isSmoke ? tt.unsmoke : tt.smoke}>
+                  <Button
+                    variant={scenario.isSmoke ? "primary" : "secondary"}
+                    size="sm"
+                    onClick={() => onMarkSmoke(scenario.id, !scenario.isSmoke)}
+                    disabled={isLoading}
+                  >
+                    {scenario.isSmoke ? '⚡ Smoke' : '⚡ Mark'}
+                  </Button>
+                  </Tooltip>
+                )}
+                {onMarkStress && (
+                  <Tooltip text={scenario.isStress ? tt.unstress : tt.stress}>
+                  <Button
+                    variant={scenario.isStress ? "primary" : "secondary"}
+                    size="sm"
+                    onClick={() => onMarkStress(scenario.id, !scenario.isStress)}
+                    disabled={isLoading}
+                  >
+                    {scenario.isStress ? '⚙️ Stress' : '⚙️ Stress'}
+                  </Button>
+                  </Tooltip>
+                )}
+                {onMarkSecurity && (
+                  <Tooltip text={scenario.isSecurity ? tt.unsecurity : tt.security}>
+                  <Button
+                    variant={scenario.isSecurity ? "primary" : "secondary"}
+                    size="sm"
+                    onClick={() => onMarkSecurity(scenario.id, !scenario.isSecurity)}
+                    disabled={isLoading}
+                  >
+                    {scenario.isSecurity ? '🔒 Security' : '🔒 Security'}
+                  </Button>
+                  </Tooltip>
+                )}
                 <Tooltip text={tt.delete}>
                 <Button
                   variant="danger"

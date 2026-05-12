@@ -20,6 +20,9 @@ import chainRoutes from './routes/chainRoutes.js'
 import schedulerRoutes from './routes/schedulerRoutes.js'
 import parallelExecutionRoutes from './routes/parallelExecutionRoutes.js'
 import browserMatrixRoutes from './routes/browserMatrixRoutes.js'
+import smokeTestRoutes from './routes/smokeTestRoutes.js'
+import stressTestRoutes from './routes/stressTestRoutes.js'
+import securityTestRoutes from './routes/securityTestRoutes.js'
 import { errorHandler } from './middleware/auth.js'
 import { swaggerSpec } from './lib/swagger.js'
 
@@ -68,6 +71,9 @@ app.use('/api/chains', chainRoutes)
 app.use('/api/scheduler', schedulerRoutes)
 app.use('/api/parallel', parallelExecutionRoutes)
 app.use('/api/browser-matrix', browserMatrixRoutes)
+app.use('/api/smoke', smokeTestRoutes)
+app.use('/api/stress', stressTestRoutes)
+app.use('/api/security', securityTestRoutes)
 
 // Swagger API docs — available at /api/docs
 app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {

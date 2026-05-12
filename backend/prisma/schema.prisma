@@ -76,6 +76,7 @@ model User {
   testSchedules    TestSchedule[] @relation("UserSchedules")
   executionBatches ExecutionBatch[] @relation("UserBatches")
   matrixExecutions MatrixExecution[] @relation("UserMatrices")
+  securityScans    SecurityScan[]
 
   @@map("users")
 }
@@ -86,6 +87,9 @@ model Scenario {
   description String?
   url         String
   steps       Int      @default(0) // count of test steps
+  isSmoke     Boolean  @default(false) // Mark scenario as smoke test
+  isStress    Boolean  @default(false) // Mark scenario as stress test
+  isSecurity  Boolean  @default(false) // Mark scenario as security test
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   userId      String
@@ -97,8 +101,11 @@ model Scenario {
   chainSteps    ChainStep[]
   testSchedules TestSchedule[] @relation("ScenarioSchedules")
   matrixExecutions MatrixExecution[] @relation("ScenarioMatrices")
+  securityScans SecurityScan[]
 
   @@index([userId])
+  @@index([isStress])
+  @@index([isSecurity])
   @@map("scenarios")
 }
 
@@ -135,6 +142,12 @@ model Execution {
   videoPath           String?           // path to execution video file
   browser             String?           @default("chromium") // chromium | firefox | webkit
   headless            Boolean?          @default(false)
+  testType            String?           @default("STANDARD") // STANDARD | SMOKE | STRESS | SECURITY
+  isSmokeTest         Boolean?          @default(false) // Mark as smoke test execution
+  isStressTest        Boolean?          @default(false) // Mark as stress test execution
+  stressProfile       String?           // light | medium | heavy | extreme
+  concurrencyLevel    Int?              @default(1) // Number of parallel test instances
+  iterationCount      Int?              @default(1) // How many times to repeat the test
   executionBatchId    String?           // for parallel execution batches
   createdAt           DateTime          @default(now())
   updatedAt           DateTime          @updatedAt
@@ -148,11 +161,14 @@ model Execution {
   screenshots  Screenshot[]
   issues       Issue[]
   executionLogs ExecutionLog[]
+  stressMetrics StressMetrics?
 
   @@index([userId])
   @@index([scenarioId])
   @@index([status])
+  @@index([testType])
   @@index([executionBatchId])
+  @@index([stressProfile])
   @@map("executions")
 }
 
@@ -407,4 +423,151 @@ model MatrixExecution {
   @@index([scenarioId])
   @@index([status])
   @@map("matrix_executions")
+}
+
+model StressMetrics {
+  id                String   @id @default(cuid())
+  executionId       String   @unique
+  // Response times (in milliseconds)
+  responseTimeMin   Int      @default(0)
+  responseTimeAvg   Int      @default(0)
+  responseTimeMax   Int      @default(0)
+  responseTimeP50   Int      @default(0) // 50th percentile
+  responseTimeP95   Int      @default(0) // 95th percentile
+  responseTimeP99   Int      @default(0) // 99th percentile
+  // Performance metrics
+  throughput        Float    @default(0) // requests per second
+  errorRate         Float    @default(0) // percentage of failed steps
+  failedStepsCount  Int      @default(0)
+  passedStepsCount  Int      @default(0)
+  totalStepsCount   Int      @default(0)
+  // Resource usage
+  cpuUsagePercent   Float?   @default(0)
+  memoryUsageMB     Float?   @default(0)
+  // Test configuration echo
+  concurrency       Int      @default(1)
+  iterations        Int      @default(1)
+  duration          Int      // total test duration in milliseconds
+  createdAt         DateTime @default(now())
+
+  execution Execution @relation(fields: [executionId], references: [id], onDelete: Cascade)
+
+  @@index([executionId])
+  @@map("stress_metrics")
+}
+
+model SecurityScan {
+  id                 String   @id @default(cuid())
+  scenarioId         String
+  executionId        String?  // linked execution
+  
+  // Scan metadata
+  scanType           String   @default("full") // "full" | "quick" | "custom"
+  vulnTypesTargeted  String[] @default([]) // array of vulnerability types
+  status             String   @default("PENDING") // PENDING|RUNNING|COMPLETED|FAILED
+  startedAt          DateTime?
+  completedAt        DateTime?
+  duration           Int?     // milliseconds
+  
+  // Results summary
+  findingsCount      Int      @default(0)
+  criticalCount      Int      @default(0)
+  highCount          Int      @default(0)
+  mediumCount        Int      @default(0)
+  lowCount           Int      @default(0)
+  infoCount          Int      @default(0)
+  
+  riskScore          Float    @default(0) // 0-100 overall risk
+  
+  // Timestamps
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  userId             String
+  
+  // Relations
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  scenario           Scenario @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+  findings           SecurityFinding[]
+  
+  @@index([userId])
+  @@index([scenarioId])
+  @@index([status])
+  @@index([riskScore])
+  @@map("security_scans")
+}
+
+model SecurityFinding {
+  id                 String   @id @default(cuid())
+  scanId             String
+  
+  // Vulnerability details
+  type               String   // SQL_INJECTION, XSS_STORED, etc
+  severity           String   // CRITICAL | HIGH | MEDIUM | LOW | INFO
+  cvssScore          Float    // 0-10
+  cvssVector         String?  // CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+  
+  // Finding information
+  title              String
+  description        String
+  affectedUrl        String?
+  affectedParameter  String?
+  
+  // Evidence & proof
+  payload            String?  // attack payload used
+  evidenceRequest    String?  // HTTP request details
+  evidenceResponse   String?  // HTTP response snippet
+  
+  // Remediation
+  remediationNotes   String?  // how to fix
+  owasp10Category    String?  // A01:2021, A02:2021, etc
+  cveId              String?  // if known CVE
+  
+  // Status tracking
+  status             String   @default("NEW") // NEW|ACKNOWLEDGED|FIXED|FALSE_POSITIVE
+  confirmedAt        DateTime?
+  fixedAt            DateTime?
+  notes              String?
+  
+  // Timestamps
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  
+  // Relations
+  scan               SecurityScan @relation(fields: [scanId], references: [id], onDelete: Cascade)
+  
+  @@index([scanId])
+  @@index([severity])
+  @@index([type])
+  @@index([cvssScore])
+  @@map("security_findings")
+}
+
+model SecurityPayload {
+  id                 String   @id @default(cuid())
+  
+  // Payload metadata
+  type               String   // SQL_INJECTION, XSS, COMMAND_INJECTION, etc
+  severity           String   // CRITICAL | HIGH | MEDIUM
+  
+  // Payload definition
+  name               String
+  description        String
+  payloadContent     String   // actual attack payload
+  targetParameter    String   // "query", "body", "header", "path"
+  
+  // Detection
+  detectionPattern   String?  // regex to detect success
+  expectedIndicators String[] @default([]) // array of success indicators
+  
+  // Safety
+  isDangerous        Boolean  @default(false) // requires confirmation
+  category           String   // "injection", "xss", "auth", "api", etc
+  
+  // Metadata
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  
+  @@index([type])
+  @@index([category])
+  @@map("security_payloads")
 }

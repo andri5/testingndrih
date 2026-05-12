@@ -18,8 +18,12 @@ import {
   X,
   Clock,
   Zap,
+  Shield,
   Globe,
   HelpCircle,
+  Activity,
+  Gauge,
+  GitBranch,
 } from 'lucide-react'
 
 export default function Layout({ children }) {
@@ -73,7 +77,10 @@ export default function Layout({ children }) {
 
   const workspaceItems = [
     { name: 'Scheduler',    path: '/scheduler',       icon: <Clock size={16} /> },
-    { name: 'Parallel',     path: '/parallel',        icon: <Zap size={16} /> },
+    { name: 'Parallel',     path: '/parallel',        icon: <GitBranch size={16} /> },
+    { name: 'Smoke Test',   path: '/smoke-test',      icon: <Activity size={16} /> },
+    { name: 'Stress Test',  path: '/stress-test',     icon: <Gauge size={16} /> },
+    { name: 'Security Test',path: '/security-test',   icon: <Shield size={16} /> },
     { name: 'Browser Test', path: '/browser-matrix',  icon: <Globe size={16} /> },
   ]
 
@@ -132,7 +139,7 @@ export default function Layout({ children }) {
           {showLabels && (
             <div className="flex-1 min-w-0 flex items-center justify-between">
               <div className="min-w-0">
-                <p className="font-semibold text-[#E0E0E2] text-sm leading-tight truncate">Test Sambil Ngopi Coy</p>
+                <p className="font-semibold text-[#E0E0E2] text-sm leading-tight truncate">Test Sambil Ngopi</p>
                 <p className="text-[10px] text-[#8A8A8F] leading-tight">Workspace</p>
               </div>
               <div className="flex items-center gap-1 shrink-0">
