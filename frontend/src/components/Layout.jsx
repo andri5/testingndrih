@@ -38,6 +38,47 @@ export default function Layout({ children }) {
   const userMenuRef = useRef(null)
   const { language, setLanguage } = useSettingsStore()
 
+  // i18n translations for sidebar and common labels
+  const i18n = {
+    en: {
+      main: 'Main',
+      tools: 'Tools',
+      dashboard: 'Dashboard',
+      scenarios: 'Scenarios',
+      chains: 'Chains',
+      execution: 'Execution',
+      reports: 'Reports',
+      scheduler: 'Scheduler',
+      parallel: 'Parallel',
+      smokeTest: 'Smoke Test',
+      stressTest: 'Stress Test',
+      securityTest: 'Security Test',
+      browserTest: 'Browser Test',
+      signOut: 'Sign out',
+      workspace: 'Workspace',
+      howToUse: 'How to use',
+    },
+    id: {
+      main: 'Utama',
+      tools: 'Alat',
+      dashboard: 'Dasbor',
+      scenarios: 'Skenario',
+      chains: 'Rantai',
+      execution: 'Eksekusi',
+      reports: 'Laporan',
+      scheduler: 'Penjadwal',
+      parallel: 'Paralel',
+      smokeTest: 'Test Asap',
+      stressTest: 'Test Beban',
+      securityTest: 'Test Keamanan',
+      browserTest: 'Test Browser',
+      signOut: 'Keluar',
+      workspace: 'Ruang Kerja',
+      howToUse: 'Cara Menggunakan',
+    }
+  }
+  const t = i18n[language] || i18n.id
+
   const handleLogout = () => {
     logout()
     navigate('/login')
@@ -68,20 +109,20 @@ export default function Layout({ children }) {
   }
 
   const mainItems = [
-    { name: 'Dashboard',    path: '/dashboard',  icon: <LayoutDashboard size={16} /> },
-    { name: 'Scenarios',    path: '/scenarios',  icon: <ClipboardList size={16} /> },
-    { name: 'Chains',       path: '/chains',     icon: <Link2 size={16} /> },
-    { name: 'Execution',    path: '/execution',  icon: <PlayCircle size={16} /> },
-    { name: 'Reports',      path: '/reports',    icon: <BarChart2 size={16} /> },
+    { name: t.dashboard,    path: '/dashboard',  icon: <LayoutDashboard size={16} /> },
+    { name: t.scenarios,    path: '/scenarios',  icon: <ClipboardList size={16} /> },
+    { name: t.chains,       path: '/chains',     icon: <Link2 size={16} /> },
+    { name: t.execution,    path: '/execution',  icon: <PlayCircle size={16} /> },
+    { name: t.reports,      path: '/reports',    icon: <BarChart2 size={16} /> },
   ]
 
   const workspaceItems = [
-    { name: 'Scheduler',    path: '/scheduler',       icon: <Clock size={16} /> },
-    { name: 'Parallel',     path: '/parallel',        icon: <GitBranch size={16} /> },
-    { name: 'Smoke Test',   path: '/smoke-test',      icon: <Activity size={16} /> },
-    { name: 'Stress Test',  path: '/stress-test',     icon: <Gauge size={16} /> },
-    { name: 'Security Test',path: '/security-test',   icon: <Shield size={16} /> },
-    { name: 'Browser Test', path: '/browser-matrix',  icon: <Globe size={16} /> },
+    { name: t.scheduler,    path: '/scheduler',       icon: <Clock size={16} /> },
+    { name: t.parallel,     path: '/parallel',        icon: <GitBranch size={16} /> },
+    { name: t.smokeTest,    path: '/smoke-test',      icon: <Activity size={16} /> },
+    { name: t.stressTest,   path: '/stress-test',     icon: <Gauge size={16} /> },
+    { name: t.securityTest, path: '/security-test',   icon: <Shield size={16} /> },
+    { name: t.browserTest,  path: '/browser-matrix',  icon: <Globe size={16} /> },
   ]
 
   const allItems = [...mainItems, ...workspaceItems]
@@ -140,7 +181,7 @@ export default function Layout({ children }) {
             <div className="flex-1 min-w-0 flex items-center justify-between">
               <div className="min-w-0">
                 <p className="font-semibold text-[#E0E0E2] text-sm leading-tight truncate">Test Sambil Ngopi</p>
-                <p className="text-[10px] text-[#8A8A8F] leading-tight">Workspace</p>
+                <p className="text-[10px] text-[#8A8A8F] leading-tight">{t.workspace}</p>
               </div>
               <div className="flex items-center gap-1 shrink-0">
                 <ChevronsUpDown size={14} className="text-[#4A4A52]" />
@@ -160,14 +201,14 @@ export default function Layout({ children }) {
         <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-4">
           <div className="space-y-0.5">
             {showLabels && (
-              <p className="px-2.5 text-[10px] font-semibold text-[#4A4A52] uppercase tracking-widest mb-1.5">Main</p>
+              <p className="px-2.5 text-[10px] font-semibold text-[#4A4A52] uppercase tracking-widest mb-1.5">{t.main}</p>
             )}
             {mainItems.map(item => <NavItem key={item.path} item={item} showLabel={showLabels} />)}
           </div>
 
           <div className="space-y-0.5">
             {showLabels && (
-              <p className="px-2.5 text-[10px] font-semibold text-[#4A4A52] uppercase tracking-widest mb-1.5">Tools</p>
+              <p className="px-2.5 text-[10px] font-semibold text-[#4A4A52] uppercase tracking-widest mb-1.5">{t.tools}</p>
             )}
             {workspaceItems.map(item => <NavItem key={item.path} item={item} showLabel={showLabels} />)}
           </div>
@@ -177,11 +218,11 @@ export default function Layout({ children }) {
         <div className="shrink-0 px-2 py-3 sidebar-bottom-divider">
           <button
             onClick={handleLogout}
-            title="Sign out"
+            title={t.signOut}
             className="nav-logout w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-[#8A8A8F] hover:text-[#F87171] hover:bg-[rgba(248,113,113,0.06)] transition-all duration-100 text-sm"
           >
             <LogOut size={15} className="shrink-0" />
-            {showLabels && <span className="font-medium">Sign out</span>}
+            {showLabels && <span className="font-medium">{t.signOut}</span>}
           </button>
         </div>
       </aside>

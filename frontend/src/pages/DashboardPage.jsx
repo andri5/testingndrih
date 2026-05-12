@@ -18,10 +18,67 @@ import {
 import toast from 'react-hot-toast'
 import { useSettingsStore } from '../store/settingsStore'
 
+// i18n translations
+const i18n = {
+  en: {
+    welcome: 'Welcome back',
+    hereIs: "Here's what's happening with your test automation today.",
+    testScenarios: 'Test Scenarios',
+    totalExecutions: 'Total Executions',
+    successRate: 'Success Rate',
+    avgDuration: 'Avg Duration',
+    passed: 'Passed',
+    failed: 'Failed',
+    quickActions: 'Quick Actions',
+    createScenario: 'Create Scenario',
+    startRecording: 'Start recording a new test',
+    runExecution: 'Run Execution',
+    executeScenario: 'Execute a test scenario',
+    viewAnalytics: 'View Analytics',
+    detailedMetrics: 'Detailed test performance metrics',
+    analyticsSummary: 'Analytics Summary',
+    last7Days: 'Last 7 days',
+    passRate: 'pass rate',
+    totalScenarios: 'Total Scenarios',
+    recentScenarios: 'Recent Scenarios',
+    recentExecutions: 'Recent Executions',
+    noScenariosYet: 'No scenarios yet',
+    noExecutionsYet: 'No executions yet',
+    steps: 'steps',
+  },
+  id: {
+    welcome: 'Selamat datang kembali',
+    hereIs: 'Berikut adalah yang terjadi dengan otomasi pengujian Anda hari ini.',
+    testScenarios: 'Skenario Pengujian',
+    totalExecutions: 'Total Eksekusi',
+    successRate: 'Tingkat Keberhasilan',
+    avgDuration: 'Durasi Rata-rata',
+    passed: 'Lulus',
+    failed: 'Gagal',
+    quickActions: 'Aksi Cepat',
+    createScenario: 'Buat Skenario',
+    startRecording: 'Mulai merekam pengujian baru',
+    runExecution: 'Jalankan Eksekusi',
+    executeScenario: 'Jalankan skenario pengujian',
+    viewAnalytics: 'Lihat Analitik',
+    detailedMetrics: 'Metrik kinerja pengujian terperinci',
+    analyticsSummary: 'Ringkasan Analitik',
+    last7Days: '7 hari terakhir',
+    passRate: 'tingkat keberhasilan',
+    totalScenarios: 'Total Skenario',
+    recentScenarios: 'Skenario Terbaru',
+    recentExecutions: 'Eksekusi Terbaru',
+    noScenariosYet: 'Belum ada skenario',
+    noExecutionsYet: 'Belum ada eksekusi',
+    steps: 'langkah',
+  }
+}
+
 export default function DashboardPage() {
   const navigate = useNavigate()
   const user = useAuthStore((state) => state.user)
   const { language } = useSettingsStore()
+  const t = i18n[language] || i18n.id
   const locale = language === 'id' ? 'id-ID' : 'en-US'
   const [stats, setStats] = useState({ scenarios: 0, executions: 0, successRate: 0, passed: 0, failed: 0, avgDuration: 0 })
   const [analytics, setAnalytics] = useState(null)
@@ -119,10 +176,10 @@ export default function DashboardPage() {
         {/* Welcome */}
         <div>
           <h1 className="text-xl font-semibold text-[#E0E0E2]">
-            Welcome back, <span className="text-[#9BA3F0]">{user?.name || 'User'}</span>
+            {t.welcome}, <span className="text-[#9BA3F0]">{user?.name || 'User'}</span>
           </h1>
           <p className="text-[#8A8A8F] mt-1 text-sm">
-            Here's what's happening with your test automation today.
+            {t.hereIs}
           </p>
         </div>
 
@@ -137,7 +194,7 @@ export default function DashboardPage() {
               <div className="linear-card stat-violet p-5">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs text-[#8A8A8F] font-medium uppercase tracking-wider">Test Scenarios</p>
+                    <p className="text-xs text-[#8A8A8F] font-medium uppercase tracking-wider">{t.testScenarios}</p>
                     <p className="text-3xl font-bold text-[#E0E0E2] mt-1">{stats.scenarios}</p>
                   </div>
                   <div className="w-10 h-10 rounded-lg bg-[#5E6AD2]/10 flex items-center justify-center">
@@ -149,7 +206,7 @@ export default function DashboardPage() {
               <div className="linear-card stat-cyan p-5">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs text-[#8A8A8F] font-medium uppercase tracking-wider">Total Executions</p>
+                    <p className="text-xs text-[#8A8A8F] font-medium uppercase tracking-wider">{t.totalExecutions}</p>
                     <p className="text-3xl font-bold text-[#E0E0E2] mt-1">{stats.executions}</p>
                   </div>
                   <div className="w-10 h-10 rounded-lg bg-[#4EC9B0]/10 flex items-center justify-center">
@@ -161,7 +218,7 @@ export default function DashboardPage() {
               <div className="linear-card stat-green p-5">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs text-[#8A8A8F] font-medium uppercase tracking-wider">Success Rate</p>
+                    <p className="text-xs text-[#8A8A8F] font-medium uppercase tracking-wider">{t.successRate}</p>
                     <p className="text-3xl font-bold text-[#E0E0E2] mt-1">{stats.successRate}%</p>
                   </div>
                   <div className="w-10 h-10 rounded-lg bg-[#34D399]/10 flex items-center justify-center">
@@ -173,7 +230,7 @@ export default function DashboardPage() {
               <div className="linear-card stat-amber p-5">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs text-[#8A8A8F] font-medium uppercase tracking-wider">Avg Duration</p>
+                    <p className="text-xs text-[#8A8A8F] font-medium uppercase tracking-wider">{t.avgDuration}</p>
                     <p className="text-3xl font-bold text-[#E0E0E2] mt-1">{formatDuration(stats.avgDuration)}</p>
                   </div>
                   <div className="w-10 h-10 rounded-lg bg-[#FBBF24]/10 flex items-center justify-center">
@@ -189,7 +246,7 @@ export default function DashboardPage() {
                 <div className="linear-card p-5 border-l-2 border-l-[#34D399]">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-xs text-[#8A8A8F] uppercase tracking-wider">Passed</p>
+                      <p className="text-xs text-[#8A8A8F] uppercase tracking-wider">{t.passed}</p>
                       <p className="text-2xl font-bold text-emerald-400 mt-1">{stats.passed}</p>
                     </div>
                     <div className="w-9 h-9 rounded-lg bg-[#34D399]/10 flex items-center justify-center">
@@ -200,7 +257,7 @@ export default function DashboardPage() {
                 <div className="linear-card p-5 border-l-2 border-l-[#F87171]">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-xs text-[#8A8A8F] uppercase tracking-wider">Failed</p>
+                      <p className="text-xs text-[#8A8A8F] uppercase tracking-wider">{t.failed}</p>
                       <p className="text-2xl font-bold text-rose-400 mt-1">{stats.failed}</p>
                     </div>
                     <div className="w-9 h-9 rounded-lg bg-[#F87171]/10 flex items-center justify-center">
@@ -213,7 +270,7 @@ export default function DashboardPage() {
 
             {/* Quick Actions */}
             <div className="linear-card p-5">
-              <h2 className="text-sm font-semibold text-[#E0E0E2] mb-4">Quick Actions</h2>
+              <h2 className="text-sm font-semibold text-[#E0E0E2] mb-4">{t.quickActions}</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <button
                   onClick={() => navigate('/scenarios')}
@@ -223,9 +280,9 @@ export default function DashboardPage() {
                     <div className="w-8 h-8 rounded-lg bg-[#5E6AD2]/10 flex items-center justify-center">
                       <Plus size={15} className="text-[#9BA3F0]" />
                     </div>
-                    <p className="font-medium text-[#E0E0E2] text-sm">Create Scenario</p>
+                    <p className="font-medium text-[#E0E0E2] text-sm">{t.createScenario}</p>
                   </div>
-                  <p className="text-xs text-[#8A8A8F]">Start recording a new test</p>
+                  <p className="text-xs text-[#8A8A8F]">{t.startRecording}</p>
                 </button>
 
                 <button
@@ -236,9 +293,9 @@ export default function DashboardPage() {
                     <div className="w-8 h-8 rounded-lg bg-[#34D399]/10 flex items-center justify-center">
                       <PlayCircle size={15} className="text-[#34D399]" />
                     </div>
-                    <p className="font-medium text-[#E0E0E2] text-sm">Run Execution</p>
+                    <p className="font-medium text-[#E0E0E2] text-sm">{t.runExecution}</p>
                   </div>
-                  <p className="text-xs text-[#8A8A8F]">Execute a test scenario</p>
+                  <p className="text-xs text-[#8A8A8F]">{t.executeScenario}</p>
                 </button>
 
                 <button
@@ -249,9 +306,9 @@ export default function DashboardPage() {
                     <div className="w-8 h-8 rounded-lg bg-[#9BA3F0]/10 flex items-center justify-center">
                       <TrendingUp size={15} className="text-[#9BA3F0]" />
                     </div>
-                    <p className="font-medium text-[#E0E0E2] text-sm">View Analytics</p>
+                    <p className="font-medium text-[#E0E0E2] text-sm">{t.viewAnalytics}</p>
                   </div>
-                  <p className="text-xs text-[#8A8A8F]">Detailed test performance metrics</p>
+                  <p className="text-xs text-[#8A8A8F]">{t.detailedMetrics}</p>
                 </button>
               </div>
             </div>
@@ -265,8 +322,8 @@ export default function DashboardPage() {
                       <TrendingUp size={18} className="text-[#9BA3F0]" />
                     </div>
                     <div>
-                      <h2 className="text-sm font-semibold text-[#E0E0E2]">📊 Analytics Summary</h2>
-                      <p className="text-xs text-[#8A8A8F] mt-0.5">Last 7 days: {analytics.last7Days?.passRate || 0}% pass rate</p>
+                      <h2 className="text-sm font-semibold text-[#E0E0E2]">📊 {t.analyticsSummary}</h2>
+                      <p className="text-xs text-[#8A8A8F] mt-0.5">{t.last7Days}: {analytics.last7Days?.passRate || 0}% {t.passRate}</p>
                     </div>
                   </div>
                   <div className="flex gap-2">
@@ -313,9 +370,9 @@ export default function DashboardPage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
               {/* Recent Scenarios */}
               <div className="linear-card p-5">
-                <h2 className="text-sm font-semibold text-[#E0E0E2] mb-4">Recent Scenarios</h2>
+                <h2 className="text-sm font-semibold text-[#E0E0E2] mb-4">{t.recentScenarios}</h2>
                 {recentScenarios.length === 0 ? (
-                  <p className="text-center py-6 text-[#8A8A8F] text-sm">No scenarios yet</p>
+                  <p className="text-center py-6 text-[#8A8A8F] text-sm">{t.noScenariosYet}</p>
                 ) : (
                   <div className="space-y-2">
                     {recentScenarios.map(s => (
@@ -329,7 +386,7 @@ export default function DashboardPage() {
                           <p className="text-xs text-[#8A8A8F] mt-0.5">{formatDate(s.updatedAt || s.createdAt)}</p>
                         </div>
                         <span className="text-xs text-[#8A8A8F] ml-3 shrink-0 bg-[rgba(255,255,255,0.04)] px-2 py-0.5 rounded">
-                          {s._count?.testSteps ?? s.testSteps?.length ?? 0} steps
+                          {s._count?.testSteps ?? s.testSteps?.length ?? 0} {t.steps}
                         </span>
                       </div>
                     ))}
@@ -339,9 +396,9 @@ export default function DashboardPage() {
 
               {/* Recent Executions */}
               <div className="linear-card p-5">
-                <h2 className="text-sm font-semibold text-[#E0E0E2] mb-4">Recent Executions</h2>
+                <h2 className="text-sm font-semibold text-[#E0E0E2] mb-4">{t.recentExecutions}</h2>
                 {recentExecutions.length === 0 ? (
-                  <p className="text-center py-6 text-[#8A8A8F] text-sm">No executions yet</p>
+                  <p className="text-center py-6 text-[#8A8A8F] text-sm">{t.noExecutionsYet}</p>
                 ) : (
                   <div className="space-y-2">
                     {recentExecutions.map(e => (
