@@ -1,19 +1,26 @@
-# 📁 Test Sambil Ngopi - Project Structure
+# � Documentation Moved
 
-**Last Updated**: May 12, 2026  
-**Version**: 3.0.0  
-**Status**: Production Ready ✅
+This file has been reorganized and consolidated into the `/docs` folder for better clarity and maintainability.
+
+## 📚 New Documentation Structure
+
+Please refer to the following files in the `/docs` folder:
+
+- **[`/docs/README.md`](./docs/README.md)** - Documentation index & navigation guide
+- **[`/docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md)** - Technical architecture & components overview  
+- **[`/docs/DIRECTORY_STRUCTURE.md`](./docs/DIRECTORY_STRUCTURE.md)** - Complete file organization
+- **[`/docs/SETUP.md`](./docs/SETUP.md)** - Installation, configuration & troubleshooting
 
 ---
 
-## 🎯 Project Overview
+## ✨ Project Overview (Archived)
 
-**Test Sambil Ngopi** adalah platform automated testing yang memungkinkan pengguna merekam interaksi browser dan memutar ulang sebagai test cases. Dibangun dengan React 18 frontend dan Node.js/Express backend.
+**Test Sambil Ngopi** adalah platform automated testing yang memungkinkan pengguna merekam interaksi browser dan memutal ulang sebagai test cases. Dibangun dengan React 18 frontend dan Node.js/Express backend.
 
-- **Tech Stack**: React 18 + Vite + TailwindCSS + Node.js 20 + Express.js + PostgreSQL 16 + Playwright
-- **Architecture**: Monorepo (backend + frontend) dengan Docker orchestration
-- **Database**: Prisma ORM + PostgreSQL
-- **Key Features**: Recording, Playback, Scheduling, Cross-browser testing, Smart error recovery
+- **Tech Stack**: React 18 + Vite + TailwindCSS | Node.js + Express | PostgreSQL + Prisma | Playwright
+- **Architecture**: Monorepo (backend + frontend) dengan Docker orchestration  
+- **Key Features**: Recording, Playback, Scheduling, Cross-browser testing, Dark/Light theme, Multi-language
+- **Status**: Production Ready ✅
 
 ---
 
@@ -29,8 +36,12 @@ testingndrih/
 ├── 📄 .env.example                 # Environment variables template
 ├── 📄 .gitignore                   # Git ignore rules
 ├── 📄 .dockerignore                # Docker ignore rules
-├── 📄 setup-docker.sh              # Docker setup script (Linux/Mac)
-├── 📄 setup-docker.bat             # Docker setup script (Windows)
+├── 📄 package.json                 # Monorepo root package
+├── 📄 commitlint.config.js         # Commit lint configuration
+│
+├── 📁 .github/                     # GitHub configuration
+│   ├── 📁 workflows/               # CI/CD workflows
+│   │   └── release.yml             # Semantic release automation
 │
 ├── 📁 backend/                     # Node.js Express API Server
 │   ├── 📄 package.json             # Dependencies & npm scripts

@@ -2,9 +2,12 @@
 
 **Intelligent Test Recording & Playback Engine** — Record user interactions using Playwright headless browser, convert to test steps, and execute with smart error handling and cross-browser testing support.
 
-> **🎯 Getting Started**: Read [`docs/guides/00_INDEX.md`](docs/guides/00_INDEX.md) for complete documentation  
-> **⚡ Quick Reference**: [`docs/guides/QUICK_REFERENCE.md`](docs/guides/QUICK_REFERENCE.md) for commands and APIs  
-> **📖 Architecture**: [`docs/guides/RECORDER_2.0_GUIDE.md`](docs/guides/RECORDER_2.0_GUIDE.md) for implementation details
+> **� Documentation**: See [**`/docs`**](./docs/README.md) folder for complete guides  
+> **🏗️ Architecture**: Check [`/docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) for technical overview  
+> **📂 Structure**: View [`/docs/DIRECTORY_STRUCTURE.md`](./docs/DIRECTORY_STRUCTURE.md) for complete file organization  
+> **⚙️ Setup**: Follow [`/docs/SETUP.md`](./docs/SETUP.md) for installation & configuration  
+> **🚀 Quick Start**: Run `npm install && npm run dev` to start development  
+> **🐳 Docker**: Use `docker-compose up -d` for production deployment
 
 ![Version](https://img.shields.io/badge/version-3.0.0-blue.svg)
 ![Status](https://img.shields.io/badge/status-production--ready-brightgreen.svg)
