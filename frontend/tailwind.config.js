@@ -7,6 +7,14 @@ export default {
   ],
   theme: {
     extend: {
+      screens: {
+        'xs': '320px',  // Extra small devices (mobile)
+        'sm': '640px',  // Small devices (mobile landscape, tablet)
+        'md': '768px',  // Medium devices (tablet)
+        'lg': '1024px', // Large devices (desktop)
+        'xl': '1280px', // Extra large devices (desktop wide)
+        '2xl': '1536px', // 2X large devices
+      },
       colors: {
         linear: {
           bg:           '#0F0E11',
