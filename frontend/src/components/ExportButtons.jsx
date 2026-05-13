@@ -25,6 +25,7 @@ export default function ExportButtons({
   summary, 
   details, 
   filename,
+  analysis,
   onExportStart,
   onExportComplete 
 }) {
@@ -39,7 +40,7 @@ export default function ExportButtons({
       
       await new Promise(resolve => setTimeout(resolve, 300))
       
-      exportToHTML(title, summary, details, filename, language)
+      exportToHTML(title, summary, details, filename, 'id', analysis)
       
       onExportComplete?.()
     } catch (err) {
