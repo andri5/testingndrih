@@ -1,8 +1,28 @@
 import { useNavigate } from 'react-router-dom'
+import { useSettingsStore } from '../store/settingsStore'
 import { ServerCrash, RefreshCw, Home } from 'lucide-react'
+
+const i18n = {
+  en: {
+    title: 'Server error',
+    description: "Something went wrong on our end. We're working on it.",
+    status: 'Service temporarily unavailable',
+    tryAgain: 'Try again',
+    backToDashboard: 'Back to Dashboard',
+  },
+  id: {
+    title: 'Kesalahan Server',
+    description: 'Ada yang salah di pihak kami. Kami sedang mengerjakannya.',
+    status: 'Layanan sementara tidak tersedia',
+    tryAgain: 'Coba Lagi',
+    backToDashboard: 'Kembali ke Dashboard',
+  },
+}
 
 export default function ServerErrorPage() {
   const navigate = useNavigate()
+  const { language } = useSettingsStore()
+  const t = i18n[language] || i18n.en
 
   return (
     <div className="auth-page-bg min-h-screen bg-[#0F0E11] flex items-center justify-center px-4">
@@ -19,17 +39,17 @@ export default function ServerErrorPage() {
         <p className="text-6xl font-bold text-orange-400 mb-2 tracking-tight">500</p>
 
         {/* Title */}
-        <h1 className="text-xl font-semibold text-[#E0E0E2] mb-2">Server error</h1>
+        <h1 className="text-xl font-semibold text-[#E0E0E2] mb-2">{t.title}</h1>
 
         {/* Description */}
         <p className="text-sm text-[#8B8B8E] mb-8 leading-relaxed">
-          Something went wrong on our end. We're working on it.
+          {t.description}
         </p>
 
         {/* Status badge */}
         <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#161618] border border-[#2A2A2D] text-xs text-[#8B8B8E] mb-8">
           <span className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-pulse" />
-          Service temporarily unavailable
+          {t.status}
         </div>
 
         {/* Actions */}
@@ -39,14 +59,14 @@ export default function ServerErrorPage() {
             className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border border-[#2A2A2D] bg-[#161618] text-sm font-medium text-[#E0E0E2] hover:border-[#5E6AD2] transition-colors"
           >
             <RefreshCw size={15} />
-            Try again
+            {t.tryAgain}
           </button>
           <button
             onClick={() => navigate('/dashboard')}
             className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-[#5E6AD2] text-sm font-medium text-white hover:bg-[#4F5BBF] transition-colors"
           >
             <Home size={15} />
-            Back to Dashboard
+            {t.backToDashboard}
           </button>
         </div>
 

@@ -108,6 +108,8 @@ export default function SettingsPage() {
       const base64String = reader.result
       setProfilePicture(base64String)
       localStorage.setItem('profilePicture', JSON.stringify(base64String))
+      // Emit custom event to notify other components (like Layout) about profile picture change
+      window.dispatchEvent(new CustomEvent('profilePictureUpdated', { detail: base64String }))
       setSuccess(t.profileSaved)
       setTimeout(() => setSuccess(null), 3000)
     }
@@ -118,11 +120,6 @@ export default function SettingsPage() {
     const updatedUser = { ...user, name }
     localStorage.setItem('user', JSON.stringify(updatedUser))
     setSuccess(t.profileSaved)
-    setTimeout(() => setSuccess(null), 3000)
-  }
-
-  const handleSaveAppSettings = () => {
-    setSuccess(t.settingsSaved)
     setTimeout(() => setSuccess(null), 3000)
   }
 
@@ -291,6 +288,11 @@ export default function SettingsPage() {
                         }`} />
                       </button>
                     </div>
+
+                    <p className="text-xs text-[#555] flex items-center gap-1.5">
+                      <span className="inline-block w-1.5 h-1.5 bg-[#5E6AD2] rounded-full"></span>
+                      Auto-saved
+                    </p>
                   </div>
                 </div>
 
@@ -337,12 +339,10 @@ export default function SettingsPage() {
                       </div>
                     </div>
 
-                    <button
-                      onClick={handleSaveAppSettings}
-                      className="px-4 py-2 bg-[#5E6AD2] hover:bg-[#6872e5] text-white text-sm font-medium rounded-lg transition"
-                    >
-                      {t.saveSettings}
-                    </button>
+                    <p className="text-xs text-[#555] flex items-center gap-1.5">
+                      <span className="inline-block w-1.5 h-1.5 bg-[#5E6AD2] rounded-full"></span>
+                      Auto-saved
+                    </p>
                   </div>
                 </div>
               </>

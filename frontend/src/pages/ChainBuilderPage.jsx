@@ -10,6 +10,51 @@ import { chainAPI, scenarioAPI } from '../services/api'
 import { Tooltip } from '../components/ui'
 import { Plus, Trash2, ChevronUp, ChevronDown, Save, X } from 'lucide-react'
 
+const i18n = {
+  en: {
+    createChain: 'Create Chain',
+    editChain: 'Edit Chain',
+    loadingChain: 'Loading chain...',
+    chainDetails: 'Chain Details',
+    name: 'Name',
+    nameRequired: 'Chain name is required',
+    description: 'Description',
+    selectScenario: 'Select Scenario',
+    selectScenarioError: 'Please select a scenario',
+    addScenario: 'Add Scenario',
+    deleteStepConfirm: 'Are you sure you want to delete this step?',
+    deleteChainConfirm: 'Delete this chain?',
+    chainDeleted: 'Chain deleted',
+    tooltips: {
+      moveUp: 'Move step up',
+      moveDown: 'Move step down',
+      editStep: 'Edit step config (wait, retry, stop on fail)',
+      deleteStep: 'Remove this step from the chain',
+    },
+  },
+  id: {
+    createChain: 'Buat Chain',
+    editChain: 'Edit Chain',
+    loadingChain: 'Memuat chain...',
+    chainDetails: 'Detail Chain',
+    name: 'Nama',
+    nameRequired: 'Nama chain wajib diisi',
+    description: 'Deskripsi',
+    selectScenario: 'Pilih Scenario',
+    selectScenarioError: 'Silakan pilih scenario',
+    addScenario: 'Tambah Scenario',
+    deleteStepConfirm: 'Apakah Anda yakin ingin menghapus step ini?',
+    deleteChainConfirm: 'Hapus chain ini?',
+    chainDeleted: 'Chain berhasil dihapus',
+    tooltips: {
+      moveUp: 'Pindahkan step ke atas',
+      moveDown: 'Pindahkan step ke bawah',
+      editStep: 'Edit konfigurasi step ini (wait, retry, stop on fail)',
+      deleteStep: 'Hapus step ini dari chain',
+    },
+  },
+}
+
 const chainTooltipI18n = {
   en: {
     moveUp:    'Move step up',
@@ -31,6 +76,7 @@ export default function ChainBuilderPage() {
   const isNew = chainId === 'new'
   const { theme, language } = useSettingsStore()
   const ct = chainTooltipI18n[language] ?? chainTooltipI18n.en
+  const t = i18n[language] ?? i18n.en
   const isDark = theme !== 'light'
 
   const [chain, setChain] = useState({
@@ -75,7 +121,7 @@ export default function ChainBuilderPage() {
 
   async function handleSave() {
     if (!chain.name.trim()) {
-      setError('Chain name is required')
+      setError(t.nameRequired)
       return
     }
 
@@ -97,7 +143,7 @@ export default function ChainBuilderPage() {
 
   async function handleAddStep(scenarioId) {
     if (!scenarioId) {
-      setError('Please select a scenario')
+      setError(t.selectScenarioError)
       return
     }
 

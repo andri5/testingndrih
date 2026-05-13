@@ -9,10 +9,32 @@ import Layout from '../components/Layout'
 import { chainAPI } from '../services/api'
 import { Play, ChevronDown, ChevronUp, Clock, Check, X, Loader } from 'lucide-react'
 
+const i18n = {
+  en: {
+    loadingChain: 'Loading chain...',
+    chainNotFound: 'Chain not found',
+    backToChains: 'Back to Chains',
+    back: 'Back',
+    executeChain: 'Execute Chain',
+    headlessMode: 'Headless Mode',
+    executing: 'Executing...',
+  },
+  id: {
+    loadingChain: 'Memuat chain...',
+    chainNotFound: 'Chain tidak ditemukan',
+    backToChains: 'Kembali ke Chains',
+    back: 'Kembali',
+    executeChain: 'Jalankan Chain',
+    headlessMode: 'Mode Headless',
+    executing: 'Mengeksekusi...',
+  },
+}
+
 export default function ChainExecutorPage() {
   const navigate = useNavigate()
   const { chainId } = useParams()
-  const { theme } = useSettingsStore()
+  const { theme, language } = useSettingsStore()
+  const t = i18n[language] || i18n.en
   const isDark = theme !== 'light'
 
   const [chain, setChain] = useState(null)
@@ -34,7 +56,7 @@ export default function ChainExecutorPage() {
       const response = await chainAPI.getById(chainId)
       setChain(response.data.chain)
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to load chain')
+      setError(err.response?.data?.error || t.chainNotFound)
     } finally {
       setLoading(false)
     }
@@ -73,7 +95,7 @@ export default function ChainExecutorPage() {
         <div className="flex items-center justify-center py-24">
           <div className="text-center">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-            <p className={`mt-4 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Loading chain...</p>
+            <p className={`mt-4 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t.loadingChain}</p>
           </div>
         </div>
       </Layout>
@@ -84,12 +106,12 @@ export default function ChainExecutorPage() {
     return (
       <Layout>
         <div className="max-w-6xl mx-auto text-center py-16">
-          <p className="text-red-500 mb-4">Chain not found</p>
+          <p className="text-red-500 mb-4">{t.chainNotFound}</p>
           <button
             onClick={() => navigate('/chains')}
             className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
           >
-            Back to Chains
+            {t.backToChains}
           </button>
         </div>
       </Layout>
@@ -109,7 +131,7 @@ export default function ChainExecutorPage() {
             onClick={() => navigate('/chains')}
             className={`px-6 py-3 rounded-lg font-medium transition ${isDark ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-gray-200 hover:bg-gray-300 text-gray-700'}`}
           >
-            Back
+            {t.back}
           </button>
         </div>
 
@@ -124,7 +146,7 @@ export default function ChainExecutorPage() {
           {/* Execution Control */}
           <div className="lg:col-span-1">
             <div className={`border rounded-lg p-6 sticky top-8 ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
-              <h2 className={`text-xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Execute Chain</h2>
+              <h2 className={`text-xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>{t.executeChain}</h2>
 
               <div className="space-y-4 mb-6">
                 <label className="flex items-center gap-3 cursor-pointer">
@@ -135,7 +157,7 @@ export default function ChainExecutorPage() {
                     disabled={executing}
                     className="w-4 h-4"
                   />
-                  <span className={isDark ? 'text-gray-300' : 'text-gray-700'}>Headless Mode</span>
+                  <span className={isDark ? 'text-gray-300' : 'text-gray-700'}>{t.headlessMode}</span>
                 </label>
               </div>
 
@@ -147,7 +169,7 @@ export default function ChainExecutorPage() {
                 {executing ? (
                   <>
                     <Loader size={20} className="animate-spin" />
-                    Executing...
+                    {t.executing}
                   </>
                 ) : (
                   <>

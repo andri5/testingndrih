@@ -1,5 +1,6 @@
 import { prisma } from '../lib/prisma.js'
 import { chromium, firefox, webkit } from 'playwright'
+import browserLauncher from '../lib/browserLauncher.js'
 
 /**
  * PRIORITY: Playwright-Based Recorder Engine
@@ -810,7 +811,34 @@ export const recorderService = {
     try {
       // ═══ Launch Playwright Browser ═══
       console.log(`[RECORDER] 🚀 Launching Playwright browser for ${url}`)
-      const browser = await chromium.launch(BROWSER_OPTIONS)
+      
+      // Use environment-aware browser launcher
+      // For recorder, try headed mode but fallback to headless if display not available
+      let browser
+      try {
+        browser = await chromium.launch({
+          headless: false,
+          args: [
+            '--disable-blink-features=AutomationControlled',
+            '--disable-dev-shm-usage',
+            '--no-sandbox'
+          ]
+        })
+      } catch (headedError) {
+        console.log(`[RECORDER] ⚠️ Headed mode failed: ${headedError.message}`)
+        console.log(`[RECORDER] 💡 Fallback: Using headless mode (recommended for server)`)
+        
+        // Fallback to headless mode if display server not available
+        browser = await chromium.launch({
+          headless: true,
+          args: [
+            '--disable-blink-features=AutomationControlled',
+            '--disable-dev-shm-usage',
+            '--no-sandbox'
+          ]
+        })
+        console.log(`[RECORDER] ✅ Browser launched in headless mode`)
+      }
       
       // ═══ Create Context & Page ═══
       const context = await browser.newContext({

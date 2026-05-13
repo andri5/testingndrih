@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Translation Test</title>
+</head>
+<body>
+  <h1>Export Translations Test</h1>
+  
+  <script>
+    // Simulate the translation mapping from exportUtils.js
+    const keyTranslations = {
+      'Total Tests': 'Total Tes',
+      'Pass Rate (%)': 'Tingkat Lulus (%)',
+      'Avg Duration (s)': 'Durasi Rata-rata (s)',
+      'Avg Response Time (ms)': 'Waktu Respons Rata-rata (ms)',
+      'Throughput (exec/sec)': 'Throughput (exec/detik)',
+      'Total Scans': 'Total Scan',
+      'Avg Risk Score': 'Skor Risiko Rata-rata',
+      'Critical Findings': 'Temuan Kritis',
+      'High Findings': 'Temuan Tinggi',
+      'Medium+Low Findings': 'Temuan Sedang+Rendah',
+      'Error Rate (%)': 'Tingkat Error (%)',
+      'Total Requests': 'Total Permintaan',
+      'Scenario Name': 'Nama Scenario',
+      'Test Steps': 'Langkah Tes',
+      'Status': 'Status',
+      'Created At': 'Dibuat Pada',
+      'URL': 'URL',
+      'Active': 'Aktif',
+    };
+    
+    // Test translations
+    const testKeys = ['Total Tests', 'Pass Rate (%)', 'Avg Duration (s)', 'Scenario Name', 'Active'];
+    
+    let output = '<pre>';
+    testKeys.forEach(key => {
+      const translated = keyTranslations[key] || key;
+      output += `${key} → ${translated}\n`;
+    });
+    output += '</pre>';
+    
+    document.body.innerHTML += output;
+  </script>
+</body>
+</html>

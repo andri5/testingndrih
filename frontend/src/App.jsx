@@ -20,6 +20,9 @@ import BrowserMatrixPage from './pages/BrowserMatrixPage'
 import SmokeTestPage from './pages/SmokeTest'
 import StressTestPage from './pages/StressTestPage'
 import SecurityTestPage from './pages/SecurityTestPage'
+import SmokeTestHelpPage from './pages/SmokeTestHelpPage'
+import StressTestHelpPage from './pages/StressTestHelpPage'
+import SecurityTestHelpPage from './pages/SecurityTestHelpPage'
 import ProtectedRoute from './components/ProtectedRoute'
 import NotFoundPage from './pages/NotFoundPage'
 import MaintenancePage from './pages/MaintenancePage'
@@ -188,6 +191,32 @@ export default function App() {
           element={
             <ProtectedRoute>
               <SecurityTestPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Help Pages */}
+        <Route
+          path="/help/smoke-test"
+          element={
+            <ProtectedRoute>
+              <SmokeTestHelpPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/help/stress-test"
+          element={
+            <ProtectedRoute>
+              <StressTestHelpPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/help/security-test"
+          element={
+            <ProtectedRoute>
+              <SecurityTestHelpPage />
             </ProtectedRoute>
           }
         />

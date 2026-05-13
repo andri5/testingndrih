@@ -19,6 +19,7 @@ import { chromium, firefox, webkit } from 'playwright'
 import { executionService } from './executionService.js'
 import screenshotComparisonService from './screenshotComparisonService.js'
 import { prisma } from '../lib/prisma.js'
+import browserLauncher from '../lib/browserLauncher.js'
 import path from 'path'
 import fs from 'fs'
 
@@ -26,25 +27,25 @@ const BROWSER_CONFIGS = {
   chromium: {
     name: 'Chromium',
     browserType: chromium,
-    headless: false,
+    headless: true,  // Changed to true for server compatibility
     defaultViewport: { width: 1920, height: 1080 }
   },
   firefox: {
     name: 'Firefox',
     browserType: firefox,
-    headless: false,
+    headless: true,  // Changed to true for server compatibility
     defaultViewport: { width: 1920, height: 1080 }
   },
   webkit: {
     name: 'WebKit (Safari)',
     browserType: webkit,
-    headless: false,
+    headless: true,  // Changed to true for server compatibility
     defaultViewport: { width: 1920, height: 1080 }
   },
   edge: {
     name: 'Edge',
     browserType: chromium,
-    headless: false,
+    headless: true,  // Changed to true for server compatibility
     channel: 'msedge',
     defaultViewport: { width: 1920, height: 1080 }
   }
@@ -141,11 +142,13 @@ export const browserMatrixService = {
     let page = null
 
     try {
-      // Launch browser
-      browser = await config.browserType.launch({
+      // Launch browser with environment-aware settings
+      const launchOptions = browserLauncher.getBrowserLaunchOptions(config.browserType, {
         headless: config.headless,
         channel: config.channel
       })
+      
+      browser = await config.browserType.launch(launchOptions)
 
       // Create context and page
       context = await browser.createBrowserContext()

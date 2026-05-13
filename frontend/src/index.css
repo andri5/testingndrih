@@ -73,6 +73,7 @@ html.theme-light .bg-\[\#2D2D2F\]   { background-color: #DDDDE0 !important; }
 html.theme-light .bg-\[\#141316\]   { background-color: #FAFAFA !important; }
 html.theme-light .bg-gray-900       { background-color: #F0F0F2 !important; }
 html.theme-light .bg-black          { background-color: #FFFFFF !important; }
+html.theme-light .bg-\[\#2D0F00\]   { background-color: #FEF2F2 !important; } /* smoke selected state */
 html.theme-light .bg-\[\#0F170F\]   { background-color: #ECFDF5 !important; } /* passed card - light green */
 html.theme-light .bg-\[\#170F0F\]   { background-color: #FEF2F2 !important; } /* failed card - light red */
 html.theme-light .border-\[\#2A2A2D\] { border-color: #DDDDE0 !important; }
@@ -81,6 +82,8 @@ html.theme-light .bg-\[\#0F1F17\]   { background-color: #ECFDF5 !important; } /*
 html.theme-light .bg-\[\#1F1A0F\]   { background-color: #FFFBEB !important; } /* alert warning bg */
 html.theme-light .bg-\[\#1A1A2E\]   { background-color: #EEF0FF !important; } /* alert info bg */
 html.theme-light .hover\:bg-\[\#252528\]:hover { background-color: #E0E0E2 !important; }
+html.theme-light .bg-\[\#EEF0FF\]   { background-color: #EEF0FF !important; } /* purple selected state */
+html.theme-light .bg-\[\#FEE2E2\]   { background-color: #FEE2E2 !important; } /* red selected state */
 
 /* ─── Modal backdrop ─── */
 html.theme-light .bg-black\/75,
@@ -97,8 +100,23 @@ html.theme-light .sidebar-panel a:hover,
 html.theme-light .sidebar-panel button.nav-logout:hover { color: #1A1A1C !important; background: rgba(0,0,0,0.05) !important; }
 html.theme-light .app-header-bar button:hover { color: #1A1A1C !important; background: rgba(0,0,0,0.05) !important; }
 
-/* ─── RGBA white border overrides ─── */
-html.theme-light .border-\[rgba\(255\,255\,255\,0\.06\)\] { border-color: #DDDDE0 !important; }
+/* Tailwind gray color overrides for light theme */
+html.theme-light .bg-gray-700       { background-color: #F0F0F2 !important; }
+html.theme-light .bg-gray-800       { background-color: #FFFFFF !important; }
+html.theme-light .bg-gray-900       { background-color: #F0F0F2 !important; }
+html.theme-light .text-gray-300     { color: #666 !important; }
+html.theme-light .text-gray-400     { color: #888 !important; }
+html.theme-light .text-gray-500     { color: #999 !important; }
+html.theme-light .border-gray-600   { border-color: #DDDDE0 !important; }
+html.theme-light .border-gray-700   { border-color: #DDDDE0 !important; }
+
+/* Tailwind purple overrides for light theme */
+html.theme-light .bg-purple-600     { background-color: #EEF0FF !important; }
+html.theme-light .text-purple-600   { color: #5E6AD2 !important; }
+
+/* Tailwind red overrides for light theme */
+html.theme-light .bg-red-600        { background-color: #FEE2E2 !important; }
+html.theme-light .text-red-600      { color: #DC2626 !important; }
 html.theme-light .border-\[rgba\(255\,255\,255\,0\.08\)\] { border-color: #DDDDE0 !important; }
 html.theme-light .border-\[rgba\(255\,255\,255\,0\.1\)\]  { border-color: #DDDDE0 !important; }
 html.theme-light .border-\[rgba\(255\,255\,255\,0\.12\)\] { border-color: #DDDDE0 !important; }
@@ -116,6 +134,37 @@ html.theme-light .hover\:bg-\[rgba\(255\,255\,255\,0\.06\)\]:hover { background-
 html.theme-light .hover\:text-\[\#E0E0E2\]:hover { color: #1A1A1C !important; }
 html.theme-light .placeholder-\[\#4A4A52\]::placeholder { color: #AAAAAC !important; }
 html.theme-light .placeholder-\[\#666\]::placeholder     { color: #AAAAAC !important; }
+
+/* ─── Test History Cards ─── */
+.test-history-card-passed {
+  background-color: #0F170F;
+  border-color: #34D399;
+  border-width: 1px;
+}
+html.theme-light .test-history-card-passed {
+  background-color: #ECFDF5;
+  border-color: #86EFAC;
+}
+
+.test-history-card-failed {
+  background-color: #170F0F;
+  border-color: #F87171;
+  border-width: 1px;
+}
+html.theme-light .test-history-card-failed {
+  background-color: #FEF2F2;
+  border-color: #FCA5A5;
+}
+
+.test-history-card-default {
+  background-color: #1A1A1C;
+  border-color: #2D2D2F;
+  border-width: 1px;
+}
+html.theme-light .test-history-card-default {
+  background-color: #F5F5F7;
+  border-color: #DDDDE0;
+}
 
 /* ─── Tooltip ─── */
 .tooltip-popup {
@@ -356,7 +405,30 @@ html.theme-light .modal-backdrop {
   border-color: rgba(255, 255, 255, 0.24);
   background: rgba(255, 255, 255, 0.06);
 }
+/* ─── DARK THEME COLOR OVERRIDES (html.theme-dark) ─── */
+/* Convert white cards to dark theme colors */
+html.theme-dark .bg-white { background-color: #1A1A1C !important; }
+html.theme-dark .bg-gray-50 { background-color: #0F0E11 !important; }
+html.theme-dark .bg-gray-100 { background-color: #2D2D2F !important; }
+html.theme-dark .bg-gray-700 { background-color: #2D2D2F !important; }
+html.theme-dark .bg-gray-800 { background-color: #0F0E11 !important; }
+html.theme-dark .bg-gray-900 { background-color: #0F0E11 !important; }
 
+/* Custom hex color overrides for dark theme */
+html.theme-dark .bg-\[\#F5F5F7\] { background-color: #0F0E11 !important; }
+html.theme-dark .bg-\[\#FFFFFF\] { background-color: #1A1A1C !important; }
+
+/* Border colors for dark theme */
+html.theme-dark .border-gray-200 { border-color: #2D2D2F !important; }
+html.theme-dark .border-gray-700 { border-color: #2D2D2F !important; }
+html.theme-dark .border-gray-800 { border-color: #2D2D2F !important; }
+html.theme-dark .border-\[\#E0E0E2\] { border-color: #2D2D2F !important; }
+html.theme-dark .border-\[\#DDDDE0\] { border-color: #2D2D2F !important; }
+
+/* Text colors for dark theme (slight adjustments) */
+html.theme-dark .text-gray-900 { color: #E0E0E2 !important; }
+html.theme-dark .text-gray-600 { color: #A0A0A4 !important; }
+html.theme-dark .text-gray-500 { color: #8A8A8F !important; }
 html.theme-light .action-btn {
   background: #F5F5F7 !important;
   border-color: #DDDDE0 !important;
@@ -365,6 +437,117 @@ html.theme-light .action-btn {
 html.theme-light .action-btn:hover {
   background: #EAEAEC !important;
   border-color: #BBBBBC !important;
+}
+
+/* ─── Test Pages: Scenario/Test Type Selection Buttons ─── */
+/* Smoke Test Scenario Selection - Selected State */
+.smoke-scenario-btn-selected {
+  background-color: #2D0F00;
+  border-color: #FF8C00;
+  color: #E0E0E2;
+}
+html.theme-light .smoke-scenario-btn-selected {
+  background-color: #FEF5E7;
+  border-color: #FF9F1C;
+  color: #1A1A1C;
+}
+
+/* Smoke Test Scenario Selection - Unselected State */
+.smoke-scenario-btn-unselected {
+  background-color: #1A1A1C;
+  border-color: #2D2D2F;
+  color: #E0E0E2;
+}
+html.theme-light .smoke-scenario-btn-unselected {
+  background-color: #FFFFFF;
+  border-color: #DDDDE0;
+  color: #1A1A1C;
+}
+
+/* Security Test Scenario Selection - Selected State */
+.security-scenario-btn-selected {
+  background-color: #2D0F00;
+  border-color: #EF4444;
+  color: #E0E0E2;
+}
+html.theme-light .security-scenario-btn-selected {
+  background-color: #FEF2F2;
+  border-color: #DC2626;
+  color: #1A1A1C;
+}
+
+/* Security Test Scenario Selection - Unselected State */
+.security-scenario-btn-unselected {
+  background-color: #1A1A1C;
+  border-color: #2D2D2F;
+  color: #E0E0E2;
+}
+html.theme-light .security-scenario-btn-unselected {
+  background-color: #FFFFFF;
+  border-color: #DDDDE0;
+  color: #1A1A1C;
+}
+
+/* ─── Test Pages: Scan Type Buttons ─── */
+.scan-type-btn-selected {
+  background-color: #EF4444;
+  color: #FFFFFF;
+}
+html.theme-light .scan-type-btn-selected {
+  background-color: #DC2626;
+  color: #FFFFFF;
+}
+
+.scan-type-btn-unselected {
+  background-color: #2D2D2F;
+  border-color: #2D2D2F;
+  color: #E0E0E2;
+}
+html.theme-light .scan-type-btn-unselected {
+  background-color: #F0F0F2;
+  border-color: #DDDDE0;
+  color: #666;
+}
+
+/* ─── Test Pages: Info/Target Boxes ─── */
+.test-target-box {
+  background-color: #0F0E11;
+  border-color: #2D2D2F;
+  color: #E0E0E2;
+}
+html.theme-light .test-target-box {
+  background-color: #F5F5F7;
+  border-color: #DDDDE0;
+  color: #1A1A1C;
+}
+
+/* ─── Test Pages: Action Buttons (Primary) ─── */
+.test-action-btn-primary {
+  background-color: #FF8C00;
+  color: #FFFFFF;
+}
+html.theme-light .test-action-btn-primary {
+  background-color: #FF9F1C;
+  color: #FFFFFF;
+}
+
+.test-action-btn-security {
+  background-color: #EF4444;
+  color: #FFFFFF;
+}
+html.theme-light .test-action-btn-security {
+  background-color: #DC2626;
+  color: #FFFFFF;
+}
+
+/* ─── Test Pages: Disabled Buttons ─── */
+.test-btn-disabled {
+  background-color: #2D2D2F;
+  color: #8A8A8F;
+}
+html.theme-light .test-btn-disabled {
+  background-color: #DDDDE0;
+  color: #888;
 }
 
 /* ─── Responsive utilities ─── */
