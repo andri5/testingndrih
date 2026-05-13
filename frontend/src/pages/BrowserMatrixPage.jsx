@@ -228,7 +228,7 @@ export default function BrowserMatrixPage() {
               <label className={`block text-sm font-medium mb-3 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                 {t.selectBrowsers}
               </label>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3">
                 {BROWSERS.map(browser => (
                   <label
                     key={browser.id}
@@ -350,7 +350,7 @@ export default function BrowserMatrixPage() {
 
                     {/* Compatibility Matrix */}
                     {execution.results?.summary && (
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-4">
                         <div>
                           <p className={`text-xs font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                             Compatibility

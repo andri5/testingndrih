@@ -461,7 +461,7 @@ export default function ScenariosPage() {
                 
                 {/* Dropdown Menu */}
                 {showCreateMenu && (
-                  <div className="absolute top-full right-0 mt-2 w-56 bg-[#1F1E22] border border-[rgba(255,255,255,0.12)] rounded-lg shadow-lg z-10 overflow-hidden">
+                  <div className="absolute top-full right-0 mt-2 w-56 bg-white dark:bg-[#1F1E22] html.theme-light:bg-white border border-[#DDDDE0] dark:border-[rgba(255,255,255,0.12)] html.theme-light:border-[#DDDDE0] rounded-lg shadow-lg z-10 overflow-hidden">
                     {/* Create Manual */}
                     <button
                       onClick={() => {
@@ -469,17 +469,17 @@ export default function ScenariosPage() {
                         setShowCreateMenu(false)
                       }}
                       title={t.createManualTooltip}
-                      className="w-full px-4 py-2.5 text-left text-[#E0E0E2] hover:bg-[#2A2A2D] transition-colors border-b border-[rgba(255,255,255,0.08)] flex items-center gap-2 group relative"
+                      className="w-full px-4 py-2.5 text-left text-[#1A1A1C] dark:text-[#E0E0E2] html.theme-light:text-[#1A1A1C] hover:bg-[#F5F5F7] dark:hover:bg-[#2A2A2D] html.theme-light:hover:bg-[#F5F5F7] transition-colors border-b border-[#DDDDE0] dark:border-[rgba(255,255,255,0.08)] html.theme-light:border-[#DDDDE0] flex items-center gap-2 group relative"
                     >
                       <span>📝</span>
                       <div className="flex-1">
                         <div className="font-medium flex items-center gap-1">
                           {t.createManual}
                           <Tooltip text={t.createManualTooltip} position="right">
-                            <HelpCircle size={14} className="text-[#8A8A8F] opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <HelpCircle size={14} className="text-[#999] dark:text-[#B0B0B5] html.theme-light:text-[#999] opacity-0 group-hover:opacity-100 transition-opacity" />
                           </Tooltip>
                         </div>
-                        <div className="text-xs text-[#8A8A8F]">{t.createManualDesc}</div>
+                        <div className="text-xs text-[#666] dark:text-[#A0A0A4] html.theme-light:text-[#666]">{t.createManualDesc}</div>
                       </div>
                     </button>
 
@@ -490,17 +490,17 @@ export default function ScenariosPage() {
                         setShowCreateMenu(false)
                       }}
                       title={t.quickRecordTooltip}
-                      className="w-full px-4 py-2.5 text-left text-[#E0E0E2] hover:bg-[#2A2A2D] transition-colors border-b border-[rgba(255,255,255,0.08)] flex items-center gap-2 group relative"
+                      className="w-full px-4 py-2.5 text-left text-[#1A1A1C] dark:text-[#E0E0E2] html.theme-light:text-[#1A1A1C] hover:bg-[#F5F5F7] dark:hover:bg-[#2A2A2D] html.theme-light:hover:bg-[#F5F5F7] transition-colors border-b border-[#DDDDE0] dark:border-[rgba(255,255,255,0.08)] html.theme-light:border-[#DDDDE0] flex items-center gap-2 group relative"
                     >
                       <span>⚡</span>
                       <div className="flex-1">
                         <div className="font-medium flex items-center gap-1">
                           {t.quickRecord}
                           <Tooltip text={t.quickRecordTooltip} position="right">
-                            <HelpCircle size={14} className="text-[#8A8A8F] opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <HelpCircle size={14} className="text-[#999] dark:text-[#B0B0B5] html.theme-light:text-[#999] opacity-0 group-hover:opacity-100 transition-opacity" />
                           </Tooltip>
                         </div>
-                        <div className="text-xs text-[#8A8A8F]">{t.quickRecordDesc}</div>
+                        <div className="text-xs text-[#666] dark:text-[#A0A0A4] html.theme-light:text-[#666]">{t.quickRecordDesc}</div>
                       </div>
                     </button>
 
@@ -511,17 +511,17 @@ export default function ScenariosPage() {
                         setShowCreateMenu(false)
                       }}
                       title={t.templatesMenuTooltip}
-                      className="w-full px-4 py-2.5 text-left text-[#E0E0E2] hover:bg-[#2A2A2D] transition-colors border-b border-[rgba(255,255,255,0.08)] flex items-center gap-2 group relative"
+                      className="w-full px-4 py-2.5 text-left text-[#1A1A1C] dark:text-[#E0E0E2] html.theme-light:text-[#1A1A1C] hover:bg-[#F5F5F7] dark:hover:bg-[#2A2A2D] html.theme-light:hover:bg-[#F5F5F7] transition-colors border-b border-[#DDDDE0] dark:border-[rgba(255,255,255,0.08)] html.theme-light:border-[#DDDDE0] flex items-center gap-2 group relative"
                     >
                       <span>📋</span>
                       <div className="flex-1">
                         <div className="font-medium flex items-center gap-1">
                           {t.templates}
                           <Tooltip text={t.templatesMenuTooltip} position="right">
-                            <HelpCircle size={14} className="text-[#8A8A8F] opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <HelpCircle size={14} className="text-[#999] dark:text-[#B0B0B5] html.theme-light:text-[#999] opacity-0 group-hover:opacity-100 transition-opacity" />
                           </Tooltip>
                         </div>
-                        <div className="text-xs text-[#8A8A8F]">{t.templatesDesc}</div>
+                        <div className="text-xs text-[#666] dark:text-[#A0A0A4] html.theme-light:text-[#666]">{t.templatesDesc}</div>
                       </div>
                     </button>
 
@@ -538,17 +538,17 @@ export default function ScenariosPage() {
                         setShowCreateMenu(false)
                       }}
                       title={t.importExcelTooltip}
-                      className="w-full px-4 py-2.5 text-left text-[#E0E0E2] hover:bg-[#2A2A2D] transition-colors flex items-center gap-2 group relative"
+                      className="w-full px-4 py-2.5 text-left text-[#1A1A1C] dark:text-[#E0E0E2] html.theme-light:text-[#1A1A1C] hover:bg-[#F5F5F7] dark:hover:bg-[#2A2A2D] html.theme-light:hover:bg-[#F5F5F7] transition-colors flex items-center gap-2 group relative"
                     >
                       <span>📥</span>
                       <div className="flex-1">
                         <div className="font-medium flex items-center gap-1">
                           {t.importExcel}
                           <Tooltip text={t.importExcelTooltip} position="right">
-                            <HelpCircle size={14} className="text-[#8A8A8F] opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <HelpCircle size={14} className="text-[#999] dark:text-[#B0B0B5] html.theme-light:text-[#999] opacity-0 group-hover:opacity-100 transition-opacity" />
                           </Tooltip>
                         </div>
-                        <div className="text-xs text-[#8A8A8F]">{t.importExcelDesc}</div>
+                        <div className="text-xs text-[#666] dark:text-[#A0A0A4] html.theme-light:text-[#666]">{t.importExcelDesc}</div>
                       </div>
                     </button>
                   </div>
@@ -674,7 +674,7 @@ export default function ScenariosPage() {
 
         {/* Stats */}
         {!showCreateForm && !editingScenario && scenarios.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             <div className="linear-card p-5">
               <div className="flex items-center gap-4">
                 <div className="w-11 h-11 rounded-xl bg-[#5E6AD2]/10 flex items-center justify-center shrink-0">

@@ -7,6 +7,7 @@ import ExportButtons from '../components/ExportButtons'
 import Layout from '../components/Layout'
 import apiClient from '../services/api'
 import { useSettingsStore } from '../store/settingsStore'
+import { analyzeSmokeTestResults } from '../utils/testAnalysis'
 
 const i18n = {
   en: {
@@ -112,6 +113,13 @@ export default function SmokeTestPage() {
           <div className="flex items-center gap-3 mb-2">
             <Zap className="w-8 h-8 text-orange-500" />
             <h1 className="text-3xl font-bold text-[#E0E0E2] html.theme-light:text-[#1A1A1C]">{t.title}</h1>
+            <a
+              href="/help/smoke-test"
+              className="ml-auto px-3 py-1 rounded-lg bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium transition-colors"
+              title="View Help Guide"
+            >
+              ? Help
+            </a>
           </div>
           <p className="text-[#A0A0A4] html.theme-light:text-[#666]">{t.description}</p>
         </div>
@@ -130,7 +138,7 @@ export default function SmokeTestPage() {
         </div>
 
         {/* Export Buttons */}
-        <div className="mb-8 flex justify-end">
+        <div className="mb-8 flex justify-center sm:justify-end">
           <ExportButtons 
             title={t.title}
             summary={summaryData ? {
@@ -144,17 +152,25 @@ export default function SmokeTestPage() {
               'Status': 'Active',
               'Created At': new Date(s.createdAt).toLocaleDateString(language)
             }))}
+            analysis={analyzeSmokeTestResults(
+              summaryData ? {
+                'Total Tests': summaryData.totalTests || 0,
+                'Pass Rate (%)': summaryData.passRate || 0,
+                'Avg Duration (s)': summaryData.avgDuration ? (summaryData.avgDuration / 1000).toFixed(2) : 0,
+              } : null,
+              smokeScenarios
+            )}
             filename={`smoke-test-report-${new Date().toISOString().slice(0, 10)}`}
           />
         </div>
 
         {/* Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mb-8">
           {/* Left Column - Scenario Selection & Test Runner */}
           <div className="lg:col-span-2 space-y-6">
             {/* Scenario Selector */}
-            <div className="bg-[#1A1A1C] html.theme-light:bg-white rounded-lg shadow p-6 border border-[#2D2D2F] html.theme-light:border-[#DDDDE0]">
-              <h2 className="text-lg font-semibold text-[#E0E0E2] html.theme-light:text-[#1A1A1C] mb-4 flex items-center gap-2">
+            <div className="bg-[#1A1A1C] rounded-lg shadow p-6 border border-[#2D2D2F]">
+              <h2 className="text-lg font-semibold text-[#E0E0E2] mb-4 flex items-center gap-2">
                 <Zap className="w-5 h-5 text-orange-500" />
                 {t.selectScenario}
               </h2>
@@ -164,25 +180,25 @@ export default function SmokeTestPage() {
                   <Loader className="w-6 h-6 text-orange-500 animate-spin" />
                 </div>
               ) : smokeScenarios.length === 0 ? (
-                <p className="text-center text-[#8A8A8F] html.theme-light:text-[#888] py-8">
+                <p className="text-center text-[#8A8A8F] py-8">
                   {t.noScenarios}
                 </p>
               ) : (
-                <div className="space-y-2 bg-[#0F0E11] html.theme-light:bg-[#F5F5F7] rounded-lg p-4 max-h-64 overflow-y-auto">
+                <div className="space-y-2 bg-[#0F0E11] rounded-lg p-4 max-h-64 overflow-y-auto">
                   {smokeScenarios.map(scenario => (
                     <button
                       key={scenario.id}
                       onClick={() => setSelectedScenario(scenario)}
                       className={`w-full text-left p-4 rounded-lg border-2 shadow-sm transition-all ${
                         selectedScenario?.id === scenario.id
-                          ? 'border-orange-500 bg-[#2D0F00] html.theme-light:bg-[#FEF2F2] html.theme-light:border-orange-400'
-                          : 'border-[#2D2D2F] html.theme-light:border-[#DDDDE0] bg-[#1A1A1C] html.theme-light:bg-white hover:border-[#3D3D3F] html.theme-light:hover:border-[#CCCCCC] hover:shadow'
+                          ? 'smoke-scenario-btn-selected'
+                          : 'smoke-scenario-btn-unselected'
                       }`}
                     >
-                      <h3 className="font-semibold text-[#E0E0E2] html.theme-light:text-[#1A1A1C] break-words">
+                      <h3 className="font-semibold break-words">
                         {scenario.name}
                       </h3>
-                      <p className="text-sm text-[#8A8A8F] html.theme-light:text-[#666] mt-1">
+                      <p className="text-sm text-[#8A8A8F] mt-1">
                         {scenario.testSteps?.length || scenario.steps?.length || 0} {t.steps}
                       </p>
                     </button>
@@ -232,40 +248,6 @@ export default function SmokeTestPage() {
             </button>
           </div>
         )}
-
-        {/* Info Section */}
-        <div className="bg-[#1A1A1C] html.theme-light:bg-white border border-[#2D2D2F] html.theme-light:border-[#DDDDE0] rounded-lg p-6 mt-8">
-          <h3 className="font-semibold text-[#E0E0E2] html.theme-light:text-[#1A1A1C] mb-4 flex items-center gap-2">
-            <Rocket className="w-5 h-5 text-orange-500" />
-            {t.aboutTitle}
-          </h3>
-          <ul className="text-sm text-[#A0A0A4] html.theme-light:text-[#666] space-y-3">
-            <li className="flex items-start gap-3">
-              <ZapIcon className="w-4 h-4 text-orange-500 flex-shrink-0 mt-0.5" />
-              <span>{t.feature1}</span>
-            </li>
-            <li className="flex items-start gap-3">
-              <Rocket className="w-4 h-4 text-orange-500 flex-shrink-0 mt-0.5" />
-              <span>{t.feature2}</span>
-            </li>
-            <li className="flex items-start gap-3">
-              <CheckCircle2 className="w-4 h-4 text-orange-500 flex-shrink-0 mt-0.5" />
-              <span>{t.feature3}</span>
-            </li>
-            <li className="flex items-start gap-3">
-              <MonitorPlay className="w-4 h-4 text-orange-500 flex-shrink-0 mt-0.5" />
-              <span>{t.feature4}</span>
-            </li>
-            <li className="flex items-start gap-3">
-              <BarChart2 className="w-4 h-4 text-orange-500 flex-shrink-0 mt-0.5" />
-              <span>{t.feature5}</span>
-            </li>
-            <li className="flex items-start gap-3">
-              <ListChecks className="w-4 h-4 text-orange-500 flex-shrink-0 mt-0.5" />
-              <span>{t.feature6}</span>
-            </li>
-          </ul>
-        </div>
       </div>
     </Layout>
   )

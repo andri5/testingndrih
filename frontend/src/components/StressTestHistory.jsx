@@ -52,27 +52,27 @@ export default function StressTestHistory({ scenario }) {
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-4 space-y-4">
+    <div className="bg-[#1A1A1C] html.theme-light:bg-white rounded-lg shadow border border-[#2D2D2F] html.theme-light:border-[#DDDDE0] p-4 space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Clock className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-          <h3 className="font-semibold text-gray-900 dark:text-white">{t.recentTests}</h3>
+          <Clock className="w-5 h-5 text-[#8A8A8F] html.theme-light:text-[#888]" />
+          <h3 className="font-semibold text-[#E0E0E2] html.theme-light:text-[#1A1A1C]">{t.recentTests}</h3>
         </div>
         <button
           onClick={loadHistory}
-          className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+          className="p-1 hover:bg-[#2D2D2F] html.theme-light:hover:bg-[#F0F0F2] rounded transition-colors"
           title="Refresh"
         >
-          <RefreshCw className="w-4 h-4 dark:text-gray-400" />
+          <RefreshCw className="w-4 h-4 text-[#8A8A8F] html.theme-light:text-[#888]" />
         </button>
       </div>
 
-      <div className="text-xs text-gray-600 dark:text-gray-400 px-2">Last 10 runs</div>
+      <div className="text-xs text-[#8A8A8F] html.theme-light:text-[#888] px-2">Last 10 runs</div>
 
       {loading ? (
-        <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">Loading...</p>
+        <p className="text-sm text-[#8A8A8F] html.theme-light:text-[#888] text-center py-4">Loading...</p>
       ) : history.length === 0 ? (
-        <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">{t.noTests}</p>
+        <p className="text-sm text-[#8A8A8F] html.theme-light:text-[#888] text-center py-4">{t.noTests}</p>
       ) : (
         <div className="space-y-2 max-h-96 overflow-y-auto">
           {history.map((test, idx) => (
@@ -80,39 +80,39 @@ export default function StressTestHistory({ scenario }) {
               key={idx}
               className={`p-3 rounded-lg text-xs ${
                 test.status === 'PASSED'
-                  ? 'bg-green-50 dark:bg-green-900 border border-green-200 dark:border-green-700'
-                  : 'bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700'
+                  ? 'test-history-card-passed'
+                  : 'test-history-card-failed'
               }`}
             >
               <div className="flex items-center justify-between mb-2">
-                <span className="font-semibold dark:text-white">
+                <span className="font-semibold text-[#E0E0E2] html.theme-light:text-[#1A1A1C]">
                   {test.status === 'PASSED' ? '✅' : '❌'} {test.profile}
                 </span>
               </div>
               
-              <div className="grid grid-cols-2 gap-2 mb-2 text-gray-600 dark:text-gray-300">
+              <div className="grid grid-cols-2 gap-2 mb-2 text-[#8A8A8F] html.theme-light:text-[#555]">
                 <div>
                   <div className="opacity-75">Load</div>
-                  <div className="font-semibold text-gray-800 dark:text-gray-100">
+                  <div className="font-semibold text-[#E0E0E2] html.theme-light:text-[#1A1A1C]">
                     {test.concurrency}×{test.iterations}
                   </div>
                 </div>
                 <div>
                   <div className="opacity-75">Duration</div>
-                  <div className="font-semibold text-gray-800 dark:text-gray-100">
+                  <div className="font-semibold text-[#E0E0E2] html.theme-light:text-[#1A1A1C]">
                     {formatDuration(test.duration)}
                   </div>
                 </div>
               </div>
 
               {test.metrics && (
-                <div className="grid grid-cols-2 gap-2 text-xs text-gray-600 dark:text-gray-400">
+                <div className="grid grid-cols-2 gap-2 text-xs text-[#8A8A8F] html.theme-light:text-[#888]">
                   <div>Avg: {test.metrics.responseTimeAvg}ms</div>
                   <div>Error: {test.metrics.errorRate.toFixed(1)}%</div>
                 </div>
               )}
 
-              <div className="text-gray-500 dark:text-gray-400 mt-2 text-xs">
+              <div className="text-[#8A8A8F] html.theme-light:text-[#888] mt-2 text-xs">
                 {formatDate(test.createdAt)}
               </div>
             </div>
@@ -122,7 +122,7 @@ export default function StressTestHistory({ scenario }) {
 
       <button
         onClick={loadHistory}
-        className="w-full py-2 text-sm text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-gray-700 rounded transition-colors"
+        className="w-full py-2 text-sm text-purple-500 html.theme-light:text-purple-600 hover:text-purple-400 html.theme-light:hover:text-purple-700 rounded transition-colors font-medium"
       >
         Refresh
       </button>

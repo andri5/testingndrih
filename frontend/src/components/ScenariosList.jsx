@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Button, Badge, Spinner, Card, Tooltip } from './ui'
 import { useSettingsStore } from '../store/settingsStore'
 
@@ -48,6 +49,46 @@ export function ScenariosList({
 }) {
   const { language } = useSettingsStore()
   const tt = tooltipI18n[language] ?? tooltipI18n.en
+
+  // Track per-action loading state
+  const [loadingStates, setLoadingStates] = useState({})
+
+  const setActionLoading = (key, isLoading) => {
+    setLoadingStates(prev => ({ ...prev, [key]: isLoading }))
+  }
+
+  const isActionLoading = (key) => loadingStates[key] ?? false
+
+  // Wrapper functions dengan loading state
+  const handleMarkSmoke = async (scenarioId, value) => {
+    const key = `smoke-${scenarioId}`
+    setActionLoading(key, true)
+    try {
+      await onMarkSmoke(scenarioId, value)
+    } finally {
+      setActionLoading(key, false)
+    }
+  }
+
+  const handleMarkStress = async (scenarioId, value) => {
+    const key = `stress-${scenarioId}`
+    setActionLoading(key, true)
+    try {
+      await onMarkStress(scenarioId, value)
+    } finally {
+      setActionLoading(key, false)
+    }
+  }
+
+  const handleMarkSecurity = async (scenarioId, value) => {
+    const key = `security-${scenarioId}`
+    setActionLoading(key, true)
+    try {
+      await onMarkSecurity(scenarioId, value)
+    } finally {
+      setActionLoading(key, false)
+    }
+  }
   if (isLoading && scenarios.length === 0) {
     return (
       <Card>
@@ -169,10 +210,17 @@ export function ScenariosList({
                   <Button
                     variant={scenario.isSmoke ? "primary" : "secondary"}
                     size="sm"
-                    onClick={() => onMarkSmoke(scenario.id, !scenario.isSmoke)}
-                    disabled={isLoading}
+                    onClick={() => handleMarkSmoke(scenario.id, !scenario.isSmoke)}
+                    disabled={isLoading || isActionLoading(`smoke-${scenario.id}`)}
                   >
-                    {scenario.isSmoke ? '⚡ Smoke' : '⚡ Mark'}
+                    {isActionLoading(`smoke-${scenario.id}`) ? (
+                      <div className="flex items-center gap-1">
+                        <Spinner size="sm" variant="primary" />
+                        <span>Marking...</span>
+                      </div>
+                    ) : (
+                      scenario.isSmoke ? '⚡ Smoke' : '⚡ Mark'
+                    )}
                   </Button>
                   </Tooltip>
                 )}
@@ -181,10 +229,17 @@ export function ScenariosList({
                   <Button
                     variant={scenario.isStress ? "primary" : "secondary"}
                     size="sm"
-                    onClick={() => onMarkStress(scenario.id, !scenario.isStress)}
-                    disabled={isLoading}
+                    onClick={() => handleMarkStress(scenario.id, !scenario.isStress)}
+                    disabled={isLoading || isActionLoading(`stress-${scenario.id}`)}
                   >
-                    {scenario.isStress ? '⚙️ Stress' : '⚙️ Stress'}
+                    {isActionLoading(`stress-${scenario.id}`) ? (
+                      <div className="flex items-center gap-1">
+                        <Spinner size="sm" variant="primary" />
+                        <span>Marking...</span>
+                      </div>
+                    ) : (
+                      scenario.isStress ? '⚙️ Stress' : '⚙️ Stress'
+                    )}
                   </Button>
                   </Tooltip>
                 )}
@@ -193,10 +248,17 @@ export function ScenariosList({
                   <Button
                     variant={scenario.isSecurity ? "primary" : "secondary"}
                     size="sm"
-                    onClick={() => onMarkSecurity(scenario.id, !scenario.isSecurity)}
-                    disabled={isLoading}
+                    onClick={() => handleMarkSecurity(scenario.id, !scenario.isSecurity)}
+                    disabled={isLoading || isActionLoading(`security-${scenario.id}`)}
                   >
-                    {scenario.isSecurity ? '🔒 Security' : '🔒 Security'}
+                    {isActionLoading(`security-${scenario.id}`) ? (
+                      <div className="flex items-center gap-1">
+                        <Spinner size="sm" variant="primary" />
+                        <span>Marking...</span>
+                      </div>
+                    ) : (
+                      scenario.isSecurity ? '🔒 Security' : '🔒 Security'
+                    )}
                   </Button>
                   </Tooltip>
                 )}

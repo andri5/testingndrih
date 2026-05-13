@@ -6,9 +6,47 @@ import toast from 'react-hot-toast'
 import { useSettingsStore } from '../store/settingsStore'
 import { Download, TrendingUp, Calendar, Zap } from 'lucide-react'
 
+const i18n = {
+  en: {
+    title: 'Test Analytics Dashboard',
+    subtitle: 'Comprehensive test execution metrics and performance tracking',
+    exportJson: 'Export JSON',
+    exportCsv: 'Export CSV',
+    failedLoadAnalytics: 'Failed to load analytics data',
+    failedExportAnalytics: 'Failed to export analytics',
+    totalExecutions: 'Total Executions',
+    last7Days: 'Last 7 days:',
+    passRate: 'Overall Pass Rate',
+    day7Rate: '7-day rate:',
+    avgDuration: 'Avg Duration',
+    perExecution: 'Per execution',
+    totalScenarios: 'Total Scenarios',
+    underTest: 'Under test',
+    executionHistory: 'Execution History',
+  },
+  id: {
+    title: 'Dashboard Analitik Test',
+    subtitle: 'Metrik eksekusi test komprehensif dan pelacakan kinerja',
+    exportJson: 'Ekspor JSON',
+    exportCsv: 'Ekspor CSV',
+    failedLoadAnalytics: 'Gagal memuat data analitik',
+    failedExportAnalytics: 'Gagal mengekspor analitik',
+    totalExecutions: 'Total Eksekusi',
+    last7Days: '7 hari terakhir:',
+    passRate: 'Tingkat Keberhasilan Keseluruhan',
+    day7Rate: 'Tingkat 7 hari:',
+    avgDuration: 'Durasi Rata-rata',
+    perExecution: 'Per eksekusi',
+    totalScenarios: 'Total Scenario',
+    underTest: 'Sedang diuji',
+    executionHistory: 'Riwayat Eksekusi',
+  },
+}
+
 export default function AnalyticsPage() {
   const navigate = useNavigate()
   const { language } = useSettingsStore()
+  const t = i18n[language] || i18n.en
   const locale = language === 'id' ? 'id-ID' : 'en-US'
   const [summary, setSummary] = useState(null)
   const [history, setHistory] = useState(null)
@@ -32,7 +70,7 @@ export default function AnalyticsPage() {
       setHistory(historyRes.data)
     } catch (error) {
       console.error('Error loading analytics:', error)
-      toast.error('Failed to load analytics data')
+      toast.error(t.failedLoadAnalytics)
     } finally {
       setLoading(false)
     }
@@ -63,10 +101,10 @@ export default function AnalyticsPage() {
         link.parentNode.removeChild(link)
       }
 
-      toast.success(`✅ Exported as ${format.toUpperCase()}`)
+      toast.success(`✅ ${t.exportJson}`)
     } catch (error) {
       console.error('Export error:', error)
-      toast.error('Failed to export analytics')
+      toast.error(t.failedExportAnalytics)
     } finally {
       setExporting(false)
     }
@@ -108,9 +146,9 @@ export default function AnalyticsPage() {
           <div>
             <h1 className="text-2xl font-bold text-[#E0E0E2] flex items-center gap-2">
               <TrendingUp size={24} className="text-[#9BA3F0]" />
-              Test Analytics Dashboard
+              {t.title}
             </h1>
-            <p className="text-[#8A8A8F] mt-1">Comprehensive test execution metrics and performance tracking</p>
+            <p className="text-[#8A8A8F] mt-1">{t.subtitle}</p>
           </div>
           <div className="flex gap-2">
             <button
@@ -119,7 +157,7 @@ export default function AnalyticsPage() {
               className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#5E6AD2]/10 hover:bg-[#5E6AD2]/20 text-[#9BA3F0] font-medium transition-colors disabled:opacity-50"
             >
               <Download size={16} />
-              Export JSON
+              {t.exportJson}
             </button>
             <button
               onClick={() => handleExport('csv')}
@@ -127,7 +165,7 @@ export default function AnalyticsPage() {
               className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#4EC9B0]/10 hover:bg-[#4EC9B0]/20 text-[#4EC9B0] font-medium transition-colors disabled:opacity-50"
             >
               <Download size={16} />
-              Export CSV
+              {t.exportCsv}
             </button>
           </div>
         </div>
@@ -141,15 +179,15 @@ export default function AnalyticsPage() {
             {/* Summary Cards */}
             {summary && (
               <>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 xs:grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                   {/* Total Executions */}
                   <div className="linear-card stat-cyan p-6">
                     <div className="flex items-start justify-between">
                       <div>
-                        <p className="text-xs text-[#8A8A8F] font-medium uppercase tracking-wider">Total Executions</p>
+                        <p className="text-xs text-[#8A8A8F] font-medium uppercase tracking-wider">{t.totalExecutions}</p>
                         <p className="text-3xl font-bold text-[#E0E0E2] mt-2">{summary.totalExecutions}</p>
                         <p className="text-xs text-[#8A8A8F] mt-2">
-                          Last 7 days: {summary.last7Days?.executions || 0}
+                          {t.last7Days} {summary.last7Days?.executions || 0}
                         </p>
                       </div>
                       <div className="w-10 h-10 rounded-lg bg-[#4EC9B0]/10 flex items-center justify-center">
@@ -162,10 +200,10 @@ export default function AnalyticsPage() {
                   <div className="linear-card stat-green p-6">
                     <div className="flex items-start justify-between">
                       <div>
-                        <p className="text-xs text-[#8A8A8F] font-medium uppercase tracking-wider">Overall Pass Rate</p>
+                        <p className="text-xs text-[#8A8A8F] font-medium uppercase tracking-wider">{t.passRate}</p>
                         <p className="text-3xl font-bold text-[#34D399] mt-2">{summary.passRate}%</p>
                         <p className="text-xs text-[#8A8A8F] mt-2">
-                          7-day rate: {summary.last7Days?.passRate || 0}%
+                          {t.day7Rate} {summary.last7Days?.passRate || 0}%
                         </p>
                       </div>
                       <div className="w-10 h-10 rounded-lg bg-[#34D399]/10 flex items-center justify-center">
@@ -178,9 +216,9 @@ export default function AnalyticsPage() {
                   <div className="linear-card stat-amber p-6">
                     <div className="flex items-start justify-between">
                       <div>
-                        <p className="text-xs text-[#8A8A8F] font-medium uppercase tracking-wider">Avg Duration</p>
+                        <p className="text-xs text-[#8A8A8F] font-medium uppercase tracking-wider">{t.avgDuration}</p>
                         <p className="text-3xl font-bold text-[#FBBF24] mt-2">{formatDuration(summary.avgDuration)}</p>
-                        <p className="text-xs text-[#8A8A8F] mt-2">Per execution</p>
+                        <p className="text-xs text-[#8A8A8F] mt-2">{t.perExecution}</p>
                       </div>
                       <div className="w-10 h-10 rounded-lg bg-[#FBBF24]/10 flex items-center justify-center">
                         <Calendar size={18} className="text-[#FBBF24]" />
@@ -192,9 +230,9 @@ export default function AnalyticsPage() {
                   <div className="linear-card stat-violet p-6">
                     <div className="flex items-start justify-between">
                       <div>
-                        <p className="text-xs text-[#8A8A8F] font-medium uppercase tracking-wider">Total Scenarios</p>
+                        <p className="text-xs text-[#8A8A8F] font-medium uppercase tracking-wider">{t.totalScenarios}</p>
                         <p className="text-3xl font-bold text-[#9BA3F0] mt-2">{summary.totalScenarios}</p>
-                        <p className="text-xs text-[#8A8A8F] mt-2">Under test</p>
+                        <p className="text-xs text-[#8A8A8F] mt-2">{t.underTest}</p>
                       </div>
                       <div className="w-10 h-10 rounded-lg bg-[#5E6AD2]/10 flex items-center justify-center">
                         <TrendingUp size={18} className="text-[#9BA3F0]" />
@@ -204,7 +242,7 @@ export default function AnalyticsPage() {
                 </div>
 
                 {/* Pass/Fail Breakdown */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <div className="linear-card p-6 border-l-2 border-l-[#34D399]">
                     <p className="text-xs text-[#8A8A8F] font-medium uppercase tracking-wider">Passed Executions</p>
                     <div className="flex items-end gap-3 mt-3">

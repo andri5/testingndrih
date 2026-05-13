@@ -33,10 +33,10 @@ export default function StressTestMetrics({ metrics }) {
   return (
     <div className="space-y-4 text-sm">
       {/* Response Times */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <div className="bg-white bg-opacity-50 p-3 rounded shadow hover:shadow-md transition-shadow">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
+        <div className="bg-white bg-opacity-50 p-3 sm:p-4 rounded shadow hover:shadow-md transition-shadow">
           <div className="text-gray-600 text-xs font-medium">{t.minResponse}</div>
-          <div className="font-semibold text-lg mt-1">{metrics.responseTimeMin}ms</div>
+          <div className="font-semibold text-lg sm:text-xl mt-1">{metrics.responseTimeMin}ms</div>
         </div>
         <div className="bg-white dark:bg-gray-800 bg-opacity-50 dark:bg-opacity-50 p-3 rounded shadow hover:shadow-md transition-shadow">
           <div className="text-gray-600 dark:text-gray-300 text-xs font-medium\">{t.avgResponse}</div>

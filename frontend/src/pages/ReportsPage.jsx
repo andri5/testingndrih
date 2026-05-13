@@ -235,7 +235,7 @@ export default function ReportsPage() {
           <>
             {/* Summary Stats */}
             {stats && (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 xs:grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                 <div className="linear-card p-5">
                   <div className="flex items-center gap-4">
                     <div className="w-11 h-11 rounded-xl bg-[#5E6AD2]/10 flex items-center justify-center shrink-0">

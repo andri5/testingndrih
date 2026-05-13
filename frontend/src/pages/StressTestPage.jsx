@@ -7,6 +7,7 @@ import ExportButtons from '../components/ExportButtons'
 import Layout from '../components/Layout'
 import { Zap, AlertCircle, Loader, Play, BarChart3, Gauge, TrendingUp, Layers } from 'lucide-react'
 import { useSettingsStore } from '../store/settingsStore'
+import { analyzeStressTestResults } from '../utils/testAnalysis'
 
 const i18n = {
   en: {
@@ -131,6 +132,13 @@ export default function StressTestPage() {
           <div className="flex items-center gap-3 mb-2">
             <Zap className="w-8 h-8 text-purple-500" />
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{t.title}</h1>
+            <a
+              href="/help/stress-test"
+              className="ml-auto px-3 py-1 rounded-lg bg-purple-500 hover:bg-purple-600 text-white text-sm font-medium transition-colors"
+              title="View Help Guide"
+            >
+              ? Help
+            </a>
           </div>
           <p className="text-gray-600 dark:text-gray-400">{t.description}</p>
         </div>
@@ -149,7 +157,7 @@ export default function StressTestPage() {
         </div>
 
         {/* Export Buttons */}
-        <div className="mb-8 flex justify-end">
+        <div className="mb-8 flex justify-center sm:justify-end">
           <ExportButtons 
             title={t.title}
             summary={summaryData ? {
@@ -164,24 +172,35 @@ export default function StressTestPage() {
               'Status': 'Active',
               'Created At': new Date(s.createdAt).toLocaleDateString(language)
             }))}
+            analysis={analyzeStressTestResults(
+              summaryData ? {
+                'Total Tests': summaryData.totalTests || 0,
+                'Pass Rate (%)': summaryData.passRate || 0,
+                'Avg Response Time (ms)': summaryData.avgResponseTime || 0,
+                'Throughput (exec/sec)': summaryData.avgThroughput || 0,
+                'Error Rate (%)': summaryData.errorRate || 0,
+                'Total Requests': summaryData.totalRequests || 0,
+              } : null,
+              scenarios
+            )}
             filename={`stress-test-report-${new Date().toISOString().slice(0, 10)}`}
           />
         </div>
 
         {/* Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mb-8">
         {/* Scenario Selector & Runner */}
         <div className="lg:col-span-2 space-y-6">
           {/* Scenario List */}
-          <div className="bg-gray-800 rounded-lg shadow border border-gray-700 p-6 space-y-4">
-            <h2 className="text-lg font-semibold text-white">{t.selectScenario}</h2>
-            <div className="bg-gray-700 rounded-lg p-4 max-h-64 overflow-y-auto">
+          <div className="bg-[#1A1A1C] dark:bg-[#1A1A1C] html.theme-light:bg-white rounded-lg shadow border border-[#2D2D2F] dark:border-[#2D2D2F] html.theme-light:border-[#DDDDE0] p-6 space-y-4">
+            <h2 className="text-lg font-semibold text-[#E0E0E2] dark:text-[#E0E0E2] html.theme-light:text-[#1A1A1C]">{t.selectScenario}</h2>
+            <div className="bg-[#0F0E11] dark:bg-[#0F0E11] html.theme-light:bg-[#F5F5F7] rounded-lg p-4 max-h-64 overflow-y-auto">
               {loading ? (
                 <div className="flex items-center justify-center py-8">
                   <Loader className="w-6 h-6 text-purple-500 animate-spin" />
                 </div>
               ) : scenarios.length === 0 ? (
-                <p className="text-center text-gray-500 py-8">{t.noScenarios}</p>
+                <p className="text-center text-[#8A8A8F] dark:text-[#8A8A8F] html.theme-light:text-[#666] py-8">{t.noScenarios}</p>
               ) : (
                 <div className="space-y-2">
                   {scenarios.map(scenario => (
@@ -190,8 +209,8 @@ export default function StressTestPage() {
                       onClick={() => setSelectedScenario(scenario)}
                       className={`w-full p-3 rounded-lg text-left transition-colors ${
                         selectedScenario?.id === scenario.id
-                          ? 'bg-purple-600 text-white hover:bg-purple-700'
-                          : 'bg-gray-800 border border-gray-600 text-gray-300 hover:border-purple-500 hover:text-white'
+                          ? 'bg-purple-600 dark:bg-purple-600 html.theme-light:bg-[#EEF0FF] border-2 border-purple-500 dark:border-purple-500 html.theme-light:border-purple-300 text-[#E0E0E2] dark:text-white html.theme-light:text-[#1A1A1C]'
+                          : 'bg-[#1A1A1C] dark:bg-[#1A1A1C] html.theme-light:bg-white border border-[#2D2D2F] dark:border-[#2D2D2F] html.theme-light:border-[#DDDDE0] text-[#8A8A8F] dark:text-gray-300 html.theme-light:text-[#666] hover:border-purple-500 dark:hover:border-purple-500 html.theme-light:hover:border-purple-300 hover:text-[#E0E0E2] dark:hover:text-white html.theme-light:hover:text-[#1A1A1C]'
                       }`}
                     >
                       <h3 className="font-semibold">{scenario.name}</h3>
@@ -210,40 +229,6 @@ export default function StressTestPage() {
               onTestComplete={loadScenarios}
             />
           )}
-
-          {/* Info Box */}
-          <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
-            <h3 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-              <Zap className="w-5 h-5 text-purple-500" />
-              {t.aboutTitle}
-            </h3>
-            <ul className="text-gray-700 dark:text-gray-300 text-sm space-y-3">
-              <li className="flex items-start gap-3">
-                <Layers className="w-4 h-4 text-purple-500 flex-shrink-0 mt-0.5" />
-                <span>{t.feature1}</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <BarChart3 className="w-4 h-4 text-purple-500 flex-shrink-0 mt-0.5" />
-                <span>{t.feature2}</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <TrendingUp className="w-4 h-4 text-purple-500 flex-shrink-0 mt-0.5" />
-                <span>{t.feature3}</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <Gauge className="w-4 h-4 text-purple-500 flex-shrink-0 mt-0.5" />
-                <span>{t.feature4}</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <AlertCircle className="w-4 h-4 text-purple-500 flex-shrink-0 mt-0.5" />
-                <span>{t.feature5}</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <Zap className="w-4 h-4 text-purple-500 flex-shrink-0 mt-0.5" />
-                <span>{t.feature6}</span>
-              </li>
-            </ul>
-          </div>
         </div>
 
         {/* History Sidebar */}

@@ -73,7 +73,7 @@ export default function SecurityHistory({ scenario }) {
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-6 space-y-4">
+    <div className="bg-white dark:bg-[#1A1A1C] html.theme-light:bg-white rounded-lg shadow border border-[#E0E0E2] dark:border-[#2D2D2F] html.theme-light:border-[#DDDDE0] p-6 space-y-4">
       <div className="flex items-center gap-2">
         <Clock className="w-5 h-5 text-gray-600 dark:text-gray-400" />
         <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{t.scanHistory}</h2>
@@ -88,7 +88,7 @@ export default function SecurityHistory({ scenario }) {
           {history.map((scan, index) => (
             <div
               key={scan.id}
-              className="border border-gray-200 dark:border-gray-700 rounded-lg p-3 hover:border-gray-300 dark:hover:border-gray-600 transition-colors cursor-pointer"
+              className="border border-[#E0E0E2] dark:border-[#2D2D2F] html.theme-light:border-[#DDDDE0] rounded-lg p-3 hover:border-[#DDDDE0] dark:hover:border-[#3D3D3F] html.theme-light:hover:border-[#CCCCCC] transition-colors cursor-pointer"
             >
               <div className="flex items-start justify-between mb-2">
                 <div>

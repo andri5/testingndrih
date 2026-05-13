@@ -54,12 +54,12 @@ export default function SecuritySummary() {
 
   if (loading || !summary) {
     return (
-      <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-6 border border-gray-200 dark:border-gray-800">
+      <div className="bg-white dark:bg-[#1A1A1C] html.theme-light:bg-white rounded-lg shadow p-6 border border-[#E0E0E2] dark:border-[#2D2D2F] html.theme-light:border-[#DDDDE0]">
         <div className="space-y-4">
-          <div className="h-6 bg-gray-200 dark:bg-gray-800 rounded w-1/3 animate-pulse" />
+          <div className="h-6 bg-[#F5F5F7] dark:bg-[#2D2D2F] html.theme-light:bg-[#F5F5F7] rounded w-1/3 animate-pulse" />
           <div className="grid grid-cols-5 gap-4">
             {[1, 2, 3, 4, 5].map(i => (
-              <div key={i} className="h-20 bg-gray-200 dark:bg-gray-800 rounded animate-pulse" />
+              <div key={i} className="h-20 bg-[#F5F5F7] dark:bg-[#2D2D2F] html.theme-light:bg-[#F5F5F7] rounded animate-pulse" />
             ))}
           </div>
         </div>
@@ -68,7 +68,7 @@ export default function SecuritySummary() {
   }
 
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-6 border border-gray-200 dark:border-gray-800">
+    <div className="bg-white dark:bg-[#1A1A1C] html.theme-light:bg-white rounded-lg shadow p-6 border border-[#E0E0E2] dark:border-[#2D2D2F] html.theme-light:border-[#DDDDE0]">
       <div className="mb-6">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
@@ -81,9 +81,9 @@ export default function SecuritySummary() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 xs:grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
         <div 
-          className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700 cursor-help hover:shadow-md transition-shadow"
+          className="bg-[#F5F5F7] dark:bg-[#0F0E11] html.theme-light:bg-[#F5F5F7] rounded-lg p-4 border border-[#E0E0E2] dark:border-[#2D2D2F] html.theme-light:border-[#DDDDE0] cursor-help hover:shadow-md transition-shadow"
           title={t.totalScansDesc}
         >
           <div className="flex items-center gap-2 mb-2">
@@ -94,7 +94,7 @@ export default function SecuritySummary() {
         </div>
 
         <div 
-          className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700 cursor-help hover:shadow-md transition-shadow"
+          className="bg-[#F5F5F7] dark:bg-[#0F0E11] html.theme-light:bg-[#F5F5F7] rounded-lg p-4 border border-[#E0E0E2] dark:border-[#2D2D2F] html.theme-light:border-[#DDDDE0] cursor-help hover:shadow-md transition-shadow"
           title={t.avgRiskDesc}
         >
           <div className="flex items-center gap-2 mb-2">
@@ -105,7 +105,7 @@ export default function SecuritySummary() {
         </div>
 
         <div 
-          className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700 cursor-help hover:shadow-md transition-shadow"
+          className="bg-[#F5F5F7] dark:bg-[#0F0E11] html.theme-light:bg-[#F5F5F7] rounded-lg p-4 border border-[#E0E0E2] dark:border-[#2D2D2F] html.theme-light:border-[#DDDDE0] cursor-help hover:shadow-md transition-shadow"
           title={t.criticalDesc}
         >
           <div className="flex items-center gap-2 mb-2">
@@ -116,7 +116,7 @@ export default function SecuritySummary() {
         </div>
 
         <div 
-          className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700 cursor-help hover:shadow-md transition-shadow"
+          className="bg-[#F5F5F7] dark:bg-[#0F0E11] html.theme-light:bg-[#F5F5F7] rounded-lg p-4 border border-[#E0E0E2] dark:border-[#2D2D2F] html.theme-light:border-[#DDDDE0] cursor-help hover:shadow-md transition-shadow"
           title={t.highDesc}
         >
           <div className="flex items-center gap-2 mb-2">
@@ -127,7 +127,7 @@ export default function SecuritySummary() {
         </div>
 
         <div 
-          className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700 cursor-help hover:shadow-md transition-shadow"
+          className="bg-[#F5F5F7] dark:bg-[#0F0E11] html.theme-light:bg-[#F5F5F7] rounded-lg p-4 border border-[#E0E0E2] dark:border-[#2D2D2F] html.theme-light:border-[#DDDDE0] cursor-help hover:shadow-md transition-shadow"
           title={t.mediumDesc}
         >
           <div className="flex items-center gap-2 mb-2">

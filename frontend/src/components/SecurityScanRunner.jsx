@@ -111,10 +111,10 @@ export default function SecurityScanRunner({ scenario, onScanComplete }) {
           <button
             onClick={() => setScanType('full')}
             disabled={scanning}
-            className={`flex-1 min-w-fit px-4 py-2 rounded-lg transition-colors ${
+            className={`flex-1 min-w-fit px-4 py-2 rounded-lg transition-colors font-medium ${
               scanType === 'full'
-                ? 'bg-red-500 text-white shadow'
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                ? 'scan-type-btn-selected'
+                : 'scan-type-btn-unselected'
             } disabled:opacity-50 disabled:cursor-not-allowed`}
           >
             {t.fullScan}
@@ -122,10 +122,10 @@ export default function SecurityScanRunner({ scenario, onScanComplete }) {
           <button
             onClick={() => setScanType('quick')}
             disabled={scanning}
-            className={`flex-1 min-w-fit px-4 py-2 rounded-lg transition-colors ${
+            className={`flex-1 min-w-fit px-4 py-2 rounded-lg transition-colors font-medium ${
               scanType === 'quick'
-                ? 'bg-red-500 text-white shadow'
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                ? 'scan-type-btn-selected'
+                : 'scan-type-btn-unselected'
             } disabled:opacity-50 disabled:cursor-not-allowed`}
           >
             {t.quickScan}
@@ -133,10 +133,10 @@ export default function SecurityScanRunner({ scenario, onScanComplete }) {
           <button
             onClick={() => setScanType('custom')}
             disabled={scanning}
-            className={`flex-1 min-w-fit px-4 py-2 rounded-lg transition-colors ${
+            className={`flex-1 min-w-fit px-4 py-2 rounded-lg transition-colors font-medium ${
               scanType === 'custom'
-                ? 'bg-red-500 text-white shadow'
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                ? 'scan-type-btn-selected'
+                : 'scan-type-btn-unselected'
             } disabled:opacity-50 disabled:cursor-not-allowed`}
           >
             {t.custom}
@@ -201,7 +201,11 @@ export default function SecurityScanRunner({ scenario, onScanComplete }) {
       <button
         onClick={handleRunScan}
         disabled={scanning || (scanType === 'custom' && selectedVulnTypes.length === 0)}
-        className="w-full px-4 py-3 bg-red-500 text-white rounded-lg font-semibold hover:bg-red-600 dark:hover:bg-red-700 hover:shadow transition-all disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        className={`w-full px-4 py-3 rounded-lg font-semibold transition-all flex items-center justify-center gap-2 ${
+          scanning || (scanType === 'custom' && selectedVulnTypes.length === 0)
+            ? 'test-btn-disabled cursor-not-allowed opacity-50'
+            : 'test-action-btn-security hover:shadow'
+        }`}
       >
         {scanning ? (
           <>

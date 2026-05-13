@@ -1150,7 +1150,7 @@ export default function ScenarioDetailPage() {
 
                 {/* Body */}
                 <div className="px-6 py-5">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                     {/* Type */}
                     <div>
                       <label className={`block text-sm font-medium mb-1 ${

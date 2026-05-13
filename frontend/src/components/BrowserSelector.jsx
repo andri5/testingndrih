@@ -112,7 +112,7 @@ export default function BrowserSelector({
 
       {/* Desktop browsers */}
       {mode === 'desktop' && (
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
           {browsers.map(b => (
             <Tooltip key={b.key} text={b.description} position="bottom">
               <button
@@ -134,7 +134,7 @@ export default function BrowserSelector({
 
       {/* Mobile devices */}
       {mode === 'mobile' && (
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {mobileDevices.map(d => (
             <Tooltip key={d.key} text={d.description} position="bottom">
               <button

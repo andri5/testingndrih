@@ -48,12 +48,12 @@ export default function SmokeTestSummary() {
 
   if (isLoading) {
     return (
-      <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-6 border border-gray-200 dark:border-gray-800">
+      <div className="bg-white dark:bg-[#1A1A1C] html.theme-light:bg-white rounded-lg shadow p-6 border border-[#E0E0E2] dark:border-[#2D2D2F] html.theme-light:border-[#DDDDE0]">
         <div className="space-y-4">
-          <div className="h-6 bg-gray-200 dark:bg-gray-800 rounded w-1/3 animate-pulse" />
+          <div className="h-6 bg-[#F5F5F7] dark:bg-[#2D2D2F] html.theme-light:bg-[#F5F5F7] rounded w-1/3 animate-pulse" />
           <div className="grid grid-cols-3 gap-4">
             {[1, 2, 3].map(i => (
-              <div key={i} className="h-20 bg-gray-200 dark:bg-gray-800 rounded animate-pulse" />
+              <div key={i} className="h-20 bg-[#F5F5F7] dark:bg-[#2D2D2F] html.theme-light:bg-[#F5F5F7] rounded animate-pulse" />
             ))}
           </div>
         </div>
@@ -63,7 +63,7 @@ export default function SmokeTestSummary() {
 
   if (error) {
     return (
-      <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-6 border border-gray-200 dark:border-gray-800">
+      <div className="bg-white dark:bg-[#1A1A1C] html.theme-light:bg-white rounded-lg shadow p-6 border border-[#E0E0E2] dark:border-[#2D2D2F] html.theme-light:border-[#DDDDE0]">
         <div className="flex items-center gap-2 text-red-600 dark:text-red-400">
           <AlertCircle className="w-5 h-5" />
           <span className="text-sm">{error}</span>
@@ -75,7 +75,7 @@ export default function SmokeTestSummary() {
   if (!summary) return null
 
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-6 border border-gray-200 dark:border-gray-800">
+    <div className="bg-white dark:bg-[#1A1A1C] html.theme-light:bg-white rounded-lg shadow p-6 border border-[#E0E0E2] dark:border-[#2D2D2F] html.theme-light:border-[#DDDDE0]">
       <div className="mb-6">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-lg bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
@@ -88,38 +88,38 @@ export default function SmokeTestSummary() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 xs:grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
         <div 
-          className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700 cursor-help hover:shadow-md transition-shadow"
+          className="bg-[#F5F5F7] dark:bg-[#0F0E11] html.theme-light:bg-[#F5F5F7] rounded-lg p-4 sm:p-5 md:p-4 border border-[#E0E0E2] dark:border-[#2D2D2F] html.theme-light:border-[#DDDDE0] cursor-help hover:shadow-md transition-shadow"
           title={t.totalTestsDesc}
         >
           <div className="flex items-center gap-2 mb-2">
             <TrendingUp className="w-4 h-4 text-gray-500 dark:text-gray-400" />
             <p className="text-sm text-gray-600 dark:text-gray-400">{t.totalTests}</p>
           </div>
-          <p className="text-3xl font-bold text-gray-900 dark:text-white">{summary.totalTests}</p>
+          <p className="text-2xl sm:text-3xl md:text-3xl font-bold text-gray-900 dark:text-white">{summary.totalTests}</p>
         </div>
 
         <div 
-          className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700 cursor-help hover:shadow-md transition-shadow"
+          className="bg-[#F5F5F7] dark:bg-[#0F0E11] html.theme-light:bg-[#F5F5F7] rounded-lg p-4 sm:p-5 md:p-4 border border-[#E0E0E2] dark:border-[#2D2D2F] html.theme-light:border-[#DDDDE0] cursor-help hover:shadow-md transition-shadow"
           title={t.passRateDesc}
         >
           <div className="flex items-center gap-2 mb-2">
             <CheckCircle2 className="w-4 h-4 text-orange-500" />
             <p className="text-sm text-gray-600 dark:text-gray-400">{t.passRate}</p>
           </div>
-          <p className="text-3xl font-bold text-orange-600 dark:text-orange-400">{summary.passRate}%</p>
+          <p className="text-2xl sm:text-3xl md:text-3xl font-bold text-orange-600 dark:text-orange-400">{summary.passRate}%</p>
         </div>
 
         <div 
-          className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700 cursor-help hover:shadow-md transition-shadow"
+          className="bg-[#F5F5F7] dark:bg-[#0F0E11] html.theme-light:bg-[#F5F5F7] rounded-lg p-4 sm:p-5 md:p-4 border border-[#E0E0E2] dark:border-[#2D2D2F] html.theme-light:border-[#DDDDE0] cursor-help hover:shadow-md transition-shadow"
           title={t.avgDurationDesc}
         >
           <div className="flex items-center gap-2 mb-2">
             <Clock className="w-4 h-4 text-gray-500 dark:text-gray-400" />
             <p className="text-sm text-gray-600 dark:text-gray-400">{t.avgDuration}</p>
           </div>
-          <p className="text-3xl font-bold text-gray-900 dark:text-white">{(summary.avgDuration / 1000).toFixed(1)}s</p>
+          <p className="text-2xl sm:text-3xl md:text-3xl font-bold text-gray-900 dark:text-white">{(summary.avgDuration / 1000).toFixed(1)}s</p>
         </div>
       </div>
 

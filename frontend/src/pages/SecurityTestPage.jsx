@@ -8,6 +8,7 @@ import ExportButtons from '../components/ExportButtons'
 import Layout from '../components/Layout'
 import { Shield, AlertCircle, Loader, Lock, Bug, Code, Zap, Key } from 'lucide-react'
 import { useSettingsStore } from '../store/settingsStore'
+import { analyzeSecurityTestResults } from '../utils/testAnalysis'
 
 const i18n = {
   en: {
@@ -138,6 +139,13 @@ export default function SecurityTestPage() {
           <div className="flex items-center gap-3 mb-2">
             <Shield className="w-8 h-8 text-red-500" />
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{t.title}</h1>
+            <a
+              href="/help/security-test"
+              className="ml-auto px-3 py-1 rounded-lg bg-red-500 hover:bg-red-600 text-white text-sm font-medium transition-colors"
+              title="View Help Guide"
+            >
+              ? Help
+            </a>
           </div>
           <p className="text-gray-600 dark:text-gray-300">{t.description}</p>
         </div>
@@ -156,7 +164,7 @@ export default function SecurityTestPage() {
         </div>
 
         {/* Export Buttons */}
-        <div className="mb-8 flex justify-end">
+        <div className="mb-8 flex justify-center sm:justify-end">
           <ExportButtons 
             title={t.title}
             summary={summaryData ? {
@@ -172,34 +180,46 @@ export default function SecurityTestPage() {
               'Status': 'Active',
               'Created At': new Date(s.createdAt).toLocaleDateString(language)
             }))}
+            analysis={analyzeSecurityTestResults(
+              summaryData ? {
+                'Total Scans': summaryData.totalScans || 0,
+                'Avg Risk Score': summaryData.avgRiskScore?.toFixed(1) || 0,
+                'Critical': summaryData.criticalFindings || 0,
+                'High': summaryData.highFindings || 0,
+                'Medium': summaryData.mediumFindings || 0,
+                'Low': summaryData.lowFindings || 0,
+              } : null,
+              scenarios,
+              findings
+            )}
             filename={`security-test-report-${new Date().toISOString().slice(0, 10)}`}
           />
         </div>
 
         {/* Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mb-8">
         {/* Scenario Selector & Runner */}
         <div className="lg:col-span-2 space-y-4">
           {/* Scenario Selection */}
-          <div className="bg-gray-800 dark:bg-gray-800 rounded-lg shadow border border-gray-700 dark:border-gray-700 p-6 space-y-4">
-            <h2 className="text-lg font-semibold text-white dark:text-white">{t.selectScenario}</h2>
-            <div className="bg-gray-700 dark:bg-gray-700 rounded-lg p-4 max-h-64 overflow-y-auto">
+          <div className="bg-[#1A1A1C] rounded-lg shadow border border-[#2D2D2F] p-6 space-y-4">
+            <h2 className="text-lg font-semibold text-[#E0E0E2]">{t.selectScenario}</h2>
+            <div className="bg-[#0F0E11] rounded-lg p-4 max-h-64 overflow-y-auto">
               {loading ? (
                 <div className="flex items-center justify-center py-8">
                   <Loader className="w-6 h-6 text-red-500 animate-spin" />
                 </div>
               ) : scenarios.length === 0 ? (
-                <p className="text-center text-gray-500 dark:text-gray-400 py-8">{t.noScenarios}</p>
+                <p className="text-center text-[#8A8A8F] py-8">{t.noScenarios}</p>
               ) : (
                 <div className="space-y-2">
                   {scenarios.map(scenario => (
                     <button
                       key={scenario.id}
                       onClick={() => setSelectedScenario(scenario)}
-                      className={`w-full p-3 rounded-lg text-left transition-colors ${
+                      className={`w-full p-3 rounded-lg text-left transition-colors border-2 ${
                         selectedScenario?.id === scenario.id
-                          ? 'bg-red-600 text-white shadow hover:bg-red-700'
-                          : 'bg-gray-800 dark:bg-gray-800 border border-gray-600 dark:border-gray-600 text-gray-300 hover:border-red-500 dark:hover:border-red-500 hover:text-white hover:shadow'
+                          ? 'security-scenario-btn-selected'
+                          : 'security-scenario-btn-unselected'
                       }`}
                     >
                       <h3 className="font-semibold">{scenario.name}</h3>
@@ -260,40 +280,6 @@ export default function SecurityTestPage() {
               )}
             </div>
           )}
-
-          {/* Info Box */}
-          <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
-            <h3 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-              <Lock className="w-5 h-5 text-red-500" />
-              {t.aboutTitle}
-            </h3>
-            <ul className="text-gray-700 dark:text-gray-300 text-sm space-y-3">
-              <li className="flex items-start gap-3">
-                <Code className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
-                <span>{t.feature1}</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <Key className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
-                <span>{t.feature2}</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <Shield className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
-                <span>{t.feature3}</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <Zap className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
-                <span>{t.feature4}</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <Bug className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
-                <span>{t.feature5}</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
-                <span>{t.feature6}</span>
-              </li>
-            </ul>
-          </div>
         </div>
 
         {/* History Sidebar */}

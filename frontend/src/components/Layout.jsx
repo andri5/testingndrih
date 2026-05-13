@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useNavigate, Link, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import { useSettingsStore } from '../store/settingsStore'
+import { GlobalLoading } from './Loading'
 import HelpModal from './HelpModal'
 import {
   LayoutDashboard,
@@ -35,6 +36,7 @@ export default function Layout({ children }) {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const [helpOpen, setHelpOpen] = useState(false)
+  const [profilePicture, setProfilePicture] = useState(null)
   const userMenuRef = useRef(null)
   const { language, setLanguage } = useSettingsStore()
 
@@ -98,6 +100,37 @@ export default function Layout({ children }) {
     }
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  // Load profile picture from localStorage
+  useEffect(() => {
+    const loadProfilePicture = () => {
+      const picture = localStorage.getItem('profilePicture')
+      if (picture) {
+        try {
+          setProfilePicture(JSON.parse(picture))
+        } catch (e) {
+          console.error('Failed to parse profile picture:', e)
+        }
+      }
+    }
+    
+    const handleProfilePictureUpdate = (event) => {
+      setProfilePicture(event.detail)
+    }
+    
+    loadProfilePicture()
+    
+    // Listen for storage changes (when profile picture is updated in another tab/window)
+    window.addEventListener('storage', loadProfilePicture)
+    
+    // Listen for custom event (when profile picture is updated in the same tab)
+    window.addEventListener('profilePictureUpdated', handleProfilePictureUpdate)
+    
+    return () => {
+      window.removeEventListener('storage', loadProfilePicture)
+      window.removeEventListener('profilePictureUpdated', handleProfilePictureUpdate)
+    }
   }, [])
 
   const handleMenuToggle = () => {
@@ -279,10 +312,18 @@ export default function Layout({ children }) {
             <div className="relative" ref={userMenuRef}>
               <button
                 onClick={() => setUserMenuOpen(!userMenuOpen)}
-                className="w-7 h-7 rounded-full bg-[#5E6AD2] flex items-center justify-center text-white text-[10px] font-bold hover:bg-[#6B7AE8] transition-all"
+                className="w-7 h-7 rounded-full bg-[#5E6AD2] flex items-center justify-center text-white text-[10px] font-bold hover:bg-[#6B7AE8] transition-all overflow-hidden"
                 title={user?.name || 'User'}
               >
-                {(user?.name || 'U')[0].toUpperCase()}
+                {profilePicture ? (
+                  <img 
+                    src={profilePicture} 
+                    alt={user?.name || 'User'} 
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  (user?.name || 'U')[0].toUpperCase()
+                )}
               </button>
 
               {userMenuOpen && (
@@ -322,6 +363,9 @@ export default function Layout({ children }) {
 
       {/* Help Modal */}
       {helpOpen && <HelpModal onClose={() => setHelpOpen(false)} />}
+
+      {/* Global Loading Overlay */}
+      <GlobalLoading />
     </div>
   )
 }

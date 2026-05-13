@@ -187,7 +187,7 @@ export default function ExecutionPage() {
         <Card>
           <h2 className="text-lg sm:text-xl font-bold text-[#E0E0E2] mb-4">{t.runScenario}</h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
             {/* Scenario Selector */}
             <div>
               <label className="block text-sm font-semibold text-[#A0A0A4] mb-2">
@@ -257,7 +257,7 @@ export default function ExecutionPage() {
 
         {/* Stats Cards */}
         {Object.keys(stats).length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 xs:grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             <div className="linear-card p-5">
               <div className="flex items-center gap-4">
                 <div className="w-11 h-11 rounded-xl bg-[#5E6AD2]/10 flex items-center justify-center shrink-0">
@@ -319,7 +319,7 @@ export default function ExecutionPage() {
                   </Badge>
                 </div>
 
-                <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
                   <div className="flex items-center gap-3 p-3 rounded-xl bg-[#161618] border border-[#2A2A2D]">
                     <div className="w-8 h-8 rounded-lg bg-[#34D399]/10 flex items-center justify-center shrink-0">
                       <CheckCircle2 size={15} className="text-[#34D399]" />

@@ -149,9 +149,9 @@ export default function SmokeTestRunner({ scenarioId, scenarioName, onTestComple
           checked={notifyOnComplete}
           onChange={(e) => setNotifyOnComplete(e.target.checked)}
           disabled={isRunning}
-          className="w-4 h-4 rounded border-[#2D2D2F] html.theme-light:border-[#CCCCCC] text-orange-500 focus:ring-orange-500"
+          className="w-4 h-4 rounded border-[#2D2D2F] text-orange-500 focus:ring-orange-500"
         />
-        <label htmlFor="notifyCheckbox" className="text-sm text-[#A0A0A4] html.theme-light:text-[#777]">
+        <label htmlFor="notifyCheckbox" className="text-sm text-[#A0A0A4]">
           {t.notifyCheckbox}
         </label>
       </div>
@@ -163,8 +163,8 @@ export default function SmokeTestRunner({ scenarioId, scenarioName, onTestComple
           disabled={isRunning || isLoading}
           className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium shadow hover:shadow-md transition-all ${
             isRunning || isLoading
-              ? 'bg-[#2D2D2F] html.theme-light:bg-[#DDDDE0] text-[#8A8A8F] html.theme-light:text-[#888] cursor-not-allowed'
-              : 'bg-orange-500 text-white hover:bg-orange-600 active:bg-orange-700'
+              ? 'test-btn-disabled cursor-not-allowed'
+              : 'test-action-btn-primary hover:shadow'
           }`}
         >
           <Play className="w-4 h-4" />
@@ -175,7 +175,7 @@ export default function SmokeTestRunner({ scenarioId, scenarioName, onTestComple
           <button
             onClick={handleResetTest}
             disabled={isRunning}
-            className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium text-[#A0A0A4] html.theme-light:text-[#777] bg-[#2D2D2F] html.theme-light:bg-[#DDDDE0] hover:bg-[#3D3D3F] html.theme-light:hover:bg-[#CCCCCC] shadow hover:shadow-md transition-all"
+            className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium text-[#A0A0A4] bg-[#2D2D2F] hover:bg-[#3D3D3F] shadow hover:shadow-md transition-all"
           >
             <RotateCcw className="w-4 h-4" />
             {t.reset}
@@ -184,7 +184,7 @@ export default function SmokeTestRunner({ scenarioId, scenarioName, onTestComple
       </div>
 
       {/* Info Text */}
-      <p className="text-xs text-[#8A8A8F] html.theme-light:text-[#888] mt-4">
+      <p className="text-xs text-[#8A8A8F] mt-4">
         💡 Smoke tests run critical paths only (~2-5 minutes). Perfect for quick deployment validation.
       </p>
     </div>
