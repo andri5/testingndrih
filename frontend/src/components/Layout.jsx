@@ -25,6 +25,7 @@ import {
   Activity,
   Gauge,
   GitBranch,
+  ChevronDown,
 } from 'lucide-react'
 
 export default function Layout({ children }) {
@@ -37,6 +38,7 @@ export default function Layout({ children }) {
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const [helpOpen, setHelpOpen] = useState(false)
   const [profilePicture, setProfilePicture] = useState(null)
+  const [toolsCollapsed, setToolsCollapsed] = useState(true)
   const userMenuRef = useRef(null)
   const { language, setLanguage } = useSettingsStore()
 
@@ -241,9 +243,15 @@ export default function Layout({ children }) {
 
           <div className="space-y-0.5">
             {showLabels && (
-              <p className="px-2.5 text-[10px] font-semibold text-[#4A4A52] uppercase tracking-widest mb-1.5">{t.tools}</p>
+              <button
+                onClick={() => setToolsCollapsed(!toolsCollapsed)}
+                className="w-full flex items-center justify-between px-2.5 mb-1.5 hover:text-[#E0E0E2] transition-colors group"
+              >
+                <p className="text-[10px] font-semibold text-[#4A4A52] uppercase tracking-widest group-hover:text-[#5E6AD2]">{t.tools}</p>
+                <ChevronDown size={13} className={`text-[#4A4A52] transition-transform duration-200 ${toolsCollapsed ? '' : 'rotate-180'}`} />
+              </button>
             )}
-            {workspaceItems.map(item => <NavItem key={item.path} item={item} showLabel={showLabels} />)}
+            {!toolsCollapsed && workspaceItems.map(item => <NavItem key={item.path} item={item} showLabel={showLabels} />)}
           </div>
         </nav>
 
