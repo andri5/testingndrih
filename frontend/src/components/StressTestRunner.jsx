@@ -60,7 +60,10 @@ export default function StressTestRunner({ scenario, onTestComplete }) {
       onTestComplete?.()
     } catch (err) {
       console.error('Failed to start stress test:', err)
-      setError(err.response?.data?.message || 'Failed to start stress test')
+      // Try to get detailed message from backend
+      const backendMessage = err.response?.data?.message || err.response?.data?.error || 'Failed to start stress test'
+      const detailedInfo = err.response?.data?.details ? ` (${err.response?.data?.details})` : ''
+      setError(backendMessage + detailedInfo)
     } finally {
       setIsRunning(false)
     }

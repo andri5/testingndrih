@@ -62,6 +62,10 @@ export async function runStressTest(scenarioId, options = {}) {
       throw new Error(`Scenario not found: ${scenarioId}`)
     }
 
+    if (!scenario.testSteps || scenario.testSteps.length === 0) {
+      throw new Error('Scenario has no test steps')
+    }
+
     // Get stress profile configuration
     const profile = STRESS_PROFILES[options.profile?.toUpperCase()] || STRESS_PROFILES.LIGHT
     console.log(`[STRESS TEST] Using profile: ${profile.name}`)

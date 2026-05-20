@@ -11,7 +11,8 @@ import {
   getStressTestSummary,
   getStressScenarios,
   markStressTest,
-  unmarkStressTest
+  unmarkStressTest,
+  debugScenario
 } from '../controllers/stressTestController.js'
 import { authenticateToken } from '../middleware/auth.js'
 
@@ -54,5 +55,10 @@ router.post('/mark/:scenarioId', authenticateToken, markStressTest)
  * DELETE /api/stress/mark/:scenarioId - Unmark scenario as stress test
  */
 router.delete('/mark/:scenarioId', authenticateToken, unmarkStressTest)
+
+/**
+ * GET /api/stress/debug/:scenarioId - Debug endpoint: check scenario details
+ */
+router.get('/debug/:scenarioId', authenticateToken, debugScenario)
 
 export default router

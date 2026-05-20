@@ -69,9 +69,20 @@ export const startStressTest = async (req, res) => {
     })
   } catch (error) {
     console.error(`[STRESS TEST API ERROR] ${error.message}`)
+    console.error(`[STRESS TEST API ERROR] Stack:`, error.stack)
+    
+    // Provide detailed error information
+    let detailedMessage = error.message
+    if (error.message.includes('Scenario has no test steps')) {
+      detailedMessage = 'Scenario has no test steps. Please add at least one step to the scenario before running stress tests.'
+    } else if (error.message.includes('Scenario not found')) {
+      detailedMessage = 'Scenario not found or you do not have access to it.'
+    }
+    
     res.status(500).json({
       error: 'Failed to start stress test',
-      message: error.message
+      message: detailedMessage,
+      details: error.message
     })
   }
 }
@@ -278,6 +289,58 @@ export const unmarkStressTest = async (req, res) => {
     console.error(`[STRESS TEST API ERROR] ${error.message}`)
     res.status(500).json({
       error: 'Failed to unmark stress test',
+      message: error.message
+    })
+  }
+}
+
+/**
+ * Debug endpoint: GET /api/stress/debug/:scenarioId
+ * Returns scenario details with test steps for debugging
+ */
+export const debugScenario = async (req, res) => {
+  try {
+    const { scenarioId } = req.params
+    const userId = req.user.id
+
+    const scenario = await prisma.scenario.findUnique({
+      where: { id: scenarioId },
+      include: { testSteps: { orderBy: { stepNumber: 'asc' } } }
+    })
+
+    if (!scenario) {
+      return res.status(404).json({ error: 'Scenario not found' })
+    }
+
+    if (scenario.userId !== userId) {
+      return res.status(403).json({ error: 'You do not have access to this scenario' })
+    }
+
+    res.json({
+      success: true,
+      scenario: {
+        id: scenario.id,
+        name: scenario.name,
+        url: scenario.url,
+        stepsCount: scenario.testSteps.length,
+        steps: scenario.testSteps.map(s => ({
+          stepNumber: s.stepNumber,
+          type: s.type,
+          description: s.description,
+          selector: s.selector,
+          value: s.value
+        }))
+      },
+      debug: {
+        message: scenario.testSteps.length === 0 
+          ? 'ERROR: Scenario has no test steps. Add steps before running stress test.'
+          : `OK: Scenario has ${scenario.testSteps.length} steps`
+      }
+    })
+  } catch (error) {
+    console.error(`[STRESS TEST DEBUG ERROR] ${error.message}`)
+    res.status(500).json({
+      error: 'Debug endpoint error',
       message: error.message
     })
   }
