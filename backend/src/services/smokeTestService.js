@@ -4,11 +4,9 @@
  * Smoke tests run critical paths only (2-5 minutes total)
  */
 
-import { PrismaClient } from '@prisma/client'
+import { prisma } from '../lib/prisma.js'
 import { executionService } from './executionService.js'
 import { reportService } from './reportService.js'
-
-const prisma = new PrismaClient()
 
 /**
  * Run smoke test on a scenario

@@ -1,10 +1,8 @@
-import { PrismaClient } from '@prisma/client'
 import crypto from 'crypto'
 import { hashPassword, comparePassword } from '../utils/password.js'
 import { signToken } from '../utils/jwt.js'
 import { sendPasswordResetEmail } from '../services/emailService.js'
-
-const prisma = new PrismaClient()
+import { prisma } from '../lib/prisma.js'
 
 /**
  * Register a new user
@@ -79,6 +77,7 @@ export async function registerUser(req, res, next) {
       token
     })
   } catch (error) {
+    console.error('❌ Registration error:', error.message)
     next(error)
   }
 }
@@ -137,6 +136,7 @@ export async function loginUser(req, res, next) {
       token
     })
   } catch (error) {
+    console.error('❌ Login error:', error.message, error.stack)
     next(error)
   }
 }

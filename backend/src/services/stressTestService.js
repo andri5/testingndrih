@@ -4,11 +4,9 @@
  * Validates system behavior under stress (concurrency + iterations)
  */
 
-import { PrismaClient } from '@prisma/client'
+import { prisma } from '../lib/prisma.js'
 import { executionService } from './executionService.js'
 import { reportService } from './reportService.js'
-
-const prisma = new PrismaClient()
 
 // Load profile configurations
 export const STRESS_PROFILES = {

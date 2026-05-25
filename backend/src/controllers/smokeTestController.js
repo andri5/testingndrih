@@ -11,9 +11,7 @@ import {
   getSmokeScenarios as getSmokeScenarioService,
   markAsSmoke
 } from '../services/smokeTestService.js'
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import { prisma } from '../lib/prisma.js'
 
 /**
  * Start a smoke test on a specific scenario

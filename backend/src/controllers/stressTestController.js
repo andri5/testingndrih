@@ -12,9 +12,7 @@ import {
   markAsStress,
   STRESS_PROFILES
 } from '../services/stressTestService.js'
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import { prisma } from '../lib/prisma.js'
 
 /**
  * Start a stress test on a specific scenario
