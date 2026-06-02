@@ -38,16 +38,17 @@ describe('ExecutionService - Core Methods', () => {
       prisma.execution.findMany.mockResolvedValueOnce([])
       prisma.execution.count.mockResolvedValueOnce(0)
 
-      const result = await executionService.getExecutionHistory('scenario-123')
+      const result = await executionService.getExecutionHistory('user-123', 'scenario-123')
       
-      expect(Array.isArray(result)).toBe(true)
+      expect(result).toHaveProperty('executions')
+      expect(Array.isArray(result.executions)).toBe(true)
     })
 
     it('should use default pagination parameters', async () => {
       prisma.execution.findMany.mockResolvedValueOnce([])
       prisma.execution.count.mockResolvedValueOnce(0)
 
-      await executionService.getExecutionHistory('scenario-123')
+      await executionService.getExecutionHistory('user-123', 'scenario-123')
 
       expect(prisma.execution.findMany).toHaveBeenCalled()
     })
@@ -56,10 +57,7 @@ describe('ExecutionService - Core Methods', () => {
       prisma.execution.findMany.mockResolvedValueOnce([])
       prisma.execution.count.mockResolvedValueOnce(100)
 
-      await executionService.getExecutionHistory('scenario-123', {
-        limit: 50,
-        offset: 25
-      })
+      await executionService.getExecutionHistory('user-123', 'scenario-123', 50, 25)
 
       expect(prisma.execution.findMany).toHaveBeenCalled()
     })
@@ -77,7 +75,7 @@ describe('ExecutionService - Core Methods', () => {
       prisma.execution.findMany.mockRejectedValueOnce(new Error('DB connection error'))
 
       await expect(
-        executionService.getExecutionHistory('scenario-123')
+        executionService.getExecutionHistory('user-123', 'scenario-123')
       ).rejects.toThrow()
     })
   })
