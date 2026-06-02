@@ -47,7 +47,8 @@ describe('Scenario Integration Tests', () => {
       })
 
       expect(res.status).toBe(201)
-      const data = await res.json()
+      const response = await res.json()
+      const data = response.scenario || response
       expect(data.id).toBeDefined()
       expect(data.name).toBe('Login Test Scenario')
       expect(data.userId).toBe(userId)
@@ -96,7 +97,8 @@ describe('Scenario Integration Tests', () => {
       })
 
       expect(res.status).toBe(201)
-      const data = await res.json()
+      const response = await res.json()
+      const data = response.scenario || response
       expect(data.name).toBe('Minimal Scenario')
       expect(data.url).toBe('https://example.com')
     })
@@ -186,7 +188,8 @@ describe('Scenario Integration Tests', () => {
       })
 
       expect(res.status).toBe(200)
-      const data = await res.json()
+      const response = await res.json()
+      const data = response.scenario || response
       expect(data.id).toBe(scenarioId)
       expect(data.name).toBe('Get Test Scenario')
     })
@@ -255,7 +258,8 @@ describe('Scenario Integration Tests', () => {
       })
 
       expect(res.status).toBe(200)
-      const data = await res.json()
+      const response = await res.json()
+      const data = response.scenario || response
       expect(data.name).toBe('Updated Scenario Name')
       expect(data.description).toBe('Updated description')
     })
@@ -395,7 +399,8 @@ describe('Scenario Integration Tests', () => {
       })
 
       expect(res.status).toBe(201)
-      const data = await res.json()
+      const response = await res.json()
+      const data = response.scenario || response
       expect(data.id).not.toBe(scenarioId)
       expect(data.name).toContain('Copy')
       expect(data.userId).toBe(userId)

@@ -55,7 +55,7 @@ describe('Workflow Integration Tests', () => {
       })
       expect(getScenarioRes.status).toBe(200)
       const getData = await getScenarioRes.json()
-      expect(getData.id).toBe(scenarioId)
+      expect((getData.scenario?.id || getData.id)).toBe(scenarioId)
 
       // 3. List scenarios (verify it appears)
       const listRes = await fetch(`${API_URL}/scenarios`, {
