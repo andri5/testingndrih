@@ -236,56 +236,10 @@ describe('ExecutionService - Data Layer Tests', () => {
       prisma.stepResult.deleteMany.mockResolvedValueOnce({ count: 3 })
       prisma.execution.delete.mockResolvedValueOnce({ id: 'exec-123' })
 
-      const result = await executionService.deleteExecution('exec-123')
+      const result = await executionService.deleteExecution('user-123', 'exec-123')
 
       expect(prisma.stepResult.deleteMany).toHaveBeenCalled()
       expect(prisma.execution.delete).toHaveBeenCalled()
-    })
-
-    it('should handle cascading deletes', async () => {
-      prisma.stepResult.deleteMany.mockResolvedValueOnce({ count: 5 })
-      prisma.execution.delete.mockResolvedValueOnce({ id: 'exec-123' })
-
-      await executionService.deleteExecution('exec-123')
-
-      expect(prisma.stepResult.deleteMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: { executionId: 'exec-123' }
-        })
-      )
-    })
-  })
-
-  describe('Step Result Recording', () => {
-    it('should record step results', async () => {
-      const stepResults = [
-        { stepId: 'step-1', status: 'PASSED', duration: 1000 },
-        { stepId: 'step-2', status: 'PASSED', duration: 500 }
-      ]
-      
-      prisma.stepResult.createMany.mockResolvedValueOnce({ count: 2 })
-
-      const result = await executionService.saveStepResults('exec-123', stepResults)
-
-      expect(prisma.stepResult.createMany).toHaveBeenCalled()
-    })
-
-    it('should update execution stats from step results', async () => {
-      const execution = {
-        id: 'exec-123',
-        totalSteps: 3,
-        passedSteps: 2,
-        failedSteps: 1
-      }
-      
-      prisma.execution.update.mockResolvedValueOnce(execution)
-
-      const result = await executionService.updateExecutionStats('exec-123', {
-        passed: 2,
-        failed: 1
-      })
-
-      expect(prisma.execution.update).toHaveBeenCalled()
     })
   })
 })

@@ -19,6 +19,7 @@ import { chromium, firefox, webkit } from 'playwright'
 import { executionService } from './executionService.js'
 import screenshotComparisonService from './screenshotComparisonService.js'
 import { prisma } from '../lib/prisma.js'
+import { logger } from '../lib/logger.js'
 import browserLauncher from '../lib/browserLauncher.js'
 import path from 'path'
 import fs from 'fs'
@@ -169,7 +170,7 @@ export const browserMatrixService = {
             await this._ensureDir(path.dirname(screenshotPath))
             await page.screenshot({ path: screenshotPath })
           } catch (screenshotErr) {
-            console.log(`[MATRIX] ⚠️ Failed to save screenshot: ${screenshotErr.message}`)
+            logger.debug('browserMatrixService', `Failed to save screenshot: ${screenshotErr.message}`)
           }
 
           stepResults.push({
@@ -186,7 +187,7 @@ export const browserMatrixService = {
       const passedCount = stepResults.filter(r => r.status === 'PASSED').length
       const passRate = ((passedCount / scenario.steps.length) * 100).toFixed(2)
 
-      console.log(`[MATRIX] ✅ ${config.name} complete: ${passedCount}/${scenario.steps.length} passed (${passRate}%)`)
+      logger.debug('browserMatrixService', `${config.name} complete: ${passedCount}/${scenario.steps.length} passed (${passRate}%)`)
 
       return {
         browser: browserName,
@@ -226,19 +227,19 @@ export const browserMatrixService = {
 
     switch (type) {
       case 'NAVIGATE':
-        console.log(`[MATRIX] 🔗 NAVIGATE: ${value}`)
+        logger.debug('browserMatrixService', `NAVIGATE: ${value}`)
         await page.goto(value, { waitUntil: 'networkidle' })
         break
 
       case 'CLICK':
-        console.log(`[MATRIX] 🖱️ CLICK: ${selector}`)
+        logger.debug('browserMatrixService', `CLICK: ${selector}`)
         const clickLocator = page.locator(selector)
         await clickLocator.waitFor({ state: 'visible', timeout })
         await clickLocator.click()
         break
 
       case 'FILL':
-        console.log(`[MATRIX] ⌨️ FILL: ${selector} = ${value}`)
+        logger.debug('browserMatrixService', `FILL: ${selector} = ${value}`)
         const fillLocator = page.locator(selector)
         await fillLocator.waitFor({ state: 'visible', timeout })
         await fillLocator.clear()
@@ -246,17 +247,17 @@ export const browserMatrixService = {
         break
 
       case 'WAIT':
-        console.log(`[MATRIX] ⏳ WAIT: ${waitMs}ms`)
+        logger.debug('browserMatrixService', `WAIT: ${waitMs}ms`)
         await page.waitForTimeout(waitMs)
         break
 
       case 'SCREENSHOT':
-        console.log(`[MATRIX] 📸 SCREENSHOT`)
+        logger.debug('browserMatrixService', `SCREENSHOT`)
         await page.screenshot({ fullPage: true })
         break
 
       case 'ASSERTION':
-        console.log(`[MATRIX] ✔️ ASSERTION: ${value}`)
+        logger.debug('browserMatrixService', `ASSERTION: ${value}`)
         const assertionLocator = page.locator(selector)
         const assertionText = await assertionLocator.textContent()
         if (!assertionText?.includes(value)) {
@@ -265,17 +266,17 @@ export const browserMatrixService = {
         break
 
       case 'SCROLL':
-        console.log(`[MATRIX] 📜 SCROLL`)
+        logger.debug('browserMatrixService', `SCROLL`)
         await page.locator(selector).scrollIntoViewIfNeeded()
         break
 
       case 'HOVER':
-        console.log(`[MATRIX] 👆 HOVER: ${selector}`)
+        logger.debug('browserMatrixService', `HOVER: ${selector}`)
         await page.locator(selector).hover()
         break
 
       default:
-        console.log(`[MATRIX] ⚠️ Unknown step type: ${type}`)
+        logger.warn('browserMatrixService', `Unknown step type: ${type}`)
     }
   },
 

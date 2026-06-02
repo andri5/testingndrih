@@ -1,5 +1,6 @@
 import { firefox } from 'playwright'
 import { prisma } from '../lib/prisma.js'
+import { logger } from '../lib/logger.js'
 import fs from 'fs'
 import path from 'path'
 import { EventEmitter } from 'events'
@@ -387,7 +388,7 @@ export const executionService = {
                 stepType: step.type,
                 errorMessage: err.message
               })
-              console.log(`[RETRY] Step ${step.stepNumber} (${step.type}): ${failureType}`)
+              logger.info('executionService', `Step ${step.stepNumber} (${step.type}): ${failureType}`)
               throw err
             }
           } else {
@@ -401,7 +402,7 @@ export const executionService = {
               } catch (err) {
                 lastErr = err
                 if (attempt < maxRetries) {
-                  console.warn(`Step ${step.stepNumber} attempt ${attempt + 1} failed, retrying...`)
+                  logger.warn('executionService', `Step ${step.stepNumber} attempt ${attempt + 1} failed, retrying...`)
                   await new Promise(r => setTimeout(r, 1000)) // 1s wait between retries
                 }
               }
@@ -443,7 +444,7 @@ export const executionService = {
                 errorDetail.locatorSuggestions = suggestions
               }
             } catch (suggestErr) {
-              console.error('Locator suggestion generation failed:', suggestErr.message)
+              logger.error('executionService', `Locator suggestion generation failed: ${suggestErr.message}`)
             }
           }
 
@@ -511,7 +512,7 @@ export const executionService = {
                     } catch { /* keep original error message */ }
                   }
                 } catch (compErr) {
-                  console.log(`[SCREENSHOT] Comparison failed: ${compErr.message}`)
+                  logger.debug('executionService', `Screenshot comparison failed: ${compErr.message}`)
                 }
               }
 
@@ -530,7 +531,7 @@ export const executionService = {
                     step.description || step.type
                   )
                 } catch (successScreenErr) {
-                  console.log(`[SCREENSHOT] Success screenshot save failed: ${successScreenErr.message}`)
+                  logger.debug('executionService', `Success screenshot save failed: ${successScreenErr.message}`)
                 }
               }
             }
@@ -543,7 +544,7 @@ export const executionService = {
               }
             })
           } catch (screenshotErr) {
-            console.error(`Screenshot capture failed for step ${step.stepNumber}:`, screenshotErr.message)
+            logger.error('executionService', `Screenshot capture failed for step ${step.stepNumber}: ${screenshotErr.message}`)
           }
         }
 
@@ -746,7 +747,7 @@ export const executionService = {
       } catch (secondErr) {
         // Phase 2.1: Self Healing Selector fallback
         if (ENABLE_SELF_HEALING) {
-          console.log(`[SELF_HEAL] Primary click failed, attempting repair for: ${step.selector}`)
+          logger.debug('executionService', `Primary click failed, attempting repair for: ${step.selector}`)
           try {
             const repairedSelector = await locatorRepairService.repairLocator(page, step.selector, {
               type: 'CLICK',
@@ -796,7 +797,7 @@ export const executionService = {
       } catch (attachErr) {
         // Phase 2.1: Self Healing Selector - Element not found
         if (ENABLE_SELF_HEALING) {
-          console.log(`[SELF_HEAL] FILL locator not found, attempting repair for: ${step.selector}`)
+          logger.debug('executionService', `FILL locator not found, attempting repair for: ${step.selector}`)
           try {
             const repairedSelector = await locatorRepairService.repairLocator(page, step.selector, {
               type: 'FILL',
@@ -1117,7 +1118,7 @@ export const executionService = {
       try { return fs.existsSync(f) } catch { return false }
     })
     if (existingFiles.length === 0) {
-      console.warn(`FILE_UPLOAD: none of [${filePaths.join(', ')}] found on disk — step skipped`)
+      logger.warn('executionService', `FILE_UPLOAD: none of [${filePaths.join(', ')}] found on disk — step skipped`)
       return
     }
 
