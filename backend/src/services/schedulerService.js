@@ -373,4 +373,5 @@ class SchedulerService {
   }
 }
 
+export { SchedulerService }
 export const schedulerService = new SchedulerService()
