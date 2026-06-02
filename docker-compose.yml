@@ -11,8 +11,6 @@
 # - Or export environment variable before docker-compose up
 # ============================================================================
 
-version: '3.8'
-
 services:
   # PostgreSQL Database — shared across both laptops if needed
   postgres:
