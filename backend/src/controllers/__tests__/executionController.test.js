@@ -3,6 +3,13 @@ import { executionService } from '../../services/executionService.js'
 import { prisma } from '../../lib/prisma.js'
 
 jest.mock('../../services/executionService.js')
+jest.mock('../../services/reportService.js', () => ({
+  reportService: {
+    fetchExecution: jest.fn(),
+    generateHTMLReport: jest.fn(),
+    generatePDFReport: jest.fn()
+  }
+}))
 
 describe('ExecutionController', () => {
   let req, res
