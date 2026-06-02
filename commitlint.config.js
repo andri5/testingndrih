@@ -23,6 +23,6 @@ export default {
     'type-case': [2, 'always', 'lowercase'],
     'subject-empty': [2, 'never'],
     'subject-max-length': [2, 'always', 100],
-    'subject-period': [2, 'never']
+    'subject-full-stop': [2, 'never']
   }
 };

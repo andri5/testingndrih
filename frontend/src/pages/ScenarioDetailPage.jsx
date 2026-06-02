@@ -790,8 +790,9 @@ export default function ScenarioDetailPage() {
       startPollingSteps()
 
     } catch (err) {
-      setError(err.response?.data?.error || t.startRecordingError)
-      console.error('Recording start error:', err)
+      const errorMsg = err.response?.data?.message || err.response?.data?.error || t.startRecordingError
+      setError(errorMsg)
+      console.error('Recording start error:', err.response?.data || err.message)
       setIsRecording(false)
     } finally {
       setIsStartingRecording(false)
@@ -819,14 +820,17 @@ export default function ScenarioDetailPage() {
           await loadSteps() // Refresh step list
         } catch (saveErr) {
           // If save failed, show steps for manual save
-          setError(t.recordingAutoSaveError(stoppedSteps.length, saveErr.response?.data?.error || saveErr.message))
+          const saveErrorMsg = saveErr.response?.data?.message || saveErr.response?.data?.error || saveErr.message
+          setError(t.recordingAutoSaveError(stoppedSteps.length, saveErrorMsg))
         }
       } else {
         showSuccess(t.recordingNoSteps)
         setShowRecordingPanel(false)
       }
     } catch (err) {
-      setError(err.response?.data?.error || t.stopRecordingError)
+      const errorMsg = err.response?.data?.message || err.response?.data?.error || t.stopRecordingError
+      setError(errorMsg)
+      console.error('Recording stop error:', err.response?.data || err.message)
     } finally {
       setIsStoppingRecording(false)
     }
