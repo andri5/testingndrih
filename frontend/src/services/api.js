@@ -218,7 +218,23 @@ export const analyticsAPI = {
 
   // Export analytics data
   exportData: (format = 'json') =>
-    apiClient.get('/analytics/export', { params: { format }, responseType: format === 'csv' ? 'blob' : 'json' })
+    apiClient.get('/analytics/export', { params: { format }, responseType: format === 'csv' ? 'blob' : 'json' }),
+
+  // Get pass/fail trend data
+  getPassFailTrend: (days = 30) =>
+    apiClient.get('/analytics/dashboard/trends', { params: { days } }),
+
+  // Get execution volume data
+  getExecutionVolume: (days = 30) =>
+    apiClient.get('/analytics/dashboard/volume', { params: { days } }),
+
+  // Get top failing steps
+  getTopFailingSteps: (limit = 10) =>
+    apiClient.get('/analytics/dashboard/failing-steps', { params: { limit } }),
+
+  // Get scenario performance ranking
+  getScenarioPerformance: (limit = 20) =>
+    apiClient.get('/analytics/dashboard/scenario-performance', { params: { limit } })
 }
 
 export const chainAPI = {
