@@ -257,3 +257,177 @@ export async function exportAnalyticsData(userId, format = 'json') {
     throw error;
   }
 }
+
+/**
+ * Get pass/fail trend data for dashboard
+ */
+export async function getPassFailTrend(userId, days = 30) {
+  try {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+
+    const executions = await prisma.execution.findMany({
+      where: {
+        userId,
+        createdAt: { gte: startDate }
+      },
+      select: {
+        status: true,
+        createdAt: true
+      },
+      orderBy: { createdAt: 'asc' }
+    });
+
+    // Group by date
+    const trendMap = new Map();
+    executions.forEach(exec => {
+      const dateStr = exec.createdAt.toISOString().split('T')[0];
+      if (!trendMap.has(dateStr)) {
+        trendMap.set(dateStr, { passed: 0, failed: 0, date: dateStr });
+      }
+      const trend = trendMap.get(dateStr);
+      if (exec.status === 'PASSED') {
+        trend.passed++;
+      } else {
+        trend.failed++;
+      }
+    });
+
+    return Array.from(trendMap.values());
+  } catch (error) {
+    console.error('Error getting pass/fail trend:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get top failing steps ranked by frequency
+ */
+export async function getTopFailingSteps(userId, limit = 10) {
+  try {
+    const failedSteps = await prisma.stepResult.findMany({
+      where: {
+        status: 'FAILED',
+        testStep: {
+          scenario: {
+            userId
+          }
+        }
+      },
+      select: {
+        testStep: {
+          select: {
+            stepNumber: true,
+            type: true,
+            description: true,
+            scenario: {
+              select: { name: true }
+            }
+          }
+        },
+        errorMessage: true
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 500
+    });
+
+    // Group and count by step
+    const stepFailureMap = new Map();
+    failedSteps.forEach(result => {
+      if (!result.testStep) return;
+      const key = `${result.testStep.scenario?.name}#${result.testStep.stepNumber}`;
+      if (!stepFailureMap.has(key)) {
+        stepFailureMap.set(key, {
+          scenario: result.testStep.scenario?.name || 'Unknown',
+          stepNumber: result.testStep.stepNumber,
+          type: result.testStep.type,
+          description: result.testStep.description,
+          failCount: 0
+        });
+      }
+      stepFailureMap.get(key).failCount++;
+    });
+
+    return Array.from(stepFailureMap.values())
+      .sort((a, b) => b.failCount - a.failCount)
+      .slice(0, limit);
+  } catch (error) {
+    console.error('Error getting top failing steps:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get execution volume statistics
+ */
+export async function getExecutionVolume(userId, days = 30) {
+  try {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+
+    const executions = await prisma.execution.findMany({
+      where: {
+        userId,
+        createdAt: { gte: startDate }
+      },
+      select: {
+        createdAt: true
+      },
+      orderBy: { createdAt: 'asc' }
+    });
+
+    // Group by date
+    const volumeMap = new Map();
+    executions.forEach(exec => {
+      const dateStr = exec.createdAt.toISOString().split('T')[0];
+      if (!volumeMap.has(dateStr)) {
+        volumeMap.set(dateStr, { date: dateStr, count: 0 });
+      }
+      volumeMap.get(dateStr).count++;
+    });
+
+    return Array.from(volumeMap.values());
+  } catch (error) {
+    console.error('Error getting execution volume:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get scenario performance ranking
+ */
+export async function getScenarioPerformance(userId, limit = 20) {
+  try {
+    const scenarios = await prisma.scenario.findMany({
+      where: { userId },
+      select: {
+        id: true,
+        name: true,
+        executions: {
+          select: { status: true }
+        }
+      },
+      take: limit
+    });
+
+    return scenarios
+      .map(scenario => {
+        const execs = scenario.executions || [];
+        const passed = execs.filter(e => e.status === 'PASSED').length;
+        const total = execs.length;
+
+        return {
+          id: scenario.id,
+          name: scenario.name,
+          totalExecutions: total,
+          passedExecutions: passed,
+          failedExecutions: total - passed,
+          successRate: total > 0 ? Math.round((passed / total) * 100) : 0
+        };
+      })
+      .sort((a, b) => b.successRate - a.successRate);
+  } catch (error) {
+    console.error('Error getting scenario performance:', error);
+    throw error;
+  }
+}

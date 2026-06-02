@@ -1,4 +1,4 @@
-import { getAnalyticsSummary, getExecutionHistory, getScenarioMetrics, exportAnalyticsData } from '../services/analyticsService.js';
+import { getAnalyticsSummary, getExecutionHistory, getScenarioMetrics, exportAnalyticsData, getPassFailTrend, getTopFailingSteps, getExecutionVolume, getScenarioPerformance } from '../services/analyticsService.js';
 
 /**
  * Get analytics summary
@@ -63,6 +63,62 @@ export async function exportAnalyticsDataHandler(req, res, next) {
       res.setHeader('Content-Disposition', `attachment; filename="${exported.filename}"`);
       res.send(csvContent);
     }
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * Get pass/fail trend data
+ */
+export async function getPassFailTrendHandler(req, res, next) {
+  try {
+    const { userId } = req.user;
+    const { days = 30 } = req.query;
+    const trend = await getPassFailTrend(userId, parseInt(days));
+    res.json(trend);
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * Get top failing steps
+ */
+export async function getTopFailingStepsHandler(req, res, next) {
+  try {
+    const { userId } = req.user;
+    const { limit = 10 } = req.query;
+    const steps = await getTopFailingSteps(userId, parseInt(limit));
+    res.json(steps);
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * Get execution volume
+ */
+export async function getExecutionVolumeHandler(req, res, next) {
+  try {
+    const { userId } = req.user;
+    const { days = 30 } = req.query;
+    const volume = await getExecutionVolume(userId, parseInt(days));
+    res.json(volume);
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * Get scenario performance
+ */
+export async function getScenarioPerformanceHandler(req, res, next) {
+  try {
+    const { userId } = req.user;
+    const { limit = 20 } = req.query;
+    const performance = await getScenarioPerformance(userId, parseInt(limit));
+    res.json(performance);
   } catch (error) {
     next(error);
   }
