@@ -78,9 +78,6 @@ export const browserMatrixService = {
       throw new Error('No valid browsers specified')
     }
 
-    console.log(`[MATRIX] 🌐 Starting matrix execution for scenario: ${scenario.name}`)
-    console.log(`[MATRIX] Browsers: ${validBrowsers.join(', ')}`)
-
     // Create matrix execution record
     const matrixExecution = await prisma.matrixExecution.create({
       data: {
@@ -116,8 +113,6 @@ export const browserMatrixService = {
       }
     })
 
-    console.log(`[MATRIX] ✨ Matrix execution complete`)
-
     return {
       matrixExecutionId: matrixExecution.id,
       scenario: scenario.name,
@@ -135,18 +130,19 @@ export const browserMatrixService = {
     const config = BROWSER_CONFIGS[browserName]
     const executionStartTime = Date.now()
 
-    console.log(`[MATRIX] 🚀 Launching ${config.name}...`)
-
     let browser = null
     let context = null
     let page = null
 
     try {
       // Launch browser with environment-aware settings
-      const launchOptions = browserLauncher.getBrowserLaunchOptions(config.browserType, {
-        headless: config.headless,
-        channel: config.channel
-      })
+      const launchOptions = { headless: true }
+      if (browserLauncher && browserLauncher.getBrowserLaunchOptions) {
+        launchOptions = browserLauncher.getBrowserLaunchOptions(config.browserType, {
+          headless: config.headless,
+          channel: config.channel
+        })
+      }
       
       browser = await config.browserType.launch(launchOptions)
 
@@ -154,9 +150,6 @@ export const browserMatrixService = {
       context = await browser.createBrowserContext()
       page = await context.newPage()
       await page.setViewportSize(config.defaultViewport)
-
-      // Execute scenario steps
-      console.log(`[MATRIX] ⚙️ Executing ${scenario.steps.length} steps on ${config.name}...`)
 
       const stepResults = []
       let lastError = null
@@ -168,7 +161,6 @@ export const browserMatrixService = {
           const result = await this._executeStep(page, step, config.name)
           stepResults.push({ stepIndex: i, status: 'PASSED', result })
         } catch (error) {
-          console.log(`[MATRIX] ❌ Step ${i + 1} failed on ${config.name}: ${error.message}`)
           lastError = error
 
           // Save failure screenshot
@@ -176,7 +168,6 @@ export const browserMatrixService = {
           try {
             await this._ensureDir(path.dirname(screenshotPath))
             await page.screenshot({ path: screenshotPath })
-            console.log(`[MATRIX] 📸 Screenshot saved: ${screenshotPath}`)
           } catch (screenshotErr) {
             console.log(`[MATRIX] ⚠️ Failed to save screenshot: ${screenshotErr.message}`)
           }
@@ -208,8 +199,6 @@ export const browserMatrixService = {
         error: lastError?.message || null
       }
     } catch (error) {
-      console.log(`[MATRIX] 💥 ${config.name} execution failed: ${error.message}`)
-
       return {
         browser: browserName,
         browserName: config.name,

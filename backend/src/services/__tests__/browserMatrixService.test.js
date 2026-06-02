@@ -11,7 +11,8 @@ jest.mock('../../lib/prisma.js', () => ({
     matrixExecution: {
       create: jest.fn(),
       findUnique: jest.fn(),
-      update: jest.fn()
+      update: jest.fn(),
+      findMany: jest.fn()
     },
     browserResult: {
       create: jest.fn(),
@@ -22,6 +23,18 @@ jest.mock('../../lib/prisma.js', () => ({
     }
   }
 }), { virtual: true })
+
+jest.mock('../../lib/browserLauncher.js', () => {
+  return {
+    default: {
+      getBrowserLaunchOptions: jest.fn(() => ({ headless: true })),
+      launchBrowser: jest.fn(),
+      getXvfbRunCommand: jest.fn(() => null),
+      isWindows: true,
+      isLinux: false
+    }
+  }
+}, { virtual: true })
 
 jest.mock('../executionService.js', () => ({
   executionService: {
@@ -34,11 +47,28 @@ jest.mock('../screenshotComparisonService.js', () => ({
   detectRegressions: jest.fn()
 }), { virtual: true })
 
-jest.mock('playwright', () => ({
-  chromium: { launch: jest.fn() },
-  firefox: { launch: jest.fn() },
-  webkit: { launch: jest.fn() }
-}), { virtual: true })
+jest.mock('playwright', () => {
+  const mockBrowser = {
+    createBrowserContext: jest.fn().mockResolvedValue({
+      newPage: jest.fn().mockResolvedValue({
+        setViewportSize: jest.fn().mockResolvedValue(undefined),
+        goto: jest.fn().mockResolvedValue(null),
+        click: jest.fn().mockResolvedValue(undefined),
+        fill: jest.fn().mockResolvedValue(undefined),
+        screenshot: jest.fn().mockResolvedValue(Buffer.from('screenshot')),
+        close: jest.fn().mockResolvedValue(undefined)
+      }),
+      close: jest.fn().mockResolvedValue(undefined)
+    }),
+    close: jest.fn().mockResolvedValue(undefined)
+  }
+
+  return {
+    chromium: { launch: jest.fn().mockResolvedValue(mockBrowser) },
+    firefox: { launch: jest.fn().mockResolvedValue(mockBrowser) },
+    webkit: { launch: jest.fn().mockResolvedValue(mockBrowser) }
+  }
+}, { virtual: true })
 
 import { browserMatrixService } from '../browserMatrixService.js'
 import { prisma } from '../../lib/prisma.js'
@@ -56,7 +86,7 @@ describe('BrowserMatrixService', () => {
       id: 'scenario-123',
       name: 'Login Test',
       userId: 'user-123',
-      testSteps: [
+      steps: [
         { id: 'step-1', type: 'NAVIGATE', value: 'https://example.com' },
         { id: 'step-2', type: 'CLICK', selector: 'button' }
       ]
@@ -261,16 +291,24 @@ describe('BrowserMatrixService', () => {
     })
 
     it('should generate compatibility report', async () => {
-      prisma.matrixExecution.findUnique.mockResolvedValueOnce(mockMatrixExecution)
-      prisma.browserResult.findMany.mockResolvedValueOnce([
-        { browser: 'chromium', status: 'PASSED', duration: 2000 },
-        { browser: 'firefox', status: 'PASSED', duration: 2100 },
-        { browser: 'webkit', status: 'FAILED', duration: 1800, error: 'Element not found' }
-      ])
+      const mockExecutionsWithScenario = [
+        {
+          id: 'matrix-123',
+          scenarioId: 'scenario-123',
+          browsers: ['chromium', 'firefox'],
+          status: 'COMPLETED',
+          startedAt: new Date(),
+          results: JSON.stringify({ passed: 2, failed: 0 }),
+          scenario: { name: 'Login Test' }
+        }
+      ]
+      prisma.matrixExecution.findMany.mockResolvedValueOnce(mockExecutionsWithScenario)
 
-      const report = await browserMatrixService.getCompatibilityReport('matrix-123')
+      const report = await browserMatrixService.getCompatibilityReport('scenario-123')
 
       expect(report).toBeDefined()
+      expect(report.scenario).toBe('Login Test')
+      expect(report.recentExecutions).toHaveLength(1)
     })
   })
 
