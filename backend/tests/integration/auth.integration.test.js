@@ -63,7 +63,7 @@ describe('Auth Integration Tests', () => {
 
       expect(res.status).toBe(400)
       const data = await res.json()
-      expect(data.error).toBeDefined()
+      expect(data.message).toBeDefined()
     })
 
     it('should reject weak password', async () => {
@@ -79,7 +79,7 @@ describe('Auth Integration Tests', () => {
 
       expect(res.status).toBe(400)
       const data = await res.json()
-      expect(data.error).toBeDefined()
+      expect(data.message).toBeDefined()
     })
 
     it('should reject missing required fields', async () => {
@@ -159,7 +159,7 @@ describe('Auth Integration Tests', () => {
 
       expect(res.status).toBe(401)
       const data = await res.json()
-      expect(data.error).toBeDefined()
+      expect(data.message).toBeDefined()
     })
 
     it('should reject wrong password', async () => {
@@ -174,7 +174,7 @@ describe('Auth Integration Tests', () => {
 
       expect(res.status).toBe(401)
       const data = await res.json()
-      expect(data.error).toBeDefined()
+      expect(data.message).toBeDefined()
     })
 
     it('should return valid JWT token', async () => {
