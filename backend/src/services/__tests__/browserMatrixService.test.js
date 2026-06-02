@@ -24,17 +24,15 @@ jest.mock('../../lib/prisma.js', () => ({
   }
 }), { virtual: true })
 
-jest.mock('../../lib/browserLauncher.js', () => {
-  return {
-    default: {
-      getBrowserLaunchOptions: jest.fn(() => ({ headless: true })),
-      launchBrowser: jest.fn(),
-      getXvfbRunCommand: jest.fn(() => null),
-      isWindows: true,
-      isLinux: false
-    }
+jest.mock('../../lib/browserLauncher.js', () => ({
+  default: {
+    getBrowserLaunchOptions: jest.fn().mockReturnValue({ headless: true }),
+    launchBrowser: jest.fn(),
+    getXvfbRunCommand: jest.fn().mockReturnValue(null),
+    isWindows: true,
+    isLinux: false
   }
-}, { virtual: true })
+}), { virtual: true })
 
 jest.mock('../executionService.js', () => ({
   executionService: {
@@ -129,7 +127,7 @@ describe('BrowserMatrixService', () => {
           data: expect.objectContaining({
             scenarioId: 'scenario-123',
             userId: 'user-123',
-            browsers: 'chromium,firefox'
+            browsers: ['chromium', 'firefox']
           })
         })
       )
@@ -176,7 +174,7 @@ describe('BrowserMatrixService', () => {
         browserMatrixService.executeMatrix('scenario-123', [], {
           userId: 'user-123'
         })
-      ).rejects.toThrow('No browsers specified')
+      ).rejects.toThrow('No valid browsers specified')
     })
 
     it('should support concurrency configuration', async () => {
