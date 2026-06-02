@@ -1,0 +1,315 @@
+
+> testingndrih-backend@2.0.0 test
+> jest --coverage --json --outputFile=test-results.json --testPathPattern=analyticsService
+
+  console.error
+    Error exporting analytics data: Error: Unsupported format: xml
+        at D:\testingndrih\backend\src\services\analyticsService.js:254:11
+        at Generator.call (D:\testingndrih\backend\src\services\analyticsService.js:2:1)
+        at Generator._invoke [as next] (D:\testingndrih\backend\src\services\analyticsService.js:2:1)
+        at asyncGeneratorStep (D:\testingndrih\backend\src\services\analyticsService.js:2:1)
+        at asyncGeneratorStep (D:\testingndrih\backend\src\services\analyticsService.js:2:1)
+        at processTicksAndRejections (node:internal/process/task_queues:104:5)
+
+      254 |     throw new Error(`Unsupported format: ${format}`);
+      255 |   } catch (error) {
+    > 256 |     console.error('Error exporting analytics data:', error);
+          |             ^
+      257 |     throw error;
+      258 |   }
+      259 | }
+
+      at error (src/services/analyticsService.js:256:13)
+      at Generator.call (src/services/analyticsService.js:2:1)
+      at Generator._invoke [as next] (src/services/analyticsService.js:2:1)
+      at asyncGeneratorStep (src/services/analyticsService.js:2:1)
+      at asyncGeneratorStep (src/services/analyticsService.js:2:1)
+
+  console.error
+    Error getting analytics summary: Error: Database connection failed
+        at D:\testingndrih\backend\src\services\__tests__\analyticsService.test.js:339:51
+        at Generator.call (D:\testingndrih\backend\src\services\__tests__\analyticsService.test.js:2:1)
+        at Generator._invoke [as next] (D:\testingndrih\backend\src\services\__tests__\analyticsService.test.js:2:1)
+        at asyncGeneratorStep (D:\testingndrih\backend\src\services\__tests__\analyticsService.test.js:2:1)
+        at asyncGeneratorStep (D:\testingndrih\backend\src\services\__tests__\analyticsService.test.js:2:1)
+        at _next (D:\testingndrih\backend\src\services\__tests__\analyticsService.test.js:2:1)
+        at new Promise (<anonymous>)
+        at Object.<anonymous> (D:\testingndrih\backend\src\services\__tests__\analyticsService.test.js:2:1)
+        at Promise.then.completed (D:\testingndrih\backend\node_modules\jest-circus\build\utils.js:298:28)
+        at new Promise (<anonymous>)
+        at callAsyncCircusFn (D:\testingndrih\backend\node_modules\jest-circus\build\utils.js:231:10)
+        at _callCircusTest (D:\testingndrih\backend\node_modules\jest-circus\build\run.js:316:40)
+        at processTicksAndRejections (node:internal/process/task_queues:104:5)
+        at _runTest (D:\testingndrih\backend\node_modules\jest-circus\build\run.js:252:3)
+        at _runTestsForDescribeBlock (D:\testingndrih\backend\node_modules\jest-circus\build\run.js:126:9)
+        at _runTestsForDescribeBlock (D:\testingndrih\backend\node_modules\jest-circus\build\run.js:121:9)
+        at _runTestsForDescribeBlock (D:\testingndrih\backend\node_modules\jest-circus\build\run.js:121:9)
+        at run (D:\testingndrih\backend\node_modules\jest-circus\build\run.js:71:3)
+        at runAndTransformResultsToJestFormat (D:\testingndrih\backend\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapterInit.js:122:21)
+        at jestAdapter (D:\testingndrih\backend\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:79:19)
+        at runTestInternal (D:\testingndrih\backend\node_modules\jest-runner\build\runTest.js:367:16)
+        at runTest (D:\testingndrih\backend\node_modules\jest-runner\build\runTest.js:444:34)
+
+      57 |     };
+      58 |   } catch (error) {
+    > 59 |     console.error('Error getting analytics summary:', error);
+         |             ^
+      60 |     throw error;
+      61 |   }
+      62 | }
+
+      at error (src/services/analyticsService.js:59:13)
+      at Generator.call (src/services/analyticsService.js:2:1)
+      at Generator._invoke [as throw] (src/services/analyticsService.js:2:1)
+      at asyncGeneratorStep (src/services/analyticsService.js:2:1)
+      at asyncGeneratorStep (src/services/analyticsService.js:2:1)
+
+FAIL src/services/__tests__/analyticsService.test.js
+  Analytics Service
+    getAnalyticsSummary
+      ├ù should return analytics summary for a user (3 ms)
+      ├ù should handle no execution data
+    getPassFailTrend
+      ΓêÜ should return pass/fail trend for specified days (4 ms)
+      ΓêÜ should return empty array when no data (1 ms)
+    getTopFailingSteps
+      ├ù should return top failing steps sorted by frequency
+      ├ù should limit results
+    getExecutionVolume
+      ΓêÜ should return execution volume by date (1 ms)
+      ΓêÜ should handle empty execution data
+    getScenarioPerformance
+      ΓêÜ should return scenarios sorted by success rate (8 ms)
+      ΓêÜ should handle scenarios with no executions (1 ms)
+      ├ù should limit results (1 ms)
+    getExecutionHistory
+      ├ù should return paginated execution history (1 ms)
+    getScenarioMetrics
+      ├ù should return scenario metrics with flaky steps (1 ms)
+    exportAnalyticsData
+      ├ù should export analytics data as JSON
+      ├ù should export analytics data as CSV
+      ΓêÜ should throw error for unsupported format (77 ms)
+    Error Handling
+      ΓêÜ should handle database errors gracefully (11 ms)
+      ├ù should handle missing user data (1 ms)
+
+  ΓùÅ Analytics Service ΓÇ║ getAnalyticsSummary ΓÇ║ should return analytics summary for a user
+
+    TypeError: Cannot read properties of undefined (reading 'mockResolvedValue')
+
+      29 |       ])
+      30 |
+    > 31 |       prisma.stepResult.findMany.mockResolvedValue([
+         |                                  ^
+      32 |         { status: 'PASSED' },
+      33 |         { status: 'PASSED' },
+      34 |         { status: 'FAILED' }
+
+      at mockResolvedValue (src/services/__tests__/analyticsService.test.js:31:34)
+      at Generator.call (src/services/__tests__/analyticsService.test.js:2:1)
+      at Generator._invoke [as next] (src/services/__tests__/analyticsService.test.js:2:1)
+      at asyncGeneratorStep (src/services/__tests__/analyticsService.test.js:2:1)
+      at asyncGeneratorStep (src/services/__tests__/analyticsService.test.js:2:1)
+      at _next (src/services/__tests__/analyticsService.test.js:2:1)
+      at Object.<anonymous> (src/services/__tests__/analyticsService.test.js:2:1)
+
+  ΓùÅ Analytics Service ΓÇ║ getAnalyticsSummary ΓÇ║ should handle no execution data
+
+    TypeError: Cannot read properties of undefined (reading 'mockResolvedValue')
+
+      47 |       prisma.execution.findMany.mockResolvedValue([])
+      48 |       prisma.scenario.findMany.mockResolvedValue([])
+    > 49 |       prisma.stepResult.findMany.mockResolvedValue([])
+         |                                  ^
+      50 |
+      51 |       const result = await analyticsService.getAnalyticsSummary(userId)
+      52 |
+
+      at mockResolvedValue (src/services/__tests__/analyticsService.test.js:49:34)
+      at Generator.call (src/services/__tests__/analyticsService.test.js:2:1)
+      at Generator._invoke [as next] (src/services/__tests__/analyticsService.test.js:2:1)
+      at asyncGeneratorStep (src/services/__tests__/analyticsService.test.js:2:1)
+      at asyncGeneratorStep (src/services/__tests__/analyticsService.test.js:2:1)
+      at _next (src/services/__tests__/analyticsService.test.js:2:1)
+      at Object.<anonymous> (src/services/__tests__/analyticsService.test.js:2:1)
+
+  ΓùÅ Analytics Service ΓÇ║ getTopFailingSteps ΓÇ║ should return top failing steps sorted by frequency
+
+    TypeError: Cannot read properties of undefined (reading 'mockResolvedValue')
+
+       97 |   describe('getTopFailingSteps', () => {
+       98 |     it('should return top failing steps sorted by frequency', async () => {
+    >  99 |       prisma.stepResult.findMany.mockResolvedValue([
+          |                                  ^
+      100 |         {
+      101 |           status: 'FAILED',
+      102 |           testStep: {
+
+      at mockResolvedValue (src/services/__tests__/analyticsService.test.js:99:34)
+      at Generator.call (src/services/__tests__/analyticsService.test.js:2:1)
+      at Generator._invoke [as next] (src/services/__tests__/analyticsService.test.js:2:1)
+      at asyncGeneratorStep (src/services/__tests__/analyticsService.test.js:2:1)
+      at asyncGeneratorStep (src/services/__tests__/analyticsService.test.js:2:1)
+      at _next (src/services/__tests__/analyticsService.test.js:2:1)
+      at Object.<anonymous> (src/services/__tests__/analyticsService.test.js:2:1)
+
+  ΓùÅ Analytics Service ΓÇ║ getTopFailingSteps ΓÇ║ should limit results
+
+    TypeError: Cannot read properties of undefined (reading 'mockResolvedValue')
+
+      152 |       }))
+      153 |
+    > 154 |       prisma.stepResult.findMany.mockResolvedValue(steps)
+          |                                  ^
+      155 |
+      156 |       const result = await analyticsService.getTopFailingSteps(userId, 5)
+      157 |
+
+      at mockResolvedValue (src/services/__tests__/analyticsService.test.js:154:34)
+      at Generator.call (src/services/__tests__/analyticsService.test.js:2:1)
+      at Generator._invoke [as next] (src/services/__tests__/analyticsService.test.js:2:1)
+      at asyncGeneratorStep (src/services/__tests__/analyticsService.test.js:2:1)
+      at asyncGeneratorStep (src/services/__tests__/analyticsService.test.js:2:1)
+      at _next (src/services/__tests__/analyticsService.test.js:2:1)
+      at Object.<anonymous> (src/services/__tests__/analyticsService.test.js:2:1)
+
+  ΓùÅ Analytics Service ΓÇ║ getScenarioPerformance ΓÇ║ should limit results
+
+    expect(received).toBeLessThanOrEqual(expected)
+
+    Expected: <= 15
+    Received:    25
+
+      251 |       const result = await analyticsService.getScenarioPerformance(userId, 15)
+      252 |
+    > 253 |       expect(result.length).toBeLessThanOrEqual(15)
+          |                             ^
+      254 |     })
+      255 |   })
+      256 |
+
+      at toBeLessThanOrEqual (src/services/__tests__/analyticsService.test.js:253:29)
+      at Generator.call (src/services/__tests__/analyticsService.test.js:2:1)
+      at Generator._invoke [as next] (src/services/__tests__/analyticsService.test.js:2:1)
+      at asyncGeneratorStep (src/services/__tests__/analyticsService.test.js:2:1)
+      at asyncGeneratorStep (src/services/__tests__/analyticsService.test.js:2:1)
+
+  ΓùÅ Analytics Service ΓÇ║ getExecutionHistory ΓÇ║ should return paginated execution history
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      272 |
+      273 |       expect(result).toBeDefined()
+    > 274 |       expect(Array.isArray(result.executions)).toBe(true)
+          |                                                ^
+      275 |       expect(result.total).toBe(100)
+      276 |     })
+      277 |   })
+
+      at toBe (src/services/__tests__/analyticsService.test.js:274:48)
+      at Generator.call (src/services/__tests__/analyticsService.test.js:2:1)
+      at Generator._invoke [as next] (src/services/__tests__/analyticsService.test.js:2:1)
+      at asyncGeneratorStep (src/services/__tests__/analyticsService.test.js:2:1)
+      at asyncGeneratorStep (src/services/__tests__/analyticsService.test.js:2:1)
+
+  ΓùÅ Analytics Service ΓÇ║ getScenarioMetrics ΓÇ║ should return scenario metrics with flaky steps
+
+    TypeError: Cannot read properties of undefined (reading 'mockResolvedValue')
+
+      289 |       ])
+      290 |
+    > 291 |       prisma.stepResult.groupBy.mockResolvedValue([
+          |                                 ^
+      292 |         { stepNumber: 1, _count: { id: 5 }, _avg: { duration: 100 } }
+      293 |       ])
+      294 |
+
+      at mockResolvedValue (src/services/__tests__/analyticsService.test.js:291:33)
+      at Generator.call (src/services/__tests__/analyticsService.test.js:2:1)
+      at Generator._invoke [as next] (src/services/__tests__/analyticsService.test.js:2:1)
+      at asyncGeneratorStep (src/services/__tests__/analyticsService.test.js:2:1)
+      at asyncGeneratorStep (src/services/__tests__/analyticsService.test.js:2:1)
+      at _next (src/services/__tests__/analyticsService.test.js:2:1)
+      at Object.<anonymous> (src/services/__tests__/analyticsService.test.js:2:1)
+
+  ΓùÅ Analytics Service ΓÇ║ exportAnalyticsData ΓÇ║ should export analytics data as JSON
+
+    TypeError: Cannot read properties of undefined (reading 'mockResolvedValue')
+
+      307 |
+      308 |       prisma.scenario.findMany.mockResolvedValue([])
+    > 309 |       prisma.stepResult.findMany.mockResolvedValue([])
+          |                                  ^
+      310 |
+      311 |       const result = await analyticsService.exportAnalyticsData(userId, 'json')
+      312 |
+
+      at mockResolvedValue (src/services/__tests__/analyticsService.test.js:309:34)
+      at Generator.call (src/services/__tests__/analyticsService.test.js:2:1)
+      at Generator._invoke [as next] (src/services/__tests__/analyticsService.test.js:2:1)
+      at asyncGeneratorStep (src/services/__tests__/analyticsService.test.js:2:1)
+      at asyncGeneratorStep (src/services/__tests__/analyticsService.test.js:2:1)
+      at _next (src/services/__tests__/analyticsService.test.js:2:1)
+      at Object.<anonymous> (src/services/__tests__/analyticsService.test.js:2:1)
+
+  ΓùÅ Analytics Service ΓÇ║ exportAnalyticsData ΓÇ║ should export analytics data as CSV
+
+    TypeError: Cannot read properties of undefined (reading 'mockResolvedValue')
+
+      319 |       prisma.execution.findMany.mockResolvedValue([])
+      320 |       prisma.scenario.findMany.mockResolvedValue([])
+    > 321 |       prisma.stepResult.findMany.mockResolvedValue([])
+          |                                  ^
+      322 |
+      323 |       const result = await analyticsService.exportAnalyticsData(userId, 'csv')
+      324 |
+
+      at mockResolvedValue (src/services/__tests__/analyticsService.test.js:321:34)
+      at Generator.call (src/services/__tests__/analyticsService.test.js:2:1)
+      at Generator._invoke [as next] (src/services/__tests__/analyticsService.test.js:2:1)
+      at asyncGeneratorStep (src/services/__tests__/analyticsService.test.js:2:1)
+      at asyncGeneratorStep (src/services/__tests__/analyticsService.test.js:2:1)
+      at _next (src/services/__tests__/analyticsService.test.js:2:1)
+      at Object.<anonymous> (src/services/__tests__/analyticsService.test.js:2:1)
+
+  ΓùÅ Analytics Service ΓÇ║ Error Handling ΓÇ║ should handle missing user data
+
+    TypeError: Cannot read properties of undefined (reading 'mockResolvedValue')
+
+      347 |       prisma.execution.findMany.mockResolvedValue([])
+      348 |       prisma.scenario.findMany.mockResolvedValue([])
+    > 349 |       prisma.stepResult.findMany.mockResolvedValue([])
+          |                                  ^
+      350 |
+      351 |       const result = await analyticsService.getAnalyticsSummary(userId)
+      352 |
+
+      at mockResolvedValue (src/services/__tests__/analyticsService.test.js:349:34)
+      at Generator.call (src/services/__tests__/analyticsService.test.js:2:1)
+      at Generator._invoke [as next] (src/services/__tests__/analyticsService.test.js:2:1)
+      at asyncGeneratorStep (src/services/__tests__/analyticsService.test.js:2:1)
+      at asyncGeneratorStep (src/services/__tests__/analyticsService.test.js:2:1)
+      at _next (src/services/__tests__/analyticsService.test.js:2:1)
+      at Object.<anonymous> (src/services/__tests__/analyticsService.test.js:2:1)
+
+Jest: "global" coverage threshold for statements (80%) not met: 1.6%
+Jest: "global" coverage threshold for branches (75%) not met: 0.7%
+Jest: "global" coverage threshold for lines (80%) not met: 1.66%
+Jest: "global" coverage threshold for functions (80%) not met: 2%
+Test Suites: 1 failed, 1 total
+Tests:       10 failed, 8 passed, 18 total
+Snapshots:   0 total
+Time:        8.781 s
+Ran all test suites matching /analyticsService/i.
+Test results written to: test-results.json
+npm error Lifecycle script `test` failed with error:
+npm error code 1
+npm error path D:\testingndrih\backend
+npm error workspace testingndrih-backend@2.0.0
+npm error location D:\testingndrih\backend
+npm error command failed
+npm error command C:\Windows\system32\cmd.exe /d /s /c jest --coverage --json --outputFile=test-results.json --testPathPattern=analyticsService
