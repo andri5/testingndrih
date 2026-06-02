@@ -11,10 +11,10 @@ const applyTheme = (theme) => {
 }
 
 // Apply theme immediately on module load (before React first render)
-applyTheme(localStorage.getItem('theme') || 'dark')
+applyTheme(localStorage.getItem('theme') || 'light')
 
 const useSettingsStore = create((set) => ({
-  theme: localStorage.getItem('theme') || 'dark',
+  theme: localStorage.getItem('theme') || 'light',
   language: localStorage.getItem('language') || 'id',
   executionTimeout: localStorage.getItem('executionTimeout') || '30',
   autoScreenshot: localStorage.getItem('autoScreenshot') !== 'false',

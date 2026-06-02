@@ -257,11 +257,16 @@ export default function ScenarioDetailPage() {
     const params = new URLSearchParams(routeLocation.search)
     if (params.get('autoRecord') === '1') {
       setShowRecordingPanel(true)
+      setRecordingUrl(scenario?.url || '')
+      // Auto-start recording immediately
+      setTimeout(() => {
+        handleStartRecording()
+      }, 500)
       // Clean up URL param without re-render
       const cleanUrl = routeLocation.pathname
       window.history.replaceState(null, '', cleanUrl)
     }
-  }, [routeLocation])
+  }, [routeLocation, scenario])
 
   // ── End of state declarations ──
 
@@ -280,7 +285,7 @@ export default function ScenarioDetailPage() {
 
   const { language, theme } = useSettingsStore()
   const t = i18n[language] || i18n.id
-  const isDark = theme !== 'light'
+  const isDark = theme === 'dark'
 
   // Close step form modal on Escape
   useEffect(() => {
@@ -711,6 +716,13 @@ export default function ScenarioDetailPage() {
   // ── Recording handlers ──
   const startPollingSteps = useCallback(() => {
     if (pollingRef.current) clearInterval(pollingRef.current)
+    // First fetch immediately
+    recorderAPI.status(id).then(res => {
+      if (res.data.status === 'recording') {
+        setRecordingSteps(res.data.steps || [])
+      }
+    }).catch(() => {})
+    
     pollingRef.current = setInterval(async () => {
       try {
         const res = await recorderAPI.status(id)
@@ -724,7 +736,7 @@ export default function ScenarioDetailPage() {
       } catch {
         // ignore polling errors
       }
-    }, 1500)
+    }, 1000)
   }, [id])
 
   const stopPolling = useCallback(() => {
@@ -755,7 +767,7 @@ export default function ScenarioDetailPage() {
   }, [id, startPollingSteps])
 
   const handleStartRecording = async () => {
-    const url = recordingUrl.trim() || scenario?.url || ''
+    const url = (recordingUrl.trim() || scenario?.url || '').trim()
     if (!url) {
       setError(t.enterUrlForRecording)
       return
@@ -772,16 +784,15 @@ export default function ScenarioDetailPage() {
       setShowRecordingPanel(true)
 
       // ═══ Show Status ═══
-      // Dengan Playwright, browser dibuka di backend (headless)
-      // Frontend tinggal menampilkan status dan polling steps
       showSuccess(t.recordingStarted(res.data.message))
       
-      // Start polling for recorded steps
+      // Start polling for recorded steps with immediate first fetch
       startPollingSteps()
 
     } catch (err) {
       setError(err.response?.data?.error || t.startRecordingError)
       console.error('Recording start error:', err)
+      setIsRecording(false)
     } finally {
       setIsStartingRecording(false)
     }
@@ -1102,10 +1113,12 @@ export default function ScenarioDetailPage() {
 
           {/* Step Form Modal */}
           {showStepForm && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
               {/* Backdrop */}
               <div
-                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                className={`absolute inset-0 backdrop-blur-sm ${
+                  isDark ? 'bg-black/60' : 'bg-black/40'
+                }`}
                 onClick={cancelForm}
                 aria-label={t.closeDialog}
               />
@@ -1154,9 +1167,9 @@ export default function ScenarioDetailPage() {
                     {/* Type */}
                     <div>
                       <label className={`block text-sm font-medium mb-1 ${
-                        isDark ? 'text-[#A0A0A4]' : 'text-gray-600'
+                        isDark ? 'text-[#A0A0A4]' : 'text-gray-700'
                       }`}>
-                        {t.fieldType} <span className="text-[#5E6AD2] text-xs">*{t.required}</span>
+                        {t.fieldType} <span className={`text-xs ${isDark ? 'text-red-400' : 'text-red-600'}`}>*{t.required}</span>
                       </label>
                       <select
                         value={stepForm.type}
@@ -1164,7 +1177,7 @@ export default function ScenarioDetailPage() {
                         className={`w-full px-3 py-2 rounded-lg border focus:ring-1 focus:ring-[#5E6AD2] focus:outline-none transition-colors ${
                           isDark
                             ? 'bg-[#161618] border-[#2D2D2F] text-[#E0E0E2]'
-                            : 'bg-gray-50 border-gray-300 text-gray-900'
+                            : 'bg-white border-gray-300 text-gray-900'
                         }`}
                       >
                         {STEP_TYPES.map(st => (
@@ -1178,9 +1191,9 @@ export default function ScenarioDetailPage() {
                     {/* Description */}
                     <div>
                       <label className={`block text-sm font-medium mb-1 ${
-                        isDark ? 'text-[#A0A0A4]' : 'text-gray-600'
+                        isDark ? 'text-[#A0A0A4]' : 'text-gray-700'
                       }`}>
-                        {t.fieldDescription} <span className="text-[#5E6AD2] text-xs">*{t.required}</span>
+                        {t.fieldDescription} <span className={`text-xs ${isDark ? 'text-red-400' : 'text-red-600'}`}>*{t.required}</span>
                       </label>
                       <input
                         type="text"
@@ -1191,7 +1204,7 @@ export default function ScenarioDetailPage() {
                         className={`w-full px-3 py-2 rounded-lg border focus:ring-1 focus:ring-[#5E6AD2] focus:outline-none transition-colors ${
                           isDark
                             ? 'bg-[#161618] border-[#2D2D2F] text-[#E0E0E2] placeholder-[#4A4A52]'
-                            : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-400'
+                            : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400'
                         }`}
                       />
                     </div>
@@ -1200,7 +1213,7 @@ export default function ScenarioDetailPage() {
                     {getStepTypeConfig(stepForm.type).fields.includes('selector') && (
                       <div>
                         <label className={`block text-sm font-medium mb-1 ${
-                          isDark ? 'text-[#A0A0A4]' : 'text-gray-600'
+                          isDark ? 'text-[#A0A0A4]' : 'text-gray-700'
                         }`}>
                           {t.fieldSelector}
                         </label>
@@ -1212,7 +1225,7 @@ export default function ScenarioDetailPage() {
                           className={`w-full px-3 py-2 rounded-lg border focus:ring-1 focus:ring-[#5E6AD2] focus:outline-none transition-colors ${
                             isDark
                               ? 'bg-[#161618] border-[#2D2D2F] text-[#E0E0E2] placeholder-[#4A4A52]'
-                              : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-400'
+                              : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400'
                           }`}
                         />
                       </div>
@@ -1222,7 +1235,7 @@ export default function ScenarioDetailPage() {
                     {getStepTypeConfig(stepForm.type).fields.includes('value') && (
                       <div>
                         <label className={`block text-sm font-medium mb-1 ${
-                          isDark ? 'text-[#A0A0A4]' : 'text-gray-600'
+                          isDark ? 'text-[#A0A0A4]' : 'text-gray-700'
                         }`}>
                           {t.fieldValue}
                         </label>
@@ -1234,7 +1247,7 @@ export default function ScenarioDetailPage() {
                           className={`w-full px-3 py-2 rounded-lg border focus:ring-1 focus:ring-[#5E6AD2] focus:outline-none transition-colors ${
                             isDark
                               ? 'bg-[#161618] border-[#2D2D2F] text-[#E0E0E2] placeholder-[#4A4A52]'
-                              : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-400'
+                              : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400'
                           }`}
                         />
                       </div>
@@ -1244,7 +1257,7 @@ export default function ScenarioDetailPage() {
                     {getStepTypeConfig(stepForm.type).fields.includes('metadata') && (
                       <div className="md:col-span-2">
                         <label className={`block text-sm font-medium mb-1 ${
-                          isDark ? 'text-[#A0A0A4]' : 'text-gray-600'
+                          isDark ? 'text-[#A0A0A4]' : 'text-gray-700'
                         }`}>
                           {t.fieldMetadata}
                         </label>
@@ -1256,7 +1269,7 @@ export default function ScenarioDetailPage() {
                           className={`w-full px-3 py-2 rounded-lg border focus:ring-1 focus:ring-[#5E6AD2] focus:outline-none font-mono text-sm transition-colors ${
                             isDark
                               ? 'bg-[#161618] border-[#2D2D2F] text-[#E0E0E2] placeholder-[#4A4A52]'
-                              : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-400'
+                              : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400'
                           }`}
                         />
                       </div>
@@ -1266,7 +1279,7 @@ export default function ScenarioDetailPage() {
                   {/* Type hint */}
                   {t.hints[stepForm.type] && (
                     <div className={`mt-4 px-3 py-2 rounded-lg text-sm ${
-                      isDark ? 'bg-[#5E6AD2]/10 text-[#9BA3F0]' : 'bg-indigo-50 text-indigo-700'
+                      isDark ? 'bg-[#5E6AD2]/10 text-[#9BA3F0]' : 'bg-blue-50 text-blue-700 border border-blue-200'
                     }`}>
                       {t.hints[stepForm.type]}
                     </div>

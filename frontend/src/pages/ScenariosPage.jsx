@@ -18,6 +18,7 @@ const i18n = {
   en: {
     title: 'Test Scenarios',
     subtitle: 'Create and manage your test scenarios',
+    createScenarioBtn: 'Create Scenario',
     selectedCount: (n) => `${n} scenario${n !== 1 ? 's' : ''} selected`,
     runningBulk: 'Running executions sequentially (headless)...',
     close: 'Close',
@@ -41,6 +42,7 @@ const i18n = {
   id: {
     title: 'Skenario Pengujian',
     subtitle: 'Buat dan kelola skenario pengujian Anda',
+    createScenarioBtn: 'Buat Scenario',
     selectedCount: (n) => `${n} scenario dipilih`,
     runningBulk: 'Menjalankan eksekusi secara berurutan (headless)...',
     close: 'Tutup',
@@ -455,7 +457,7 @@ export default function ScenariosPage() {
                   className="flex items-center gap-1"
                   data-testid="create-scenario-btn"
                 >
-                  + Create Scenario
+                  + {t.createScenarioBtn}
                   <ChevronDown size={18} className={`transition-transform ${showCreateMenu ? 'rotate-180' : ''}`} />
                 </Button>
                 
