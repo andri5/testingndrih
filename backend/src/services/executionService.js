@@ -615,7 +615,7 @@ export const executionService = {
           }
         }
       } catch (videoErr) {
-        console.error('Video save failed:', videoErr.message)
+        // Video save failed - continue without video
       }
 
       const finalStatus = stopped ? 'FAILED' : (failedSteps > 0 ? 'FAILED' : 'PASSED')
