@@ -48,7 +48,7 @@ describe('Execution Integration Tests', () => {
     })
 
     const data = await res.json()
-    scenarioId = data.id
+    scenarioId = data.scenario?.id || data.id
   })
 
   describe('POST /api/executions/scenarios/:scenarioId - Execute Scenario', () => {
@@ -312,7 +312,7 @@ describe('Execution Integration Tests', () => {
       })
       expect(createRes.status).toBe(201)
       const createData = await createRes.json()
-      const workflowScenarioId = createData.id
+      const workflowScenarioId = createData.scenario?.id || createData.id
 
       // 2. Execute scenario
       const execRes = await fetch(`${API_URL}/executions/scenarios/${workflowScenarioId}`, {

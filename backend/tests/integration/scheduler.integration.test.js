@@ -47,7 +47,7 @@ describe('Scheduler Integration Tests', () => {
     })
 
     const data = await res.json()
-    scenarioId = data.id
+    scenarioId = data.scenario?.id || data.id
   })
 
   describe('POST /api/scheduler - Create Schedule', () => {

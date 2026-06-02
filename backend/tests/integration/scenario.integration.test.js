@@ -274,7 +274,7 @@ describe('Scenario Integration Tests', () => {
         })
       })
       const createData = await createRes.json()
-      const newScenarioId = createData.id
+      const newScenarioId = createData.scenario?.id || createData.id
 
       const updateRes = await fetch(`${API_URL}/scenarios/${newScenarioId}`, {
         method: 'PUT',
@@ -342,7 +342,7 @@ describe('Scenario Integration Tests', () => {
         })
       })
       const createData = await createRes.json()
-      const testScenarioId = createData.id
+      const testScenarioId = createData.scenario?.id || createData.id
 
       // Register other user
       const otherEmail = `delete-test-${Date.now()}@test.local`

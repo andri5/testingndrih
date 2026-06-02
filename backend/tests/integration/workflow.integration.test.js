@@ -46,7 +46,7 @@ describe('Workflow Integration Tests', () => {
       })
       expect(createScenarioRes.status).toBe(201)
       const createData = await createScenarioRes.json()
-      scenarioId = createData.id
+      scenarioId = createData.scenario?.id || createData.id
       expect(scenarioId).toBeDefined()
 
       // 2. Get the created scenario

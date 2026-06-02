@@ -48,7 +48,7 @@ describe('Parallel Execution Integration Tests', () => {
       })
 
       const data = await res.json()
-      scenarioIds.push(data.id)
+      scenarioIds.push(data.scenario?.id || data.id)
     }
   })
 
@@ -166,7 +166,7 @@ describe('Parallel Execution Integration Tests', () => {
         })
       })
       const createData = await createRes.json()
-      const otherScenarioId = createData.id
+      const otherScenarioId = createData.scenario?.id || createData.id
 
       // Try to execute with first user token
       const res = await fetch(`${API_URL}/parallel/execute`, {
