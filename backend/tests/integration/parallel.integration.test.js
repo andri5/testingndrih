@@ -48,7 +48,23 @@ describe('Parallel Execution Integration Tests', () => {
       })
 
       const data = await res.json()
-      scenarioIds.push(data.scenario?.id || data.id)
+      const id = data.scenario?.id || data.id
+      scenarioIds.push(id)
+
+      // Add test step to enable execution
+      if (id) {
+        await fetch(`${API_URL}/scenarios/${id}/steps`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`
+          },
+          body: JSON.stringify({
+            type: 'NAVIGATE',
+            description: 'Navigate'
+          })
+        })
+      }
     }
   })
 

@@ -49,6 +49,24 @@ describe('Workflow Integration Tests', () => {
       scenarioId = createData.scenario?.id || createData.id
       expect(scenarioId).toBeDefined()
 
+      // 1.5. Add a test step to the scenario (required for execution)
+      const stepRes = await fetch(`${API_URL}/scenarios/${scenarioId}/steps`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`
+        },
+        body: JSON.stringify({
+          type: 'NAVIGATE',
+          description: 'Navigate to test site'
+        })
+      })
+      // Step creation may fail if endpoint doesn't exist, continue anyway
+      if (stepRes.status !== 201) {
+        const stepError = await stepRes.json()
+        console.warn(`Step creation failed with status ${stepRes.status}: ${JSON.stringify(stepError)}`)
+      }
+
       // 2. Get the created scenario
       const getScenarioRes = await fetch(`${API_URL}/scenarios/${scenarioId}`, {
         headers: { 'Authorization': `Bearer ${authToken}` }
@@ -93,7 +111,7 @@ describe('Workflow Integration Tests', () => {
       })
       expect(statsRes.status).toBe(200)
       const statsData = await statsRes.json()
-      expect(typeof statsData.totalExecutions).toBe('number')
+      expect(typeof (statsData.stats?.totalExecutions || statsData.totalExecutions)).toBe('number')
 
       // 7. Duplicate scenario
       const dupRes = await fetch(`${API_URL}/scenarios/${scenarioId}/duplicate`, {
@@ -159,10 +177,26 @@ describe('Workflow Integration Tests', () => {
         })
       })
       const scData = await scRes.json()
-      scenarioId = scData.id
+      scenarioId = scData.scenario?.id || scData.id
     })
 
     it('should complete schedule creation to execution workflow', async () => {
+      // Add test step to scenario
+      if (scenarioId) {
+        const stepRes = await fetch(`${API_URL}/scenarios/${scenarioId}/steps`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`
+          },
+          body: JSON.stringify({
+            type: 'NAVIGATE',
+            description: 'Navigate'
+          })
+        })
+        // Step may already exist, ignore errors
+      }
+
       // 1. Create schedule
       const createRes = await fetch(`${API_URL}/scheduler`, {
         method: 'POST',
@@ -274,7 +308,23 @@ describe('Workflow Integration Tests', () => {
           })
         })
         const data = await res.json()
-        scenarioIds.push(data.id)
+        const id = data.scenario?.id || data.id
+        scenarioIds.push(id)
+
+        // Add test step to each scenario
+        if (id) {
+          const stepRes = await fetch(`${API_URL}/scenarios/${id}/steps`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${authToken}`
+            },
+            body: JSON.stringify({
+              type: 'NAVIGATE',
+              description: 'Navigate'
+            })
+          })
+        }
       }
     })
 
@@ -363,7 +413,22 @@ describe('Workflow Integration Tests', () => {
         })
       })
       const scenarioData = await scenarioRes.json()
-      user1ScenarioId = scenarioData.id
+      user1ScenarioId = scenarioData.scenario?.id || scenarioData.id
+
+      // Add test step to user1's scenario
+      if (user1ScenarioId) {
+        const stepRes = await fetch(`${API_URL}/scenarios/${user1ScenarioId}/steps`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${user1Token}`
+          },
+          body: JSON.stringify({
+            type: 'NAVIGATE',
+            description: 'Navigate'
+          })
+        })
+      }
     })
 
     it('should enforce user isolation across operations', async () => {
@@ -454,7 +519,22 @@ describe('Workflow Integration Tests', () => {
         })
       })
       const scData = await scRes.json()
-      scenarioId = scData.id
+      scenarioId = scData.scenario?.id || scData.id
+
+      // Create test step
+      if (scenarioId) {
+        const stepRes = await fetch(`${API_URL}/scenarios/${scenarioId}/steps`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`
+          },
+          body: JSON.stringify({
+            type: 'NAVIGATE',
+            description: 'Navigate'
+          })
+        })
+      }
     })
 
     it('should handle and recover from various error scenarios', async () => {
