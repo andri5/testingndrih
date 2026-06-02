@@ -38,9 +38,6 @@ export const parallelExecutionService = {
       throw new Error('No scenarios provided')
     }
 
-    console.log(`[PARALLEL] 🚀 Starting parallel execution of ${scenarios.length} scenarios`)
-    console.log(`[PARALLEL] Concurrency limit: ${concurrencyLimit}`)
-
     // Create execution batch record
     const executionBatch = await prisma.executionBatch.create({
       data: {
@@ -52,18 +49,18 @@ export const parallelExecutionService = {
     })
 
     const executions = []
-    const activePromises = []
+    const executionPromises = [] // Track promises
 
     // Process scenarios with concurrency control
-    for (const scenario of scenarios) {
+    for (let index = 0; index < scenarios.length; index++) {
+      const scenario = scenarios[index]
+
       // If at concurrency limit, wait for one to complete
-      if (activePromises.length >= concurrencyLimit) {
-        await Promise.race(activePromises)
-        // Remove completed promise
-        activePromises.splice(
-          activePromises.findIndex(p => p.state === 'completed'),
-          1
-        )
+      if (executionPromises.length >= concurrencyLimit) {
+        // Wait for the first promise to complete
+        await Promise.race(executionPromises)
+        // Remove one promise from the list
+        executionPromises.splice(0, 1)
       }
 
       // Start scenario execution
@@ -73,26 +70,26 @@ export const parallelExecutionService = {
         executionBatch.id
       )
 
-      activePromises.push(executionPromise)
+      // Store promise for tracking
+      executionPromises.push(executionPromise)
 
-      // Track execution
-      executionPromise.then(result => {
-        executions.push(result)
-        console.log(`[PARALLEL] ✅ Scenario ${scenario.id} completed (${executions.length}/${scenarios.length})`)
-      }).catch(error => {
-        console.log(`[PARALLEL] ❌ Scenario ${scenario.id} failed: ${error.message}`)
-        executions.push({
-          scenarioId: scenario.id,
-          executionId: null,
-          status: 'FAILED',
-          error: error.message
+      // Non-blocking: handle result when ready (don't await here)
+      executionPromise
+        .then(result => {
+          executions.push(result)
         })
-      })
+        .catch(error => {
+          executions.push({
+            scenarioId: scenario.id,
+            executionId: null,
+            status: 'FAILED',
+            error: error.message
+          })
+        })
     }
 
     // Wait for all remaining executions
-    console.log(`[PARALLEL] ⏳ Waiting for ${activePromises.length} remaining executions...`)
-    const results = await Promise.allSettled(activePromises)
+    await Promise.allSettled(executionPromises)
 
     // Update batch status
     const failedCount = executions.filter(e => e.status === 'FAILED').length
@@ -107,8 +104,6 @@ export const parallelExecutionService = {
         failureCount: failedCount
       }
     })
-
-    console.log(`[PARALLEL] ✨ Parallel batch complete: ${passedCount} passed, ${failedCount} failed`)
 
     return {
       executionBatchId: executionBatch.id,
@@ -140,8 +135,6 @@ export const parallelExecutionService = {
         throw new Error(`Scenario ${scenario.id} not found`)
       }
 
-      console.log(`[PARALLEL] Starting scenario: ${scenarioData.name}`)
-
       const execution = await executionService.executeScenario(
         scenario.id,
         scenarioData.steps,
@@ -164,7 +157,6 @@ export const parallelExecutionService = {
       clearTimeout(timeoutId)
 
       if (error.name === 'AbortError') {
-        console.log(`[PARALLEL] ⏱️ Execution timeout for scenario ${scenario.id}`)
         throw new Error(`Execution timeout after ${timeout}ms`)
       }
 
@@ -179,8 +171,15 @@ export const parallelExecutionService = {
    */
   async queueScenario(scenarioId, options = {}) {
     this.executionQueue.push({ scenarioId, options, queuedAt: new Date() })
-    console.log(`[PARALLEL] 📋 Scenario queued. Queue size: ${this.executionQueue.length}`)
     return { queued: true, queueSize: this.executionQueue.length }
+  },
+
+  /**
+   * Get execution batch status (alias for getBatchDetails)
+   * @param {string} batchId
+   */
+  async getExecutionBatchStatus(batchId) {
+    return this.getBatchDetails(batchId)
   },
 
   /**
@@ -219,12 +218,10 @@ export const parallelExecutionService = {
   },
 
   /**
-   * Cancel execution batch (stop all running scenarios)
+   * Cancel/Stop execution batch (stop all running scenarios)
    * @param {string} batchId
    */
-  async cancelBatch(batchId) {
-    console.log(`[PARALLEL] ⛔ Cancelling batch ${batchId}...`)
-
+  async stopBatch(batchId) {
     // Update all running executions in batch
     await prisma.execution.updateMany({
       where: {
@@ -238,15 +235,22 @@ export const parallelExecutionService = {
     })
 
     // Update batch status
-    await prisma.executionBatch.update({
+    const result = await prisma.executionBatch.update({
       where: { id: batchId },
       data: {
-        status: 'CANCELLED',
+        status: 'STOPPED',
         completedAt: new Date()
       }
     })
 
-    console.log(`[PARALLEL] ✅ Batch cancelled`)
+    return result
+  },
+
+  /**
+   * @deprecated Use stopBatch instead
+   */
+  async cancelBatch(batchId) {
+    return this.stopBatch(batchId)
   },
 
   /**
@@ -274,7 +278,6 @@ export const parallelExecutionService = {
     }
 
     const queueItem = this.executionQueue.shift()
-    console.log(`[PARALLEL] Processing queued scenario: ${queueItem.scenarioId}`)
 
     try {
       const scenario = await prisma.scenario.findUnique({
@@ -290,7 +293,40 @@ export const parallelExecutionService = {
 
       this.activeExecutions.set(execution.id, execution)
     } catch (error) {
-      console.error(`[PARALLEL] Error processing queue: ${error.message}`)
+      // Error handling for queue processing - silently continue
+    }
+  },
+
+  /**
+   * Aggregate results from parallel executions
+   * @param {Array<Object>} executions - Array of execution results
+   * @returns {Object} - Aggregated statistics
+   */
+  aggregateResults(executions) {
+    if (!executions || executions.length === 0) {
+      return {
+        totalExecutions: 0,
+        passedCount: 0,
+        failedCount: 0,
+        averageDuration: 0,
+        successRate: 0
+      }
+    }
+
+    const passedCount = executions.filter(e => e.status === 'PASSED').length
+    const failedCount = executions.filter(e => e.status === 'FAILED').length
+    const totalDuration = executions.reduce((sum, e) => sum + (e.duration || 0), 0)
+    const averageDuration = executions.length > 0 ? totalDuration / executions.length : 0
+    const successRate = executions.length > 0 
+      ? parseFloat(((passedCount / executions.length) * 100).toFixed(2))
+      : 0
+
+    return {
+      totalExecutions: executions.length,
+      passedCount,
+      failedCount,
+      averageDuration: Math.round(averageDuration),
+      successRate
     }
   }
 }
