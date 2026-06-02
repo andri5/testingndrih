@@ -73,7 +73,19 @@ describe('ParallelExecutionService', () => {
   describe('executeParallel', () => {
     it('should create execution batch', async () => {
       prisma.executionBatch.create.mockResolvedValueOnce(mockBatch)
-      executionService.executeScenario.mockResolvedValueOnce(mockExecution)
+      prisma.scenario.findUnique.mockResolvedValue({
+        id: 'scenario-1',
+        name: 'Test Scenario',
+        userId: 'user-123',
+        steps: []
+      })
+      executionService.executeScenario.mockResolvedValueOnce({
+        id: 'exec-123',
+        status: 'PASSED',
+        passedSteps: 5,
+        failedSteps: 0,
+        duration: 1000
+      })
 
       await parallelExecutionService.executeParallel(mockScenarios, { userId: 'user-123' })
 
@@ -100,7 +112,19 @@ describe('ParallelExecutionService', () => {
 
     it('should execute scenarios within concurrency limit', async () => {
       prisma.executionBatch.create.mockResolvedValueOnce(mockBatch)
-      executionService.executeScenario.mockResolvedValueOnce(mockExecution)
+      prisma.scenario.findUnique.mockResolvedValue({
+        id: 'scenario-1',
+        name: 'Test Scenario',
+        userId: 'user-123',
+        steps: []
+      })
+      executionService.executeScenario.mockResolvedValue({
+        id: 'exec-123',
+        status: 'PASSED',
+        passedSteps: 5,
+        failedSteps: 0,
+        duration: 1000
+      })
 
       const result = await parallelExecutionService.executeParallel(mockScenarios, {
         userId: 'user-123',
@@ -113,7 +137,19 @@ describe('ParallelExecutionService', () => {
 
     it('should queue scenarios exceeding concurrency limit', async () => {
       prisma.executionBatch.create.mockResolvedValueOnce(mockBatch)
-      executionService.executeScenario.mockResolvedValueOnce(mockExecution)
+      prisma.scenario.findUnique.mockResolvedValue({
+        id: 'scenario-1',
+        name: 'Test Scenario',
+        userId: 'user-123',
+        steps: []
+      })
+      executionService.executeScenario.mockResolvedValue({
+        id: 'exec-123',
+        status: 'PASSED',
+        passedSteps: 5,
+        failedSteps: 0,
+        duration: 1000
+      })
 
       const manyScenarios = Array.from({ length: 10 }, (_, i) => ({
         id: `scenario-${i}`,
@@ -131,7 +167,19 @@ describe('ParallelExecutionService', () => {
 
     it('should apply timeout to each execution', async () => {
       prisma.executionBatch.create.mockResolvedValueOnce(mockBatch)
-      executionService.executeScenario.mockResolvedValueOnce(mockExecution)
+      prisma.scenario.findUnique.mockResolvedValue({
+        id: 'scenario-1',
+        name: 'Test Scenario',
+        userId: 'user-123',
+        steps: []
+      })
+      executionService.executeScenario.mockResolvedValue({
+        id: 'exec-123',
+        status: 'PASSED',
+        passedSteps: 5,
+        failedSteps: 0,
+        duration: 1000
+      })
 
       const timeout = 300000 // 5 minutes
       await parallelExecutionService.executeParallel(mockScenarios, {
@@ -147,7 +195,19 @@ describe('ParallelExecutionService', () => {
 
     it('should track active executions', async () => {
       prisma.executionBatch.create.mockResolvedValueOnce(mockBatch)
-      executionService.executeScenario.mockResolvedValueOnce(mockExecution)
+      prisma.scenario.findUnique.mockResolvedValue({
+        id: 'scenario-1',
+        name: 'Test Scenario',
+        userId: 'user-123',
+        steps: []
+      })
+      executionService.executeScenario.mockResolvedValue({
+        id: 'exec-123',
+        status: 'PASSED',
+        passedSteps: 5,
+        failedSteps: 0,
+        duration: 1000
+      })
 
       await parallelExecutionService.executeParallel(mockScenarios, {
         userId: 'user-123'

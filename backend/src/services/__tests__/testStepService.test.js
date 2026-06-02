@@ -1,3 +1,5 @@
+jest.mock('../../lib/prisma.js')
+
 import { prisma } from '../../lib/prisma.js'
 import {
   createTestStep,
@@ -13,6 +15,46 @@ import {
 describe('TestStepService', () => {
   const userId = 'user-1'
   const scenarioId = 'scenario-1'
+
+  beforeEach(() => {
+    jest.clearAllMocks()
+
+    // Setup prisma mocks
+    prisma.scenario = {
+      findUnique: jest.fn(),
+      findMany: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn()
+    }
+
+    prisma.testStep = {
+      findUnique: jest.fn(),
+      findMany: jest.fn(),
+      findFirst: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+      count: jest.fn()
+    }
+
+    // Important: Mock $transaction to execute callback directly
+    prisma.$transaction = jest.fn(async (callback) => {
+      const tx = {
+        testStep: {
+          findFirst: jest.fn(),
+          create: jest.fn()
+        }
+      }
+      // Use the real testStep mocks
+      tx.testStep.findFirst = prisma.testStep.findFirst
+      tx.testStep.create = prisma.testStep.create
+      return callback(tx)
+    })
+  })
+
+  afterEach(() => {
+    jest.clearAllMocks()
+  })
 
   describe('createTestStep', () => {
     it('should create a test step', async () => {
