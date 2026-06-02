@@ -456,7 +456,64 @@ docker compose logs -f db
 
 ---
 
-## 🚀 Quick Start
+## � Phase 2: Analytics Dashboard (June 2026)
+
+### Overview
+Comprehensive analytics dashboard with data visualization, providing insights into test execution metrics, performance trends, and failure analysis.
+
+### Backend Implementation
+**Services** (`backend/src/services/analyticsService.js`)
+- `getPassFailTrend(userId, days)` - Daily pass/fail statistics
+- `getTopFailingSteps(userId, limit)` - Most frequently failing steps ranked
+- `getExecutionVolume(userId, days)` - Daily execution activity tracking
+- `getScenarioPerformance(userId, limit)` - Scenario success rate ranking
+
+**API Endpoints** (`backend/src/routes/analyticsRoutes.js`)
+```
+GET /api/analytics/dashboard/trends?days=30
+GET /api/analytics/dashboard/failing-steps?limit=10
+GET /api/analytics/dashboard/volume?days=30
+GET /api/analytics/dashboard/scenario-performance?limit=20
+```
+
+### Frontend Implementation
+**Enhanced Page** (`frontend/src/pages/AnalyticsPage.jsx`)
+- **Pass/Fail Trend Chart** (ComposedChart) - Shows daily pass/fail execution counts
+- **Execution Volume Chart** (AreaChart) - Displays testing activity intensity
+- **Top Failing Steps** (BarChart) - Ranked failing steps with error counts
+- **Scenario Performance** (Progress bars) - Success rate ranking by scenario
+
+**Features**
+- Dynamic date range selector (7/30/90 days)
+- Interactive tooltips and legends
+- Responsive grid layout (mobile/desktop optimized)
+- Dark/Light theme support
+- Bilingual interface (EN/ID)
+
+**API Methods** (`frontend/src/services/api.js`)
+```javascript
+analyticsAPI.getPassFailTrend(days)
+analyticsAPI.getExecutionVolume(days)
+analyticsAPI.getTopFailingSteps(limit)
+analyticsAPI.getScenarioPerformance(limit)
+```
+
+### Test Coverage
+- `analyticsService.test.js` - 8 unit tests (service layer)
+- `analyticsController.test.js` - 10 unit tests (controller layer)
+- Test Suite: **273/295 tests passing (92.5%)**
+
+### Total Deliverables
+- 4 backend service functions
+- 4 API controller handlers
+- 4 API endpoints
+- 4 frontend chart components
+- 18 new test cases
+- 1,500+ lines of production code
+
+---
+
+## �🚀 Quick Start
 
 1. **Clone & Setup**
    ```bash
