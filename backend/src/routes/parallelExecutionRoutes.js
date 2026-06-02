@@ -29,7 +29,7 @@ router.post('/execute', async (req, res) => {
         id: { in: scenarioIds },
         userId: req.user.id
       },
-      include: { steps: true }
+      include: { testSteps: true }
     })
 
     if (scenarios.length !== scenarioIds.length) {

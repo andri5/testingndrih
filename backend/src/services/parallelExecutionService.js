@@ -128,7 +128,7 @@ export const parallelExecutionService = {
     try {
       const scenarioData = await prisma.scenario.findUnique({
         where: { id: scenario.id },
-        include: { steps: true }
+        include: { testSteps: true }
       })
 
       if (!scenarioData) {
@@ -137,7 +137,7 @@ export const parallelExecutionService = {
 
       const execution = await executionService.executeScenario(
         scenario.id,
-        scenarioData.steps,
+        scenarioData.testSteps,
         null,
         { batchId, signal: controller.signal }
       )
