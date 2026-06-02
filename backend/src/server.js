@@ -41,10 +41,16 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
 // Rate limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 1000 // limit each IP to 1000 requests per windowMs
-})
+let limiter
+if (process.env.NODE_ENV === 'test') {
+  // Disable rate limiting in test environment
+  limiter = (req, res, next) => next()
+} else {
+  limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 1000 // limit each IP to 1000 requests per windowMs
+  })
+}
 app.use('/api/', limiter)
 
 // Health check endpoint
