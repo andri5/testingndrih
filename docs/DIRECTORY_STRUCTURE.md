@@ -1,325 +1,295 @@
-# 📋 Complete Directory Structure
+# Directory Structure
 
-Last Updated: May 13, 2026  
-Version: 3.0
+Struktur folder lengkap project **Test Sambil Ngopi** (TestingNDRIH).
+
+**Last Updated:** June 4, 2026
 
 ---
 
-## Root Directory
+## Root
 
 ```
 testingndrih/
-├── 📄 README.md                      # Project overview & quick start
-├── 📄 package.json                   # Monorepo package definition
-├── 📄 commitlint.config.js           # Commit message validation
-├── 📄 docker-compose.yml             # Docker orchestration config
-├── 📄 Dockerfile                     # Main application Docker image
-├── 📄 .env.example                   # Environment variables template
-├── 📄 .gitignore                     # Git ignore rules
-├── 📄 .dockerignore                  # Docker ignore rules
+├── README.md                       # Overview & quick start
+├── PROJECT_STRUCTURE.md            # Redirect ke /docs
+├── package.json                    # Monorepo workspaces + health-check script
+├── docker-compose.yml              # PostgreSQL + app
+├── Dockerfile                      # Multi-stage build
+├── .env.example                    # Environment template
+├── commitlint.config.js            # Conventional commits
 │
-├── 📁 backend/                       # Backend API Server (Node.js/Express)
-├── 📁 frontend/                      # Frontend Application (React 18)
-├── 📁 .github/                       # GitHub workflows & config
-├── 📁 .husky/                        # Git hooks configuration
-└── 📁 docs/                          # Documentation (NEW)
+├── scripts/
+│   └── health-check.js             # Cek kesehatan backend/frontend/DB
+│
+├── .github/workflows/
+│   ├── release.yml                 # Semantic release
+│   └── ci-run-scenario.example.yml # Contoh CI dengan API token
+│
+├── backend/                        # Node.js Express API
+├── frontend/                       # React SPA
+└── docs/                           # Dokumentasi
 ```
 
 ---
 
-## Backend Structure
+## Backend
 
 ```
 backend/
-├── 📄 package.json                   # Backend dependencies
-├── 📄 .env                           # Backend environment config
-├── 📄 Dockerfile                     # Backend container image
-├── 📄 jest.config.js                 # Testing configuration
-├── 📄 jest-setup.js                  # Jest setup
-├── 📄 babel.config.js                # Babel transpilation
-├── 📄 nodemon.json                   # Auto-reload on file changes
-├── 📄 seed.js                        # Database seeding script
+├── package.json
+├── jest.config.js
+├── jest-setup.js
+├── Dockerfile
 │
-├── 📁 src/
-│   ├── 📄 server.js                  # Express app entry point
-│   │
-│   ├── 📁 controllers/               # HTTP Request Handlers (13 files)
-│   │   ├── authController.js         # Authentication endpoints
-│   │   ├── scenarioController.js     # Scenario CRUD
-│   │   ├── testStepController.js     # Test step management
-│   │   ├── executionController.js    # Execution logic
-│   │   ├── recorderController.js     # Recording sessions
-│   │   ├── chainController.js        # Test chains
-│   │   ├── analyticsController.js    # Analytics & reports
-│   │   ├── searchController.js       # Search functionality
-│   │   ├── fileController.js         # File operations
-│   │   ├── importController.js       # Import scenarios
-│   │   ├── smokeTestController.js    # Smoke testing
-│   │   ├── stressTestController.js   # Stress testing
-│   │   ├── securityTestController.js # Security testing
-│   │   └── __tests__/                # Controller tests
-│   │
-│   ├── 📁 services/                  # Business Logic Layer (15+ files)
-│   │   ├── authService.js            # Auth & user management
-│   │   ├── scenarioService.js        # Scenario operations
-│   │   ├── testStepService.js        # Step transactions
-│   │   ├── executionService.js       # Playwright executor
-│   │   ├── recordingService.js       # Recording engine
-│   │   ├── chainService.js           # Chain execution
-│   │   ├── analyticsService.js       # Metrics & analytics
-│   │   ├── schedulerService.js       # Cron scheduling
-│   │   ├── parallelExecutionService  # Parallel runs
-│   │   ├── browserMatrixService      # Cross-browser testing
-│   │   ├── emailService.js           # Email sending
-│   │   ├── reportService.js          # Report generation
-│   │   ├── browserService.js         # Browser detection
-│   │   ├── fileService.js            # File operations
-│   │   └── __tests__/                # Service tests
-│   │
-│   ├── 📁 routes/                    # Express Routes (17 files)
-│   │   ├── authRoutes.js             # /api/auth/*
-│   │   ├── scenarioRoutes.js         # /api/scenarios/*
-│   │   ├── testStepRoutes.js         # /api/steps/*
-│   │   ├── executionRoutes.js        # /api/executions/*
-│   │   ├── recorderRoutes.js         # /api/recorder/*
-│   │   ├── chainRoutes.js            # /api/chains/*
-│   │   ├── analyticsRoutes.js        # /api/analytics/*
-│   │   ├── searchRoutes.js           # /api/search/*
-│   │   ├── schedulerRoutes.js        # /api/scheduler/*
-│   │   ├── fileRoutes.js             # /api/files/*
-│   │   ├── importRoutes.js           # /api/import/*
-│   │   ├── parallelExecutionRoutes   # /api/parallel/*
-│   │   ├── browserMatrixRoutes       # /api/browser-matrix/*
-│   │   ├── smokeTestRoutes.js        # /api/smoke/*
-│   │   ├── stressTestRoutes.js       # /api/stress/*
-│   │   ├── securityTestRoutes.js     # /api/security/*
-│   │   └── stepTypeRoutes.js         # /api/step-types/*
-│   │
-│   ├── 📁 middleware/                # Express Middleware (2+ files)
-│   │   ├── auth.js                   # JWT verification
-│   │   ├── errorHandler.js           # Error handling
-│   │   ├── logger.js                 # Request logging
-│   │   └── __tests__/                # Middleware tests
-│   │
-│   ├── 📁 lib/                       # Shared Libraries
-│   │   ├── prisma.js                 # Prisma client singleton
-│   │   └── swagger.js                # Swagger/OpenAPI config
-│   │
-│   └── 📁 utils/                     # Utility Functions
-│       ├── validators.js             # Input validation
-│       ├── formatters.js             # Data formatting
-│       └── helpers.js                # Helper utilities
+├── scripts/
+│   └── seed.js                     # Seed user & data awal
 │
-├── 📁 prisma/                        # Database Configuration
-│   ├── schema.prisma                 # Database schema
-│   └── migrations/                   # Database migration files
-│       ├── 20260309090326_init/
-│       ├── 20260309101939_add_qase_integration_models/
-│       ├── 20260414094618_add_hover_scroll_fileupload_video/
-│       ├── 20260414105432_add_drag_mock_route_step_types/
-│       ├── 20260420082956_remove_qase/
-│       ├── 20260421110533_add_test_chains/
-│       ├── 20260422040830_add_reset_token_fields/
-│       ├── 20260422073917_add_test_schedule/
-│       ├── 20260422080250_add_priority3_features/
-│       ├── 20260512000000_add_smoke_test_support/
-│       ├── 20260512110000_add_stress_test_support/
-│       └── 20260512120000_add_security_testing_support/
+├── src/
+│   ├── server.js                   # Entry point Express
+│   │
+│   ├── controllers/                # HTTP handlers (22 controllers)
+│   │   ├── authController.js
+│   │   ├── scenarioController.js
+│   │   ├── testStepController.js
+│   │   ├── executionController.js
+│   │   ├── recorderController.js
+│   │   ├── chainController.js
+│   │   ├── analyticsController.js
+│   │   ├── searchController.js
+│   │   ├── fileController.js
+│   │   ├── importController.js
+│   │   ├── smokeTestController.js
+│   │   ├── stressTestController.js
+│   │   ├── securityTestController.js
+│   │   ├── apiTestController.js
+│   │   ├── issueController.js
+│   │   ├── notificationController.js
+│   │   ├── apiTokenController.js
+│   │   ├── ciController.js
+│   │   ├── environmentController.js
+│   │   ├── visualRegressionController.js
+│   │   └── __tests__/
+│   │
+│   ├── services/                   # Business logic (30+ services)
+│   │   ├── scenarioService.js
+│   │   ├── testStepService.js
+│   │   ├── executionService.js
+│   │   ├── recorderService.js
+│   │   ├── chainService.js
+│   │   ├── schedulerService.js
+│   │   ├── parallelExecutionService.js
+│   │   ├── browserMatrixService.js
+│   │   ├── smokeTestService.js
+│   │   ├── stressTestService.js
+│   │   ├── securityTestService.js
+│   │   ├── analyticsService.js
+│   │   ├── searchService.js
+│   │   ├── reportService.js
+│   │   ├── emailService.js
+│   │   ├── notificationService.js
+│   │   ├── apiTestService.js
+│   │   ├── issueService.js
+│   │   ├── apiTokenService.js
+│   │   ├── environmentService.js
+│   │   ├── visualRegressionService.js
+│   │   ├── screenshotComparisonService.js
+│   │   ├── locatorSuggestionService.js
+│   │   ├── locatorRepairService.js
+│   │   ├── retryEngineService.js
+│   │   ├── excelImportService.js
+│   │   ├── fileService.js
+│   │   ├── browserService.js
+│   │   └── __tests__/
+│   │
+│   ├── routes/                     # REST endpoints (24 route files)
+│   │   ├── authRoutes.js
+│   │   ├── scenarioRoutes.js
+│   │   ├── testStepRoutes.js
+│   │   ├── executionRoutes.js
+│   │   ├── recorderRoutes.js
+│   │   ├── chainRoutes.js
+│   │   ├── schedulerRoutes.js
+│   │   ├── parallelExecutionRoutes.js
+│   │   ├── browserMatrixRoutes.js
+│   │   ├── smokeTestRoutes.js
+│   │   ├── stressTestRoutes.js
+│   │   ├── securityTestRoutes.js
+│   │   ├── analyticsRoutes.js
+│   │   ├── searchRoutes.js
+│   │   ├── fileRoutes.js
+│   │   ├── importRoutes.js
+│   │   ├── stepTypeRoutes.js
+│   │   ├── apiTestRoutes.js
+│   │   ├── issueRoutes.js
+│   │   ├── notificationRoutes.js
+│   │   ├── apiTokenRoutes.js
+│   │   ├── ciRoutes.js
+│   │   ├── environmentRoutes.js
+│   │   └── visualRegressionRoutes.js
+│   │
+│   ├── middleware/
+│   │   └── auth.js
+│   │
+│   ├── lib/
+│   │   ├── prisma.js
+│   │   ├── swagger.js
+│   │   ├── logger.js
+│   │   └── browserLauncher.js
+│   │
+│   └── utils/
+│       ├── jwt.js
+│       ├── password.js
+│       ├── errorHandler.js
+│       ├── secretCrypto.js
+│       ├── variableSubstitution.js
+│       ├── imageDiff.js
+│       └── __tests__/
 │
-├── 📁 public/                        # Static assets
-│   └── logo-icon.png                 # App logo
+├── tests/
+│   ├── integration/                # Auth, scenario, execution, parallel, scheduler
+│   ├── security/                   # SQL injection, XSS, CSRF, OWASP
+│   └── database/                   # Integrity, transactions, performance
 │
-├── 📁 templates/                     # CSV templates
-│   ├── basic-navigation.csv
-│   ├── ecommerce-flow.csv
-│   ├── form-test.csv
-│   └── login-test.csv
+├── prisma/
+│   ├── schema.prisma
+│   └── migrations/                 # 15 migrations
 │
-└── 📁 uploads/                       # User uploads
-    └── videos/                       # Recorded videos
+├── templates/                      # CSV import templates
+├── public/
+└── uploads/                        # Screenshots, videos, visual baselines (gitignored)
 ```
 
 ---
 
-## Frontend Structure
+## Frontend
 
 ```
 frontend/
-├── 📄 package.json                   # Dependencies & scripts
-├── 📄 vite.config.js                 # Vite configuration
-├── 📄 tailwind.config.js             # TailwindCSS config
-├── 📄 postcss.config.js              # PostCSS configuration
-├── 📄 playwright.config.js           # Playwright E2E config
-├── 📄 .eslintrc.cjs                  # ESLint rules
-├── 📄 index.html                     # HTML entry point
-├── 📄 .gitignore                     # Git ignore rules
+├── package.json
+├── vite.config.js
+├── tailwind.config.js
+├── playwright.config.js
+├── index.html
 │
-├── 📁 src/
-│   ├── 📄 main.jsx                   # React app entry
-│   ├── 📄 App.jsx                    # Main app component
-│   ├── 📄 index.css                  # Global styles
+├── src/
+│   ├── main.jsx
+│   ├── App.jsx                     # Routing & layout
+│   ├── index.css
 │   │
-│   ├── 📁 pages/                     # Page Components (28 files)
-│   │   ├── DashboardPage.jsx         # Dashboard overview
-│   │   ├── ScenariosPage.jsx         # Scenario management
-│   │   ├── ScenarioDetailPage.jsx    # Scenario editor
-│   │   ├── ChainsPage.jsx            # Chain management
-│   │   ├── ChainBuilderPage.jsx      # Chain builder interface
-│   │   ├── ChainExecutorPage.jsx     # Execute chains
-│   │   ├── ExecutionPage.jsx         # Manual execution
-│   │   ├── ParallelExecutionPage.jsx # Parallel batch runs
-│   │   ├── BrowserMatrixPage.jsx     # Cross-browser testing
-│   │   ├── SmokeTest.jsx             # Smoke test runner
-│   │   ├── StressTestPage.jsx        # Stress test runner
-│   │   ├── SecurityTestPage.jsx      # Security test runner
-│   │   ├── SchedulerPage.jsx         # Schedule configuration
-│   │   ├── ReportsPage.jsx           # Test reports
-│   │   ├── AnalyticsPage.jsx         # Analytics & metrics
-│   │   ├── SettingsPage.jsx          # User settings
-│   │   ├── LoginPage.jsx             # Login form
-│   │   ├── RegisterPage.jsx          # Registration form
-│   │   ├── ForgotPasswordPage.jsx    # Password recovery
-│   │   ├── ResetPasswordPage.jsx     # Password reset form
-│   │   ├── SmokeTestHelpPage.jsx     # Help content
-│   │   ├── StressTestHelpPage.jsx    # Help content
-│   │   ├── SecurityTestHelpPage.jsx  # Help content
-│   │   ├── NotFoundPage.jsx          # 404 page
-│   │   ├── ForbiddenPage.jsx         # 403 page
-│   │   ├── ServerErrorPage.jsx       # 500 page
-│   │   ├── MaintenancePage.jsx       # Maintenance page
-│   │   └── SessionExpiredPage.jsx    # Session timeout page
+│   ├── pages/                      # 33 halaman
+│   │   ├── DashboardPage.jsx
+│   │   ├── ScenariosPage.jsx
+│   │   ├── ScenarioDetailPage.jsx
+│   │   ├── ChainsPage.jsx
+│   │   ├── ChainBuilderPage.jsx
+│   │   ├── ChainExecutorPage.jsx
+│   │   ├── ExecutionPage.jsx
+│   │   ├── ParallelExecutionPage.jsx
+│   │   ├── BrowserMatrixPage.jsx
+│   │   ├── SchedulerPage.jsx
+│   │   ├── SmokeTest.jsx
+│   │   ├── StressTestPage.jsx
+│   │   ├── SecurityTestPage.jsx
+│   │   ├── ApiTestingPage.jsx
+│   │   ├── IssuesPage.jsx
+│   │   ├── EnvironmentsPage.jsx
+│   │   ├── VisualRegressionPage.jsx
+│   │   ├── AnalyticsPage.jsx
+│   │   ├── ReportsPage.jsx
+│   │   ├── SettingsPage.jsx
+│   │   ├── LoginPage.jsx / RegisterPage.jsx
+│   │   ├── ForgotPasswordPage.jsx / ResetPasswordPage.jsx
+│   │   ├── *HelpPage.jsx / error pages
+│   │   └── ...
 │   │
-│   ├── 📁 components/                # Reusable Components (29 files)
-│   │   ├── Layout.jsx                # Main layout wrapper
-│   │   ├── ProtectedRoute.jsx        # Route protection
-│   │   ├── ErrorBoundary.jsx         # Error handling
-│   │   ├── OfflineBanner.jsx         # Connection status
-│   │   ├── Loading.jsx               # Loading state UI
-│   │   ├── HelpModal.jsx             # Help content modal
-│   │   │
-│   │   ├── Form Components
-│   │   │   ├── ScenarioForm.jsx      # Scenario input
-│   │   │   ├── ScenarioSearch.jsx    # Scenario search
-│   │   │   └── ImportPreviewModal.jsx # Import preview
-│   │   │
-│   │   ├── Test Runners
-│   │   │   ├── SmokeTestRunner.jsx   # Smoke test UI
-│   │   │   ├── SmokeTestHistory.jsx  # Smoke history
-│   │   │   ├── SmokeTestSummary.jsx  # Smoke summary
-│   │   │   ├── StressTestRunner.jsx  # Stress test UI
-│   │   │   ├── StressTestHistory.jsx # Stress history
-│   │   │   ├── StressTestSummary.jsx # Stress summary
-│   │   │   ├── StressTestMetrics.jsx # Metrics display
-│   │   │   ├── SecurityScanRunner.jsx # Security test UI
-│   │   │   ├── SecurityHistory.jsx   # Security history
-│   │   │   ├── SecuritySummary.jsx   # Security summary
-│   │   │   └── SecurityFindings.jsx  # Findings display
-│   │   │
-│   │   ├── Utilities & Helpers
-│   │   │   ├── BrowserSelector.jsx   # Browser selection
-│   │   │   ├── ExecuteScenarioButton.jsx
-│   │   │   ├── QuickRecordModal.jsx  # Quick recording
-│   │   │   ├── SmartSuggestionPanel.jsx
-│   │   │   ├── ScenariosList.jsx     # Scenario list view
-│   │   │   ├── TestStepList.jsx      # Step list display
-│   │   │   ├── StepErrorDetail.jsx   # Error details
-│   │   │   ├── ExportButtons.jsx     # PDF/CSV export
-│   │   │   ├── TemplatePickerModal.jsx
-│   │   │   └── ui/index.jsx          # UI utilities
+│   ├── components/                 # 30+ komponen reusable
+│   │   ├── Layout.jsx
+│   │   ├── ProtectedRoute.jsx
+│   │   ├── HelpModal.jsx
+│   │   ├── IntegrationsSettings.jsx
+│   │   ├── ExecuteScenarioButton.jsx
+│   │   ├── ScenariosList.jsx
+│   │   ├── TestStepList.jsx
+│   │   ├── BrowserSelector.jsx
+│   │   ├── SmokeTest* / StressTest* / Security*
+│   │   └── ui/index.jsx
 │   │
-│   ├── 📁 services/                  # API Clients (5+ files)
-│   │   ├── api.js                    # Axios client
-│   │   ├── authService.js            # Auth API calls
-│   │   ├── scenarioService.js        # Scenario API calls
-│   │   ├── executionService.js       # Execution API calls
-│   │   └── analyticsService.js       # Analytics API calls
+│   ├── services/                   # API clients
+│   │   ├── api.js
+│   │   ├── authService.js
+│   │   ├── scenarioService.js
+│   │   ├── executionService.js
+│   │   └── analyticsService.js
 │   │
-│   ├── 📁 store/                     # Zustand State Management (3 files)
-│   │   ├── authStore.js              # Auth state (user, token)
-│   │   ├── settingsStore.js          # Theme, language
-│   │   └── uiStore.js                # UI state (modals, etc)
+│   ├── store/                      # Zustand
+│   │   ├── authStore.js
+│   │   ├── settingsStore.js
+│   │   └── uiStore.js
 │   │
-│   ├── 📁 hooks/                     # Custom React Hooks
-│   │   └── useLoading.js             # Loading state hook
-│   │
-│   ├── 📁 utils/                     # Utility Functions (3 files)
-│   │   ├── exportUtils.js            # Export to CSV/PDF/JSON
-│   │   └── testAnalysis.js           # Test result analysis
-│   │
-│   ├── 📁 data/                      # Static Content
-│   │   └── helpContent.js            # Help text & tooltips
-│   │
-│   └── 📁 __tests__/                 # Unit Tests
-│       └── (test files)
+│   └── utils/
+│       ├── exportUtils.js
+│       └── testAnalysis.js
 │
-├── 📁 e2e/                           # End-to-End Tests (Playwright)
-│   ├── auth.spec.js
-│   ├── comprehensive.spec.js
-│   ├── execution-api.spec.js
-│   ├── features-e2e.spec.js
-│   ├── forgot-password.spec.js
-│   ├── mocked-auth.spec.js
-│   ├── scenarios.spec.js
-│   └── search.spec.js
+├── e2e/                            # 15 Playwright specs
+│   ├── auth.spec.js / auth-e2e.spec.js
+│   ├── scenarios.spec.js / scenario-e2e.spec.js
+│   ├── execution-e2e.spec.js
+│   ├── parallel-e2e.spec.js
+│   ├── scheduler-e2e.spec.js
+│   ├── browser-matrix-e2e.spec.js
+│   └── ...
 │
-├── 📁 public/                        # Static Assets
-│   └── logo-icon.png                 # App icon
-│
-└── 📁 node_modules/                  # Dependencies (gitignored)
+└── public/
 ```
 
 ---
 
-## Documentation Structure
+## Documentation
 
 ```
 docs/
-├── 📄 ARCHITECTURE.md                # Project overview & tech stack
-├── 📄 DIRECTORY_STRUCTURE.md         # This file
-├── 📄 SETUP.md                       # Installation & setup guide
-└── 📄 API_ENDPOINTS.md               # API documentation (optional)
+├── README.md               # Index dokumentasi
+├── ARCHITECTURE.md         # Arsitektur teknis
+├── DIRECTORY_STRUCTURE.md  # File ini
+├── SETUP.md                # Instalasi & troubleshooting
+└── TESTING.md              # Strategi & panduan testing
 ```
 
 ---
 
-## File Organization Best Practices
+## File Counts
 
-### Code Organization
-- ✅ **Controllers** group HTTP handlers by domain
-- ✅ **Services** contain reusable business logic
-- ✅ **Routes** define Express endpoints
-- ✅ **Pages** are top-level components (one per route)
-- ✅ **Components** are reusable, focused UI elements
-- ✅ **Utils** contain pure utility functions
-- ✅ **Tests** colocate with source code where possible
-
-### Naming Conventions
-- Controllers: `*Controller.js`
-- Services: `*Service.js`
-- Routes: `*Routes.js`
-- Pages: `*Page.jsx` or `*.jsx`
-- Components: PascalCase for React components
-- Utilities: camelCase functions
-
-### Documentation
-- README.md files in each major folder
-- JSDoc comments for complex functions
-- Component prop documentation
-- API endpoint documentation
+| Area | Count |
+|------|-------|
+| Backend controllers | 22 |
+| Backend services | 30+ |
+| Backend routes | 24 |
+| Frontend pages | 33 |
+| Frontend components | 30+ |
+| Database migrations | 15 |
+| E2E specs | 15 |
 
 ---
 
-## File Counts Summary
+## Konvensi Penamaan
 
-| Directory | Count | Notes |
-|-----------|-------|-------|
-| Backend Controllers | 13 | One per major feature |
-| Backend Services | 15+ | Reusable business logic |
-| Backend Routes | 17 | REST endpoints |
-| Frontend Pages | 28 | Feature + auth pages |
-| Frontend Components | 29 | Reusable & domain-specific |
-| Database Migrations | 12 | Version history |
+| Tipe | Pola |
+|------|------|
+| Controller | `*Controller.js` |
+| Service | `*Service.js` |
+| Route | `*Routes.js` |
+| Page | `*Page.jsx` |
+| Component | PascalCase `.jsx` |
 
-**Total Production Files**: ~150+  
-**Total Lines of Code**: ~15,000+
+---
 
+## File yang Dihapus (Cleanup Juni 2026)
+
+File berikut tidak lagi digunakan dan telah dihapus:
+
+- `backend/test-output.txt`, `test-final.txt`, `analytics-test*.txt`, `integration_test_output.txt`
+- `backend/test-api.html`, `frontend/test-translations.html`
+- `backend/create-user-simple.js`, `create-test-user.js` (diganti `backend/scripts/seed.js`)
+- `frontend/src/data/helpContent.js` (konten inline di `HelpModal.jsx`)
+- `frontend/src/hooks/useLoading.js` (menggunakan `loadingStore` langsung)
+- `health-check.js` (root) → `scripts/health-check.js`
