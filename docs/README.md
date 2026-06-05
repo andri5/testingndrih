@@ -46,6 +46,18 @@ Welcome to the **Test Sambil Ngopi** documentation. This folder contains compreh
 
 ---
 
+### [TESTING.md](./TESTING.md)
+**Testing Strategy & Guide**
+- Backend unit, integration, security tests
+- Frontend E2E (Playwright)
+- Visual regression & environment variable testing
+- CI/CD test workflow
+- Coverage targets & troubleshooting
+
+*Read this to:* Run tests and understand current test coverage.
+
+---
+
 ## 🎯 Quick Navigation
 
 ### 🚀 Getting Started
@@ -57,7 +69,7 @@ Welcome to the **Test Sambil Ngopi** documentation. This folder contains compreh
 - **Backend Development**: See [SETUP.md](./SETUP.md#-backend-setup-details)
 - **Frontend Development**: See [SETUP.md](./SETUP.md#-frontend-setup-details)
 - **Database Changes**: See [SETUP.md](./SETUP.md#-database-schema)
-- **Testing**: See [SETUP.md](./SETUP.md#running-tests)
+- **Testing**: See [TESTING.md](./TESTING.md)
 
 ### 🐳 Deployment
 - **Docker Setup**: See [SETUP.md](./SETUP.md#-docker-setup)
@@ -75,12 +87,12 @@ Welcome to the **Test Sambil Ngopi** documentation. This folder contains compreh
 
 | Metric | Count |
 |--------|-------|
-| **Backend Controllers** | 13 |
-| **Backend Services** | 15+ |
-| **Backend Routes** | 17 |
-| **Frontend Pages** | 28 |
-| **Frontend Components** | 29 |
-| **Database Migrations** | 12 |
+| **Backend Controllers** | 22 |
+| **Backend Services** | 30+ |
+| **Backend Routes** | 24 |
+| **Frontend Pages** | 33 |
+| **Frontend Components** | 30+ |
+| **Database Migrations** | 15 |
 | **Total Production Files** | 150+ |
 | **Lines of Code** | 15,000+ |
 
@@ -98,6 +110,11 @@ Welcome to the **Test Sambil Ngopi** documentation. This folder contains compreh
 ✅ **Scheduling**: Cron-based test automation  
 ✅ **Analytics & Reports**: Performance metrics  
 ✅ **PDF Export**: Generate professional reports  
+✅ **API Testing**: HTTP request builder & assertions  
+✅ **Issue Tracker**: Auto-create dari execution gagal  
+✅ **Environment Variables**: `{{var}}` substitution  
+✅ **Visual Regression**: Baseline capture & pixel diff  
+✅ **CI/CD Integration**: API tokens & remote run  
 
 ---
 
@@ -179,11 +196,12 @@ Welcome to the **Test Sambil Ngopi** documentation. This folder contains compreh
 | Date | Version | Changes |
 |------|---------|---------|
 | May 13, 2026 | 3.0 | Created comprehensive documentation structure |
+| June 4, 2026 | 3.1 | Cleanup unused files, update structure & testing docs |
 
 ---
 
-**Last Updated:** May 13, 2026  
-**Documentation Version:** 3.0  
+**Last Updated:** June 4, 2026  
+**Documentation Version:** 3.1  
 **Project Version:** 3.0.0  
 **Status:** Production Ready ✅
 

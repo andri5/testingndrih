@@ -17,6 +17,7 @@
     "test:frontend": "npm run test --workspace=frontend",
     "lint": "npm run lint --workspace=backend && npm run lint --workspace=frontend",
     "format": "npm run format:write --workspace=backend && npm run format:write --workspace=frontend",
+    "health-check": "node scripts/health-check.js",
     "prepare": "husky install"
   },
   "workspaces": [

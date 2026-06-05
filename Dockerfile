@@ -35,7 +35,7 @@ RUN npx playwright install --with-deps chromium
 # Copy backend source & database schema
 COPY backend/src ./src
 COPY backend/prisma ./prisma
-COPY backend/seed.js ./seed.js
+COPY backend/scripts ./scripts
 
 # Copy built React frontend → Express serves it as static files
 COPY --from=frontend-builder /build/dist ./public
@@ -46,4 +46,4 @@ RUN npx prisma generate
 EXPOSE 3000
 
 # On container start: start virtual display, run migrations, seed database, then launch server
-CMD ["sh", "-c", "Xvfb :99 -screen 0 1280x720x24 -nolisten tcp &  export DISPLAY=:99 && npx prisma migrate deploy && node seed.js && node src/server.js"]
+CMD ["sh", "-c", "Xvfb :99 -screen 0 1280x720x24 -nolisten tcp &  export DISPLAY=:99 && npx prisma migrate deploy && node scripts/seed.js && node src/server.js"]

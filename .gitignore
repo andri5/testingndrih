@@ -40,12 +40,17 @@ test-results.json
 test-results/
 playwright-report/
 blob-report/
+backend/test-output.txt
+backend/test-final.txt
+backend/analytics-test*.txt
+backend/integration_test_output.txt
 
 # Screenshot & uploads
 backend/screenshots/
 backend/uploads/*
 backend/uploads/screenshots/**
 backend/uploads/videos/**
+backend/uploads/visual/**
 !backend/uploads/.gitkeep
 !backend/uploads/screenshots/
 !backend/uploads/screenshots/.gitkeep

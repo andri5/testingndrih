@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client'
-import { hashPassword } from './src/utils/password.js'
+import { hashPassword } from '../src/utils/password.js'
 
 const prisma = new PrismaClient()
 
@@ -152,35 +152,25 @@ async function main() {
   try {
     console.log('🌱 Starting database seed...')
 
-    // Seed user — configure via SEED_EMAIL / SEED_PASSWORD env vars
     const seedEmail = process.env.SEED_EMAIL || 'admin@testingndrih.local'
     const seedPassword = process.env.SEED_PASSWORD || 'changeme123'
 
-    // ── 1. Create or find test user ──────────────────────
-    let user = await prisma.user.findUnique({
-      where: { email: seedEmail }
-    })
+    let user = await prisma.user.findUnique({ where: { email: seedEmail } })
 
     if (!user) {
       const hashedPassword = await hashPassword(seedPassword)
       user = await prisma.user.create({
-        data: {
-          email: seedEmail,
-          password: hashedPassword,
-          name: 'Admin User'
-        }
+        data: { email: seedEmail, password: hashedPassword, name: 'Admin User' }
       })
       console.log('✅ Seed user created:', user.email)
     } else {
       console.log('✅ Seed user already exists:', user.email)
     }
 
-    // ── 2. Seed 10 comprehensive test scenarios ──────────
     let created = 0
     let skipped = 0
 
     for (const sc of scenarios) {
-      // Skip if scenario with same name already exists for this user
       const existing = await prisma.scenario.findFirst({
         where: { name: sc.name, userId: user.id }
       })
@@ -219,7 +209,6 @@ async function main() {
 
     console.log(`\n✅ Seed complete: ${created} scenarios created, ${skipped} skipped (already exist)`)
     console.log(`📊 Total steps seeded: ${scenarios.reduce((sum, s) => sum + s.steps.length, 0)}`)
-
   } catch (error) {
     console.error('❌ Seed error:', error)
     process.exit(1)

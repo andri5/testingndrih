@@ -2,12 +2,13 @@
 
 **Intelligent Test Recording & Playback Engine** — Record user interactions using Playwright headless browser, convert to test steps, and execute with smart error handling and cross-browser testing support.
 
-> **� Documentation**: See [**`/docs`**](./docs/README.md) folder for complete guides  
-> **🏗️ Architecture**: Check [`/docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) for technical overview  
-> **📂 Structure**: View [`/docs/DIRECTORY_STRUCTURE.md`](./docs/DIRECTORY_STRUCTURE.md) for complete file organization  
-> **⚙️ Setup**: Follow [`/docs/SETUP.md`](./docs/SETUP.md) for installation & configuration  
-> **🚀 Quick Start**: Run `npm install && npm run dev` to start development  
-> **🐳 Docker**: Use `docker-compose up -d` for production deployment
+> **📚 Documentation**: See [**`/docs`**](./docs/README.md) for complete guides  
+> **🏗️ Architecture**: [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md)  
+> **📂 Structure**: [`docs/DIRECTORY_STRUCTURE.md`](./docs/DIRECTORY_STRUCTURE.md)  
+> **⚙️ Setup**: [`docs/SETUP.md`](./docs/SETUP.md)  
+> **🧪 Testing**: [`docs/TESTING.md`](./docs/TESTING.md)  
+> **🚀 Quick Start**: `npm install && npm run dev`  
+> **🐳 Docker**: `docker-compose up -d`
 
 ![Version](https://img.shields.io/badge/version-3.0.0-blue.svg)
 ![Status](https://img.shields.io/badge/status-production--ready-brightgreen.svg)
@@ -44,13 +45,18 @@
 - ✅ **Dialog Auto-Handling** — Auto-accept alert/confirm/prompt dialogs
 - ✅ **Step-by-Step Execution** — Full execution lifecycle with real-time status
 
-### 🌐 Advanced Testing Features (New in v2.0)
-- ✅ **Cross-Browser Testing** — Run same scenario on Chromium, Firefox, WebKit, Edge
-- ✅ **Parallel Execution** — Execute multiple scenarios simultaneously with concurrency control
-- ✅ **Test Scheduling** — Schedule test runs (Once, Hourly, Daily, Weekly)
-- ✅ **Retry Engine** — Smart retry mechanism for flaky tests
-- ✅ **Screenshot Comparison** — Visual regression testing support
-- ✅ **Browser Matrix** — Execute tests across browser/OS combinations
+### 🌐 Advanced Testing Features
+- ✅ **Cross-Browser Testing** — Chromium, Firefox, WebKit, Edge
+- ✅ **Parallel Execution** — Multiple scenarios dengan concurrency control
+- ✅ **Test Scheduling** — Once, Hourly, Daily, Weekly
+- ✅ **Retry Engine** — Smart retry untuk flaky tests
+- ✅ **Browser Matrix** — Cross-browser/OS combinations
+- ✅ **API Testing** — HTTP request builder dengan assertions (`/api-testing`)
+- ✅ **Issue Tracker** — Auto-create issue dari execution gagal (`/issues`)
+- ✅ **Environment Variables** — `{{var}}` substitution per environment (`/environments`)
+- ✅ **Visual Regression** — Baseline capture, pixel diff, approve/reject (`/visual-regression`)
+- ✅ **CI/CD Integration** — API tokens & remote scenario run
+- ✅ **Notifications** — Email & webhook saat execution selesai
 
 ### 🔐 Authentication & Security
 - ✅ **Forgot Password Flow** — Email-based password reset with 15-minute token expiry
@@ -301,63 +307,46 @@ docker-compose up -d --build
 docker-compose down -v
 ```
 
-### ⚡ Multi-Laptop Setup
+### Multi-Laptop Setup
 
-**Using 2 or more laptops?** Read [**MULTI_LAPTOP_SETUP.md**](MULTI_LAPTOP_SETUP.md) for:
-- ✅ How to sync database between laptops
-- ✅ Sharing test scenarios across devices
-- ✅ Docker remote database configuration
-- ✅ Network troubleshooting guide
-
-**Quick reference:**
-- **Laptop 1**: Run `docker-compose up -d` (hosts DB + App)
-- **Laptop 2**: Edit `.env` DATABASE_URL to point to Laptop 1 IP
-- **Both**: Access at `http://localhost:3000` — automatically synced
+Untuk development di 2+ laptop, arahkan `DATABASE_URL` di `.env` ke IP laptop yang menjalankan PostgreSQL/Docker. Lihat [`docs/SETUP.md`](./docs/SETUP.md) untuk detail konfigurasi jaringan.
 
 ---
 
 ## 📖 Documentation
 
-Start here based on your needs:
-
 | Need | Document |
 |------|----------|
-| **Multi-Laptop Setup** | [`MULTI_LAPTOP_SETUP.md`](MULTI_LAPTOP_SETUP.md) 🆕 |
-| **Getting started** | [`docs/guides/00_INDEX.md`](docs/guides/00_INDEX.md) |
-| **Quick commands** | [`docs/guides/QUICK_REFERENCE.md`](docs/guides/QUICK_REFERENCE.md) |
-| **Manual testing** | [`docs/guides/MANUAL_TESTING_GUIDE.md`](docs/guides/MANUAL_TESTING_GUIDE.md) |
-| **Architecture** | [`docs/guides/RECORDER_2.0_GUIDE.md`](docs/guides/RECORDER_2.0_GUIDE.md) |
-| **Upgrading from v1.1** | [`docs/guides/MIGRATION_GUIDE.md`](docs/guides/MIGRATION_GUIDE.md) |
-| **Test results** | [`docs/guides/FINAL_TEST_REPORT.md`](docs/guides/FINAL_TEST_REPORT.md) |
-| **Implementation status** | [`docs/guides/IMPLEMENTATION_STATUS.md`](docs/guides/IMPLEMENTATION_STATUS.md) |
-| **Project structure** | [`PROJECT_STRUCTURE.md`](PROJECT_STRUCTURE.md) |
+| **Documentation index** | [`docs/README.md`](docs/README.md) |
+| **Architecture** | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) |
+| **Setup & config** | [`docs/SETUP.md`](docs/SETUP.md) |
+| **Directory structure** | [`docs/DIRECTORY_STRUCTURE.md`](docs/DIRECTORY_STRUCTURE.md) |
+| **Testing guide** | [`docs/TESTING.md`](docs/TESTING.md) |
+| **Project structure (redirect)** | [`PROJECT_STRUCTURE.md`](PROJECT_STRUCTURE.md) |
 
 ---
 
 ## 🧪 Testing
 
-### Run Tests
 ```bash
-# Backend unit/integration (Jest)
-cd backend
+# Semua test (monorepo)
 npm test
+
+# Backend unit + integration (Jest)
+cd backend && npm test
+cd backend && npm test -- --coverage
 
 # Frontend unit (Vitest)
-cd ../frontend
-npm test
+cd frontend && npm test
 
-# Frontend E2E (Playwright)
-npm run e2e
+# E2E (Playwright — butuh backend & frontend running)
+cd frontend && npm run e2e
+
+# Health check
+npm run health-check
 ```
 
-### Test Results
-- ✅ **Unit Tests**: 6/6 Passing
-- ✅ **API Tests**: 5/5 Passing
-- ✅ **E2E Flow**: Full workflow verified
-- ✅ **Integration**: Database persistence confirmed
-- ✅ **Overall**: 17+ test cases passing
-
-See [`docs/guides/FINAL_TEST_REPORT.md`](docs/guides/FINAL_TEST_REPORT.md) for complete test report.
+**Status:** 273/295 backend tests passing (92.5%). Lihat [`docs/TESTING.md`](docs/TESTING.md) untuk panduan lengkap.
 
 ---
 
@@ -398,7 +387,7 @@ curl -X POST http://localhost:5001/api/recorder/stop \
   -d '{"scenarioId":"123"}'
 ```
 
-See [`docs/guides/QUICK_REFERENCE.md`](docs/guides/QUICK_REFERENCE.md) for full API reference.
+Lihat Swagger UI di `http://localhost:5001/api/docs` untuk referensi API lengkap.
 
 ---
 
@@ -427,15 +416,17 @@ See [`docs/guides/QUICK_REFERENCE.md`](docs/guides/QUICK_REFERENCE.md) for full 
 ## 🛠️ Development
 
 ### Project Structure
-See [`PROJECT_STRUCTURE.md`](PROJECT_STRUCTURE.md) for detailed folder organization.
 
-```bash
-# Key directories
-backend/src/           # Backend source code
-frontend/src/          # Frontend React code
-docs/guides/           # All documentation
-frontend/e2e/          # E2E test files
-backend/uploads/       # Runtime screenshots/videos (ignored by git)
+Lihat [`docs/DIRECTORY_STRUCTURE.md`](docs/DIRECTORY_STRUCTURE.md) untuk organisasi folder lengkap.
+
+```
+backend/src/           # API Express + services
+backend/scripts/       # Seed & utilitas backend
+frontend/src/          # React SPA
+frontend/e2e/          # Playwright E2E tests
+docs/                  # Dokumentasi terpusat
+scripts/               # health-check.js
+backend/uploads/       # Screenshots, videos (gitignored)
 ```
 
 ### Making Changes
@@ -504,24 +495,24 @@ curl http://localhost:5001/health
 cd backend
 npm test -- --verbose
 
-# See full test report
-cat ../docs/guides/FINAL_TEST_REPORT.md
+# Panduan testing lengkap
+# Lihat docs/TESTING.md
 ```
 
-For more help, see:
-- [`docs/guides/MANUAL_TESTING_GUIDE.md`](docs/guides/MANUAL_TESTING_GUIDE.md) — Manual testing guide
-- [`docs/guides/RECORDER_2.0_GUIDE.md`](docs/guides/RECORDER_2.0_GUIDE.md) — Architecture & troubleshooting
-- [`docs/guides/QUICK_REFERENCE.md`](docs/guides/QUICK_REFERENCE.md) — Quick commands
+Bantuan lebih lanjut:
+- [`docs/TESTING.md`](docs/TESTING.md) — Panduan testing
+- [`docs/SETUP.md`](docs/SETUP.md) — Setup & troubleshooting
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — Arsitektur teknis
 
 ---
 
 ## 📞 Support
 
 ### Documentation
-- **Full Guides**: [`docs/guides/`](docs/guides/)
-- **Architecture**: [`RECORDER_2.0_GUIDE.md`](docs/guides/RECORDER_2.0_GUIDE.md)
-- **Testing**: [`MANUAL_TESTING_GUIDE.md`](docs/guides/MANUAL_TESTING_GUIDE.md)
-- **Quick Reference**: [`QUICK_REFERENCE.md`](docs/guides/QUICK_REFERENCE.md)
+- **Index**: [`docs/README.md`](docs/README.md)
+- **Architecture**: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
+- **Testing**: [`docs/TESTING.md`](docs/TESTING.md)
+- **Setup**: [`docs/SETUP.md`](docs/SETUP.md)
 
 ### Issues & Contributions
 - GitHub Issues: [Report bugs or request features](https://github.com/andri5/testingndrih/issues)
@@ -547,4 +538,4 @@ Built with:
 
 ---
 
-**Ready to test? Start with [`docs/guides/00_INDEX.md`](docs/guides/00_INDEX.md)** 🚀
+**Ready to test?** Mulai dari [`docs/TESTING.md`](docs/TESTING.md) 🚀
