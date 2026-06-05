@@ -234,7 +234,60 @@ export const analyticsAPI = {
 
   // Get scenario performance ranking
   getScenarioPerformance: (limit = 20) =>
-    apiClient.get('/analytics/dashboard/scenario-performance', { params: { limit } })
+    apiClient.get('/analytics/dashboard/scenario-performance', { params: { limit } }),
+
+  // Flaky steps (intermittent failures)
+  getFlakySteps: (limit = 15) =>
+    apiClient.get('/analytics/dashboard/flaky-steps', { params: { limit } })
+}
+
+export const apiTestAPI = {
+  list: (scenarioId) => apiClient.get(`/api-tests/scenarios/${scenarioId}`),
+  create: (scenarioId, data) => apiClient.post(`/api-tests/scenarios/${scenarioId}`, data),
+  update: (apiTestId, data) => apiClient.put(`/api-tests/${apiTestId}`, data),
+  delete: (apiTestId) => apiClient.delete(`/api-tests/${apiTestId}`),
+  run: (apiTestId, options = {}) => apiClient.post(`/api-tests/${apiTestId}/run`, options, { timeout: 60000 }),
+  getResults: (apiTestId) => apiClient.get(`/api-tests/${apiTestId}/results`)
+}
+
+export const visualRegressionAPI = {
+  listBaselines: (scenarioId) =>
+    apiClient.get('/visual-regression/baselines', { params: scenarioId ? { scenarioId } : {} }),
+  listComparisons: (params = {}) => apiClient.get('/visual-regression/comparisons', { params }),
+  capture: (scenarioId, options = {}) =>
+    apiClient.post(`/visual-regression/capture/${scenarioId}`, options, { timeout: 600000 }),
+  run: (scenarioId, options = {}) =>
+    apiClient.post(`/visual-regression/run/${scenarioId}`, options, { timeout: 600000 }),
+  approve: (comparisonId) => apiClient.post(`/visual-regression/comparisons/${comparisonId}/approve`)
+}
+
+export const environmentAPI = {
+  list: () => apiClient.get('/environments'),
+  create: (data) => apiClient.post('/environments', data),
+  update: (environmentId, data) => apiClient.put(`/environments/${environmentId}`, data),
+  delete: (environmentId) => apiClient.delete(`/environments/${environmentId}`),
+  listVariables: (environmentId) => apiClient.get(`/environments/${environmentId}/variables`),
+  getResolved: (environmentId) => apiClient.get(`/environments/${environmentId}/resolved`),
+  upsertVariable: (environmentId, data) => apiClient.post(`/environments/${environmentId}/variables`, data),
+  deleteVariable: (environmentId, variableId) =>
+    apiClient.delete(`/environments/${environmentId}/variables/${variableId}`)
+}
+
+export const issueAPI = {
+  list: (params = {}) => apiClient.get('/issues', { params }),
+  getById: (issueId) => apiClient.get(`/issues/${issueId}`),
+  update: (issueId, data) => apiClient.patch(`/issues/${issueId}`, data)
+}
+
+export const notificationAPI = {
+  getSettings: () => apiClient.get('/notifications/settings'),
+  updateSettings: (data) => apiClient.put('/notifications/settings', data)
+}
+
+export const apiTokenAPI = {
+  list: () => apiClient.get('/tokens'),
+  create: (name, expiresInDays) => apiClient.post('/tokens', { name, expiresInDays }),
+  revoke: (tokenId) => apiClient.delete(`/tokens/${tokenId}`)
 }
 
 export const chainAPI = {

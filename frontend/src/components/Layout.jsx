@@ -26,6 +26,9 @@ import {
   Gauge,
   GitBranch,
   ChevronDown,
+  Bug,
+  Layers,
+  Image,
 } from 'lucide-react'
 
 export default function Layout({ children }) {
@@ -52,6 +55,11 @@ export default function Layout({ children }) {
       chains: 'Chains',
       execution: 'Execution',
       reports: 'Reports',
+      analytics: 'Analytics',
+      apiTesting: 'API Testing',
+      issues: 'Issues',
+      environments: 'Environments',
+      visualRegression: 'Visual Regression',
       scheduler: 'Scheduler',
       parallel: 'Parallel',
       smokeTest: 'Smoke Test',
@@ -70,6 +78,11 @@ export default function Layout({ children }) {
       chains: 'Rantai',
       execution: 'Eksekusi',
       reports: 'Laporan',
+      analytics: 'Analitik',
+      apiTesting: 'Tes API',
+      issues: 'Issue',
+      environments: 'Environment',
+      visualRegression: 'Regresi Visual',
       scheduler: 'Penjadwal',
       parallel: 'Paralel',
       smokeTest: 'Test Asap',
@@ -149,6 +162,11 @@ export default function Layout({ children }) {
     { name: t.chains,       path: '/chains',     icon: <Link2 size={16} /> },
     { name: t.execution,    path: '/execution',  icon: <PlayCircle size={16} /> },
     { name: t.reports,      path: '/reports',    icon: <BarChart2 size={16} /> },
+    { name: t.analytics,    path: '/analytics',  icon: <BarChart2 size={16} /> },
+    { name: t.apiTesting,   path: '/api-testing', icon: <Globe size={16} /> },
+    { name: t.issues,       path: '/issues',        icon: <Bug size={16} /> },
+    { name: t.environments, path: '/environments',      icon: <Layers size={16} /> },
+    { name: t.visualRegression, path: '/visual-regression', icon: <Image size={16} /> },
   ]
 
   const workspaceItems = [

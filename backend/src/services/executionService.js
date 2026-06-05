@@ -8,6 +8,14 @@ import { suggestAlternativeLocators } from './locatorSuggestionService.js'
 import locatorRepairService from './locatorRepairService.js'
 import screenshotComparisonService from './screenshotComparisonService.js'
 import { retryEngineService } from './retryEngineService.js'
+import { createIssueFromExecution } from './issueService.js'
+import { notifyTestFailure } from './notificationService.js'
+import {
+  getResolvedVariables,
+  getDefaultVariables
+} from './environmentService.js'
+import { substituteStep } from '../utils/variableSubstitution.js'
+import { handleStepScreenshot } from './visualRegressionService.js'
 
 /* Phase 2.1: Self Healing Selector configuration */
 const ENABLE_SELF_HEALING = true
@@ -154,6 +162,20 @@ export const executionService = {
       throw new Error('Scenario has no test steps')
     }
 
+    let envVariables = {}
+    try {
+      if (options.environmentId) {
+        envVariables = await getResolvedVariables(userId, options.environmentId)
+      } else {
+        envVariables = await getDefaultVariables(userId)
+      }
+    } catch (envErr) {
+      logger.warn('executionService', `Environment variables skipped: ${envErr.message}`)
+    }
+
+    const resolvedSteps = scenario.testSteps.map((step) => substituteStep(step, envVariables))
+    const stepsToRun = resolvedSteps.length ? resolvedSteps : scenario.testSteps
+
     // Create execution record
     const execution = await prisma.execution.create({
       data: {
@@ -266,8 +288,8 @@ export const executionService = {
       let failedSteps = 0
       let stopped = false
 
-      // Execute each step
-      for (const step of scenario.testSteps) {
+      // Execute each step (with {{variable}} substitution applied)
+      for (const step of stepsToRun) {
         // Check for stop signal from live viewer before starting step
         if (cancelledExecutions.has(execution.id)) {
           cancelledExecutions.delete(execution.id)
@@ -543,6 +565,24 @@ export const executionService = {
                 stepResultId: stepResult.id
               }
             })
+
+            if (options.visualRegressionCapture || options.visualRegression) {
+              try {
+                await handleStepScreenshot({
+                  userId,
+                  scenarioId: scenario.id,
+                  executionId: execution.id,
+                  stepNumber: step.stepNumber,
+                  browser: options.browser || 'chromium',
+                  screenshotPath: filepath,
+                  capture: !!options.visualRegressionCapture,
+                  compare: !!options.visualRegression,
+                  threshold: options.visualThreshold ?? 0.1
+                })
+              } catch (vrErr) {
+                logger.debug('executionService', `Visual regression step failed: ${vrErr.message}`)
+              }
+            }
           } catch (screenshotErr) {
             logger.error('executionService', `Screenshot capture failed for step ${step.stepNumber}: ${screenshotErr.message}`)
           }
@@ -644,6 +684,20 @@ export const executionService = {
         videoPath
       })
 
+      if (finalStatus === 'FAILED') {
+        createIssueFromExecution(execution.id).catch(() => {})
+        notifyTestFailure({
+          userId,
+          type: 'execution',
+          scenarioName: scenario.name,
+          status: finalStatus,
+          executionId: execution.id,
+          errorMessage: stopped ? 'Execution stopped by user' : undefined,
+          passedSteps,
+          totalSteps: scenario.testSteps.length
+        }).catch(() => {})
+      }
+
       return {
         execution: {
           id: execution.id,
@@ -674,6 +728,16 @@ export const executionService = {
           endTime: new Date()
         }
       })
+
+      createIssueFromExecution(execution.id).catch(() => {})
+      notifyTestFailure({
+        userId,
+        type: 'execution',
+        scenarioName: scenario?.name || 'Unknown',
+        status: 'FAILED',
+        executionId: execution.id,
+        errorMessage: error.message
+      }).catch(() => {})
 
       error.executionId = execution.id
       throw error

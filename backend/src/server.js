@@ -23,6 +23,13 @@ import browserMatrixRoutes from './routes/browserMatrixRoutes.js'
 import smokeTestRoutes from './routes/smokeTestRoutes.js'
 import stressTestRoutes from './routes/stressTestRoutes.js'
 import securityTestRoutes from './routes/securityTestRoutes.js'
+import apiTestRoutes from './routes/apiTestRoutes.js'
+import issueRoutes from './routes/issueRoutes.js'
+import notificationRoutes from './routes/notificationRoutes.js'
+import apiTokenRoutes from './routes/apiTokenRoutes.js'
+import ciRoutes from './routes/ciRoutes.js'
+import environmentRoutes from './routes/environmentRoutes.js'
+import visualRegressionRoutes from './routes/visualRegressionRoutes.js'
 import { errorHandler } from './middleware/auth.js'
 import { swaggerSpec } from './lib/swagger.js'
 
@@ -80,6 +87,13 @@ app.use('/api/browser-matrix', browserMatrixRoutes)
 app.use('/api/smoke', smokeTestRoutes)
 app.use('/api/stress', stressTestRoutes)
 app.use('/api/security', securityTestRoutes)
+app.use('/api/api-tests', apiTestRoutes)
+app.use('/api/issues', issueRoutes)
+app.use('/api/notifications', notificationRoutes)
+app.use('/api/tokens', apiTokenRoutes)
+app.use('/api/ci', ciRoutes)
+app.use('/api/environments', environmentRoutes)
+app.use('/api/visual-regression', visualRegressionRoutes)
 
 // Swagger API docs — available at /api/docs
 app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
@@ -95,6 +109,7 @@ app.get('/api/docs.json', (req, res) => {
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 app.use('/api/screenshots', express.static(path.resolve(__dirname, '../uploads/screenshots')))
+app.use('/api/visual', express.static(path.resolve(__dirname, '../uploads/visual')))
 app.use('/api/videos', express.static(path.resolve(__dirname, '../uploads/videos')))
 
 // ── Combined-mode: serve built React frontend (Docker) ─────────────────────

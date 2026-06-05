@@ -20,6 +20,10 @@ import BrowserMatrixPage from './pages/BrowserMatrixPage'
 import SmokeTestPage from './pages/SmokeTest'
 import StressTestPage from './pages/StressTestPage'
 import SecurityTestPage from './pages/SecurityTestPage'
+import ApiTestingPage from './pages/ApiTestingPage'
+import IssuesPage from './pages/IssuesPage'
+import EnvironmentsPage from './pages/EnvironmentsPage'
+import VisualRegressionPage from './pages/VisualRegressionPage'
 import SmokeTestHelpPage from './pages/SmokeTestHelpPage'
 import StressTestHelpPage from './pages/StressTestHelpPage'
 import SecurityTestHelpPage from './pages/SecurityTestHelpPage'
@@ -191,6 +195,38 @@ export default function App() {
           element={
             <ProtectedRoute>
               <SecurityTestPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/api-testing"
+          element={
+            <ProtectedRoute>
+              <ApiTestingPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/issues"
+          element={
+            <ProtectedRoute>
+              <IssuesPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/environments"
+          element={
+            <ProtectedRoute>
+              <EnvironmentsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/visual-regression"
+          element={
+            <ProtectedRoute>
+              <VisualRegressionPage />
             </ProtectedRoute>
           }
         />

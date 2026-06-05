@@ -77,8 +77,79 @@ model User {
   executionBatches ExecutionBatch[] @relation("UserBatches")
   matrixExecutions MatrixExecution[] @relation("UserMatrices")
   securityScans    SecurityScan[]
+  apiTokens              ApiToken[]
+  notificationSettings   NotificationSettings?
+  testEnvironments       TestEnvironment[]
+  visualBaselines        VisualBaseline[]
+  visualComparisons      VisualComparison[]
 
   @@map("users")
+}
+
+model TestEnvironment {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  description String?
+  baseUrl     String?
+  isDefault   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user      User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  variables EnvironmentVariable[]
+
+  @@unique([userId, name])
+  @@index([userId])
+  @@map("test_environments")
+}
+
+model EnvironmentVariable {
+  id            String   @id @default(cuid())
+  environmentId String
+  key           String
+  value         String
+  isSecret      Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  environment TestEnvironment @relation(fields: [environmentId], references: [id], onDelete: Cascade)
+
+  @@unique([environmentId, key])
+  @@index([environmentId])
+  @@map("environment_variables")
+}
+
+model ApiToken {
+  id         String    @id @default(cuid())
+  userId     String
+  name       String
+  tokenHash  String    @unique
+  prefix     String
+  lastUsedAt DateTime?
+  createdAt  DateTime  @default(now())
+  expiresAt  DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("api_tokens")
+}
+
+model NotificationSettings {
+  userId             String   @id
+  emailOnFailure       Boolean  @default(true)
+  emailOnSmokeFail     Boolean  @default(true)
+  webhookUrl           String?
+  webhookEnabled       Boolean  @default(false)
+  webhookOnFailure     Boolean  @default(true)
+  webhookOnSmokeFail   Boolean  @default(true)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notification_settings")
 }
 
 model Scenario {
@@ -102,11 +173,62 @@ model Scenario {
   testSchedules TestSchedule[] @relation("ScenarioSchedules")
   matrixExecutions MatrixExecution[] @relation("ScenarioMatrices")
   securityScans SecurityScan[]
+  visualBaselines VisualBaseline[]
+  visualComparisons VisualComparison[]
 
   @@index([userId])
   @@index([isStress])
   @@index([isSecurity])
   @@map("scenarios")
+}
+
+model VisualBaseline {
+  id         String   @id @default(cuid())
+  userId     String
+  scenarioId String
+  stepNumber Int
+  browser    String   @default("chromium")
+  imagePath  String
+  width      Int?
+  height     Int?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  scenario Scenario @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+
+  @@unique([scenarioId, stepNumber, browser])
+  @@index([userId])
+  @@index([scenarioId])
+  @@map("visual_baselines")
+}
+
+model VisualComparison {
+  id           String   @id @default(cuid())
+  userId       String
+  scenarioId   String
+  executionId  String?
+  stepNumber   Int
+  browser      String   @default("chromium")
+  baselinePath String
+  currentPath  String
+  diffPath     String?
+  diffPercent  Float    @default(0)
+  diffPixels   Int      @default(0)
+  totalPixels  Int      @default(0)
+  status       String   @default("FAILED")
+  threshold    Float    @default(0.1)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  scenario Scenario @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([scenarioId])
+  @@index([executionId])
+  @@index([status])
+  @@map("visual_comparisons")
 }
 
 model TestStep {

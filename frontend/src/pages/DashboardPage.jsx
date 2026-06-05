@@ -14,6 +14,8 @@ import {
   Plus,
   Download,
   TrendingUp,
+  Globe,
+  Bug,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useSettingsStore } from '../store/settingsStore'
@@ -45,6 +47,10 @@ const i18n = {
     noScenariosYet: 'No scenarios yet',
     noExecutionsYet: 'No executions yet',
     steps: 'steps',
+    apiTesting: 'API Testing',
+    apiTestingDesc: 'Run HTTP request tests',
+    viewIssues: 'View Issues',
+    viewIssuesDesc: 'Track failed test executions',
   },
   id: {
     welcome: 'Selamat datang kembali',
@@ -71,6 +77,10 @@ const i18n = {
     noScenariosYet: 'Belum ada skenario',
     noExecutionsYet: 'Belum ada eksekusi',
     steps: 'langkah',
+    apiTesting: 'Tes API',
+    apiTestingDesc: 'Jalankan tes request HTTP',
+    viewIssues: 'Lihat Issue',
+    viewIssuesDesc: 'Lacak eksekusi test yang gagal',
   }
 }
 
@@ -271,7 +281,7 @@ export default function DashboardPage() {
             {/* Quick Actions */}
             <div className="linear-card p-5">
               <h2 className="text-sm font-semibold text-[#E0E0E2] mb-4">{t.quickActions}</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
                 <button
                   onClick={() => navigate('/scenarios')}
                   className="action-btn p-4 text-left"
@@ -309,6 +319,32 @@ export default function DashboardPage() {
                     <p className="font-medium text-[#E0E0E2] text-sm">{t.viewAnalytics}</p>
                   </div>
                   <p className="text-xs text-[#8A8A8F]">{t.detailedMetrics}</p>
+                </button>
+
+                <button
+                  onClick={() => navigate('/api-testing')}
+                  className="action-btn p-4 text-left"
+                >
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-8 h-8 rounded-lg bg-[#4EC9B0]/10 flex items-center justify-center">
+                      <Globe size={15} className="text-[#4EC9B0]" />
+                    </div>
+                    <p className="font-medium text-[#E0E0E2] text-sm">{t.apiTesting}</p>
+                  </div>
+                  <p className="text-xs text-[#8A8A8F]">{t.apiTestingDesc}</p>
+                </button>
+
+                <button
+                  onClick={() => navigate('/issues')}
+                  className="action-btn p-4 text-left"
+                >
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-8 h-8 rounded-lg bg-[#FBBF24]/10 flex items-center justify-center">
+                      <Bug size={15} className="text-[#FBBF24]" />
+                    </div>
+                    <p className="font-medium text-[#E0E0E2] text-sm">{t.viewIssues}</p>
+                  </div>
+                  <p className="text-xs text-[#8A8A8F]">{t.viewIssuesDesc}</p>
                 </button>
               </div>
             </div>

@@ -1,11 +1,11 @@
-import { getAnalyticsSummary, getExecutionHistory, getScenarioMetrics, exportAnalyticsData, getPassFailTrend, getTopFailingSteps, getExecutionVolume, getScenarioPerformance } from '../services/analyticsService.js';
+import { getAnalyticsSummary, getExecutionHistory, getScenarioMetrics, exportAnalyticsData, getPassFailTrend, getTopFailingSteps, getExecutionVolume, getScenarioPerformance, getFlakySteps } from '../services/analyticsService.js';
 
 /**
  * Get analytics summary
  */
 export async function getAnalyticsSummaryHandler(req, res, next) {
   try {
-    const { userId } = req.user;
+    const userId = req.user.id;
     const summary = await getAnalyticsSummary(userId);
     res.json(summary);
   } catch (error) {
@@ -18,7 +18,7 @@ export async function getAnalyticsSummaryHandler(req, res, next) {
  */
 export async function getExecutionHistoryHandler(req, res, next) {
   try {
-    const { userId } = req.user;
+    const userId = req.user.id;
     const { limit = 50, offset = 0 } = req.query;
     const history = await getExecutionHistory(userId, parseInt(limit), parseInt(offset));
     res.json(history);
@@ -32,7 +32,7 @@ export async function getExecutionHistoryHandler(req, res, next) {
  */
 export async function getScenarioMetricsHandler(req, res, next) {
   try {
-    const { userId } = req.user;
+    const userId = req.user.id;
     const { scenarioId } = req.params;
     const metrics = await getScenarioMetrics(scenarioId, userId);
     res.json(metrics);
@@ -46,7 +46,7 @@ export async function getScenarioMetricsHandler(req, res, next) {
  */
 export async function exportAnalyticsDataHandler(req, res, next) {
   try {
-    const { userId } = req.user;
+    const userId = req.user.id;
     const { format = 'json' } = req.query;
     const exported = await exportAnalyticsData(userId, format);
 
@@ -73,7 +73,7 @@ export async function exportAnalyticsDataHandler(req, res, next) {
  */
 export async function getPassFailTrendHandler(req, res, next) {
   try {
-    const { userId } = req.user;
+    const userId = req.user.id;
     const { days = 30 } = req.query;
     const trend = await getPassFailTrend(userId, parseInt(days));
     res.json(trend);
@@ -87,7 +87,7 @@ export async function getPassFailTrendHandler(req, res, next) {
  */
 export async function getTopFailingStepsHandler(req, res, next) {
   try {
-    const { userId } = req.user;
+    const userId = req.user.id;
     const { limit = 10 } = req.query;
     const steps = await getTopFailingSteps(userId, parseInt(limit));
     res.json(steps);
@@ -101,7 +101,7 @@ export async function getTopFailingStepsHandler(req, res, next) {
  */
 export async function getExecutionVolumeHandler(req, res, next) {
   try {
-    const { userId } = req.user;
+    const userId = req.user.id;
     const { days = 30 } = req.query;
     const volume = await getExecutionVolume(userId, parseInt(days));
     res.json(volume);
@@ -115,10 +115,24 @@ export async function getExecutionVolumeHandler(req, res, next) {
  */
 export async function getScenarioPerformanceHandler(req, res, next) {
   try {
-    const { userId } = req.user;
+    const userId = req.user.id;
     const { limit = 20 } = req.query;
     const performance = await getScenarioPerformance(userId, parseInt(limit));
     res.json(performance);
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * Get flaky steps across all scenarios
+ */
+export async function getFlakyStepsHandler(req, res, next) {
+  try {
+    const userId = req.user.id;
+    const { limit = 15 } = req.query;
+    const flakySteps = await getFlakySteps(userId, parseInt(limit));
+    res.json(flakySteps);
   } catch (error) {
     next(error);
   }

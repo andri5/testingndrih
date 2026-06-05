@@ -15,7 +15,7 @@ export const executionController = {
     try {
       const { scenarioId } = req.params
       const userId = req.user.id
-      const { browser, headless, device } = req.body || {}
+      const { browser, headless, device, environmentId } = req.body || {}
 
       if (!scenarioId) {
         return res.status(400).json({ message: 'Scenario ID is required' })
@@ -40,7 +40,8 @@ export const executionController = {
       const options = {
         browser: browser || 'chromium',
         headless: headless === true || headless === 'true',
-        device: device || null
+        device: device || null,
+        environmentId: environmentId || null
       }
 
       // Fire and forget — execution runs in background

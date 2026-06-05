@@ -18,6 +18,7 @@ const useSettingsStore = create((set) => ({
   language: localStorage.getItem('language') || 'id',
   executionTimeout: localStorage.getItem('executionTimeout') || '30',
   autoScreenshot: localStorage.getItem('autoScreenshot') !== 'false',
+  selectedEnvironmentId: localStorage.getItem('selectedEnvironmentId') || '',
 
   setTheme: (theme) => {
     localStorage.setItem('theme', theme)
@@ -38,6 +39,11 @@ const useSettingsStore = create((set) => ({
   setAutoScreenshot: (autoScreenshot) => {
     localStorage.setItem('autoScreenshot', autoScreenshot.toString())
     set({ autoScreenshot })
+  },
+
+  setSelectedEnvironmentId: (selectedEnvironmentId) => {
+    localStorage.setItem('selectedEnvironmentId', selectedEnvironmentId || '')
+    set({ selectedEnvironmentId: selectedEnvironmentId || '' })
   },
 
   init: () => {

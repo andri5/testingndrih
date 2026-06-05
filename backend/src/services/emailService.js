@@ -171,6 +171,37 @@ export async function sendWelcomeEmail(email, name) {
 }
 
 /**
+ * Send test failure / alert email
+ */
+export async function sendTestAlertEmail(email, subject, payload) {
+  try {
+    const lines = [
+      `Scenario: ${payload.scenarioName}`,
+      `Status: ${payload.status}`,
+      payload.passedSteps != null ? `Steps: ${payload.passedSteps}/${payload.totalSteps}` : null,
+      payload.errorMessage ? `Error: ${payload.errorMessage}` : null,
+      `Time: ${payload.timestamp}`,
+      `Details: ${payload.detailUrl}`
+    ].filter(Boolean)
+
+    const mailOptions = {
+      from: process.env.SMTP_FROM || 'noreply@testingndrih.local',
+      to: email,
+      subject: `[Test Sambil Ngopi] ${subject}`,
+      text: lines.join('\n'),
+      html: `<pre style="font-family:monospace">${lines.join('\n')}</pre>`
+    }
+
+    const result = await transporter.sendMail(mailOptions)
+    return { success: true, messageId: result.messageId }
+  } catch (error) {
+    console.error(`[Email Service] Alert email failed: ${error.message}`)
+    if (process.env.NODE_ENV === 'production') throw error
+    return { success: false, error: error.message }
+  }
+}
+
+/**
  * Verify email transporter is working
  */
 export async function verifyEmailService() {
