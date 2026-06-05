@@ -8,6 +8,7 @@ import {
   getTopFailingStepsHandler,
   getExecutionVolumeHandler,
   getScenarioPerformanceHandler,
+  getFlakyStepsHandler,
 } from '../controllers/analyticsController.js';
 import { authenticateToken } from '../middleware/auth.js';
 
@@ -37,6 +38,9 @@ router.get('/dashboard/volume', getExecutionVolumeHandler);
 
 // Get scenario performance ranking
 router.get('/dashboard/scenario-performance', getScenarioPerformanceHandler);
+
+// Get flaky steps (intermittent failures)
+router.get('/dashboard/flaky-steps', getFlakyStepsHandler);
 
 // Export analytics data
 router.get('/export', exportAnalyticsDataHandler);

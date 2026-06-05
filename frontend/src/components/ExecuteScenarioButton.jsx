@@ -2,18 +2,40 @@ import { useState, useEffect } from 'react'
 import { Button, Alert, Spinner } from './ui'
 import { useExecutionStore } from '../store/executionStore'
 import { useSettingsStore } from '../store/settingsStore'
+import { environmentAPI } from '../services/api'
 
 export function ExecuteScenarioButton({ scenarioId, scenarioName, onExecutionStart = null }) {
   const { isRunning, executeScenario, clearError, error } = useExecutionStore()
-  const { theme } = useSettingsStore()
+  const { theme, language, selectedEnvironmentId, setSelectedEnvironmentId } = useSettingsStore()
   const isDark = theme !== 'light'
   const [showConfirm, setShowConfirm] = useState(false)
   const [browser, setBrowser] = useState('chromium')
   const [headless, setHeadless] = useState(false)
+  const [environments, setEnvironments] = useState([])
+  const [environmentId, setEnvironmentId] = useState(selectedEnvironmentId || '')
+
+  useEffect(() => {
+    if (!showConfirm) return
+    environmentAPI.list().then((res) => {
+      const list = res.data.environments || []
+      setEnvironments(list)
+      if (!environmentId && list.length) {
+        const def = list.find((e) => e.isDefault) || list[0]
+        setEnvironmentId(def.id)
+      }
+    }).catch(() => {})
+  }, [showConfirm])
+
+  const envLabel = language === 'id' ? 'Environment' : 'Environment'
 
   const handleExecute = async () => {
     try {
-      await executeScenario(scenarioId, { browser, headless })
+      if (environmentId) setSelectedEnvironmentId(environmentId)
+      await executeScenario(scenarioId, {
+        browser,
+        headless,
+        environmentId: environmentId || undefined
+      })
       setShowConfirm(false)
       if (onExecutionStart) {
         onExecutionStart()
@@ -62,6 +84,25 @@ export function ExecuteScenarioButton({ scenarioId, scenarioName, onExecutionSta
                 <option value="chromium">Chromium</option>
                 <option value="firefox">Firefox</option>
                 <option value="webkit">WebKit</option>
+              </select>
+            </div>
+            <div>
+              <label className={`text-xs font-semibold block mb-1 ${
+                isDark ? 'text-[#8A8A8F]' : 'text-gray-600'
+              }`}>{envLabel}</label>
+              <select
+                value={environmentId}
+                onChange={(e) => setEnvironmentId(e.target.value)}
+                className={`text-sm rounded px-2 py-1 focus:outline-none focus:ring-1 ${
+                  isDark
+                    ? 'bg-[#0F0E11] border border-[#2D2D2F] text-[#E0E0E2] focus:ring-[#5E6AD2]'
+                    : 'border border-gray-300 text-gray-900 focus:ring-indigo-500'
+                }`}
+              >
+                <option value="">—</option>
+                {environments.map((env) => (
+                  <option key={env.id} value={env.id}>{env.name}{env.isDefault ? ' ★' : ''}</option>
+                ))}
               </select>
             </div>
             <div className="flex items-end gap-2">

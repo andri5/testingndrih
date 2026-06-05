@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { Alert } from '../components/ui'
+import IntegrationsSettings from '../components/IntegrationsSettings'
 import { useAuthStore } from '../store/authStore'
 import { useSettingsStore } from '../store/settingsStore'
 
@@ -17,6 +18,7 @@ const i18n = {
     profile: 'Profile',
     application: 'Application',
     about: 'About',
+    integrations: 'Integrations',
     userProfile: 'USER PROFILE',
     profilePicture: 'Profile Picture',
     changePhoto: 'Change Photo',
@@ -45,6 +47,7 @@ const i18n = {
     profile: 'Profil',
     application: 'Aplikasi',
     about: 'Tentang',
+    integrations: 'Integrasi',
     userProfile: 'PROFIL PENGGUNA',
     profilePicture: 'Foto Profil',
     changePhoto: 'Ubah Foto',
@@ -88,6 +91,7 @@ export default function SettingsPage() {
   const tabs = [
     { id: 'profile', label: t.profile },
     { id: 'app', label: t.application },
+    { id: 'integrations', label: t.integrations },
     { id: 'about', label: t.about },
   ]
 
@@ -346,6 +350,10 @@ export default function SettingsPage() {
                   </div>
                 </div>
               </>
+            )}
+
+            {activeTab === 'integrations' && (
+              <IntegrationsSettings language={language} />
             )}
 
             {/* About Tab */}

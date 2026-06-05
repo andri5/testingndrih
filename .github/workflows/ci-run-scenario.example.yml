@@ -1,0 +1,28 @@
+# Example: run a scenario from GitHub Actions using API token
+# 1. Create token in Settings → Integrations
+# 2. Add secrets: TSN_API_TOKEN, TSN_SCENARIO_ID
+# 3. Rename this file (remove .example) to enable
+
+name: Run Test Scenario
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  run-scenario:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run scenario via API
+        run: |
+          curl -sf -X POST "${{ secrets.TSN_API_URL || 'http://localhost:5001' }}/api/ci/run/${{ secrets.TSN_SCENARIO_ID }}" \
+            -H "Authorization: Bearer ${{ secrets.TSN_API_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d '{"headless": true}' \
+            -o result.json -w "%{http_code}" | tee http_code.txt
+          code=$(cat http_code.txt)
+          if [ "$code" != "200" ]; then
+            cat result.json
+            exit 1
+          fi

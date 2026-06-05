@@ -7,6 +7,7 @@
 import { prisma } from '../lib/prisma.js'
 import { executionService } from './executionService.js'
 import { reportService } from './reportService.js'
+import { notifyTestFailure } from './notificationService.js'
 
 /**
  * Run smoke test on a scenario
@@ -68,10 +69,8 @@ export async function runSmokeTest(scenarioId, options = {}) {
     // Generate smoke report
     const report = await generateSmokeReport(execution, smokeResult)
 
-    // Send notifications if configured
-    if (options.notifyOnComplete) {
-      await sendSmokeTestNotification(scenario, smokeResult, report)
-    }
+    // Notify on failure (uses per-user Settings → Integrations preferences)
+    await sendSmokeTestNotification(scenario, smokeResult, report)
 
     return {
       executionId: execution.id,
@@ -349,40 +348,19 @@ export async function getSmokeTestSummary() {
  */
 export async function sendSmokeTestNotification(scenario, smokeResult, report) {
   try {
-    const subject =
-      smokeResult.status === 'SMOKE_PASSED'
-        ? `✅ Smoke Test PASSED: ${scenario.name}`
-        : `❌ Smoke Test FAILED: ${scenario.name}`
-
-    const emailBody = `
-Smoke Test Result for: ${scenario.name}
-
-Status: ${smokeResult.status}
-Passed: ${smokeResult.passed}/${smokeResult.total}
-Duration: ${formatDuration(smokeResult.duration)}
-
-${
-  smokeResult.failed > 0
-    ? `\nFailed Steps:\n${smokeResult.failureDetails.map(f => `- ${f}`).join('\n')}`
-    : ''
-}
-
-View full report: ${process.env.APP_URL || 'http://localhost:3000'}/executions/${
-      report.executionId
+    if (smokeResult.status !== 'SMOKE_PASSED' && scenario.userId) {
+      await notifyTestFailure({
+        userId: scenario.userId,
+        type: 'smoke',
+        scenarioName: scenario.name,
+        status: smokeResult.status,
+        executionId: report?.executionId,
+        errorMessage: smokeResult.failureDetails?.join('; '),
+        passedSteps: smokeResult.passed,
+        totalSteps: smokeResult.total
+      })
     }
-    `
-
-    // Email notifications not configured - skipping
-    // TODO: Implement email notifications if needed
-    // await emailService.sendEmail({
-    //   to: scenario.user.email,
-    //   subject,
-    //   body: emailBody
-    // })
-
-    console.log(
-      `[SMOKE TEST] Test complete for ${scenario.user.email}`
-    )
+    console.log(`[SMOKE TEST] Test complete for ${scenario.user?.email || scenario.userId}`)
   } catch (error) {
     console.error(`[SMOKE TEST] Failed to send notification: ${error.message}`)
   }

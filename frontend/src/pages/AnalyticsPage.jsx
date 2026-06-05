@@ -26,7 +26,10 @@ const i18n = {
     passFail: 'Pass/Fail Trend',
     executionVolume: 'Execution Volume',
     failingSteps: 'Top Failing Steps',
+    flakySteps: 'Flaky Steps',
+    flakyHint: 'Steps that fail intermittently (not every run)',
     scenarioPerformance: 'Scenario Performance',
+    failRate: 'Fail rate',
     noData: 'No data available',
     daysShort: 'days',
     passedExec: 'Passed Executions',
@@ -49,7 +52,10 @@ const i18n = {
     passFail: 'Tren Lulus/Gagal',
     executionVolume: 'Volume Eksekusi',
     failingSteps: 'Step Teratas yang Gagal',
+    flakySteps: 'Step Flaky',
+    flakyHint: 'Step yang kadang gagal (tidak setiap run)',
     scenarioPerformance: 'Kinerja Scenario',
+    failRate: 'Tingkat gagal',
     noData: 'Tidak ada data',
     daysShort: 'hari',
     passedExec: 'Eksekusi Lulus',
@@ -68,6 +74,7 @@ export default function AnalyticsPage() {
   const [trendData, setTrendData] = useState([])
   const [volumeData, setVolumeData] = useState([])
   const [failingSteps, setFailingSteps] = useState([])
+  const [flakySteps, setFlakySteps] = useState([])
   const [scenarioPerf, setScenarioPerf] = useState([])
   const [loading, setLoading] = useState(true)
   const [exporting, setExporting] = useState(false)
@@ -80,11 +87,12 @@ export default function AnalyticsPage() {
   const loadAnalytics = async () => {
     try {
       setLoading(true)
-      const [summaryRes, trendRes, volumeRes, stepsRes, perfRes] = await Promise.all([
+      const [summaryRes, trendRes, volumeRes, stepsRes, flakyRes, perfRes] = await Promise.all([
         analyticsAPI.getSummary(),
         analyticsAPI.getPassFailTrend?.(dayRange).catch(() => ({ data: [] })),
         analyticsAPI.getExecutionVolume?.(dayRange).catch(() => ({ data: [] })),
         analyticsAPI.getTopFailingSteps?.(10).catch(() => ({ data: [] })),
+        analyticsAPI.getFlakySteps?.(15).catch(() => ({ data: [] })),
         analyticsAPI.getScenarioPerformance?.(20).catch(() => ({ data: [] }))
       ])
 
@@ -92,6 +100,7 @@ export default function AnalyticsPage() {
       setTrendData(trendRes?.data || [])
       setVolumeData(volumeRes?.data || [])
       setFailingSteps(stepsRes?.data || [])
+      setFlakySteps(flakyRes?.data || [])
       setScenarioPerf(perfRes?.data || [])
     } catch (error) {
       console.error('Error loading analytics:', error)
@@ -350,6 +359,43 @@ export default function AnalyticsPage() {
               </ResponsiveContainer>
             ) : (
               <div className="h-72 flex items-center justify-center text-[#8A8A8F]">{t.noData}</div>
+            )}
+          </div>
+
+          {/* Flaky Steps */}
+          <div className="linear-card p-6 lg:col-span-2">
+            <h3 className="text-lg font-bold text-[#E0E0E2] mb-1 flex items-center gap-2">
+              <AlertTriangle size={18} className="text-[#FBBF24]" />
+              {t.flakySteps}
+            </h3>
+            <p className="text-xs text-[#8A8A8F] mb-4">{t.flakyHint}</p>
+            {flakySteps && flakySteps.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-left text-[#8A8A8F] border-b border-[#2D2D2F]">
+                      <th className="py-2 pr-4">Scenario</th>
+                      <th className="py-2 pr-4">Step</th>
+                      <th className="py-2 pr-4">{t.failRate}</th>
+                      <th className="py-2">Runs</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {flakySteps.map((row, i) => (
+                      <tr key={i} className="border-b border-[#2D2D2F]/50 text-[#E0E0E2]">
+                        <td className="py-2 pr-4">{row.scenarioName}</td>
+                        <td className="py-2 pr-4">
+                          #{row.stepNumber} {row.description?.slice(0, 40)}
+                        </td>
+                        <td className="py-2 pr-4 text-[#FBBF24]">{row.failRate}%</td>
+                        <td className="py-2 text-[#8A8A8F]">{row.failed}/{row.total}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="h-32 flex items-center justify-center text-[#8A8A8F]">{t.noData}</div>
             )}
           </div>
 

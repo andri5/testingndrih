@@ -13,7 +13,7 @@ export default {
     }]
   },
   transformIgnorePatterns: [
-    'node_modules/(?!(uuid)/)'
+    'node_modules/(?!(uuid|pixelmatch)/)'
   ],
   moduleFileExtensions: ['js'],
   collectCoverageFrom: [

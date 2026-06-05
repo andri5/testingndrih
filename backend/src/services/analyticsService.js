@@ -394,6 +394,65 @@ export async function getExecutionVolume(userId, days = 30) {
 }
 
 /**
+ * Get flaky steps across all scenarios (fail sometimes but not always)
+ */
+export async function getFlakySteps(userId, limit = 15) {
+  try {
+    const stepResults = await prisma.stepResult.findMany({
+      where: {
+        execution: { userId },
+        testStep: { scenario: { userId } }
+      },
+      select: {
+        status: true,
+        testStep: {
+          select: {
+            stepNumber: true,
+            description: true,
+            type: true,
+            scenario: { select: { id: true, name: true } }
+          }
+        }
+      },
+      take: 2000,
+      orderBy: { createdAt: 'desc' }
+    })
+
+    const stepStats = {}
+    stepResults.forEach((result) => {
+      if (!result.testStep?.scenario) return
+      const key = `${result.testStep.scenario.id}_${result.testStep.stepNumber}`
+      if (!stepStats[key]) {
+        stepStats[key] = {
+          scenarioId: result.testStep.scenario.id,
+          scenarioName: result.testStep.scenario.name,
+          stepNumber: result.testStep.stepNumber,
+          description: result.testStep.description,
+          type: result.testStep.type,
+          total: 0,
+          failed: 0
+        }
+      }
+      stepStats[key].total += 1
+      if (result.status === 'FAILED') stepStats[key].failed += 1
+    })
+
+    return Object.values(stepStats)
+      .filter((s) => s.failed > 0 && s.failed < s.total)
+      .map((s) => ({
+        ...s,
+        failRate: parseFloat(((s.failed / s.total) * 100).toFixed(2)),
+        flakyScore: parseFloat(((s.failed / s.total) * (1 - Math.abs(0.5 - s.failed / s.total) * 2)).toFixed(3))
+      }))
+      .sort((a, b) => b.flakyScore - a.flakyScore)
+      .slice(0, limit)
+  } catch (error) {
+    console.error('Error getting flaky steps:', error)
+    throw error
+  }
+}
+
+/**
  * Get scenario performance ranking
  */
 export async function getScenarioPerformance(userId, limit = 20) {

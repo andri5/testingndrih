@@ -113,6 +113,71 @@ jest.mock('./src/lib/prisma.js', () => {
         update: jest.fn((args) => Promise.resolve({ id: args.where.id, ...args.data })),
         delete: jest.fn(() => Promise.resolve({ id: 'user-1' })),
         count: countMock
+      },
+      issue: {
+        create: createMock,
+        findMany: findManyMock,
+        findUnique: findUniqueMock,
+        findFirst: findFirstMock,
+        update: updateMock,
+        count: countMock
+      },
+      apiTest: {
+        create: createMock,
+        findMany: findManyMock,
+        findUnique: findUniqueMock,
+        update: updateMock,
+        delete: deleteMock
+      },
+      apiTestResult: {
+        create: createMock,
+        findMany: findManyMock
+      },
+      apiToken: {
+        create: createMock,
+        findMany: findManyMock,
+        findUnique: findUniqueMock,
+        findFirst: findFirstMock,
+        update: updateMock,
+        delete: deleteMock
+      },
+      notificationSettings: {
+        create: createMock,
+        findUnique: findUniqueMock,
+        update: updateMock
+      },
+      testEnvironment: {
+        create: createMock,
+        findMany: findManyMock,
+        findUnique: findUniqueMock,
+        findFirst: findFirstMock,
+        update: updateMock,
+        updateMany: updateManyMock,
+        delete: deleteMock,
+        count: countMock
+      },
+      environmentVariable: {
+        create: createMock,
+        findMany: findManyMock,
+        findUnique: findUniqueMock,
+        findFirst: findFirstMock,
+        update: updateMock,
+        delete: deleteMock
+      },
+      visualBaseline: {
+        create: createMock,
+        findMany: findManyMock,
+        findUnique: findUniqueMock,
+        findFirst: findFirstMock,
+        update: updateMock,
+        upsert: jest.fn((args) => Promise.resolve({ id: 'vb-1', ...args.create, ...args.update })),
+        delete: deleteMock
+      },
+      visualComparison: {
+        create: createMock,
+        findMany: findManyMock,
+        findFirst: findFirstMock,
+        update: updateMock
       }
     }
   }
