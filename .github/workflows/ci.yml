@@ -1,0 +1,63 @@
+name: CI (Dev)
+
+on:
+  push:
+    branches: [main, develop, 'feat/**']
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  backend:
+    name: Backend Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+        working-directory: .
+      - run: npm test
+      - run: npm run lint
+        continue-on-error: true
+
+  frontend-lint:
+    name: Frontend Lint
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+        working-directory: .
+      - run: npm run lint
+        continue-on-error: true
+
+  frontend-e2e:
+    name: Platform E2E
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+        working-directory: .
+      - run: npx playwright install chromium --with-deps
+      - run: npm run build
+      - run: npx playwright test e2e/platform-features-e2e.spec.js --project=chromium
+        env:
+          CI: true

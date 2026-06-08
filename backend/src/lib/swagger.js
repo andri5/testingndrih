@@ -1,4 +1,5 @@
 import swaggerJsdoc from 'swagger-jsdoc'
+import { platformPaths } from '../routes/swaggerDocs.js'
 
 const options = {
   definition: {
@@ -83,8 +84,15 @@ const options = {
       { name: 'Test Steps', description: 'Step management within a scenario' },
       { name: 'Execution', description: 'Run scenarios and view results' },
       { name: 'Recorder', description: 'Browser recording session management' },
-      { name: 'Search', description: 'Search and filter scenarios' }
-    ]
+      { name: 'Search', description: 'Search and filter scenarios' },
+      { name: 'API Testing', description: 'HTTP request tests linked to scenarios' },
+      { name: 'Issues', description: 'Auto-tracked failures from executions' },
+      { name: 'Environments', description: 'Environment profiles and {{variables}}' },
+      { name: 'Visual Regression', description: 'Screenshot baseline comparison' },
+      { name: 'Notifications', description: 'Email and webhook alerts' },
+      { name: 'CI/CD', description: 'API tokens and remote scenario runs' }
+    ],
+    paths: platformPaths
   },
   apis: ['./src/routes/*.js', './src/controllers/*.js']
 }

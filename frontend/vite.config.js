@@ -14,6 +14,13 @@ export default defineConfig({
         target: process.env.VITE_API_URL || 'http://localhost:5001',
         changeOrigin: true,
         secure: false,
+        bypass(req) {
+          const path = req.url || ''
+          // Proxy only /api/... endpoints, not SPA routes like /api-testing
+          if (!path.startsWith('/api/')) {
+            return path
+          }
+        },
       }
     }
   },

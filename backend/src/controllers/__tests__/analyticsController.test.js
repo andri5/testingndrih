@@ -7,7 +7,7 @@ import {
   getScenarioPerformanceHandler
 } from '../analyticsController.js'
 
-jest.mock('../analyticsService.js')
+jest.mock('../../services/analyticsService.js')
 
 describe('Analytics Controller', () => {
   let req, res, next

@@ -182,7 +182,14 @@ class SchedulerService {
 
       console.log(`[SCHEDULER] ✅ Execution #${execution.id} created for schedule #${scheduleId}`)
 
-      // TODO: Send email/WhatsApp report (Phase 2.5)
+      if (execution.status === 'FAILED') {
+        const { notifyScheduledExecution } = await import('./notificationService.js')
+        await notifyScheduledExecution({
+          userId,
+          scenarioName: scenario.name,
+          execution
+        })
+      }
 
       return execution
     } catch (err) {

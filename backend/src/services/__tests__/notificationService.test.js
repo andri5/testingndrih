@@ -1,7 +1,9 @@
 import {
   getNotificationSettings,
   updateNotificationSettings,
-  notifyTestFailure
+  notifyTestFailure,
+  notifyScheduledExecution,
+  notifySmokeTestSummary
 } from '../notificationService.js'
 import { prisma } from '../../lib/prisma.js'
 import { sendTestAlertEmail } from '../emailService.js'
@@ -98,6 +100,55 @@ describe('notificationService', () => {
         'https://hooks.example.com',
         expect.objectContaining({ method: 'POST' })
       )
+    })
+  })
+
+  describe('notifyScheduledExecution', () => {
+    it('notifies only on failed scheduled execution', async () => {
+      prisma.notificationSettings.findUnique.mockResolvedValue({
+        emailOnFailure: true,
+        webhookEnabled: false
+      })
+      prisma.user.findUnique.mockResolvedValue({ email: 'qa@example.com', name: 'QA' })
+      sendTestAlertEmail.mockResolvedValue({ success: true })
+
+      await notifyScheduledExecution({
+        userId: 'user-1',
+        scenarioName: 'Nightly Login',
+        execution: { id: 'e1', status: 'FAILED', errorMessage: 'timeout' }
+      })
+
+      expect(sendTestAlertEmail).toHaveBeenCalled()
+    })
+
+    it('skips passed executions', async () => {
+      await notifyScheduledExecution({
+        userId: 'user-1',
+        scenarioName: 'Nightly Login',
+        execution: { id: 'e1', status: 'PASSED' }
+      })
+
+      expect(sendTestAlertEmail).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('notifySmokeTestSummary', () => {
+    it('notifies for each failed smoke result', async () => {
+      prisma.notificationSettings.findUnique.mockResolvedValue({
+        emailOnSmokeFail: true,
+        webhookEnabled: false
+      })
+      prisma.user.findUnique.mockResolvedValue({ email: 'qa@example.com', name: 'QA' })
+      sendTestAlertEmail.mockResolvedValue({ success: true })
+
+      await notifySmokeTestSummary('user-1', {
+        results: [
+          { scenarioName: 'A', status: 'SMOKE_PASSED' },
+          { scenarioName: 'B', status: 'SMOKE_FAILED', error: 'boom' }
+        ]
+      })
+
+      expect(sendTestAlertEmail).toHaveBeenCalledTimes(1)
     })
   })
 })

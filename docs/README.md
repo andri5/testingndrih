@@ -46,6 +46,16 @@ Welcome to the **Test Sambil Ngopi** documentation. This folder contains compreh
 
 ---
 
+### [API_ENDPOINTS.md](./API_ENDPOINTS.md)
+**REST API Reference**
+- All endpoints grouped by feature
+- Auth requirements and base URL
+- CI token usage
+
+*Read this to:* Integrate with the API or debug requests during development.
+
+---
+
 ### [TESTING.md](./TESTING.md)
 **Testing Strategy & Guide**
 - Backend unit, integration, security tests
@@ -93,6 +103,7 @@ Welcome to the **Test Sambil Ngopi** documentation. This folder contains compreh
 | **Frontend Pages** | 33 |
 | **Frontend Components** | 30+ |
 | **Database Migrations** | 15 |
+| **E2E Specs** | 16 |
 | **Total Production Files** | 150+ |
 | **Lines of Code** | 15,000+ |
 

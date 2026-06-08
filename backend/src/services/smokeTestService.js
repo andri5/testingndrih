@@ -244,9 +244,8 @@ export async function runAllSmokeTests(options = {}) {
       timestamp: new Date()
     }
 
-    // Send summary notification if configured
     if (options.notifyOnComplete) {
-      await sendSmokeTestSummary(summary)
+      await sendSmokeTestSummary(summary, options.userId)
     }
 
     return summary
@@ -370,30 +369,18 @@ export async function sendSmokeTestNotification(scenario, smokeResult, report) {
  * Send smoke test summary notification
  * @param {object} summary - Test summary
  */
-export async function sendSmokeTestSummary(summary) {
+export async function sendSmokeTestSummary(summary, userId) {
   try {
-    const subject = `Smoke Test Summary: ${summary.passed}/${summary.totalTests} Passed`
+    if (userId) {
+      const { notifySmokeTestSummary } = await import('./notificationService.js')
+      await notifySmokeTestSummary(userId, summary)
+    }
 
-    const emailBody = `
-Smoke Test Run Summary
-
-Total Tests: ${summary.totalTests}
-Passed: ${summary.passed}
-Failed: ${summary.failed}
-Pass Rate: ${summary.passRate}%
-Total Duration: ${formatDuration(summary.duration)}
-
-Results:
-${summary.results
-  .map(
-    r =>
-      `- ${r.scenarioName}: ${r.status} (${r.duration}ms)`
-  )
-  .join('\n')}
-    `
-
-    // TODO: Send to notification system or Slack
-    console.log(`[SMOKE TEST SUMMARY]\n${emailBody}`)
+    if (summary.failed > 0) {
+      console.log(
+        `[SMOKE TEST SUMMARY] ${summary.passed}/${summary.totalTests} passed, ${summary.failed} failed`
+      )
+    }
   } catch (error) {
     console.error(`[SMOKE TEST] Failed to send summary: ${error.message}`)
   }

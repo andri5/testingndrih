@@ -96,3 +96,41 @@ export async function notifyTestFailure({
     console.error('[Notification] Failed:', err.message)
   }
 }
+
+/**
+ * Notify user after scheduled execution completes with failure
+ */
+export async function notifyScheduledExecution({ userId, scenarioName, execution }) {
+  if (!userId || !execution || execution.status !== 'FAILED') return
+
+  await notifyTestFailure({
+    userId,
+    type: 'execution',
+    scenarioName,
+    status: execution.status,
+    executionId: execution.id,
+    errorMessage: execution.errorMessage,
+    passedSteps: execution.passedSteps,
+    totalSteps: execution.totalSteps
+  })
+}
+
+/**
+ * Notify user when smoke test batch has failures
+ */
+export async function notifySmokeTestSummary(userId, summary) {
+  if (!userId || !summary?.results?.length) return
+
+  const failed = summary.results.filter((r) => r.status !== 'SMOKE_PASSED')
+  if (failed.length === 0) return
+
+  for (const result of failed) {
+    await notifyTestFailure({
+      userId,
+      type: 'smoke',
+      scenarioName: result.scenarioName,
+      status: result.status,
+      errorMessage: result.error || `Smoke test ${result.status}`
+    })
+  }
+}

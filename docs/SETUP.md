@@ -428,6 +428,20 @@ npm install
 # Terminal: Ctrl+C then npm run dev
 ```
 
+### Halaman `/api-testing` Blank atau Error 500
+
+Vite dev server mem-proxy path yang diawali `/api` ke backend. Route SPA `/api-testing` harus **tidak** ikut ter-proxy.
+
+Pastikan `frontend/vite.config.js` memiliki `bypass` agar hanya `/api/...` yang di-proxy, lalu restart dev server:
+
+```bash
+cd frontend
+# Ctrl+C lalu:
+npm run dev
+```
+
+Akses frontend di **http://localhost:3001** (bukan 3000 — port 3000 biasanya Docker).
+
 ---
 
 ## 📚 Additional Resources
@@ -442,6 +456,8 @@ npm install
 ---
 
 ## 🤝 Contributing
+
+Lihat [`CONTRIBUTING.md`](../CONTRIBUTING.md) di root project.
 
 1. Create feature branch: `git checkout -b feature/my-feature`
 2. Commit changes: `git commit -am 'Add feature'`

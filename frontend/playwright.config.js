@@ -15,7 +15,8 @@ export default defineConfig({
   ],
 
   use: {
-    baseURL: 'http://localhost:3000',
+    // Fixed port — avoid global PLAYWRIGHT_BASE_URL from other projects breaking local runs
+    baseURL: 'http://localhost:3001',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
@@ -38,11 +39,11 @@ export default defineConfig({
     }
   ],
 
-  webServer: process.env.CI ? {
-    command: 'npx vite preview --port 3000',
+  webServer: {
+    command: process.env.CI ? 'npx vite preview --port 3001' : 'npm run dev',
     cwd: '.',
-    url: 'http://localhost:3000',
+    url: 'http://localhost:3001',
     reuseExistingServer: true,
     timeout: 120000
-  } : undefined,
+  },
 })

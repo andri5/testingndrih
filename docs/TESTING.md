@@ -1,6 +1,6 @@
 # Testing Strategy & Guide
 
-**Last Updated:** June 4, 2026  
+**Last Updated:** June 8, 2026  
 **Test Stack:** Jest (backend), Vitest (frontend unit), Playwright (E2E)  
 **Coverage Target:** 80% statements, 80% functions, 80% lines, 75% branches
 
@@ -12,9 +12,11 @@
 # Semua test (monorepo)
 npm test
 
-# Backend saja
+# Backend saja (dev — tanpa coverage gate)
 cd backend && npm test
-cd backend && npm test -- --coverage
+
+# Backend dengan coverage report
+cd backend && npm run test:coverage
 
 # Frontend unit
 cd frontend && npm test
@@ -22,7 +24,12 @@ cd frontend && npm test
 # Health check (backend + frontend + DB)
 npm run health-check
 
-# E2E (butuh backend & frontend running)
+# E2E (frontend dev server di port 3001)
+cd frontend && npx playwright install chromium   # sekali saja
+cd frontend && npm run dev                       # Terminal 1 → http://localhost:3001
+cd frontend && npx playwright test e2e/platform-features-e2e.spec.js --project=chromium
+
+# E2E full suite (butuh backend + frontend)
 cd backend && npm run dev    # Terminal 1
 cd frontend && npm run dev   # Terminal 2
 cd frontend && npm run e2e   # Terminal 3
@@ -36,7 +43,7 @@ cd frontend && npm run e2e   # Terminal 3
 
 | Metric | Nilai |
 |--------|-------|
-| Tests passing | 273/295 (92.5%) |
+| Tests passing | 349/349 (100%) |
 | ParallelExecutionService | 18/18 ✅ |
 | BrowserMatrixService | 22/22 ✅ |
 | AuthController | 19/19 ✅ |
@@ -51,7 +58,9 @@ cd frontend && npm run e2e   # Terminal 3
 | Notifications | `notificationService.test.js` | Email & webhook |
 | API Tokens | `apiTokenService.test.js` | CI/CD token auth |
 | Variable Substitution | `variableSubstitution.test.js` | `{{var}}` di steps & API |
-| Visual Regression | (via execution hooks) | Baseline capture & diff |
+| Environments | `environmentService.test.js` | CRUD, variables, resolved values |
+| Visual Regression | `visualRegressionService.test.js` | Baseline capture & diff |
+| Scheduler | `schedulerService.test.js` | Cron runs + failure notifications |
 
 ```bash
 cd backend
@@ -112,10 +121,11 @@ backend/tests/database/
 
 ## Frontend E2E (Playwright)
 
-Lokasi: `frontend/e2e/` (15 spec files)
+Lokasi: `frontend/e2e/` (16 spec files)
 
 | Spec | Area |
 |------|------|
+| `platform-features-e2e.spec.js` | API Testing, Issues, Environments, Visual Regression |
 | `auth.spec.js` / `auth-e2e.spec.js` | Login, logout, session |
 | `scenarios.spec.js` / `scenario-e2e.spec.js` | CRUD scenario |
 | `execution-e2e.spec.js` | Jalankan test |
@@ -125,7 +135,9 @@ Lokasi: `frontend/e2e/` (15 spec files)
 | `comprehensive.spec.js` | Full user journey |
 | `features-e2e.spec.js` | Fitur tambahan |
 
-Konfigurasi: `frontend/playwright.config.js`
+Konfigurasi: `frontend/playwright.config.js` (baseURL: `http://localhost:3001`)
+
+**Platform E2E** memakai mocked API — tidak butuh backend berjalan.
 
 ---
 
@@ -163,7 +175,9 @@ npm test -- --testPathPattern=variableSubstitution
 
 ## CI/CD Testing
 
-Contoh workflow: `.github/workflows/ci-run-scenario.example.yml`
+Workflow dev aktif: `.github/workflows/ci.yml` (backend test + lint pada PR)
+
+Contoh remote run: `.github/workflows/ci-run-scenario.example.yml`
 
 1. Generate API token di Settings → Integrations
 2. Trigger `POST /api/ci/run` dengan token
@@ -175,13 +189,14 @@ Contoh workflow: `.github/workflows/ci-run-scenario.example.yml`
 
 ### HIGH
 
-- [ ] Naikkan coverage ExecutionService ke 80%+
-- [ ] E2E untuk halaman baru: API Testing, Issues, Environments, Visual Regression
+- [x] Stabilkan backend unit tests (349/349 passing)
+- [x] E2E untuk halaman baru — `frontend/e2e/platform-features-e2e.spec.js` (5/5 passing)
+- [x] CI workflow dev — `.github/workflows/ci.yml`
+- [x] API reference — `docs/API_ENDPOINTS.md`
+- [ ] Naikkan coverage global ke 80%+ (`npm run test:coverage`)
 - [ ] Component tests (React Testing Library) untuk `ScenariosList`, `ExecuteScenarioButton`
 
 ### MEDIUM
-
-- [ ] GitHub Actions: jalankan `npm test` otomatis di setiap PR
 - [ ] Performance benchmark API (<500ms)
 - [ ] Test notifikasi email/webhook end-to-end
 
@@ -205,7 +220,15 @@ cd backend && npm test -- --verbose
 
 # Playwright debug
 cd frontend && npx playwright test --debug
+
+# Playwright browser belum terinstall
+cd frontend && npx playwright install chromium
+
+# Halaman /api-testing blank di dev → restart Vite setelah update vite.config.js
+# (proxy hanya untuk /api/..., bukan /api-testing)
 ```
+
+**Dev port:** gunakan `http://localhost:3001` (Vite). Port 3000 biasanya Docker/build lama.
 
 ---
 
@@ -218,4 +241,4 @@ cd frontend && npx playwright test --debug
 | `frontend/playwright.config.js` | Konfigurasi E2E |
 | `scripts/health-check.js` | Health check semua service |
 
-**Status:** Phase 1 stabilisasi selesai; Phase 2 fokus coverage & E2E fitur baru.
+**Status:** Backend 349/349 ✅ | Platform E2E 5/5 ✅ | CI workflow (backend + E2E) ✅ | Phase 2: naikkan coverage global.
