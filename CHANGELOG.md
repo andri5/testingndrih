@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/andri5/testingndrih/compare/v1.0.2...v1.1.0) (2026-06-09)
+
+
+### Features
+
+* **security:** validate production secrets and add admin password rotation ([9358bb0](https://github.com/andri5/testingndrih/commit/9358bb0bde844f1c5671a83a65957fb65dfd9ba2))
+
 ## [1.0.2](https://github.com/andri5/testingndrih/compare/v1.0.1...v1.0.2) (2026-06-09)
 
 
