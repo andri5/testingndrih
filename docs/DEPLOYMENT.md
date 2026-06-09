@@ -209,6 +209,31 @@ server {
 
 ---
 
+## Keamanan production (wajib)
+
+Checklist setelah server live:
+
+1. **Jangan commit `.env`** — file ini hanya di VPS / lokal.
+2. **Generate secret kuat** di laptop:
+   ```bash
+   npm run generate-secrets
+   ```
+   Salin `JWT_SECRET` (minimal 32 karakter) ke `/opt/testingndrih/.env`.
+3. **Ganti password admin** di VPS:
+   ```bash
+   cd /opt/testingndrih
+   docker compose exec -e NEW_ADMIN_PASSWORD='YourStrongPass123!' app node scripts/rotate-admin-password.js
+   ```
+4. **Pastikan** `RUN_SEED=false` setelah user admin ada.
+5. **Restart app** setelah mengubah `.env`:
+   ```bash
+   docker compose up -d --force-recreate app
+   ```
+
+Server production akan **menolak start** jika `JWT_SECRET` masih default atau kurang dari 32 karakter.
+
+---
+
 ## Rollback
 
 Di server:

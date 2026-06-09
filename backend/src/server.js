@@ -32,8 +32,10 @@ import environmentRoutes from './routes/environmentRoutes.js'
 import visualRegressionRoutes from './routes/visualRegressionRoutes.js'
 import { errorHandler } from './middleware/auth.js'
 import { swaggerSpec } from './lib/swagger.js'
+import { validateProductionSecurity } from './lib/productionSecurity.js'
 
 dotenv.config()
+validateProductionSecurity()
 
 const app = express()
 const PORT = process.env.PORT || 5001

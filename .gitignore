@@ -8,6 +8,15 @@ pnpm-lock.yaml
 .env.local
 .env.*.local
 .env.test
+.env.production
+
+# SSH / deploy keys
+deploy_key
+deploy_key.pub
+id_*
+*.pem
+*.key
+!*.key.example
 
 # Build outputs
 dist/
