@@ -144,10 +144,14 @@ JWT_EXPIRES_IN=7d
 
 CORS_ORIGIN=https://testsambilngopi.com
 
+# First deploy only — set false after admin user exists
+RUN_SEED=true
 SEED_EMAIL=admin@testingndrih.local
 SEED_PASSWORD=<change-me>
 ENABLE_SCHEDULER=true
 ```
+
+Setelah admin berhasil dibuat, ubah `RUN_SEED=false` di `.env` VPS agar redeploy tidak menjalankan seed lagi.
 
 Jalankan pertama kali:
 

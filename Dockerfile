@@ -45,5 +45,7 @@ RUN npx prisma generate
 
 EXPOSE 3000
 
-# On container start: start virtual display, run migrations, seed database, then launch server
-CMD ["sh", "-c", "Xvfb :99 -screen 0 1280x720x24 -nolisten tcp &  export DISPLAY=:99 && npx prisma migrate deploy && node scripts/seed.js && node src/server.js"]
+RUN chmod +x scripts/docker-entrypoint.sh
+
+# Migrations always run; seed only when RUN_SEED=true (first deploy / dev)
+CMD ["scripts/docker-entrypoint.sh"]

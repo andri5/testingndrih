@@ -63,7 +63,8 @@ services:
       # CORS - allow requests from frontend on same host
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
       
-      # Seed user credentials
+      # Seed — set RUN_SEED=true only on first deploy, then false (default)
+      RUN_SEED: ${RUN_SEED:-false}
       SEED_EMAIL: ${SEED_EMAIL:-admin@testingndrih.local}
       SEED_PASSWORD: ${SEED_PASSWORD:-changeme123}
       
