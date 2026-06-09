@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/andri5/testingndrih/compare/v1.0.0...v1.0.1) (2026-06-09)
+
+
+### Bug Fixes
+
+* **ci:** trigger deploy after Release workflow completes ([05f9433](https://github.com/andri5/testingndrih/commit/05f943337b375f9f4bc323be487ae7ff87ad4646))
+
 # 1.0.0 (2026-06-09)
 
 
