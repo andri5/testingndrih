@@ -82,6 +82,7 @@ Welcome to the **Test Sambil Ngopi** documentation. This folder contains compreh
 - **Testing**: See [TESTING.md](./TESTING.md)
 
 ### 🐳 Deployment
+- **Release & Production Deploy**: See [DEPLOYMENT.md](./DEPLOYMENT.md) — branching, semantic commit, CI, approval deploy ke `testsambilngopi.com`
 - **Docker Setup**: See [SETUP.md](./SETUP.md#-docker-setup)
 - **Production Build**: See [SETUP.md](./SETUP.md#building-for-production)
 - **Environment Variables**: See [SETUP.md](./SETUP.md#-backend-setup-details)

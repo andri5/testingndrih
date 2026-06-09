@@ -1,0 +1,57 @@
+name: Deploy Production
+
+on:
+  release:
+    types: [published]
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+env:
+  PROD_HEALTH_URL: https://testsambilngopi.com/health
+
+jobs:
+  deploy:
+    name: Deploy to testsambilngopi.com
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.PROD_SSH_HOST }}
+          username: ${{ secrets.PROD_SSH_USER }}
+          key: ${{ secrets.PROD_SSH_KEY }}
+          script_stop: true
+          script: |
+            set -e
+            APP_PATH="${{ secrets.PROD_APP_PATH }}"
+            TAG="${{ github.event.release.tag_name }}"
+
+            echo "Deploying ${TAG} to ${APP_PATH}"
+            cd "${APP_PATH}"
+
+            git fetch --tags origin
+            git checkout "${TAG}"
+
+            docker compose build
+            docker compose up -d
+
+            echo "Containers restarted for ${TAG}"
+
+      - name: Wait for production health check
+        run: |
+          echo "Checking ${PROD_HEALTH_URL}"
+          for attempt in 1 2 3 4 5 6 8 10 12; do
+            if curl -fsS "${PROD_HEALTH_URL}"; then
+              echo ""
+              echo "Production health check passed"
+              exit 0
+            fi
+            echo "Attempt ${attempt}: not ready, waiting ${attempt}s..."
+            sleep "${attempt}"
+          done
+          echo "Production health check failed after retries"
+          exit 1
