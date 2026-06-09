@@ -1,3 +1,10 @@
+## [1.0.2](https://github.com/andri5/testingndrih/compare/v1.0.1...v1.0.2) (2026-06-09)
+
+
+### Bug Fixes
+
+* **docker:** skip database seed on redeploy unless RUN_SEED=true ([9cc4165](https://github.com/andri5/testingndrih/commit/9cc4165380347280be3894ae593711b1c6e9b976))
+
 ## [1.0.1](https://github.com/andri5/testingndrih/compare/v1.0.0...v1.0.1) (2026-06-09)
 
 
