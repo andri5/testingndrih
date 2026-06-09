@@ -1,12 +1,22 @@
-name: CI (Dev)
+name: CI
 
 on:
   push:
-    branches: [main, develop, 'feat/**']
+    branches: [main, 'feat/**', 'fix/**', 'hotfix/**']
   pull_request:
-    branches: [main, develop]
+    branches: [main]
 
 jobs:
+  commitlint:
+    name: Commit lint
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: wagoid/commitlint-github-action@v6
+
   backend:
     name: Backend Tests
     runs-on: ubuntu-latest

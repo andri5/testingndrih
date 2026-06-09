@@ -7,8 +7,7 @@ name: Run Test Scenario
 
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
+  # push disabled — rename file (remove .example) and set secrets before enabling
 
 jobs:
   run-scenario:

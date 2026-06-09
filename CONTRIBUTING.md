@@ -19,29 +19,69 @@ npm run dev
 cd frontend && npm run dev
 ```
 
-## Workflow
+## Workflow Git
 
-1. Buat branch dari `main`: `feat/nama-fitur` atau `fix/nama-bug`
-2. Tulis kode + test yang relevan
-3. Jalankan sebelum commit:
-   ```bash
-   cd backend && npm test
-   cd frontend && npm run lint
-   npm run health-check   # opsional, butuh server running
-   ```
-4. Commit dengan [Conventional Commits](https://www.conventionalcommits.org/):
-   - `feat:` fitur baru
-   - `fix:` perbaikan bug
-   - `chore:` maintenance, docs, refactor
-5. Buka Pull Request ke `main`
+1. Sync `main`: `git checkout main && git pull`
+2. Buat branch: `feat/nama-fitur`, `fix/nama-bug`, atau `hotfix/nama`
+3. Tulis kode + test yang relevan
+4. Commit dengan [Conventional Commits](#semantic-commit)
+5. Push dan buka **Pull Request ke `main`**
+6. Pastikan CI hijau (test, lint, E2E, commitlint)
+7. Setelah merge → semantic-release membuat versi → deploy prod butuh **approval manual**
 
-## Testing
+Branch `develop` tidak dipakai. Lihat [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) untuk alur rilis lengkap.
+
+## Semantic commit
+
+Format wajib:
+
+```
+<type>(<scope>): <deskripsi singkat>
+```
+
+| Type | Kapan |
+|------|--------|
+| `feat` | Fitur baru → bump **minor** |
+| `fix` | Perbaikan bug → bump **patch** |
+| `docs` | Dokumentasi saja |
+| `test` | Test saja |
+| `refactor` | Refactor tanpa ubah perilaku |
+| `perf` | Peningkatan performa |
+| `ci` | Perubahan CI/CD |
+| `chore` | Maintenance, deps, config |
+
+Contoh:
+
+```
+feat(api): add environment variable export
+fix(ui): resolve sidebar link on mobile
+chore: update dependencies
+```
+
+Breaking change:
+
+```
+feat(api)!: remove legacy auth endpoint
+
+BREAKING CHANGE: /api/auth/legacy removed, use /api/auth/login
+```
+
+Validasi lokal (Husky) + CI pada PR.
+
+## Testing sebelum PR
+
+```bash
+cd backend && npm test
+cd frontend && npm run lint
+cd frontend && npx playwright test e2e/platform-features-e2e.spec.js --project=chromium
+npm run health-check   # opsional, butuh dev server
+```
 
 | Layer | Command |
 |-------|---------|
 | Backend unit | `cd backend && npm test` |
 | Backend coverage | `cd backend && npm run test:coverage` |
-| Frontend E2E | `cd frontend && npm run e2e` (butuh dev server) |
+| Frontend E2E | `cd frontend && npm run e2e` |
 | Health check | `npm run health-check` |
 
 Lihat [`docs/TESTING.md`](docs/TESTING.md) untuk panduan lengkap.
@@ -55,7 +95,9 @@ Lihat [`docs/TESTING.md`](docs/TESTING.md) untuk panduan lengkap.
 ## Dokumentasi
 
 Update docs jika menambah endpoint, halaman, atau fitur:
+
 - `docs/API_ENDPOINTS.md` — referensi API
+- `docs/DEPLOYMENT.md` — rilis & deploy production
 - `docs/DIRECTORY_STRUCTURE.md` — struktur folder
 - `docs/TESTING.md` — panduan testing
 
