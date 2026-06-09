@@ -71,6 +71,7 @@ jobs:
         working-directory: .
       # package-lock generated on Windows omits Linux Rollup native bindings (npm/cli#4828)
       - name: Install Rollup native binding for Linux
+        working-directory: .
         run: |
           ROLLUP_VERSION=$(node -p "require('./frontend/node_modules/rollup/package.json').version")
           npm install --no-save "@rollup/rollup-linux-x64-gnu@${ROLLUP_VERSION}"
