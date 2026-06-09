@@ -1,8 +1,20 @@
 name: Deploy Production
 
+# release:published does NOT fire when semantic-release publishes via GITHUB_TOKEN.
+# Chain deploy after Release workflow (same pattern as CI → Release).
 on:
-  release:
-    types: [published]
+  workflow_run:
+    workflows: [Release]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to deploy (leave empty for latest)'
+        required: false
+
+permissions:
+  contents: read
 
 concurrency:
   group: deploy-production
@@ -15,9 +27,29 @@ jobs:
   deploy:
     name: Deploy to testsambilngopi.com
     runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     environment: production
 
     steps:
+      - name: Resolve release tag
+        id: tag
+        run: |
+          if [ -n "${{ github.event.inputs.tag }}" ]; then
+            echo "tag=${{ github.event.inputs.tag }}" >> "$GITHUB_OUTPUT"
+          else
+            TAG=$(curl -fsSL \
+              -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/${{ github.repository }}/releases/latest" \
+              | jq -r .tag_name)
+            if [ -z "$TAG" ] || [ "$TAG" = "null" ]; then
+              echo "No published release found"
+              exit 1
+            fi
+            echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          fi
+          echo "Deploying tag: ${{ steps.tag.outputs.tag }}"
+
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.2.0
         with:
@@ -28,7 +60,7 @@ jobs:
           script: |
             set -e
             APP_PATH="${{ secrets.PROD_APP_PATH }}"
-            TAG="${{ github.event.release.tag_name }}"
+            TAG="${{ steps.tag.outputs.tag }}"
 
             echo "Deploying ${TAG} to ${APP_PATH}"
             cd "${APP_PATH}"
