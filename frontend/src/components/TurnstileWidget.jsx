@@ -1,23 +1,20 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
+/** Poll until turnstile.render exists — do NOT use turnstile.ready() with defer/async scripts. */
 function waitForTurnstileApi(timeoutMs = 15000) {
   return new Promise((resolve, reject) => {
     const started = Date.now()
 
     const attempt = () => {
       if (window.turnstile?.render) {
-        if (window.turnstile.ready) {
-          window.turnstile.ready(() => resolve(window.turnstile))
-        } else {
-          resolve(window.turnstile)
-        }
+        resolve(window.turnstile)
         return
       }
       if (Date.now() - started > timeoutMs) {
         reject(new Error('Turnstile script timed out'))
         return
       }
-      setTimeout(attempt, 100)
+      setTimeout(attempt, 50)
     }
 
     attempt()
