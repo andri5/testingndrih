@@ -1,3 +1,10 @@
+## [1.1.11](https://github.com/andri5/testingndrih/compare/v1.1.10...v1.1.11) (2026-06-10)
+
+
+### Bug Fixes
+
+* **auth:** move Turnstile captcha from forgot-password to reset-password page ([e890a69](https://github.com/andri5/testingndrih/commit/e890a6934583877ab56ea1fd8435cf940feea0a3))
+
 ## [1.1.10](https://github.com/andri5/testingndrih/compare/v1.1.9...v1.1.10) (2026-06-10)
 
 
