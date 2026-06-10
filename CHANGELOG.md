@@ -1,3 +1,10 @@
+## [1.1.9](https://github.com/andri5/testingndrih/compare/v1.1.8...v1.1.9) (2026-06-10)
+
+
+### Bug Fixes
+
+* **docker:** pass SMTP and FRONTEND_URL env vars to app container ([be82197](https://github.com/andri5/testingndrih/commit/be82197a3ae9360e3e00fe9107557df32b39f790))
+
 ## [1.1.8](https://github.com/andri5/testingndrih/compare/v1.1.7...v1.1.8) (2026-06-10)
 
 
