@@ -1,3 +1,10 @@
+## [1.1.8](https://github.com/andri5/testingndrih/compare/v1.1.7...v1.1.8) (2026-06-10)
+
+
+### Bug Fixes
+
+* **auth:** enhance forgot password flow with captcha and SMTP branding ([46c07b3](https://github.com/andri5/testingndrih/commit/46c07b339cd4e0e9647f400ad89afa5f68df1eaa))
+
 ## [1.1.7](https://github.com/andri5/testingndrih/compare/v1.1.6...v1.1.7) (2026-06-10)
 
 
