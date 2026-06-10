@@ -27,7 +27,11 @@ function mockPlatformApis(page) {
     const method = route.request().method()
 
     if (url.includes('/api/auth/me')) {
-      return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(mockUser) })
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ user: mockUser }),
+      })
     }
 
     if (url.includes('/api/executions/stats')) {
