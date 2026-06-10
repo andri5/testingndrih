@@ -1,3 +1,10 @@
+## [1.1.2](https://github.com/andri5/testingndrih/compare/v1.1.1...v1.1.2) (2026-06-10)
+
+
+### Bug Fixes
+
+* **ci:** protect production data and stabilize deploy pipeline ([caff8b3](https://github.com/andri5/testingndrih/commit/caff8b36f6eb85ffdd4807bcbe8274df9de923e4))
+
 ## [1.1.1](https://github.com/andri5/testingndrih/compare/v1.1.0...v1.1.1) (2026-06-10)
 
 
