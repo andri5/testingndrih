@@ -1,3 +1,16 @@
+# [1.2.0](https://github.com/andri5/testingndrih/compare/v1.1.11...v1.2.0) (2026-06-10)
+
+
+### Bug Fixes
+
+* **e2e:** align platform navigation tests with admin Tools menu ([262443c](https://github.com/andri5/testingndrih/commit/262443c658acd4b2b7fabef85a1e438dc8deba52))
+* **e2e:** mock /auth/me response shape for refreshUser on load ([ed54791](https://github.com/andri5/testingndrih/commit/ed547913ca3b4f8ccbc64aef17f4dcc07fc3d7a8))
+
+
+### Features
+
+* **platform:** add user roles, admin access control, and auth improvements ([66e0840](https://github.com/andri5/testingndrih/commit/66e08403e4823fa9bfe00b323b73641a6ff4f81a))
+
 ## [1.1.11](https://github.com/andri5/testingndrih/compare/v1.1.10...v1.1.11) (2026-06-10)
 
 
