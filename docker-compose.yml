@@ -76,6 +76,17 @@ services:
       # Cloudflare Turnstile (optional — captcha on login/register when set)
       TURNSTILE_SITE_KEY: ${VITE_TURNSTILE_SITE_KEY:-}
       TURNSTILE_SECRET_KEY: ${TURNSTILE_SECRET_KEY:-}
+
+      # Public URL for password-reset links in emails
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+
+      # Gmail SMTP (read from host .env — required for forgot-password email in Docker/prod)
+      SMTP_HOST: ${SMTP_HOST:-smtp.gmail.com}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_SECURE: ${SMTP_SECURE:-false}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-}
       
     ports:
       - "${FRONTEND_PORT:-3000}:3000"
