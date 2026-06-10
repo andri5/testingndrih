@@ -19,6 +19,7 @@
     "format": "npm run format:write --workspace=backend && npm run format:write --workspace=frontend",
     "health-check": "node scripts/health-check.js",
     "generate-secrets": "node scripts/generate-production-secrets.js",
+    "push": "node scripts/git-push-safe.js",
     "prepare": "husky install"
   },
   "workspaces": [
