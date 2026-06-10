@@ -44,7 +44,9 @@ const PORT = process.env.PORT || 5001
 const cspDirectives = helmet.contentSecurityPolicy.getDefaultDirectives()
 cspDirectives['script-src'] = ["'self'", 'https://challenges.cloudflare.com']
 cspDirectives['frame-src'] = ["'self'", 'https://challenges.cloudflare.com']
+cspDirectives['child-src'] = ["'self'", 'https://challenges.cloudflare.com']
 cspDirectives['connect-src'] = ["'self'", 'https://challenges.cloudflare.com']
+cspDirectives['worker-src'] = ["'self'", 'blob:']
 cspDirectives['style-src'] = [...(cspDirectives['style-src'] || ["'self'"]), 'https://fonts.googleapis.com']
 cspDirectives['font-src'] = [...(cspDirectives['font-src'] || ["'self'"]), 'https://fonts.gstatic.com']
 
@@ -72,6 +74,18 @@ if (process.env.NODE_ENV === 'test') {
   })
 }
 app.use('/api/', limiter)
+
+// Public config for SPA (Turnstile site key at runtime — no frontend rebuild required)
+app.get('/api/config/public', (req, res) => {
+  const turnstileSiteKey = (
+    process.env.TURNSTILE_SITE_KEY ||
+    process.env.VITE_TURNSTILE_SITE_KEY ||
+    ''
+  ).trim()
+  res.json({
+    turnstileSiteKey,
+  })
+})
 
 // Health check endpoint
 app.get('/health', (req, res) => {

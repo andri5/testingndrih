@@ -74,6 +74,7 @@ services:
       ENABLE_SCHEDULER: ${ENABLE_SCHEDULER:-true}
 
       # Cloudflare Turnstile (optional — captcha on login/register when set)
+      TURNSTILE_SITE_KEY: ${VITE_TURNSTILE_SITE_KEY:-}
       TURNSTILE_SECRET_KEY: ${TURNSTILE_SECRET_KEY:-}
       
     ports:

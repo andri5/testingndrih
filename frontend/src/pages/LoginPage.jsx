@@ -4,9 +4,8 @@ import { useAuthStore } from '../store/authStore'
 import { useSettingsStore } from '../store/settingsStore'
 import { CheckCircle2, AlertCircle, Eye, EyeOff, Loader2, ShieldCheck, Globe } from 'lucide-react'
 import TurnstileWidget from '../components/TurnstileWidget'
+import { useTurnstileSiteKey } from '../hooks/useTurnstileSiteKey'
 import { validateEmail } from '../utils/validation'
-
-const turnstileSiteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY || ''
 
 const translations = {
   en: {
@@ -54,6 +53,7 @@ export default function LoginPage() {
   const error = useAuthStore((state) => state.error)
   const clearError = useAuthStore((state) => state.clearError)
   const { language, setLanguage } = useSettingsStore()
+  const turnstileSiteKey = useTurnstileSiteKey()
   const t = translations[language] || translations.en
 
   const [email, setEmail] = useState('')
@@ -208,7 +208,7 @@ export default function LoginPage() {
                 resetKey={captchaResetKey}
                 onVerify={setCaptchaToken}
                 onExpire={resetCaptcha}
-                onError={resetCaptcha}
+                onError={() => setCaptchaToken('')}
               />
             )}
 

@@ -4,9 +4,8 @@ import { useAuthStore } from '../store/authStore'
 import { useSettingsStore } from '../store/settingsStore'
 import { AlertCircle, Eye, EyeOff, Loader2, ShieldCheck, Globe } from 'lucide-react'
 import TurnstileWidget from '../components/TurnstileWidget'
+import { useTurnstileSiteKey } from '../hooks/useTurnstileSiteKey'
 import { validateEmail, validateFullName, NAME_MAX_LENGTH } from '../utils/validation'
-
-const turnstileSiteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY || ''
 
 const translations = {
   en: {
@@ -88,6 +87,7 @@ export default function RegisterPage() {
   const error = useAuthStore((state) => state.error)
   const clearError = useAuthStore((state) => state.clearError)
   const { language, setLanguage } = useSettingsStore()
+  const turnstileSiteKey = useTurnstileSiteKey()
   const t = translations[language] || translations.en
 
   const [name, setName] = useState('')
@@ -254,7 +254,7 @@ export default function RegisterPage() {
                 resetKey={captchaResetKey}
                 onVerify={setCaptchaToken}
                 onExpire={resetCaptcha}
-                onError={resetCaptcha}
+                onError={() => setCaptchaToken('')}
               />
             )}
             <button type="submit" disabled={isLoading} className="w-full py-2 px-4 rounded-md font-medium text-sm text-white bg-[#5E6AD2] hover:bg-[#6B7AE8] transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-[#5E6AD2] focus:ring-offset-2 focus:ring-offset-[#161618] disabled:opacity-50 disabled:cursor-not-allowed">
