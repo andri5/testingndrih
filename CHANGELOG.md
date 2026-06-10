@@ -1,3 +1,10 @@
+# [1.3.0](https://github.com/andri5/testingndrih/compare/v1.2.0...v1.3.0) (2026-06-10)
+
+
+### Features
+
+* **admin:** add full user CRUD in Settings user management ([39fac7b](https://github.com/andri5/testingndrih/commit/39fac7b2ad09cf09a8545a0c714ddf1376f6ec5d))
+
 # [1.2.0](https://github.com/andri5/testingndrih/compare/v1.1.11...v1.2.0) (2026-06-10)
 
 
