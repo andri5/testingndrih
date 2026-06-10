@@ -46,6 +46,7 @@ cspDirectives['script-src'] = ["'self'", 'https://challenges.cloudflare.com']
 cspDirectives['frame-src'] = ["'self'", 'https://challenges.cloudflare.com']
 cspDirectives['child-src'] = ["'self'", 'https://challenges.cloudflare.com']
 cspDirectives['connect-src'] = ["'self'", 'https://challenges.cloudflare.com']
+cspDirectives['img-src'] = ["'self'", 'data:', 'https://challenges.cloudflare.com']
 cspDirectives['worker-src'] = ["'self'", 'blob:']
 cspDirectives['style-src'] = [...(cspDirectives['style-src'] || ["'self'"]), 'https://fonts.googleapis.com']
 cspDirectives['font-src'] = [...(cspDirectives['font-src'] || ["'self'"]), 'https://fonts.gstatic.com']
@@ -143,12 +144,33 @@ app.use('/api/videos', express.static(path.resolve(__dirname, '../uploads/videos
 // When the container includes a /app/public/index.html (built frontend),
 // Express serves the React SPA at / so frontend + backend share one port.
 const publicDir = path.resolve(__dirname, '../public')
+
+function getTurnstileSiteKey() {
+  return (process.env.TURNSTILE_SITE_KEY || process.env.VITE_TURNSTILE_SITE_KEY || '').trim()
+}
+
+function serveSpaIndex(req, res) {
+  const indexPath = path.join(publicDir, 'index.html')
+  let html = fs.readFileSync(indexPath, 'utf8')
+  const siteKey = getTurnstileSiteKey()
+
+  if (siteKey && !html.includes('name="turnstile-site-key"')) {
+    const safeKey = siteKey.replace(/"/g, '&quot;')
+    html = html.replace(
+      '</head>',
+      `  <meta name="turnstile-site-key" content="${safeKey}">\n</head>`
+    )
+  }
+
+  res.type('html').send(html)
+}
+
 if (fs.existsSync(publicDir)) {
   app.use(express.static(publicDir))
-  // SPA fallback — all non-API GET requests return index.html (for React Router)
+  // SPA fallback — inject Turnstile site key meta for captcha on login/register
   app.get('*', (req, res, next) => {
     if (req.path.startsWith('/api/')) return next()
-    res.sendFile(path.join(publicDir, 'index.html'))
+    serveSpaIndex(req, res)
   })
 }
 

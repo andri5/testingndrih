@@ -1,55 +1,26 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-const SCRIPT_ID = 'cf-turnstile-script'
-const SCRIPT_SRC = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit'
-
-function whenTurnstileReady() {
+function waitForTurnstileApi(timeoutMs = 15000) {
   return new Promise((resolve, reject) => {
-    if (window.turnstile?.ready) {
-      window.turnstile.ready(resolve)
-      return
-    }
-    if (window.turnstile?.render) {
-      resolve()
-      return
-    }
-    reject(new Error('Turnstile API unavailable'))
-  })
-}
+    const started = Date.now()
 
-function loadTurnstileScript() {
-  if (window.turnstile?.render) {
-    return whenTurnstileReady()
-  }
-
-  const existing = document.getElementById(SCRIPT_ID)
-
-  return new Promise((resolve, reject) => {
-    const finish = () => {
-      whenTurnstileReady().then(resolve).catch(reject)
-    }
-
-    if (existing) {
-      if (existing.dataset.loaded === 'true') {
-        finish()
+    const attempt = () => {
+      if (window.turnstile?.render) {
+        if (window.turnstile.ready) {
+          window.turnstile.ready(() => resolve(window.turnstile))
+        } else {
+          resolve(window.turnstile)
+        }
         return
       }
-      existing.addEventListener('load', finish, { once: true })
-      existing.addEventListener('error', () => reject(new Error('Script load failed')), { once: true })
-      return
+      if (Date.now() - started > timeoutMs) {
+        reject(new Error('Turnstile script timed out'))
+        return
+      }
+      setTimeout(attempt, 100)
     }
 
-    const script = document.createElement('script')
-    script.id = SCRIPT_ID
-    script.src = SCRIPT_SRC
-    script.async = true
-    script.defer = true
-    script.onload = () => {
-      script.dataset.loaded = 'true'
-      finish()
-    }
-    script.onerror = () => reject(new Error('Script load failed'))
-    document.head.appendChild(script)
+    attempt()
   })
 }
 
@@ -82,12 +53,12 @@ export default function TurnstileWidget({ siteKey, onVerify, onExpire, onError, 
 
     const renderWidget = async () => {
       try {
-        await loadTurnstileScript()
-        if (cancelled || !containerRef.current || !window.turnstile?.render) return
+        const api = await waitForTurnstileApi()
+        if (cancelled || !containerRef.current) return
 
         if (widgetIdRef.current != null) {
           try {
-            window.turnstile.remove(widgetIdRef.current)
+            api.remove(widgetIdRef.current)
           } catch {
             /* ignore */
           }
@@ -95,7 +66,7 @@ export default function TurnstileWidget({ siteKey, onVerify, onExpire, onError, 
         }
 
         containerRef.current.innerHTML = ''
-        widgetIdRef.current = window.turnstile.render(containerRef.current, {
+        widgetIdRef.current = api.render(containerRef.current, {
           sitekey: key,
           theme: 'auto',
           callback: (token) => {
@@ -104,7 +75,9 @@ export default function TurnstileWidget({ siteKey, onVerify, onExpire, onError, 
           },
           'expired-callback': () => onExpireRef.current?.(),
           'error-callback': () => {
-            setLoadError('Captcha verification failed. Please try again.')
+            setLoadError(
+              'Captcha verification failed. Ensure testsambilngopi.com is added in Cloudflare Turnstile.'
+            )
             onErrorRef.current?.()
           },
         })
@@ -112,7 +85,9 @@ export default function TurnstileWidget({ siteKey, onVerify, onExpire, onError, 
       } catch (err) {
         if (!cancelled) {
           console.error('[Turnstile]', err)
-          setLoadError('Captcha could not be loaded')
+          setLoadError(
+            'Captcha could not be loaded. Check network or Cloudflare Turnstile domain settings.'
+          )
         }
       }
     }
@@ -137,8 +112,8 @@ export default function TurnstileWidget({ siteKey, onVerify, onExpire, onError, 
   }
 
   return (
-    <div className="space-y-2">
-      <div ref={containerRef} className="flex justify-center min-h-[65px]" />
+    <div className="space-y-2 turnstile-widget">
+      <div ref={containerRef} className="flex justify-center min-h-[65px] w-full" />
       {loadError && (
         <div className="text-center space-y-1">
           <p className="text-xs text-[#F87171]">{loadError}</p>

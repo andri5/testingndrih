@@ -2,14 +2,24 @@ import { useEffect, useState } from 'react'
 
 const buildTimeKey = (import.meta.env.VITE_TURNSTILE_SITE_KEY || '').trim()
 
+function readMetaSiteKey() {
+  const meta = document.querySelector('meta[name="turnstile-site-key"]')
+  return (meta?.getAttribute('content') || '').trim()
+}
+
 /**
- * Site key from Vite build, with runtime fallback from /api/config/public
- * (so production works after .env update without a full frontend rebuild).
+ * Site key: meta tag (server-injected) → build → /api/config/public
  */
 export function useTurnstileSiteKey() {
-  const [siteKey, setSiteKey] = useState(buildTimeKey)
+  const [siteKey, setSiteKey] = useState(() => readMetaSiteKey() || buildTimeKey)
 
   useEffect(() => {
+    const metaKey = readMetaSiteKey()
+    if (metaKey) {
+      setSiteKey(metaKey)
+      return
+    }
+
     let cancelled = false
 
     fetch('/api/config/public')

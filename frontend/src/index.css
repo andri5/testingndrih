@@ -362,6 +362,14 @@ html.theme-light input:-webkit-autofill:active {
 /* ─── Auth page – light theme ─── */
 /* Login/Register full-page bg should be surface gray, not pure white */
 html.theme-light .auth-page-bg { background-color: #F5F5F7 !important; }
+
+/* Cloudflare Turnstile widget — keep iframe visible on auth forms */
+.turnstile-widget iframe {
+  display: block !important;
+  min-height: 65px;
+  width: 100%;
+  max-width: 304px;
+}
 html.theme-light .auth-card {
   background: #FFFFFF !important;
   border-color: #DDDDE0 !important;
