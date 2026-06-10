@@ -143,6 +143,15 @@ JWT_SECRET=<long-random-secret>
 JWT_EXPIRES_IN=7d
 
 CORS_ORIGIN=https://testsambilngopi.com
+FRONTEND_URL=https://testsambilngopi.com
+
+# Gmail SMTP (password reset emails)
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=testsambilngopi@gmail.com
+SMTP_PASSWORD=<gmail-app-password>
+SMTP_FROM=Test Sambil Ngopi <testsambilngopi@gmail.com>
 
 # First deploy only — set false after admin user exists
 RUN_SEED=true

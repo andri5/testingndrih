@@ -1,5 +1,6 @@
 import { prisma } from '../lib/prisma.js'
 import { sendTestAlertEmail } from './emailService.js'
+import { getFrontendUrl } from '../utils/frontendUrl.js'
 
 export async function getNotificationSettings(userId) {
   let settings = await prisma.notificationSettings.findUnique({ where: { userId } })
@@ -58,7 +59,7 @@ export async function notifyTestFailure({
     ])
     if (!user) return
 
-    const appUrl = process.env.FRONTEND_URL || 'http://localhost:3000'
+    const appUrl = getFrontendUrl()
     const detailUrl = executionId ? `${appUrl}/reports` : appUrl
     const payload = {
       event: type === 'smoke' ? 'smoke_test_failed' : 'execution_failed',

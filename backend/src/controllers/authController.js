@@ -5,6 +5,7 @@ import { sendPasswordResetEmail } from '../services/emailService.js'
 import { prisma } from '../lib/prisma.js'
 import { validateRegistrationEmail, validateRegistrationName } from '../utils/registerValidation.js'
 import { verifyTurnstileToken } from '../utils/turnstile.js'
+import { getFrontendUrl } from '../utils/frontendUrl.js'
 
 async function assertCaptcha(req, res) {
   const captcha = await verifyTurnstileToken(
@@ -258,7 +259,7 @@ export async function forgotPassword(req, res, next) {
     })
 
     // Send reset email
-    const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3001'}/reset-password/${resetToken}`
+    const resetUrl = `${getFrontendUrl()}/reset-password/${resetToken}`
     
     try {
       const emailResult = await sendPasswordResetEmail(normalizedEmail, resetToken, resetUrl)

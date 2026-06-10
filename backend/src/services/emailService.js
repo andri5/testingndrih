@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer'
+import { getFrontendUrl } from '../utils/frontendUrl.js'
 
 /**
  * Email service using Nodemailer
@@ -124,7 +125,7 @@ export async function sendWelcomeEmail(email, name) {
             <p>You can now log in and start creating automated test scenarios.</p>
             
             <div style="margin: 30px 0;">
-              <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/login" style="background-color: #5E6AD2; color: white; padding: 12px 30px; text-decoration: none; border-radius: 4px; display: inline-block;">
+              <a href="${getFrontendUrl()}/login" style="background-color: #5E6AD2; color: white; padding: 12px 30px; text-decoration: none; border-radius: 4px; display: inline-block;">
                 Login Now
               </a>
             </div>
@@ -146,7 +147,7 @@ export async function sendWelcomeEmail(email, name) {
         
         You can now log in and start creating automated test scenarios.
         
-        Visit: ${process.env.FRONTEND_URL || 'http://localhost:3000'}/login
+        Visit: ${getFrontendUrl()}/login
         
         This is an automated email. Please do not reply to this email.
       `

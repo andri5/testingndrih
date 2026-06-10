@@ -78,7 +78,7 @@ services:
       TURNSTILE_SECRET_KEY: ${TURNSTILE_SECRET_KEY:-}
 
       # Public URL for password-reset links in emails
-      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+      FRONTEND_URL: ${FRONTEND_URL}
 
       # Gmail SMTP (read from host .env — required for forgot-password email in Docker/prod)
       SMTP_HOST: ${SMTP_HOST:-smtp.gmail.com}

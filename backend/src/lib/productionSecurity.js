@@ -44,6 +44,21 @@ export function validateProductionSecurity() {
     warnings.push('SEED_PASSWORD is still the default while RUN_SEED=true')
   }
 
+  const frontendUrl = (process.env.FRONTEND_URL || '').trim()
+  if (!frontendUrl) {
+    errors.push(
+      'FRONTEND_URL must be set in production (e.g. https://testsambilngopi.com) for password-reset emails'
+    )
+  } else if (/localhost|127\.0\.0\.1/i.test(frontendUrl)) {
+    errors.push(
+      `FRONTEND_URL must not point to localhost in production (current: ${frontendUrl})`
+    )
+  } else if (!frontendUrl.startsWith('https://')) {
+    warnings.push(
+      `FRONTEND_URL should use HTTPS in production (current: ${frontendUrl})`
+    )
+  }
+
   for (const warning of warnings) {
     console.warn(`[security] WARNING: ${warning}`)
   }
