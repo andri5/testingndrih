@@ -1,3 +1,10 @@
+## [1.1.3](https://github.com/andri5/testingndrih/compare/v1.1.2...v1.1.3) (2026-06-10)
+
+
+### Bug Fixes
+
+* **auth:** render Turnstile captcha and allow Cloudflare in CSP ([872044e](https://github.com/andri5/testingndrih/commit/872044e98f5a02d944f0167a3511b152cc86c304))
+
 ## [1.1.2](https://github.com/andri5/testingndrih/compare/v1.1.1...v1.1.2) (2026-06-10)
 
 
