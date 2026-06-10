@@ -1,3 +1,11 @@
+## [1.1.1](https://github.com/andri5/testingndrih/compare/v1.1.0...v1.1.1) (2026-06-10)
+
+
+### Bug Fixes
+
+* **ci:** trigger deploy after Release workflow completes ([65dac8d](https://github.com/andri5/testingndrih/commit/65dac8df150f3d12b51f6b13355a6f032075dc29))
+* **test:** update auth controller tests for captcha and name validation ([51acfad](https://github.com/andri5/testingndrih/commit/51acfad75aadca581892181c1a28d4ca9c37e4b5))
+
 # [1.1.0](https://github.com/andri5/testingndrih/compare/v1.0.2...v1.1.0) (2026-06-09)
 
 
