@@ -4,6 +4,9 @@
 FROM node:20-alpine AS frontend-builder
 WORKDIR /build
 
+ARG VITE_TURNSTILE_SITE_KEY=
+ENV VITE_TURNSTILE_SITE_KEY=$VITE_TURNSTILE_SITE_KEY
+
 COPY frontend/package*.json ./
 RUN npm install --legacy-peer-deps
 

@@ -45,6 +45,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        VITE_TURNSTILE_SITE_KEY: ${VITE_TURNSTILE_SITE_KEY:-}
     container_name: testingndrih-app
     environment:
       # Node environment
@@ -70,6 +72,9 @@ services:
       
       # Scheduler
       ENABLE_SCHEDULER: ${ENABLE_SCHEDULER:-true}
+
+      # Cloudflare Turnstile (optional — captcha on login/register when set)
+      TURNSTILE_SECRET_KEY: ${TURNSTILE_SECRET_KEY:-}
       
     ports:
       - "${FRONTEND_PORT:-3000}:3000"

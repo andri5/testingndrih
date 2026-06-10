@@ -3,6 +3,10 @@ import { useNavigate, Link } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import { useSettingsStore } from '../store/settingsStore'
 import { AlertCircle, Eye, EyeOff, Loader2, ShieldCheck, Globe } from 'lucide-react'
+import TurnstileWidget from '../components/TurnstileWidget'
+import { validateEmail, validateFullName, NAME_MAX_LENGTH } from '../utils/validation'
+
+const turnstileSiteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY || ''
 
 const translations = {
   en: {
@@ -32,6 +36,13 @@ const translations = {
     ruleLowercase: 'At least 1 lowercase letter (a-z)',
     ruleNumber: 'At least 1 number (0-9)',
     ruleSpecial: 'At least 1 special character (!@#$%^&*)',
+    nameRequired: 'Full name is required',
+    nameMaxLength: 'Full name must be at most 30 characters',
+    nameAlphabetOnly: 'Full name may only contain letters and spaces',
+    emailRequired: 'Email is required',
+    emailMissingAt: 'Email must contain @ (example: user@email.com)',
+    emailInvalid: 'Email format is invalid (example: user@email.com)',
+    captchaRequired: 'Please complete the captcha verification',
   },
   id: {
     createAccount: 'Buat akun Anda',
@@ -60,6 +71,13 @@ const translations = {
     ruleLowercase: 'Setidaknya 1 huruf kecil (a-z)',
     ruleNumber: 'Setidaknya 1 angka (0-9)',
     ruleSpecial: 'Setidaknya 1 karakter spesial (!@#$%^&*)',
+    nameRequired: 'Nama lengkap wajib diisi',
+    nameMaxLength: 'Nama lengkap maksimal 30 karakter',
+    nameAlphabetOnly: 'Nama lengkap hanya boleh huruf dan spasi',
+    emailRequired: 'Email wajib diisi',
+    emailMissingAt: 'Email harus mengandung @ (contoh: user@email.com)',
+    emailInvalid: 'Format email tidak valid (contoh: user@email.com)',
+    captchaRequired: 'Selesaikan verifikasi captcha terlebih dahulu',
   }
 }
 
@@ -79,6 +97,27 @@ export default function RegisterPage() {
   const [localError, setLocalError] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [captchaToken, setCaptchaToken] = useState('')
+  const [captchaResetKey, setCaptchaResetKey] = useState(0)
+
+  const validationMessages = {
+    nameRequired: t.nameRequired,
+    nameMaxLength: t.nameMaxLength,
+    nameAlphabetOnly: t.nameAlphabetOnly,
+    emailRequired: t.emailRequired,
+    emailMissingAt: t.emailMissingAt,
+    emailInvalid: t.emailInvalid,
+  }
+
+  const handleNameChange = (value) => {
+    const filtered = value.replace(/[^a-zA-Z\s]/g, '').slice(0, NAME_MAX_LENGTH)
+    setName(filtered)
+  }
+
+  const resetCaptcha = () => {
+    setCaptchaToken('')
+    setCaptchaResetKey((key) => key + 1)
+  }
 
   const passwordRules = [
     { test: (p) => p.length >= 8,                                               label: t.rule8Chars },
@@ -105,11 +144,25 @@ export default function RegisterPage() {
     e.preventDefault()
     setLocalError('')
     clearError()
-    if (!name || !email || !password || !confirmPassword) { setLocalError(t.fieldRequired); return }
+
+    const nameError = validateFullName(name, validationMessages)
+    if (nameError) { setLocalError(nameError); return }
+
+    const emailError = validateEmail(email, validationMessages)
+    if (emailError) { setLocalError(emailError); return }
+
+    if (!password || !confirmPassword) { setLocalError(t.fieldRequired); return }
     if (!allRulesPassed) { setLocalError(t.passwordNotMeet); return }
     if (password !== confirmPassword) { setLocalError(t.passwordDoNotMatch); return }
-    try { await register(email, password, name); navigate('/dashboard') }
-    catch (err) { setLocalError(err.message) }
+    if (turnstileSiteKey && !captchaToken) { setLocalError(t.captchaRequired); return }
+
+    try {
+      await register(email.trim(), password, name.trim(), captchaToken || undefined)
+      navigate('/dashboard')
+    } catch (err) {
+      setLocalError(err.message)
+      resetCaptcha()
+    }
   }
 
   const inputCls = 'auth-input w-full px-3 py-2 bg-[#0F0E11] border border-[rgba(255,255,255,0.1)] rounded-md focus:ring-1 focus:ring-[#5E6AD2] focus:border-[#5E6AD2] outline-none transition-all text-[#E0E0E2] placeholder-[#4A4A52] text-sm disabled:opacity-50'
@@ -147,7 +200,7 @@ export default function RegisterPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label htmlFor="name" className={labelCls}>{t.fullName}</label>
-              <input id="name" type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder={t.fullNamePlaceholder} disabled={isLoading} className={inputCls} />
+              <input id="name" type="text" value={name} onChange={(e) => handleNameChange(e.target.value)} placeholder={t.fullNamePlaceholder} disabled={isLoading} maxLength={NAME_MAX_LENGTH} className={inputCls} />
             </div>
             <div>
               <label htmlFor="email" className={labelCls}>{t.email}</label>
@@ -195,6 +248,15 @@ export default function RegisterPage() {
                 <p className="mt-1 text-xs text-[#F87171]">{t.passwordsDoNotMatch}</p>
               )}
             </div>
+            {turnstileSiteKey && (
+              <TurnstileWidget
+                siteKey={turnstileSiteKey}
+                resetKey={captchaResetKey}
+                onVerify={setCaptchaToken}
+                onExpire={resetCaptcha}
+                onError={resetCaptcha}
+              />
+            )}
             <button type="submit" disabled={isLoading} className="w-full py-2 px-4 rounded-md font-medium text-sm text-white bg-[#5E6AD2] hover:bg-[#6B7AE8] transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-[#5E6AD2] focus:ring-offset-2 focus:ring-offset-[#161618] disabled:opacity-50 disabled:cursor-not-allowed">
               {isLoading ? <span className="flex items-center justify-center gap-2"><Loader2 size={15} className="animate-spin" />{t.creatingAccount}</span> : t.createAccountBtn}
             </button>

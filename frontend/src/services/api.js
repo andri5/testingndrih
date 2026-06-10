@@ -58,11 +58,11 @@ apiClient.interceptors.response.use(
 )
 
 export const authAPI = {
-  register: (email, password, name) =>
-    apiClient.post('/auth/register', { email, password, name }),
-  
-  login: (email, password) =>
-    apiClient.post('/auth/login', { email, password }),
+  register: (email, password, name, captchaToken) =>
+    apiClient.post('/auth/register', { email, password, name, captchaToken }),
+
+  login: (email, password, captchaToken) =>
+    apiClient.post('/auth/login', { email, password, captchaToken }),
   
   me: () =>
     apiClient.get('/auth/me'),

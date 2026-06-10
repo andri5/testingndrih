@@ -9,10 +9,10 @@ export const useAuthStore = create((set) => ({
   error: null,
 
   // Actions
-  register: async (email, password, name) => {
+  register: async (email, password, name, captchaToken) => {
     set({ isLoading: true, error: null })
     try {
-      const response = await authAPI.register(email, password, name)
+      const response = await authAPI.register(email, password, name, captchaToken)
       const { user, token } = response.data
 
       // Save to localStorage
@@ -29,10 +29,10 @@ export const useAuthStore = create((set) => ({
     }
   },
 
-  login: async (email, password) => {
+  login: async (email, password, captchaToken) => {
     set({ isLoading: true, error: null })
     try {
-      const response = await authAPI.login(email, password)
+      const response = await authAPI.login(email, password, captchaToken)
       const { user, token } = response.data
 
       // Save to localStorage

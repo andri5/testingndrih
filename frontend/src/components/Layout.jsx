@@ -67,6 +67,11 @@ export default function Layout({ children }) {
       securityTest: 'Security Test',
       browserTest: 'Browser Test',
       signOut: 'Sign out',
+      profileSettings: 'Profile & Settings',
+      settings: 'Settings',
+      toggleSidebar: 'Toggle sidebar',
+      switchToEnglish: 'Switch to English',
+      switchToIndonesian: 'Switch to Bahasa Indonesia',
       workspace: 'Workspace',
       howToUse: 'How to use',
     },
@@ -90,6 +95,11 @@ export default function Layout({ children }) {
       securityTest: 'Test Keamanan',
       browserTest: 'Test Browser',
       signOut: 'Keluar',
+      profileSettings: 'Profil & Pengaturan',
+      settings: 'Pengaturan',
+      toggleSidebar: 'Buka/tutup sidebar',
+      switchToEnglish: 'Ganti ke English',
+      switchToIndonesian: 'Ganti ke Bahasa Indonesia',
       workspace: 'Ruang Kerja',
       howToUse: 'Cara Menggunakan',
     }
@@ -186,7 +196,7 @@ export default function Layout({ children }) {
       <Link
         to={item.path}
         title={!showLabel ? item.name : undefined}
-        className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-sm transition-all duration-100
+        className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-xs sm:text-sm transition-all duration-100
           ${isActive
             ? 'nav-item-active text-[#E0E0E2]'
             : 'text-[#8A8A8F] hover:text-[#E0E0E2] hover:bg-[rgba(255,255,255,0.04)]'
@@ -293,7 +303,7 @@ export default function Layout({ children }) {
           <button
             onClick={handleMenuToggle}
             className="w-7 h-7 flex items-center justify-center rounded-md text-[#4A4A52] hover:text-[#E0E0E2] hover:bg-[rgba(255,255,255,0.06)] transition-all"
-            title="Toggle sidebar"
+            title={t.toggleSidebar}
           >
             <Menu size={16} />
           </button>
@@ -306,7 +316,7 @@ export default function Layout({ children }) {
             {/* Language toggle */}
             <button
               onClick={() => setLanguage(language === 'id' ? 'en' : 'id')}
-              title={language === 'id' ? 'Switch to English' : 'Ganti ke Bahasa Indonesia'}
+              title={language === 'id' ? t.switchToEnglish : t.switchToIndonesian}
               className="h-7 px-2 flex items-center justify-center rounded-md text-[#8A8A8F] hover:text-[#E0E0E2] hover:bg-[rgba(255,255,255,0.06)] transition-all text-[11px] font-semibold tracking-wide border border-transparent hover:border-[rgba(255,255,255,0.08)]"
             >
               {language === 'id' ? 'ID' : 'EN'}
@@ -315,7 +325,7 @@ export default function Layout({ children }) {
             {/* Help icon */}
             <button
               onClick={() => setHelpOpen(true)}
-              title="How to use"
+              title={t.howToUse}
               className="w-7 h-7 flex items-center justify-center rounded-md text-[#4A4A52] hover:text-[#E0E0E2] hover:bg-[rgba(255,255,255,0.06)] transition-all"
             >
               <HelpCircle size={15} />
@@ -324,7 +334,7 @@ export default function Layout({ children }) {
             {/* Settings icon */}
             <Link
               to="/settings"
-              title="Settings"
+              title={t.settings}
               className={`w-7 h-7 flex items-center justify-center rounded-md transition-all
                 ${location.pathname.startsWith('/settings')
                   ? 'text-[#5E6AD2] bg-[#5E6AD2]/10'
@@ -365,14 +375,14 @@ export default function Layout({ children }) {
                       className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-sm text-[#A0A0A4] hover:text-[#E0E0E2] hover:bg-[rgba(255,255,255,0.06)] transition-all"
                     >
                       <User size={13} />
-                      <span>Profile & Settings</span>
+                      <span>{t.profileSettings}</span>
                     </Link>
                     <button
                       onClick={() => { setUserMenuOpen(false); handleLogout() }}
                       className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-sm text-[#8A8A8F] hover:text-[#F87171] hover:bg-[rgba(248,113,113,0.06)] transition-all"
                     >
                       <LogOut size={13} />
-                      <span>Sign out</span>
+                      <span>{t.signOut}</span>
                     </button>
                   </div>
                 </div>
@@ -382,8 +392,10 @@ export default function Layout({ children }) {
         </header>
 
         {/* Page content */}
-        <main className="flex-1 overflow-auto p-4 md:p-6">
-          {children}
+        <main className="app-main flex-1 overflow-auto overflow-x-hidden p-3 sm:p-4 md:p-6">
+          <div className="app-page mx-auto w-full max-w-[1600px]">
+            {children}
+          </div>
         </main>
       </div>
 

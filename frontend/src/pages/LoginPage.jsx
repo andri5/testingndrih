@@ -3,6 +3,10 @@ import { useNavigate, Link } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import { useSettingsStore } from '../store/settingsStore'
 import { CheckCircle2, AlertCircle, Eye, EyeOff, Loader2, ShieldCheck, Globe } from 'lucide-react'
+import TurnstileWidget from '../components/TurnstileWidget'
+import { validateEmail } from '../utils/validation'
+
+const turnstileSiteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY || ''
 
 const translations = {
   en: {
@@ -12,13 +16,16 @@ const translations = {
     passwordLabel: 'Password',
     passwordPlaceholder: '••••••••',
     signingIn: 'Signing in...',
-    continue: 'Continue',
+    login: 'Login',
     noAccount: "Don't have an account? ",
     createOne: 'Create one',
     forgotPassword: 'Forgot password?',
     copyright: 'Test Sambil Ngopi',
     signedIn: 'Signed in successfully',
     emailRequired: 'Email and password are required',
+    emailMissingAt: 'Email must contain @ (example: user@email.com)',
+    emailInvalid: 'Email format is invalid (example: user@email.com)',
+    captchaRequired: 'Please complete the captcha verification',
   },
   id: {
     title: 'Masuk ke workspace Anda',
@@ -27,13 +34,16 @@ const translations = {
     passwordLabel: 'Password',
     passwordPlaceholder: '••••••••',
     signingIn: 'Masuk...',
-    continue: 'Lanjutkan',
+    login: 'Masuk',
     noAccount: 'Belum punya akun? ',
     createOne: 'Buat satu',
     forgotPassword: 'Lupa password?',
     copyright: 'Test Sambil Ngopi',
     signedIn: 'Masuk berhasil',
     emailRequired: 'Email dan password wajib diisi',
+    emailMissingAt: 'Email harus mengandung @ (contoh: user@email.com)',
+    emailInvalid: 'Format email tidak valid (contoh: user@email.com)',
+    captchaRequired: 'Selesaikan verifikasi captcha terlebih dahulu',
   }
 }
 
@@ -51,26 +61,51 @@ export default function LoginPage() {
   const [localError, setLocalError] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [captchaToken, setCaptchaToken] = useState('')
+  const [captchaResetKey, setCaptchaResetKey] = useState(0)
+
+  const validationMessages = {
+    emailRequired: t.emailRequired,
+    emailMissingAt: t.emailMissingAt,
+    emailInvalid: t.emailInvalid,
+  }
+
+  const resetCaptcha = () => {
+    setCaptchaToken('')
+    setCaptchaResetKey((key) => key + 1)
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setSuccessMessage('')
 
-    if (!email || !password) {
+    const emailError = validateEmail(email, validationMessages)
+    if (emailError) {
+      setLocalError(emailError)
+      return
+    }
+
+    if (!password) {
       setLocalError(t.emailRequired)
+      return
+    }
+
+    if (turnstileSiteKey && !captchaToken) {
+      setLocalError(t.captchaRequired)
       return
     }
 
     try {
       setLocalError('')
       clearError()
-      await login(email, password)
+      await login(email.trim(), password, captchaToken || undefined)
       setSuccessMessage(t.signedIn)
       setTimeout(() => {
         navigate('/dashboard')
       }, 1000)
     } catch (err) {
       setLocalError(err.message)
+      resetCaptcha()
     }
   }
 
@@ -167,6 +202,16 @@ export default function LoginPage() {
               </div>
             </div>
 
+            {turnstileSiteKey && (
+              <TurnstileWidget
+                siteKey={turnstileSiteKey}
+                resetKey={captchaResetKey}
+                onVerify={setCaptchaToken}
+                onExpire={resetCaptcha}
+                onError={resetCaptcha}
+              />
+            )}
+
             {/* Submit */}
             <button
               type="submit"
@@ -178,7 +223,7 @@ export default function LoginPage() {
                   <Loader2 size={15} className="animate-spin" />
                   {t.signingIn}
                 </span>
-              ) : t.continue}
+              ) : t.login}
             </button>
           </form>
 

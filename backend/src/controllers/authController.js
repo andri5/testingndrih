@@ -3,6 +3,20 @@ import { hashPassword, comparePassword } from '../utils/password.js'
 import { signToken } from '../utils/jwt.js'
 import { sendPasswordResetEmail } from '../services/emailService.js'
 import { prisma } from '../lib/prisma.js'
+import { validateRegistrationEmail, validateRegistrationName } from '../utils/registerValidation.js'
+import { verifyTurnstileToken } from '../utils/turnstile.js'
+
+async function assertCaptcha(req, res) {
+  const captcha = await verifyTurnstileToken(
+    req.body.captchaToken,
+    req.ip || req.headers['x-forwarded-for']
+  )
+  if (!captcha.ok) {
+    res.status(400).json({ success: false, message: captcha.message })
+    return false
+  }
+  return true
+}
 
 /**
  * Register a new user
@@ -13,8 +27,20 @@ export async function registerUser(req, res, next) {
   try {
     const { email, password, name } = req.body
 
+    if (!(await assertCaptcha(req, res))) return
+
+    const nameError = validateRegistrationName(name)
+    if (nameError) {
+      return res.status(400).json({ success: false, message: nameError })
+    }
+
+    const emailError = validateRegistrationEmail(email)
+    if (emailError) {
+      return res.status(400).json({ success: false, message: emailError })
+    }
+
     // Validation
-    if (!email || !password) {
+    if (!password) {
       return res.status(400).json({
         success: false,
         message: 'Email and password are required'
@@ -55,9 +81,9 @@ export async function registerUser(req, res, next) {
     // Create user
     const user = await prisma.user.create({
       data: {
-        email,
+        email: email.trim(),
         password: hashedPassword,
-        name: name || email.split('@')[0]
+        name: name.trim()
       },
       select: {
         id: true,
@@ -91,8 +117,15 @@ export async function loginUser(req, res, next) {
   try {
     const { email, password } = req.body
 
+    if (!(await assertCaptcha(req, res))) return
+
+    const emailError = validateRegistrationEmail(email)
+    if (emailError) {
+      return res.status(400).json({ success: false, message: emailError })
+    }
+
     // Validation
-    if (!email || !password) {
+    if (!password) {
       return res.status(400).json({
         success: false,
         message: 'Email and password are required'
@@ -101,7 +134,7 @@ export async function loginUser(req, res, next) {
 
     // Find user
     const user = await prisma.user.findUnique({
-      where: { email }
+      where: { email: email.trim() }
     })
 
     if (!user) {

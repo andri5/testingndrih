@@ -375,22 +375,6 @@ export default function SettingsPage() {
                   </div>
 
                   <div className="bg-[#0F0E11] rounded-lg p-4 space-y-3">
-                    <p className="text-xs font-semibold text-[#A0A0A4] uppercase tracking-wider">Tech Stack</p>
-                    {[
-                      ['Frontend', 'React 18 + Vite + TailwindCSS'],
-                      ['Backend', 'Node.js + Express.js'],
-                      ['Database', 'PostgreSQL 16 + Prisma ORM'],
-                      ['Test Runner', 'Playwright (Chromium)'],
-                      ['State', 'Zustand'],
-                    ].map(([k, v]) => (
-                      <div key={k} className="flex justify-between items-center">
-                        <span className="text-sm text-[#666]">{k}</span>
-                        <span className="text-sm text-[#E0E0E2]">{v}</span>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="bg-[#0F0E11] rounded-lg p-4 space-y-3">
                     <p className="text-xs font-semibold text-[#A0A0A4] uppercase tracking-wider">Supported Step Types</p>
                     <div className="flex flex-wrap gap-2">
                       {['NAVIGATE', 'CLICK', 'FILL', 'WAIT', 'ASSERTION', 'SCREENSHOT', 'API_CALL'].map(t => (
