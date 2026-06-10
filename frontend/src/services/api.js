@@ -84,6 +84,8 @@ export const userAPI = {
   update: (userId, payload) => apiClient.patch(`/users/${userId}`, payload),
   updateRole: (userId, role) =>
     apiClient.patch(`/users/${userId}/role`, { role }),
+  setActive: (userId, isActive) =>
+    apiClient.patch(`/users/${userId}/active`, { isActive }),
   delete: (userId) => apiClient.delete(`/users/${userId}`),
   activitySummary: () => apiClient.get('/users/activity/summary'),
   activityLog: (userId, limit = 50) =>

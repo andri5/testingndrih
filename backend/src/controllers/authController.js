@@ -24,6 +24,7 @@ const userPublicSelect = {
   email: true,
   name: true,
   role: true,
+  isActive: true,
   createdAt: true,
 }
 
@@ -167,6 +168,14 @@ export async function loginUser(req, res, next) {
       })
     }
 
+    if (user.isActive === false) {
+      return res.status(403).json({
+        success: false,
+        code: 'ACCOUNT_INACTIVE',
+        message: 'Your account has been deactivated. Contact an administrator.',
+      })
+    }
+
     // Sign token
     const token = signToken({ id: user.id, email: user.email, role: user.role })
 
@@ -178,6 +187,7 @@ export async function loginUser(req, res, next) {
         email: user.email,
         name: user.name,
         role: user.role,
+        isActive: user.isActive,
         createdAt: user.createdAt,
       },
       token,

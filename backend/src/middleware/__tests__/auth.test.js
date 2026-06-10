@@ -1,7 +1,15 @@
 import { authenticateToken, optionalAuth, errorHandler } from '../auth.js'
 import * as jwtUtils from '../../utils/jwt.js'
+import { prisma } from '../../lib/prisma.js'
 
 jest.mock('../../utils/jwt.js')
+jest.mock('../../lib/prisma.js', () => ({
+  prisma: {
+    user: {
+      findUnique: jest.fn(),
+    },
+  },
+}))
 
 describe('Auth Middleware', () => {
   let req, res, next
@@ -19,26 +27,54 @@ describe('Auth Middleware', () => {
   })
 
   describe('authenticateToken', () => {
-    it('should authenticate with valid token', () => {
-      const decoded = { id: 'user-1', email: 'test@example.com' }
+    it('should authenticate with valid token', async () => {
+      const decoded = { id: 'user-1', email: 'test@example.com', role: 'USER' }
       req.headers.authorization = 'Bearer token-xyz'
 
       jwtUtils.extractToken.mockReturnValue('token-xyz')
       jwtUtils.verifyToken.mockReturnValue(decoded)
+      prisma.user.findUnique.mockResolvedValue({
+        id: 'user-1',
+        email: 'test@example.com',
+        role: 'USER',
+        isActive: true,
+      })
 
-      authenticateToken(req, res, next)
+      await authenticateToken(req, res, next)
 
-      expect(req.user).toEqual(decoded)
+      expect(req.user).toEqual({
+        id: 'user-1',
+        email: 'test@example.com',
+        role: 'USER',
+      })
       expect(next).toHaveBeenCalled()
       expect(res.status).not.toHaveBeenCalled()
     })
 
-    it('should reject missing token', () => {
+    it('should reject inactive accounts', async () => {
+      req.headers.authorization = 'Bearer token-xyz'
+      jwtUtils.extractToken.mockReturnValue('token-xyz')
+      jwtUtils.verifyToken.mockReturnValue({ id: 'user-1' })
+      prisma.user.findUnique.mockResolvedValue({
+        id: 'user-1',
+        email: 'test@example.com',
+        role: 'USER',
+        isActive: false,
+      })
+
+      await authenticateToken(req, res, next)
+
+      expect(res.status).toHaveBeenCalledWith(403)
+      expect(res.json.mock.calls[0][0].code).toBe('ACCOUNT_INACTIVE')
+      expect(next).not.toHaveBeenCalled()
+    })
+
+    it('should reject missing token', async () => {
       req.headers.authorization = undefined
 
       jwtUtils.extractToken.mockReturnValue(null)
 
-      authenticateToken(req, res, next)
+      await authenticateToken(req, res, next)
 
       expect(res.status).toHaveBeenCalledWith(401)
       const response = res.json.mock.calls[0][0]
@@ -46,26 +82,32 @@ describe('Auth Middleware', () => {
       expect(next).not.toHaveBeenCalled()
     })
 
-    it('should reject invalid token', () => {
+    it('should reject invalid token', async () => {
       req.headers.authorization = 'Bearer invalid-token'
 
       jwtUtils.extractToken.mockReturnValue('invalid-token')
       jwtUtils.verifyToken.mockReturnValue(null)
 
-      authenticateToken(req, res, next)
+      await authenticateToken(req, res, next)
 
       expect(res.status).toHaveBeenCalledWith(401)
       const response = res.json.mock.calls[0][0]
       expect(response.message).toContain('Invalid')
     })
 
-    it('should extract token from header', () => {
+    it('should extract token from header', async () => {
       req.headers.authorization = 'Bearer my-token'
 
       jwtUtils.extractToken.mockReturnValue('my-token')
       jwtUtils.verifyToken.mockReturnValue({ id: 'user-1' })
+      prisma.user.findUnique.mockResolvedValue({
+        id: 'user-1',
+        email: 'test@example.com',
+        role: 'USER',
+        isActive: true,
+      })
 
-      authenticateToken(req, res, next)
+      await authenticateToken(req, res, next)
 
       expect(jwtUtils.extractToken).toHaveBeenCalledWith('Bearer my-token')
     })

@@ -11,6 +11,7 @@ const emptyForm = {
   email: '',
   password: '',
   role: 'USER',
+  isActive: true,
 }
 
 function Modal({ title, children, onClose }) {
@@ -54,6 +55,7 @@ export default function UserManagement() {
   const [formData, setFormData] = useState(emptyForm)
   const [editingUser, setEditingUser] = useState(null)
   const [deleteTarget, setDeleteTarget] = useState(null)
+  const [statusFilter, setStatusFilter] = useState('all')
 
   const loadUsers = async () => {
     setLoading(true)
@@ -94,12 +96,32 @@ export default function UserManagement() {
     setSuccess(null)
   }
 
+  const handleActiveToggle = async (user, nextActive) => {
+    setUpdatingId(user.id)
+    setError(null)
+    try {
+      const res = await userAPI.setActive(user.id, nextActive)
+      const updated = res.data.user
+      setUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)))
+      setSuccess(
+        nextActive
+          ? `Activated ${updated.email}`
+          : `Deactivated ${updated.email}`
+      )
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to update user status')
+    } finally {
+      setUpdatingId(null)
+    }
+  }
+
   const openEdit = (user) => {
     setFormData({
       name: user.name || '',
       email: user.email || '',
       password: '',
       role: user.role || 'USER',
+      isActive: user.isActive !== false,
     })
     setEditingUser(user)
     setFormMode('edit')
@@ -136,6 +158,7 @@ export default function UserManagement() {
           name: formData.name,
           email: formData.email,
           role: formData.role,
+          isActive: formData.isActive,
         }
         if (formData.password.trim()) {
           payload.password = formData.password
@@ -172,6 +195,14 @@ export default function UserManagement() {
     }
   }
 
+  const filteredUsers = users.filter((u) => {
+    if (statusFilter === 'active') return u.isActive !== false
+    if (statusFilter === 'inactive') return u.isActive === false
+    return true
+  })
+
+  const inactiveCount = users.filter((u) => u.isActive === false).length
+
   if (loading) {
     return (
       <div className="flex justify-center py-12">
@@ -185,7 +216,22 @@ export default function UserManagement() {
       {error && <Alert type="error" message={error} onClose={() => setError(null)} />}
       {success && <Alert type="success" message={success} onClose={() => setSuccess(null)} />}
 
-      <div className="flex justify-end">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <label className="text-xs text-[#666] uppercase tracking-wider">Status</label>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="px-2 py-1.5 bg-[#0F0E11] border border-[#2D2D2F] rounded text-[#E0E0E2] text-xs focus:outline-none focus:border-[#5E6AD2]"
+          >
+            <option value="all">All users</option>
+            <option value="active">Active only</option>
+            <option value="inactive">Inactive only</option>
+          </select>
+          {inactiveCount > 0 && (
+            <span className="text-xs text-[#F87171]">{inactiveCount} inactive</span>
+          )}
+        </div>
         <Button size="sm" onClick={openCreate}>
           <Plus size={14} />
           Add user
@@ -199,21 +245,31 @@ export default function UserManagement() {
               <th className="px-4 py-3 font-medium">Name</th>
               <th className="px-4 py-3 font-medium">Email</th>
               <th className="px-4 py-3 font-medium">Role</th>
+              <th className="px-4 py-3 font-medium">Status</th>
               <th className="px-4 py-3 font-medium">Joined</th>
               <th className="px-4 py-3 font-medium text-right">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {users.map((u) => {
+            {filteredUsers.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="px-4 py-8 text-center text-[#666]">
+                  No users match this filter.
+                </td>
+              </tr>
+            ) : (
+            filteredUsers.map((u) => {
               const isPrimaryAdmin =
                 u.email?.toLowerCase() === PRIMARY_ADMIN_EMAIL.toLowerCase()
               const isSelf = u.id === currentUser?.id
               const canDelete = !isPrimaryAdmin && !isSelf
+              const isActive = u.isActive !== false
+              const canToggleActive = !isPrimaryAdmin && !isSelf
 
               return (
                 <tr
                   key={u.id}
-                  className="border-b border-[#2D2D2F] last:border-0 hover:bg-[#0F0E11]/50"
+                  className={`border-b border-[#2D2D2F] last:border-0 hover:bg-[#0F0E11]/50 ${!isActive ? 'opacity-70' : ''}`}
                 >
                   <td className="px-4 py-3 text-[#E0E0E2]">{u.name || '—'}</td>
                   <td className="px-4 py-3 text-[#A0A0A4]">
@@ -237,6 +293,26 @@ export default function UserManagement() {
                         <option value="USER">USER</option>
                         <option value="ADMIN">ADMIN</option>
                       </select>
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
+                    {canToggleActive ? (
+                      <button
+                        type="button"
+                        disabled={updatingId === u.id}
+                        onClick={() => handleActiveToggle(u, !isActive)}
+                        className={`inline-flex px-2 py-1 rounded text-xs font-semibold border transition-colors disabled:opacity-50 ${
+                          isActive
+                            ? 'bg-[#3DAF7A]/15 text-[#34D399] border-[#3DAF7A]/25 hover:bg-[#3DAF7A]/25'
+                            : 'bg-[#C24B4B]/15 text-[#F87171] border-[#C24B4B]/25 hover:bg-[#C24B4B]/25'
+                        }`}
+                      >
+                        {isActive ? 'Active' : 'Inactive'}
+                      </button>
+                    ) : (
+                      <span className="inline-flex px-2 py-1 rounded text-xs font-semibold bg-[#5E6AD2]/15 text-[#5E6AD2] border border-[#5E6AD2]/25">
+                        Active
+                      </span>
                     )}
                   </td>
                   <td className="px-4 py-3 text-[#666] text-xs">
@@ -275,7 +351,7 @@ export default function UserManagement() {
                   </td>
                 </tr>
               )
-            })}
+            }))}
           </tbody>
         </table>
       </div>
@@ -333,6 +409,23 @@ export default function UserManagement() {
                 </select>
               </div>
             )}
+            {!(
+              editingUser &&
+              (editingUser.email?.toLowerCase() === PRIMARY_ADMIN_EMAIL.toLowerCase() ||
+                editingUser.id === currentUser?.id)
+            ) && (
+              <label className="flex items-center gap-2 text-sm text-[#A0A0A4] cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.isActive}
+                  onChange={(e) =>
+                    setFormData((p) => ({ ...p, isActive: e.target.checked }))
+                  }
+                  className="rounded border-[#2D2D2F] bg-[#0F0E11] text-[#5E6AD2] focus:ring-[#5E6AD2]"
+                />
+                Account is active (user can sign in)
+              </label>
+            )}
             <div className="flex justify-end gap-2 pt-2">
               <Button
                 type="button"
@@ -371,6 +464,12 @@ export default function UserManagement() {
               <div>
                 <p className="text-[#666] text-xs uppercase">Role</p>
                 <p className="text-[#E0E0E2]">{viewUser.role}</p>
+              </div>
+              <div>
+                <p className="text-[#666] text-xs uppercase">Status</p>
+                <p className={viewUser.isActive === false ? 'text-[#F87171]' : 'text-[#34D399]'}>
+                  {viewUser.isActive === false ? 'Inactive' : 'Active'}
+                </p>
               </div>
               <div className="grid grid-cols-2 gap-3 pt-2">
                 <div className="rounded-lg bg-[#0F0E11] p-3 border border-[#2D2D2F]">

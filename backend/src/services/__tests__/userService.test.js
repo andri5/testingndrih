@@ -4,6 +4,7 @@ import {
   createUser,
   updateUser,
   updateUserRole,
+  setUserActive,
   deleteUser,
 } from '../userService.js'
 import { prisma } from '../../lib/prisma.js'
@@ -157,6 +158,42 @@ describe('userService', () => {
       await expect(deleteUser({ id: '2', email: 'user@test.com' }, '2')).rejects.toMatchObject({
         status: 403,
       })
+    })
+
+    it('rejects deactivating primary admin', async () => {
+      prisma.user.findUnique.mockResolvedValue({
+        id: '1',
+        email: 'donkditren@gmail.com',
+        role: 'ADMIN',
+        isActive: true,
+      })
+
+      await expect(
+        setUserActive({ id: '9', email: 'other@test.com' }, '1', false)
+      ).rejects.toMatchObject({ status: 403 })
+    })
+
+    it('deactivates a regular user', async () => {
+      prisma.user.findUnique.mockResolvedValue({
+        id: '2',
+        email: 'user@test.com',
+        role: 'USER',
+        isActive: true,
+      })
+      prisma.user.update.mockResolvedValue({
+        id: '2',
+        email: 'user@test.com',
+        role: 'USER',
+        isActive: false,
+      })
+
+      const result = await setUserActive(
+        { id: '1', email: 'donkditren@gmail.com' },
+        '2',
+        false
+      )
+
+      expect(result.isActive).toBe(false)
     })
 
     it('deletes a regular user', async () => {

@@ -6,6 +6,7 @@ import {
   createUser,
   updateUser,
   updateUserRole,
+  setUserActive,
   deleteUser,
   getUserActivitySummary,
   getUserActivityLog,
@@ -22,6 +23,7 @@ router.get('/:userId/activity', getUserActivityLog)
 router.get('/:userId', getUser)
 router.patch('/:userId', updateUser)
 router.patch('/:userId/role', updateUserRole)
+router.patch('/:userId/active', setUserActive)
 router.delete('/:userId', deleteUser)
 
 export default router

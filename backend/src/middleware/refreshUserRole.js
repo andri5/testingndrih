@@ -7,11 +7,19 @@ export async function refreshUserRole(req, res, next) {
   try {
     const user = await prisma.user.findUnique({
       where: { id: req.user.id },
-      select: { role: true, email: true },
+      select: { role: true, email: true, isActive: true },
     })
 
     if (!user) {
       return res.status(401).json({ success: false, message: 'User not found' })
+    }
+
+    if (!user.isActive) {
+      return res.status(403).json({
+        success: false,
+        code: 'ACCOUNT_INACTIVE',
+        message: 'Your account has been deactivated. Contact an administrator.',
+      })
     }
 
     req.user.role = user.role

@@ -12,6 +12,7 @@ const userSelect = {
   email: true,
   name: true,
   role: true,
+  isActive: true,
   createdAt: true,
   updatedAt: true,
 }
@@ -61,7 +62,13 @@ export async function getUserById(userId) {
   return user
 }
 
-export async function createUser({ email, name, password, role = 'USER' }) {
+export async function createUser({
+  email,
+  name,
+  password,
+  role = 'USER',
+  isActive = true,
+}) {
   const nameError = validateRegistrationName(name)
   if (nameError) {
     throw Object.assign(new Error(nameError), { status: 400 })
@@ -101,13 +108,14 @@ export async function createUser({ email, name, password, role = 'USER' }) {
       name: name.trim(),
       password: hashedPassword,
       role: finalRole,
+      isActive: Boolean(isActive),
     },
     select: userSelect,
   })
 }
 
 export async function updateUser(actor, userId, payload) {
-  const { name, email, role, password } = payload
+  const { name, email, role, password, isActive } = payload
   const actorId = actor?.id
   const actorEmail = actor?.email
 
@@ -184,6 +192,21 @@ export async function updateUser(actor, userId, payload) {
     data.password = await hashPassword(password)
   }
 
+  if (isActive !== undefined) {
+    if (isPrimaryAdmin(target.email) && !isActive) {
+      throw Object.assign(
+        new Error('The primary admin account cannot be deactivated'),
+        { status: 403 }
+      )
+    }
+    if (actorId === target.id && !isActive) {
+      throw Object.assign(new Error('You cannot deactivate your own account'), {
+        status: 403,
+      })
+    }
+    data.isActive = Boolean(isActive)
+  }
+
   if (Object.keys(data).length === 0) {
     return target
   }
@@ -197,6 +220,10 @@ export async function updateUser(actor, userId, payload) {
 
 export async function updateUserRole(actor, userId, role) {
   return updateUser(actor, userId, { role })
+}
+
+export async function setUserActive(actor, userId, isActive) {
+  return updateUser(actor, userId, { isActive })
 }
 
 export async function deleteUser(actor, userId) {

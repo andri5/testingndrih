@@ -1,9 +1,10 @@
 import { extractToken, verifyToken } from '../utils/jwt.js'
+import { prisma } from '../lib/prisma.js'
 
 /**
  * Middleware to authenticate JWT token from Authorization header
  */
-export function authenticateToken(req, res, next) {
+export async function authenticateToken(req, res, next) {
   const token = extractToken(req.headers.authorization)
 
   if (!token) {
@@ -21,8 +22,36 @@ export function authenticateToken(req, res, next) {
     })
   }
 
-  req.user = decoded
-  next()
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.id },
+      select: { id: true, email: true, role: true, isActive: true },
+    })
+
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: 'User not found'
+      })
+    }
+
+    if (!user.isActive) {
+      return res.status(403).json({
+        success: false,
+        code: 'ACCOUNT_INACTIVE',
+        message: 'Your account has been deactivated. Contact an administrator.',
+      })
+    }
+
+    req.user = {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+    }
+    next()
+  } catch (error) {
+    next(error)
+  }
 }
 
 /**
