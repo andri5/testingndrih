@@ -16,6 +16,9 @@ jest.mock('../../lib/prisma.js')
 jest.mock('../../utils/password.js')
 jest.mock('../../utils/jwt.js')
 jest.mock('../../services/emailService.js')
+jest.mock('../../utils/turnstile.js', () => ({
+  verifyTurnstileToken: jest.fn().mockResolvedValue({ ok: true, skipped: true }),
+}))
 
 describe('AuthController', () => {
   let mockRes, mockReq, mockNext
@@ -34,7 +37,8 @@ describe('AuthController', () => {
     mockReq = {
       body: {},
       user: {},
-      params: {}
+      params: {},
+      headers: {},
     }
 
     // Mock next middleware
@@ -52,7 +56,7 @@ describe('AuthController', () => {
 
   describe('registerUser', () => {
     it('should return 400 if email or password is missing', async () => {
-      mockReq.body = { email: '', password: '' }
+      mockReq.body = { name: 'Test User', email: '', password: '' }
 
       await registerUser(mockReq, mockRes, mockNext)
 
@@ -65,8 +69,22 @@ describe('AuthController', () => {
       )
     })
 
+    it('should return 400 if name is invalid', async () => {
+      mockReq.body = { name: 'User123', email: 'test@example.com', password: 'ValidPass123!' }
+
+      await registerUser(mockReq, mockRes, mockNext)
+
+      expect(mockRes.status).toHaveBeenCalledWith(400)
+      expect(mockRes.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          success: false,
+          message: expect.stringContaining('letters and spaces')
+        })
+      )
+    })
+
     it('should return 400 if password does not meet OWASP requirements', async () => {
-      mockReq.body = { email: 'test@example.com', password: 'weak' }
+      mockReq.body = { name: 'Test User', email: 'test@example.com', password: 'weak' }
 
       await registerUser(mockReq, mockRes, mockNext)
 
@@ -80,7 +98,7 @@ describe('AuthController', () => {
     })
 
     it('should return 409 if user already exists', async () => {
-      mockReq.body = { email: 'existing@example.com', password: 'ValidPass123!' }
+      mockReq.body = { name: 'Existing User', email: 'existing@example.com', password: 'ValidPass123!' }
       prisma.user.findUnique.mockResolvedValue({ id: '1', email: 'existing@example.com' })
 
       await registerUser(mockReq, mockRes, mockNext)
@@ -184,6 +202,9 @@ describe('AuthController', () => {
 
       await loginUser(mockReq, mockRes, mockNext)
 
+      expect(prisma.user.findUnique).toHaveBeenCalledWith({
+        where: { email: 'user@example.com' }
+      })
       expect(mockRes.json).toHaveBeenCalledWith(
         expect.objectContaining({
           success: true,
