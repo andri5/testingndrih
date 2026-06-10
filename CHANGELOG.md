@@ -1,3 +1,10 @@
+## [1.1.6](https://github.com/andri5/testingndrih/compare/v1.1.5...v1.1.6) (2026-06-10)
+
+
+### Bug Fixes
+
+* **auth:** preload Turnstile script and inject site key in SPA ([d19b921](https://github.com/andri5/testingndrih/commit/d19b92112c80a121073729ec2e43c9c73919fdeb))
+
 ## [1.1.5](https://github.com/andri5/testingndrih/compare/v1.1.4...v1.1.5) (2026-06-10)
 
 
