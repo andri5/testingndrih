@@ -4,8 +4,16 @@ const SCRIPT_ID = 'cf-turnstile-script'
 const SCRIPT_SRC = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit'
 
 function loadTurnstileScript() {
-  if (document.getElementById(SCRIPT_ID)) {
+  if (window.turnstile) {
     return Promise.resolve()
+  }
+
+  const existing = document.getElementById(SCRIPT_ID)
+  if (existing) {
+    return new Promise((resolve, reject) => {
+      existing.addEventListener('load', () => resolve(), { once: true })
+      existing.addEventListener('error', () => reject(new Error('Failed to load captcha')), { once: true })
+    })
   }
 
   return new Promise((resolve, reject) => {
@@ -20,19 +28,40 @@ function loadTurnstileScript() {
   })
 }
 
+function waitForTurnstile() {
+  return new Promise((resolve, reject) => {
+    if (window.turnstile?.ready) {
+      window.turnstile.ready(resolve)
+      return
+    }
+    reject(new Error('Turnstile API unavailable'))
+  })
+}
+
 export default function TurnstileWidget({ siteKey, onVerify, onExpire, onError, resetKey = 0 }) {
   const containerRef = useRef(null)
   const widgetIdRef = useRef(null)
   const [loadError, setLoadError] = useState(null)
 
+  const onVerifyRef = useRef(onVerify)
+  const onExpireRef = useRef(onExpire)
+  const onErrorRef = useRef(onError)
+
   useEffect(() => {
-    if (!siteKey) return undefined
+    onVerifyRef.current = onVerify
+    onExpireRef.current = onExpire
+    onErrorRef.current = onError
+  })
+
+  useEffect(() => {
+    if (!siteKey?.trim()) return undefined
 
     let cancelled = false
 
     const renderWidget = async () => {
       try {
         await loadTurnstileScript()
+        await waitForTurnstile()
         if (cancelled || !containerRef.current || !window.turnstile) return
 
         if (widgetIdRef.current != null) {
@@ -42,17 +71,17 @@ export default function TurnstileWidget({ siteKey, onVerify, onExpire, onError, 
 
         containerRef.current.innerHTML = ''
         widgetIdRef.current = window.turnstile.render(containerRef.current, {
-          sitekey: siteKey,
-          theme: 'dark',
-          callback: (token) => onVerify?.(token),
-          'expired-callback': () => onExpire?.(),
-          'error-callback': () => onError?.(),
+          sitekey: siteKey.trim(),
+          theme: 'auto',
+          callback: (token) => onVerifyRef.current?.(token),
+          'expired-callback': () => onExpireRef.current?.(),
+          'error-callback': () => onErrorRef.current?.(),
         })
         setLoadError(null)
       } catch {
         if (!cancelled) {
           setLoadError('Captcha could not be loaded')
-          onError?.()
+          onErrorRef.current?.()
         }
       }
     }
@@ -66,9 +95,9 @@ export default function TurnstileWidget({ siteKey, onVerify, onExpire, onError, 
         widgetIdRef.current = null
       }
     }
-  }, [siteKey, resetKey, onVerify, onExpire, onError])
+  }, [siteKey, resetKey])
 
-  if (!siteKey) {
+  if (!siteKey?.trim()) {
     return null
   }
 

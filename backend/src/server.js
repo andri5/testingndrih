@@ -40,8 +40,19 @@ validateProductionSecurity()
 const app = express()
 const PORT = process.env.PORT || 5001
 
-// Middleware
-app.use(helmet())
+// Middleware — allow Cloudflare Turnstile on login/register
+const cspDirectives = helmet.contentSecurityPolicy.getDefaultDirectives()
+cspDirectives['script-src'] = ["'self'", 'https://challenges.cloudflare.com']
+cspDirectives['frame-src'] = ["'self'", 'https://challenges.cloudflare.com']
+cspDirectives['connect-src'] = ["'self'", 'https://challenges.cloudflare.com']
+cspDirectives['style-src'] = [...(cspDirectives['style-src'] || ["'self'"]), 'https://fonts.googleapis.com']
+cspDirectives['font-src'] = [...(cspDirectives['font-src'] || ["'self'"]), 'https://fonts.gstatic.com']
+
+app.use(
+  helmet({
+    contentSecurityPolicy: { directives: cspDirectives },
+  })
+)
 app.use(cors({
   origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
   credentials: true
