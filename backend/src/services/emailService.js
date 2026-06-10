@@ -110,13 +110,13 @@ export async function sendPasswordResetEmail(email, resetToken, resetUrl) {
 export async function sendWelcomeEmail(email, name) {
   try {
     const mailOptions = {
-      from: process.env.SMTP_FROM || 'noreply@testingndrih.local',
+      from: process.env.SMTP_FROM || 'Test Sambil Ngopi <noreply@testsambilngopi.local>',
       to: email,
-      subject: 'Welcome to TestingNDRIH!',
+      subject: 'Welcome to Test Sambil Ngopi!',
       html: `
         <div style="font-family: Arial, sans-serif; color: #333;">
           <div style="background-color: #f5f5f5; padding: 20px; border-radius: 8px;">
-            <h2 style="color: #5E6AD2;">Welcome to TestingNDRIH!</h2>
+            <h2 style="color: #5E6AD2;">Welcome to Test Sambil Ngopi!</h2>
             
             <p>Hello ${name || 'User'},</p>
             
@@ -139,7 +139,7 @@ export async function sendWelcomeEmail(email, name) {
         </div>
       `,
       text: `
-        Welcome to TestingNDRIH!
+        Welcome to Test Sambil Ngopi!
         
         Hello ${name || 'User'},
         
@@ -186,7 +186,7 @@ export async function sendTestAlertEmail(email, subject, payload) {
     ].filter(Boolean)
 
     const mailOptions = {
-      from: process.env.SMTP_FROM || 'noreply@testingndrih.local',
+      from: process.env.SMTP_FROM || 'Test Sambil Ngopi <noreply@testsambilngopi.local>',
       to: email,
       subject: `[Test Sambil Ngopi] ${subject}`,
       text: lines.join('\n'),
