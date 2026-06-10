@@ -1,6 +1,8 @@
 #!/bin/sh
 set -e
 
+# Clear stale lock from a previous crash/restart in the same container
+rm -f /tmp/.X99-lock /tmp/.X11-unix/X99 2>/dev/null || true
 Xvfb :99 -screen 0 1280x720x24 -nolisten tcp &
 export DISPLAY=:99
 
