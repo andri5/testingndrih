@@ -79,8 +79,12 @@ export const authAPI = {
 
 export const userAPI = {
   list: () => apiClient.get('/users'),
+  get: (userId) => apiClient.get(`/users/${userId}`),
+  create: (payload) => apiClient.post('/users', payload),
+  update: (userId, payload) => apiClient.patch(`/users/${userId}`, payload),
   updateRole: (userId, role) =>
     apiClient.patch(`/users/${userId}/role`, { role }),
+  delete: (userId) => apiClient.delete(`/users/${userId}`),
 }
 
 export const scenarioAPI = {

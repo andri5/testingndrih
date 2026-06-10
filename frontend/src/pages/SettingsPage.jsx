@@ -40,7 +40,7 @@ const i18n = {
     photoSizeError: 'Image size must be less than 5MB',
     users: 'Users',
     userManagement: 'USER MANAGEMENT',
-    userManagementDesc: 'View registered users and manage roles',
+    userManagementDesc: 'View, add, edit, and delete registered users',
   },
   id: {
     settings: 'Pengaturan',

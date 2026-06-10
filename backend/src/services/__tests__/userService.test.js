@@ -1,14 +1,28 @@
-import { listUsers, updateUserRole } from '../userService.js'
+import {
+  listUsers,
+  getUserById,
+  createUser,
+  updateUser,
+  updateUserRole,
+  deleteUser,
+} from '../userService.js'
 import { prisma } from '../../lib/prisma.js'
+import { hashPassword } from '../../utils/password.js'
 
 jest.mock('../../lib/prisma.js', () => ({
   prisma: {
     user: {
       findMany: jest.fn(),
       findUnique: jest.fn(),
+      create: jest.fn(),
       update: jest.fn(),
+      delete: jest.fn(),
     },
   },
+}))
+
+jest.mock('../../utils/password.js', () => ({
+  hashPassword: jest.fn().mockResolvedValue('hashed-password'),
 }))
 
 describe('userService', () => {
@@ -30,6 +44,58 @@ describe('userService', () => {
     })
   })
 
+  describe('getUserById', () => {
+    it('returns user with counts', async () => {
+      const user = { id: '1', email: 'a@test.com', _count: { scenarios: 2 } }
+      prisma.user.findUnique.mockResolvedValue(user)
+
+      const result = await getUserById('1')
+
+      expect(result).toEqual(user)
+    })
+
+    it('throws 404 when missing', async () => {
+      prisma.user.findUnique.mockResolvedValue(null)
+
+      await expect(getUserById('missing')).rejects.toMatchObject({
+        status: 404,
+      })
+    })
+  })
+
+  describe('createUser', () => {
+    it('creates a user with hashed password', async () => {
+      prisma.user.findUnique.mockResolvedValue(null)
+      prisma.user.create.mockResolvedValue({
+        id: '2',
+        email: 'new@test.com',
+        name: 'New User',
+        role: 'USER',
+      })
+
+      const result = await createUser({
+        email: 'new@test.com',
+        name: 'New User',
+        password: 'SecurePass1!',
+      })
+
+      expect(hashPassword).toHaveBeenCalledWith('SecurePass1!')
+      expect(result.email).toBe('new@test.com')
+    })
+
+    it('rejects duplicate email', async () => {
+      prisma.user.findUnique.mockResolvedValue({ id: '1' })
+
+      await expect(
+        createUser({
+          email: 'exists@test.com',
+          name: 'Existing',
+          password: 'SecurePass1!',
+        })
+      ).rejects.toMatchObject({ status: 409 })
+    })
+  })
+
   describe('updateUserRole', () => {
     it('rejects demoting primary admin', async () => {
       prisma.user.findUnique.mockResolvedValue({
@@ -38,7 +104,9 @@ describe('userService', () => {
         role: 'ADMIN',
       })
 
-      await expect(updateUserRole('other@test.com', '1', 'USER')).rejects.toMatchObject({
+      await expect(
+        updateUserRole({ id: '9', email: 'other@test.com' }, '1', 'USER')
+      ).rejects.toMatchObject({
         status: 403,
         message: expect.stringContaining('primary admin'),
       })
@@ -56,14 +124,56 @@ describe('userService', () => {
         role: 'ADMIN',
       })
 
-      const result = await updateUserRole('donkditren@gmail.com', '2', 'ADMIN')
+      const result = await updateUserRole(
+        { id: '1', email: 'donkditren@gmail.com' },
+        '2',
+        'ADMIN'
+      )
 
       expect(result.role).toBe('ADMIN')
-      expect(prisma.user.update).toHaveBeenCalledWith({
-        where: { id: '2' },
-        data: { role: 'ADMIN' },
-        select: expect.any(Object),
+    })
+  })
+
+  describe('deleteUser', () => {
+    it('rejects deleting primary admin', async () => {
+      prisma.user.findUnique.mockResolvedValue({
+        id: '1',
+        email: 'donkditren@gmail.com',
+        role: 'ADMIN',
       })
+
+      await expect(
+        deleteUser({ id: '9', email: 'other@test.com' }, '1')
+      ).rejects.toMatchObject({ status: 403 })
+    })
+
+    it('rejects self deletion', async () => {
+      prisma.user.findUnique.mockResolvedValue({
+        id: '2',
+        email: 'user@test.com',
+        role: 'USER',
+      })
+
+      await expect(deleteUser({ id: '2', email: 'user@test.com' }, '2')).rejects.toMatchObject({
+        status: 403,
+      })
+    })
+
+    it('deletes a regular user', async () => {
+      prisma.user.findUnique.mockResolvedValue({
+        id: '2',
+        email: 'user@test.com',
+        role: 'USER',
+      })
+      prisma.user.delete.mockResolvedValue({ id: '2' })
+
+      const result = await deleteUser(
+        { id: '1', email: 'donkditren@gmail.com' },
+        '2'
+      )
+
+      expect(result.email).toBe('user@test.com')
+      expect(prisma.user.delete).toHaveBeenCalledWith({ where: { id: '2' } })
     })
   })
 })
