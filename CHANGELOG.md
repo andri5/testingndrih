@@ -1,3 +1,10 @@
+## [1.1.7](https://github.com/andri5/testingndrih/compare/v1.1.6...v1.1.7) (2026-06-10)
+
+
+### Bug Fixes
+
+* **auth:** fix Turnstile ready() conflict with defer script tag ([99c4a90](https://github.com/andri5/testingndrih/commit/99c4a908100e22077e85c217ce3df27fa7e6cf0f))
+
 ## [1.1.6](https://github.com/andri5/testingndrih/compare/v1.1.5...v1.1.6) (2026-06-10)
 
 
