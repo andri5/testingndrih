@@ -1,3 +1,10 @@
+# [1.5.0](https://github.com/andri5/testingndrih/compare/v1.4.0...v1.5.0) (2026-06-10)
+
+
+### Features
+
+* **admin:** add inactive user status to user management ([ba01a45](https://github.com/andri5/testingndrih/commit/ba01a45f807e93964c66501f8fd023c73ca7c270))
+
 # [1.4.0](https://github.com/andri5/testingndrih/compare/v1.3.0...v1.4.0) (2026-06-10)
 
 
