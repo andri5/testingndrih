@@ -27,19 +27,19 @@ const transporter = nodemailer.createTransport({
 export async function sendPasswordResetEmail(email, resetToken, resetUrl) {
   try {
     const mailOptions = {
-      from: process.env.SMTP_FROM || 'noreply@testingndrih.local',
+      from: process.env.SMTP_FROM || 'Test Sambil Ngopi <noreply@testsambilngopi.local>',
       to: email,
-      subject: 'Password Reset Request - TestingNDRIH',
+      subject: 'Reset Password — Test Sambil Ngopi',
       html: `
         <div style="font-family: Arial, sans-serif; color: #333;">
           <div style="background-color: #f5f5f5; padding: 20px; border-radius: 8px;">
-            <h2 style="color: #5E6AD2;">Password Reset Request</h2>
+            <h2 style="color: #5E6AD2;">Reset Password — Test Sambil Ngopi</h2>
             
-            <p>Hello,</p>
+            <p>Halo,</p>
             
-            <p>We received a request to reset your password. If you didn't make this request, you can safely ignore this email.</p>
+            <p>Kami menerima permintaan untuk mereset password akun Anda. Jika Anda tidak meminta ini, abaikan email ini.</p>
             
-            <p>To reset your password, click the button below (link expires in 15 minutes):</p>
+            <p>Klik tombol di bawah untuk membuat password baru (link berlaku 15 menit):</p>
             
             <div style="margin: 30px 0;">
               <a href="${resetUrl}" style="background-color: #5E6AD2; color: white; padding: 12px 30px; text-decoration: none; border-radius: 4px; display: inline-block;">
@@ -48,29 +48,29 @@ export async function sendPasswordResetEmail(email, resetToken, resetUrl) {
             </div>
             
             <p style="color: #666; font-size: 13px;">
-              Or copy and paste this link in your browser:<br/>
-              <code style="background-color: #f0f0f0; padding: 2px 6px; border-radius: 3px;">${resetUrl}</code>
+              Atau salin link berikut ke browser Anda:<br/>
+              <code style="background-color: #f0f0f0; padding: 2px 6px; border-radius: 3px; word-break: break-all;">${resetUrl}</code>
             </p>
             
             <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
             
             <p style="color: #999; font-size: 12px;">
-              This is an automated email. Please do not reply to this email. If you have questions, visit our support page.
+              Email otomatis dari Test Sambil Ngopi. Mohon jangan membalas email ini.
             </p>
           </div>
         </div>
       `,
       text: `
-        Password Reset Request
+        Reset Password — Test Sambil Ngopi
         
-        Hello,
+        Halo,
         
-        We received a request to reset your password. If you didn't make this request, you can safely ignore this email.
+        Kami menerima permintaan untuk mereset password akun Anda. Jika Anda tidak meminta ini, abaikan email ini.
         
-        To reset your password, visit this link (expires in 15 minutes):
+        Buka link berikut untuk membuat password baru (berlaku 15 menit):
         ${resetUrl}
         
-        This is an automated email. Please do not reply to this email.
+        Email otomatis dari Test Sambil Ngopi. Mohon jangan membalas email ini.
       `
     }
 

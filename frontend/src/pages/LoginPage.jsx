@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useNavigate, Link, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import { useSettingsStore } from '../store/settingsStore'
 import { CheckCircle2, AlertCircle, Eye, EyeOff, Loader2, ShieldCheck, Globe } from 'lucide-react'
@@ -48,6 +48,7 @@ const translations = {
 
 export default function LoginPage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const login = useAuthStore((state) => state.login)
   const isLoading = useAuthStore((state) => state.isLoading)
   const error = useAuthStore((state) => state.error)
@@ -74,6 +75,13 @@ export default function LoginPage() {
     setCaptchaToken('')
     setCaptchaResetKey((key) => key + 1)
   }
+
+  useEffect(() => {
+    if (location.state?.message) {
+      setSuccessMessage(location.state.message)
+      navigate(location.pathname, { replace: true, state: {} })
+    }
+  }, [location.state?.message, location.pathname, navigate])
 
   const handleSubmit = async (e) => {
     e.preventDefault()

@@ -135,7 +135,7 @@ export default function ResetPasswordPage() {
     }
 
     try {
-      await api.post(`/auth/reset-password/${token}`, { password })
+      await api.post(`/auth/reset-password/${token}`, { password, passwordConfirm: confirmPassword })
       navigate('/login', {
         state: { message: t.successMessage }
       })

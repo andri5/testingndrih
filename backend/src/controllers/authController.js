@@ -214,19 +214,23 @@ export async function getCurrentUser(req, res, next) {
  */
 export async function forgotPassword(req, res, next) {
   try {
+    if (!(await assertCaptcha(req, res))) return
+
     const { email } = req.body
 
-    // Validation
-    if (!email) {
+    const emailError = validateRegistrationEmail(email)
+    if (emailError) {
       return res.status(400).json({
         success: false,
-        message: 'Email is required'
+        message: emailError
       })
     }
 
+    const normalizedEmail = email.trim()
+
     // Find user
     const user = await prisma.user.findUnique({
-      where: { email }
+      where: { email: normalizedEmail }
     })
 
     // Don't reveal if email exists (security best practice)
@@ -254,10 +258,10 @@ export async function forgotPassword(req, res, next) {
     })
 
     // Send reset email
-    const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password/${resetToken}`
+    const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3001'}/reset-password/${resetToken}`
     
     try {
-      const emailResult = await sendPasswordResetEmail(email, resetToken, resetUrl)
+      const emailResult = await sendPasswordResetEmail(normalizedEmail, resetToken, resetUrl)
       
       // In development mode, email might fail but we still want to allow testing
       if (!emailResult.success && process.env.NODE_ENV === 'production') {
