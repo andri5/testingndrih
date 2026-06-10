@@ -1,3 +1,10 @@
+## [1.1.4](https://github.com/andri5/testingndrih/compare/v1.1.3...v1.1.4) (2026-06-10)
+
+
+### Bug Fixes
+
+* **ci:** deploy via self-hosted runner on VPS ([b90ae57](https://github.com/andri5/testingndrih/commit/b90ae5721ec45c40ea36d3d66e7b6ec955011323))
+
 ## [1.1.3](https://github.com/andri5/testingndrih/compare/v1.1.2...v1.1.3) (2026-06-10)
 
 
