@@ -151,6 +151,7 @@ router.get('/validate-reset-token/:token', validateResetToken)
  *             properties:
  *               password: { type: string, minLength: 8, example: 'NewPassword123!' }
  *               passwordConfirm: { type: string, minLength: 8, example: 'NewPassword123!' }
+ *               captchaToken: { type: string, description: Cloudflare Turnstile token (required when Turnstile is configured) }
  *     responses:
  *       200:
  *         description: Password reset successfully

@@ -3,8 +3,6 @@ import { Link } from 'react-router-dom'
 import { AlertCircle, Mail, Loader2, CheckCircle2, Moon, Sun, Globe } from 'lucide-react'
 import api from '../services/api'
 import { useSettingsStore } from '../store/settingsStore'
-import TurnstileWidget from '../components/TurnstileWidget'
-import { useTurnstileSiteKey } from '../hooks/useTurnstileSiteKey'
 import { validateEmail } from '../utils/validation'
 
 const translations = {
@@ -27,7 +25,6 @@ const translations = {
     emailRequired: 'Email is required',
     emailMissingAt: 'Email must contain @ (example: user@email.com)',
     emailInvalid: 'Email format is invalid (example: user@email.com)',
-    captchaRequired: 'Please complete the captcha verification',
     errorOccurred: 'Failed to send reset link',
   },
   id: {
@@ -49,7 +46,6 @@ const translations = {
     emailRequired: 'Email wajib diisi',
     emailMissingAt: 'Email harus mengandung @ (contoh: user@email.com)',
     emailInvalid: 'Format email tidak valid (contoh: user@email.com)',
-    captchaRequired: 'Selesaikan verifikasi captcha terlebih dahulu',
     errorOccurred: 'Gagal mengirim link reset',
   },
 }
@@ -122,10 +118,7 @@ export default function ForgotPasswordPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [submitted, setSubmitted] = useState(false)
-  const [captchaToken, setCaptchaToken] = useState('')
-  const [captchaResetKey, setCaptchaResetKey] = useState(0)
   const { theme, language, setTheme, setLanguage } = useSettingsStore()
-  const turnstileSiteKey = useTurnstileSiteKey()
   const isDarkMode = theme !== 'light'
 
   const t = translations[language]
@@ -134,11 +127,6 @@ export default function ForgotPasswordPage() {
     emailRequired: t.emailRequired,
     emailMissingAt: t.emailMissingAt,
     emailInvalid: t.emailInvalid,
-  }
-
-  const resetCaptcha = () => {
-    setCaptchaToken('')
-    setCaptchaResetKey((key) => key + 1)
   }
 
   const cardClass = isDarkMode
@@ -171,21 +159,11 @@ export default function ForgotPasswordPage() {
       return
     }
 
-    if (turnstileSiteKey && !captchaToken) {
-      setError(t.captchaRequired)
-      setLoading(false)
-      return
-    }
-
     try {
-      await api.post('/auth/forgot-password', {
-        email: email.trim(),
-        captchaToken: captchaToken || undefined,
-      })
+      await api.post('/auth/forgot-password', { email: email.trim() })
       setSubmitted(true)
     } catch (err) {
       setError(err.response?.data?.message || t.errorOccurred)
-      resetCaptcha()
     } finally {
       setLoading(false)
     }
@@ -194,7 +172,6 @@ export default function ForgotPasswordPage() {
   const handleTryAgain = () => {
     setSubmitted(false)
     setError('')
-    resetCaptcha()
   }
 
   if (submitted) {
@@ -279,16 +256,6 @@ export default function ForgotPasswordPage() {
               className={`${inputClass} w-full px-3 py-2 rounded-md focus:ring-1 outline-none transition-all text-sm disabled:opacity-50`}
             />
           </div>
-
-          {turnstileSiteKey && (
-            <TurnstileWidget
-              siteKey={turnstileSiteKey}
-              resetKey={captchaResetKey}
-              onVerify={setCaptchaToken}
-              onExpire={resetCaptcha}
-              onError={() => setCaptchaToken('')}
-            />
-          )}
 
           {error && (
             <div className={`${errorBgClass} p-3 rounded-md border text-sm flex items-center gap-2`}>

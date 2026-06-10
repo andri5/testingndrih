@@ -215,8 +215,6 @@ export async function getCurrentUser(req, res, next) {
  */
 export async function forgotPassword(req, res, next) {
   try {
-    if (!(await assertCaptcha(req, res))) return
-
     const { email } = req.body
 
     const emailError = validateRegistrationEmail(email)
@@ -352,6 +350,8 @@ export async function validateResetToken(req, res, next) {
  */
 export async function resetPassword(req, res, next) {
   try {
+    if (!(await assertCaptcha(req, res))) return
+
     const { token } = req.params
     const { password, passwordConfirm } = req.body
 

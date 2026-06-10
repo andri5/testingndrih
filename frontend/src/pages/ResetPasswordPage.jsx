@@ -3,6 +3,8 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { AlertCircle, Lock, Loader2, CheckCircle2, ShieldCheck, Check, X } from 'lucide-react'
 import api from '../services/api'
 import { useSettingsStore } from '../store/settingsStore'
+import TurnstileWidget from '../components/TurnstileWidget'
+import { useTurnstileSiteKey } from '../hooks/useTurnstileSiteKey'
 
 const translations = {
   en: {
@@ -30,7 +32,8 @@ const translations = {
     reqUppercase: 'One uppercase letter (A-Z)',
     reqLowercase: 'One lowercase letter (a-z)',
     reqDigit: 'One digit (0-9)',
-    reqSpecial: 'One special character (!@#$%^&*...)'
+    reqSpecial: 'One special character (!@#$%^&*...)',
+    captchaRequired: 'Please complete the captcha verification',
   },
   id: {
     title: 'Reset Password',
@@ -57,7 +60,8 @@ const translations = {
     reqUppercase: 'Satu huruf besar (A-Z)',
     reqLowercase: 'Satu huruf kecil (a-z)',
     reqDigit: 'Satu digit (0-9)',
-    reqSpecial: 'Satu karakter khusus (!@#$%^&*...)'
+    reqSpecial: 'Satu karakter khusus (!@#$%^&*...)',
+    captchaRequired: 'Selesaikan verifikasi captcha terlebih dahulu',
   }
 }
 
@@ -71,10 +75,18 @@ export default function ResetPasswordPage() {
   const [error, setError] = useState('')
   const [tokenValid, setTokenValid] = useState(false)
   const [email, setEmail] = useState('')
+  const [captchaToken, setCaptchaToken] = useState('')
+  const [captchaResetKey, setCaptchaResetKey] = useState(0)
   const { theme, language, setTheme, setLanguage } = useSettingsStore()
+  const turnstileSiteKey = useTurnstileSiteKey()
   const isDarkMode = theme !== 'light'
 
   const t = translations[language]
+
+  const resetCaptcha = () => {
+    setCaptchaToken('')
+    setCaptchaResetKey((key) => key + 1)
+  }
 
   // Password validation helpers
   const passwordRequirements = {
@@ -134,8 +146,18 @@ export default function ResetPasswordPage() {
       return
     }
 
+    if (turnstileSiteKey && !captchaToken) {
+      setError(t.captchaRequired)
+      setLoading(false)
+      return
+    }
+
     try {
-      await api.post(`/auth/reset-password/${token}`, { password, passwordConfirm: confirmPassword })
+      await api.post(`/auth/reset-password/${token}`, {
+        password,
+        passwordConfirm: confirmPassword,
+        captchaToken: captchaToken || undefined,
+      })
       navigate('/login', {
         state: { message: t.successMessage }
       })
@@ -143,6 +165,7 @@ export default function ResetPasswordPage() {
       setError(
         err.response?.data?.message || (language === 'id' ? 'Gagal mereset password' : 'Failed to reset password')
       )
+      resetCaptcha()
     } finally {
       setLoading(false)
     }
@@ -374,6 +397,16 @@ export default function ResetPasswordPage() {
               />
             </div>
 
+            {turnstileSiteKey && (
+              <TurnstileWidget
+                siteKey={turnstileSiteKey}
+                resetKey={captchaResetKey}
+                onVerify={setCaptchaToken}
+                onExpire={resetCaptcha}
+                onError={() => setCaptchaToken('')}
+              />
+            )}
+
             {error && (
               <div className={`${errorBgClass} p-3 rounded-md border text-sm flex items-center gap-2`}>
                 <AlertCircle size={15} className="shrink-0" />
@@ -383,7 +416,14 @@ export default function ResetPasswordPage() {
 
             <button
               type="submit"
-              disabled={loading || !password || !confirmPassword || password !== confirmPassword || !isPasswordValid}
+              disabled={
+                loading ||
+                !password ||
+                !confirmPassword ||
+                password !== confirmPassword ||
+                !isPasswordValid ||
+                (turnstileSiteKey && !captchaToken)
+              }
               className={`w-full py-2 px-4 rounded-md font-medium text-sm text-white ${
                 isDarkMode ? 'bg-[#5E6AD2] hover:bg-[#6B7AE8]' : 'bg-blue-600 hover:bg-blue-700'
               } transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-[#5E6AD2] focus:ring-offset-2 ${
