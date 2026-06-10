@@ -1,3 +1,10 @@
+## [1.1.5](https://github.com/andri5/testingndrih/compare/v1.1.4...v1.1.5) (2026-06-10)
+
+
+### Bug Fixes
+
+* **auth:** load Turnstile captcha reliably on production ([e72183d](https://github.com/andri5/testingndrih/commit/e72183d30799227216ae37479d1b14190359d2b5))
+
 ## [1.1.4](https://github.com/andri5/testingndrih/compare/v1.1.3...v1.1.4) (2026-06-10)
 
 
