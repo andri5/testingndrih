@@ -1,7 +1,7 @@
 name: Deploy Production
 
-# release:published does NOT fire when semantic-release publishes via GITHUB_TOKEN.
-# Chain deploy after Release workflow (same pattern as CI → Release).
+# Deploy runs on a self-hosted runner ON the VPS (no inbound SSH from GitHub cloud).
+# One-time setup: scripts/setup-github-runner.sh on the server.
 on:
   workflow_run:
     workflows: [Release]
@@ -26,8 +26,7 @@ env:
 jobs:
   deploy:
     name: Deploy to testsambilngopi.com
-    runs-on: ubuntu-latest
-    # Manual deploy always runs; auto-deploy only after a successful Release (new version published).
+    runs-on: [self-hosted, production]
     if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     environment: production
 
@@ -72,7 +71,6 @@ jobs:
           echo "Release workflow started: ${RUN_START}"
           echo "Latest GitHub release published: ${PUBLISHED} (${AGE}s before this workflow)"
 
-          # semantic-release publishes during the Release job — fresh release is within ~15 minutes
           if [ "${AGE}" -ge -60 ] && [ "${AGE}" -le 900 ]; then
             echo "skip=false" >> "$GITHUB_OUTPUT"
             echo "Fresh release detected — continuing deploy."
@@ -81,91 +79,58 @@ jobs:
             echo "No new release for this run — skipping production deploy."
           fi
 
-      - name: Validate production secrets
+      - name: Validate deploy path
         if: github.event_name == 'workflow_dispatch' || steps.release_check.outputs.skip != 'true'
         env:
-          PROD_SSH_HOST: ${{ secrets.PROD_SSH_HOST }}
-          PROD_SSH_USER: ${{ secrets.PROD_SSH_USER }}
           PROD_APP_PATH: ${{ secrets.PROD_APP_PATH }}
-          PROD_SSH_KEY: ${{ secrets.PROD_SSH_KEY }}
         run: |
-          missing=""
-          [ -z "$PROD_SSH_HOST" ] && missing="${missing} PROD_SSH_HOST"
-          [ -z "$PROD_SSH_USER" ] && missing="${missing} PROD_SSH_USER"
-          [ -z "$PROD_APP_PATH" ] && missing="${missing} PROD_APP_PATH"
-          [ -z "$PROD_SSH_KEY" ] && missing="${missing} PROD_SSH_KEY"
-          if [ -n "$missing" ]; then
-            echo "Missing environment secrets:${missing}"
-            echo "Add them under Settings → Environments → production → Environment secrets"
+          if [ -z "${PROD_APP_PATH}" ]; then
+            echo "Missing secret PROD_APP_PATH in environment production"
             exit 1
           fi
-          echo "Secrets OK (host=${PROD_SSH_HOST}, user=${PROD_SSH_USER}, path=${PROD_APP_PATH})"
+          if [ ! -d "${PROD_APP_PATH}" ]; then
+            echo "Deploy path does not exist: ${PROD_APP_PATH}"
+            exit 1
+          fi
+          echo "Deploy path OK: ${PROD_APP_PATH}"
 
-      - name: Prepare SSH key
+      - name: Deploy application
         if: github.event_name == 'workflow_dispatch' || steps.release_check.outputs.skip != 'true'
+        env:
+          APP_PATH: ${{ secrets.PROD_APP_PATH }}
+          TAG: ${{ steps.tag.outputs.tag }}
         run: |
-          install -m 700 -d ~/.ssh
-          printf '%s\n' "${{ secrets.PROD_SSH_KEY }}" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          ssh-keygen -y -f ~/.ssh/deploy_key > /dev/null
-          echo "SSH private key parsed successfully"
+          set -e
+          echo "Deploying ${TAG} to ${APP_PATH} (runner: $(whoami)@$(hostname))"
 
-      - name: Test SSH connection
-        if: github.event_name == 'workflow_dispatch' || steps.release_check.outputs.skip != 'true'
-        run: |
-          ssh -i ~/.ssh/deploy_key \
-            -o BatchMode=yes \
-            -o StrictHostKeyChecking=no \
-            -o ConnectTimeout=30 \
-            ${{ secrets.PROD_SSH_USER }}@${{ secrets.PROD_SSH_HOST }} \
-            'echo "SSH OK — connected as $(whoami)"'
+          git config --global --add safe.directory "${APP_PATH}" 2>/dev/null || true
+          cd "${APP_PATH}"
 
-      - name: Deploy via SSH
-        if: github.event_name == 'workflow_dispatch' || steps.release_check.outputs.skip != 'true'
-        uses: appleboy/ssh-action@v1.2.0
-        with:
-          host: ${{ secrets.PROD_SSH_HOST }}
-          username: ${{ secrets.PROD_SSH_USER }}
-          key_path: ~/.ssh/deploy_key
-          port: 22
-          command_timeout: 30m
-          script_stop: true
-          script: |
-            set -e
-            APP_PATH="${{ secrets.PROD_APP_PATH }}"
-            TAG="${{ steps.tag.outputs.tag }}"
+          if [ ! -w .git/objects ]; then
+            echo "ERROR: cannot write to ${APP_PATH}/.git/objects"
+            echo "Fix as root: chown -R deploy:deploy ${APP_PATH}"
+            exit 1
+          fi
 
-            echo "Deploying ${TAG} to ${APP_PATH}"
-            git config --global --add safe.directory "${APP_PATH}" 2>/dev/null || true
-            cd "${APP_PATH}"
+          git fetch --tags origin
+          git checkout -f "${TAG}"
 
-            if [ ! -w .git/objects ]; then
-              echo "ERROR: user $(whoami) cannot write to ${APP_PATH}/.git/objects"
-              echo "Fix on VPS as root: chown -R deploy:deploy ${APP_PATH}"
+          if [ -f .env ]; then
+            sed -i 's/\r$//' .env
+            if grep -qE '^RUN_SEED=(true|1|yes|TRUE|YES)' .env; then
+              echo "ERROR: RUN_SEED is enabled — refusing deploy to protect production data"
               exit 1
             fi
+          else
+            echo "ERROR: missing ${APP_PATH}/.env"
+            exit 1
+          fi
 
-            git fetch --tags origin
-            git checkout -f "${TAG}"
+          docker compose build app
+          docker compose up -d app
 
-            # .env is gitignored — never overwritten by checkout; only normalize line endings
-            if [ -f .env ]; then
-              sed -i 's/\r$//' .env
-              if grep -qE '^RUN_SEED=(true|1|yes|TRUE|YES)' .env; then
-                echo "ERROR: RUN_SEED is enabled in .env — refusing deploy to protect production data"
-                exit 1
-              fi
-            else
-              echo "ERROR: missing ${APP_PATH}/.env — create it on the VPS before deploying"
-              exit 1
-            fi
-
-            # Rebuild/restart app only — postgres volume and data are left untouched
-            docker compose build app
-            docker compose up -d app
-
-            echo "App redeployed for ${TAG} (database container unchanged)"
-            docker compose ps
+          echo "App redeployed for ${TAG} (database container unchanged)"
+          docker compose ps
 
       - name: Wait for production health check
         if: github.event_name == 'workflow_dispatch' || steps.release_check.outputs.skip != 'true'
