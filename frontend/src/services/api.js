@@ -85,6 +85,9 @@ export const userAPI = {
   updateRole: (userId, role) =>
     apiClient.patch(`/users/${userId}/role`, { role }),
   delete: (userId) => apiClient.delete(`/users/${userId}`),
+  activitySummary: () => apiClient.get('/users/activity/summary'),
+  activityLog: (userId, limit = 50) =>
+    apiClient.get(`/users/${userId}/activity`, { params: { limit } }),
 }
 
 export const scenarioAPI = {

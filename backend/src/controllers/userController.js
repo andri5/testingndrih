@@ -1,4 +1,5 @@
 import * as userService from '../services/userService.js'
+import * as userActivityService from '../services/userActivityService.js'
 
 function handleServiceError(error, res, next) {
   if (error.status) {
@@ -64,6 +65,28 @@ export async function deleteUser(req, res, next) {
   try {
     const deleted = await userService.deleteUser(req.user, req.params.userId)
     res.json({ success: true, deleted })
+  } catch (error) {
+    return handleServiceError(error, res, next)
+  }
+}
+
+export async function getUserActivitySummary(req, res, next) {
+  try {
+    const users = await userActivityService.getUserActivitySummary()
+    res.json({ success: true, users })
+  } catch (error) {
+    next(error)
+  }
+}
+
+export async function getUserActivityLog(req, res, next) {
+  try {
+    const limit = Math.min(parseInt(req.query.limit, 10) || 50, 100)
+    const result = await userActivityService.getUserActivityLog(
+      req.params.userId,
+      limit
+    )
+    res.json({ success: true, ...result })
   } catch (error) {
     return handleServiceError(error, res, next)
   }

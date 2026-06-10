@@ -7,6 +7,8 @@ import {
   updateUser,
   updateUserRole,
   deleteUser,
+  getUserActivitySummary,
+  getUserActivityLog,
 } from '../controllers/userController.js'
 
 const router = Router()
@@ -14,7 +16,9 @@ const router = Router()
 router.use(...adminAuth)
 
 router.get('/', listUsers)
+router.get('/activity/summary', getUserActivitySummary)
 router.post('/', createUser)
+router.get('/:userId/activity', getUserActivityLog)
 router.get('/:userId', getUser)
 router.patch('/:userId', updateUser)
 router.patch('/:userId/role', updateUserRole)

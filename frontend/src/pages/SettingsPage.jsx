@@ -4,6 +4,7 @@ import Layout from '../components/Layout'
 import { Alert } from '../components/ui'
 import IntegrationsSettings from '../components/IntegrationsSettings'
 import UserManagement from '../components/UserManagement'
+import UserActivityLog from '../components/UserActivityLog'
 import { useAuthStore } from '../store/authStore'
 import { useSettingsStore } from '../store/settingsStore'
 
@@ -41,6 +42,8 @@ const i18n = {
     users: 'Users',
     userManagement: 'USER MANAGEMENT',
     userManagementDesc: 'View, add, edit, and delete registered users',
+    userActivity: 'User Activity',
+    userActivityDesc: 'Monitor what USER accounts are doing and their latest actions',
   },
   id: {
     settings: 'Pengaturan',
@@ -94,12 +97,13 @@ export default function SettingsPage() {
     ...(isAdmin ? [
       { id: 'integrations', label: t.integrations },
       { id: 'users', label: t.users },
+      { id: 'activity', label: t.userActivity },
     ] : []),
     { id: 'about', label: t.about },
   ]
 
   useEffect(() => {
-    if (!isAdmin && (activeTab === 'integrations' || activeTab === 'users')) {
+    if (!isAdmin && ['integrations', 'users', 'activity'].includes(activeTab)) {
       setActiveTab('profile')
     }
   }, [isAdmin, activeTab])
@@ -317,6 +321,14 @@ export default function SettingsPage() {
                 <p className={sectionTitleCls}>{t.userManagement}</p>
                 <p className="text-sm text-[#666] mb-4">{t.userManagementDesc}</p>
                 <UserManagement />
+              </div>
+            )}
+
+            {activeTab === 'activity' && isAdmin && (
+              <div className={cardCls}>
+                <p className={sectionTitleCls}>{t.userActivity}</p>
+                <p className="text-sm text-[#666] mb-4">{t.userActivityDesc}</p>
+                <UserActivityLog />
               </div>
             )}
 
