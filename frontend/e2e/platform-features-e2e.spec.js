@@ -5,7 +5,12 @@
 
 import { test, expect } from '@playwright/test'
 
-const mockUser = { id: 'user-1', email: 'admin@testingndrih.local', name: 'Admin' }
+const mockUser = {
+  id: 'user-1',
+  email: 'admin@testingndrih.local',
+  name: 'Admin',
+  role: 'ADMIN',
+}
 const mockToken = 'mock-jwt-token-platform-e2e'
 const mockScenario = { id: 'scenario-1', name: 'Demo Scenario', url: 'https://example.com' }
 
@@ -170,10 +175,18 @@ test.describe('Platform Features E2E', () => {
   test('Sidebar navigation links reach platform pages', async ({ page }) => {
     await page.goto('/dashboard')
     await expect(page.locator('h1').first()).toBeVisible({ timeout: 10000 })
-    await page.getByText(/^Tools$|^Alat$/i).click()
-    await page.getByRole('link', { name: /API Testing|Tes API/i }).click()
+
+    // API Testing & Issues live under Main (not admin-only Tools)
+    await page.getByRole('link', { name: /^API Testing$/i }).click()
     await expect(page).toHaveURL(/\/api-testing/)
-    await page.getByRole('link', { name: /Issues|Issue/i }).first().click()
+    await page.getByRole('link', { name: /^Issues$/i }).first().click()
     await expect(page).toHaveURL(/\/issues/)
+  })
+
+  test('Admin Tools menu reaches scheduler page', async ({ page }) => {
+    await page.goto('/dashboard')
+    await page.getByText(/^Tools$/i).click()
+    await page.getByRole('link', { name: /^Scheduler$/i }).click()
+    await expect(page).toHaveURL(/\/scheduler/)
   })
 })
