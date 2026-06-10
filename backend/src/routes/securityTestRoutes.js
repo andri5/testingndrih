@@ -1,11 +1,10 @@
 import express from 'express'
-import { authenticateToken } from '../middleware/auth.js'
+import { adminAuth } from '../middleware/adminAuth.js'
 import * as securityTestController from '../controllers/securityTestController.js'
 
 const router = express.Router()
 
-// All security test endpoints require authentication
-router.use(authenticateToken)
+router.use(...adminAuth)
 
 /**
  * POST /api/security/scan

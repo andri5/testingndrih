@@ -1,8 +1,8 @@
+import 'dotenv/config'
 import express from 'express'
 import cors from 'cors'
 import helmet from 'helmet'
 import rateLimit from 'express-rate-limit'
-import dotenv from 'dotenv'
 import path from 'path'
 import fs from 'fs'
 import { fileURLToPath } from 'url'
@@ -30,11 +30,11 @@ import apiTokenRoutes from './routes/apiTokenRoutes.js'
 import ciRoutes from './routes/ciRoutes.js'
 import environmentRoutes from './routes/environmentRoutes.js'
 import visualRegressionRoutes from './routes/visualRegressionRoutes.js'
+import userRoutes from './routes/userRoutes.js'
 import { errorHandler } from './middleware/auth.js'
 import { swaggerSpec } from './lib/swagger.js'
 import { validateProductionSecurity } from './lib/productionSecurity.js'
 
-dotenv.config()
 validateProductionSecurity()
 
 const app = express()
@@ -122,6 +122,7 @@ app.use('/api/tokens', apiTokenRoutes)
 app.use('/api/ci', ciRoutes)
 app.use('/api/environments', environmentRoutes)
 app.use('/api/visual-regression', visualRegressionRoutes)
+app.use('/api/users', userRoutes)
 
 // Swagger API docs — available at /api/docs
 app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
@@ -207,6 +208,21 @@ app.listen(PORT, async () => {
   console.log(`\n✅ Backend server running on http://localhost:${PORT}`)
   console.log(`📚 API docs (Swagger): http://localhost:${PORT}/api/docs`)
   console.log(`🏥 Health check: http://localhost:${PORT}/health\n`)
+
+  // Housekeeping: expired reset tokens + stale failed migration rows
+  try {
+    const { cleanupExpiredResetTokens, cleanupFailedMigrationRecords } =
+      await import('./services/maintenanceService.js')
+    const tokens = await cleanupExpiredResetTokens()
+    const migrations = await cleanupFailedMigrationRecords()
+    if (tokens > 0 || migrations > 0) {
+      console.log(
+        `[MAINTENANCE] Cleared ${tokens} expired reset token(s), ${migrations} failed migration record(s)`
+      )
+    }
+  } catch (err) {
+    console.warn('[MAINTENANCE] Skipped:', err.message)
+  }
 
   // Phase 2.4: Initialize scheduler
   try {

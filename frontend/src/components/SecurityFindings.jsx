@@ -31,7 +31,7 @@ const i18n = {
 export default function SecurityFindings({ findings }) {
   const [expandedIds, setExpandedIds] = useState([])
   const { language } = useSettingsStore()
-  const t = i18n[language] || i18n.id
+  const t = i18n[language] || i18n.en
 
   const toggleExpand = (id) => {
     setExpandedIds(prev =>

@@ -1,5 +1,6 @@
 module.exports = {
   testEnvironment: 'node',
+  setupFiles: ['<rootDir>/tests/jest-test-env.cjs'],
   testMatch: '**/tests/database/**/*.test.js',
   testTimeout: 30000,
   collectCoverage: true,

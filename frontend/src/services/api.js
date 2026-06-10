@@ -29,6 +29,10 @@ apiClient.interceptors.response.use(
     const currentPath = window.location.pathname
     const isAuthPage = ['/login', '/register', '/session-expired'].includes(currentPath)
 
+    if (error.config?.skipGlobalErrorRedirect) {
+      return Promise.reject(error)
+    }
+
     if (status === 401) {
       // Token expired/invalid - clear auth and redirect
       localStorage.removeItem('authToken')
@@ -65,12 +69,18 @@ export const authAPI = {
     apiClient.post('/auth/login', { email, password, captchaToken }),
   
   me: () =>
-    apiClient.get('/auth/me'),
+    apiClient.get('/auth/me', { skipGlobalErrorRedirect: true }),
   
   logout: () => {
     localStorage.removeItem('authToken')
     localStorage.removeItem('user')
   }
+}
+
+export const userAPI = {
+  list: () => apiClient.get('/users'),
+  updateRole: (userId, role) =>
+    apiClient.patch(`/users/${userId}/role`, { role }),
 }
 
 export const scenarioAPI = {

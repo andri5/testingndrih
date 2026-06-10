@@ -6,18 +6,27 @@ import { getFrontendUrl } from '../utils/frontendUrl.js'
  * Supports: SMTP, Gmail, Outlook, etc.
  */
 
-// Create transporter based on environment
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST || 'localhost',
-  port: process.env.SMTP_PORT || 1025,
-  secure: process.env.SMTP_SECURE === 'true',
-  auth: process.env.SMTP_USER && process.env.SMTP_PASSWORD ? {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASSWORD
-  } : undefined,
-  logger: process.env.NODE_ENV === 'development',
-  debug: process.env.NODE_ENV === 'development'
-})
+let transporter
+
+function getTransporter() {
+  if (!transporter) {
+    transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST || 'localhost',
+      port: Number(process.env.SMTP_PORT) || 1025,
+      secure: process.env.SMTP_SECURE === 'true',
+      auth: process.env.SMTP_USER && process.env.SMTP_PASSWORD ? {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASSWORD
+      } : undefined,
+      connectionTimeout: 10_000,
+      greetingTimeout: 10_000,
+      socketTimeout: 15_000,
+      logger: process.env.NODE_ENV === 'development',
+      debug: process.env.NODE_ENV === 'development'
+    })
+  }
+  return transporter
+}
 
 /**
  * Send password reset email
@@ -75,7 +84,7 @@ export async function sendPasswordResetEmail(email, resetToken, resetUrl) {
       `
     }
 
-    const result = await transporter.sendMail(mailOptions)
+    const result = await getTransporter().sendMail(mailOptions)
     
     console.log(`[Email Service] Reset email sent to ${email}:`, result.messageId)
     
@@ -84,16 +93,16 @@ export async function sendPasswordResetEmail(email, resetToken, resetUrl) {
       messageId: result.messageId
     }
   } catch (error) {
-    console.error(`[Email Service] Failed to send reset email to ${email}:`, error.message)
-    
-    // In development, log the error but don't throw - allow the flow to continue
-    // This allows testing without a real SMTP server
     if (process.env.NODE_ENV === 'production') {
+      console.error(`[Email Service] Failed to send reset email to ${email}:`, error.message)
       throw new Error(`Failed to send reset email: ${error.message}`)
     }
-    
-    console.warn('[Email Service] Email sending failed in development mode - this is expected without a real SMTP server')
-    
+
+    // Dev: SMTP often blocked on office networks — reset link is logged by authController
+    console.warn(
+      `[Email Service] SMTP skipped in dev (${error.message}). Use the [DEV] reset link in the log above.`
+    )
+
     return {
       success: false,
       message: `Failed to send email: ${error.message}`,
@@ -153,7 +162,7 @@ export async function sendWelcomeEmail(email, name) {
       `
     }
 
-    const result = await transporter.sendMail(mailOptions)
+    const result = await getTransporter().sendMail(mailOptions)
     
     console.log(`[Email Service] Welcome email sent to ${email}:`, result.messageId)
     
@@ -193,7 +202,7 @@ export async function sendTestAlertEmail(email, subject, payload) {
       html: `<pre style="font-family:monospace">${lines.join('\n')}</pre>`
     }
 
-    const result = await transporter.sendMail(mailOptions)
+    const result = await getTransporter().sendMail(mailOptions)
     return { success: true, messageId: result.messageId }
   } catch (error) {
     console.error(`[Email Service] Alert email failed: ${error.message}`)
@@ -207,7 +216,7 @@ export async function sendTestAlertEmail(email, subject, payload) {
  */
 export async function verifyEmailService() {
   try {
-    await transporter.verify()
+    await getTransporter().verify()
     console.log('[Email Service] SMTP connection verified successfully')
     return { success: true }
   } catch (error) {

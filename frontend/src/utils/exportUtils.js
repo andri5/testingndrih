@@ -11,7 +11,7 @@
  */
 export const exportToCSV = (data, filename, headers) => {
   if (!data || data.length === 0) {
-    alert('Tidak ada data untuk diexport')
+    alert('No data to export')
     return
   }
 
@@ -106,7 +106,7 @@ const createSVGBarChart = (labels, values, colors, description = '') => {
  * @param {string} filename - Output filename
  * @param {Object} analysis - Analysis data with conclusions, recommendations, solutions
  */
-export const exportToHTML = (title, summary, details, filename, language = 'id', analysis = null) => {
+export const exportToHTML = (title, summary, details, filename, language = 'en', analysis = null) => {
   const lang = {
     en: {
       report: 'Test Report',
@@ -140,7 +140,7 @@ export const exportToHTML = (title, summary, details, filename, language = 'id',
     }
   }
 
-  const l = lang[language] || lang.id
+  const l = lang[language] || lang.en
   const now = new Date().toLocaleString(language === 'id' ? 'id-ID' : 'en-US')
 
   let html = `

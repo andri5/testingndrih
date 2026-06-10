@@ -39,7 +39,7 @@ export default function SmokeTestRunner({ scenarioId, scenarioName, onTestComple
   const [lastResult, setLastResult] = useState(null)
   const [notifyOnComplete, setNotifyOnComplete] = useState(false)
   const { language } = useSettingsStore()
-  const t = i18n[language] || i18n.id
+  const t = i18n[language] || i18n.en
 
   const handleStartTest = async () => {
     try {

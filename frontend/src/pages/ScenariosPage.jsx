@@ -13,6 +13,7 @@ import { Tooltip } from '../components/ui'
 import { useScenarioStore } from '../store/scenarioStore'
 import { executionAPI } from '../services/api'
 import { useSettingsStore } from '../store/settingsStore'
+import { useAuthStore } from '../store/authStore'
 
 const i18n = {
   en: {
@@ -99,7 +100,8 @@ export default function ScenariosPage() {
 
   const language = useSettingsStore((state) => state.language)
   const theme = useSettingsStore((state) => state.theme)
-  const t = i18n[language] || i18n.id
+  const isAdmin = useAuthStore((state) => state.user)?.role === 'ADMIN'
+  const t = i18n[language] || i18n.en
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -661,9 +663,9 @@ export default function ScenariosPage() {
             onDelete={handleDeleteScenario}
             onDuplicate={handleDuplicateScenario}
             onView={handleViewScenario}
-            onMarkSmoke={handleMarkSmoke}
-            onMarkStress={handleMarkStress}
-            onMarkSecurity={handleMarkSecurity}
+            onMarkSmoke={isAdmin ? handleMarkSmoke : undefined}
+            onMarkStress={isAdmin ? handleMarkStress : undefined}
+            onMarkSecurity={isAdmin ? handleMarkSecurity : undefined}
             isLoading={isLoading}
             hasMore={pagination.hasMore}
             onLoadMore={handleLoadMore}

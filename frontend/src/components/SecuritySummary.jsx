@@ -34,7 +34,7 @@ export default function SecuritySummary() {
   const [summary, setSummary] = useState(null)
   const [loading, setLoading] = useState(true)
   const { language } = useSettingsStore()
-  const t = i18n[language] || i18n.id
+  const t = i18n[language] || i18n.en
 
   useEffect(() => {
     loadSummary()

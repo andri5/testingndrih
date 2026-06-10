@@ -6,6 +6,26 @@ import { prisma } from '../lib/prisma.js'
 import { validateRegistrationEmail, validateRegistrationName } from '../utils/registerValidation.js'
 import { verifyTurnstileToken } from '../utils/turnstile.js'
 import { getFrontendUrl } from '../utils/frontendUrl.js'
+import { resolveRoleForEmail } from '../utils/roles.js'
+import { validatePassword } from '../utils/passwordValidation.js'
+
+const AUTH_ERROR_CODES = {
+  ACCOUNT_NOT_FOUND: 'ACCOUNT_NOT_FOUND',
+}
+
+const AUTH_MESSAGES = {
+  accountNotFound:
+    'No account found with this email. Please register first.',
+  invalidCredentials: 'Incorrect email or password.',
+}
+
+const userPublicSelect = {
+  id: true,
+  email: true,
+  name: true,
+  role: true,
+  createdAt: true,
+}
 
 async function assertCaptcha(req, res) {
   const captcha = await verifyTurnstileToken(
@@ -48,19 +68,11 @@ export async function registerUser(req, res, next) {
       })
     }
 
-    // OWASP password validation
-    const passwordErrors = []
-    if (password.length < 8) passwordErrors.push('Minimal 8 karakter')
-    if (password.length > 64) passwordErrors.push('Maksimal 64 karakter')
-    if (!/[A-Z]/.test(password)) passwordErrors.push('Minimal 1 huruf besar')
-    if (!/[a-z]/.test(password)) passwordErrors.push('Minimal 1 huruf kecil')
-    if (!/[0-9]/.test(password)) passwordErrors.push('Minimal 1 angka')
-    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) passwordErrors.push('Minimal 1 karakter spesial (!@#$%^&*)')
-
-    if (passwordErrors.length > 0) {
+    const passwordValidation = validatePassword(password)
+    if (!passwordValidation.valid) {
       return res.status(400).json({
         success: false,
-        message: 'Password tidak memenuhi syarat: ' + passwordErrors.join(', ')
+        message: passwordValidation.message,
       })
     }
 
@@ -79,23 +91,22 @@ export async function registerUser(req, res, next) {
     // Hash password
     const hashedPassword = await hashPassword(password)
 
+    const normalizedEmail = email.trim()
+    const role = resolveRoleForEmail(normalizedEmail)
+
     // Create user
     const user = await prisma.user.create({
       data: {
-        email: email.trim(),
+        email: normalizedEmail,
         password: hashedPassword,
-        name: name.trim()
+        name: name.trim(),
+        role,
       },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        createdAt: true
-      }
+      select: userPublicSelect,
     })
 
     // Sign token
-    const token = signToken({ id: user.id, email: user.email })
+    const token = signToken({ id: user.id, email: user.email, role: user.role })
 
     res.status(201).json({
       success: true,
@@ -139,9 +150,10 @@ export async function loginUser(req, res, next) {
     })
 
     if (!user) {
-      return res.status(401).json({
+      return res.status(404).json({
         success: false,
-        message: 'Password atau email nya salah'
+        code: AUTH_ERROR_CODES.ACCOUNT_NOT_FOUND,
+        message: AUTH_MESSAGES.accountNotFound,
       })
     }
 
@@ -151,12 +163,12 @@ export async function loginUser(req, res, next) {
     if (!isPasswordValid) {
       return res.status(401).json({
         success: false,
-        message: 'Password atau email nya salah'
+        message: AUTH_MESSAGES.invalidCredentials,
       })
     }
 
     // Sign token
-    const token = signToken({ id: user.id, email: user.email })
+    const token = signToken({ id: user.id, email: user.email, role: user.role })
 
     res.json({
       success: true,
@@ -165,9 +177,10 @@ export async function loginUser(req, res, next) {
         id: user.id,
         email: user.email,
         name: user.name,
-        createdAt: user.createdAt
+        role: user.role,
+        createdAt: user.createdAt,
       },
-      token
+      token,
     })
   } catch (error) {
     console.error('❌ Login error:', error.message, error.stack)
@@ -184,12 +197,7 @@ export async function getCurrentUser(req, res, next) {
   try {
     const user = await prisma.user.findUnique({
       where: { id: req.user.id },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        createdAt: true
-      }
+      select: userPublicSelect,
     })
 
     if (!user) {
@@ -232,11 +240,11 @@ export async function forgotPassword(req, res, next) {
       where: { email: normalizedEmail }
     })
 
-    // Don't reveal if email exists (security best practice)
     if (!user) {
-      return res.json({
-        success: true,
-        message: 'If an account exists with this email, you will receive a password reset link'
+      return res.status(404).json({
+        success: false,
+        code: AUTH_ERROR_CODES.ACCOUNT_NOT_FOUND,
+        message: AUTH_MESSAGES.accountNotFound,
       })
     }
 
@@ -258,37 +266,43 @@ export async function forgotPassword(req, res, next) {
 
     // Send reset email
     const resetUrl = `${getFrontendUrl()}/reset-password/${resetToken}`
-    
+
+    const successPayload = {
+      success: true,
+      message: 'If an account exists with this email, you will receive a password reset link'
+    }
+
+    // Dev: respond immediately (SMTP often blocked on office networks); log link for testing
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[DEV] Password reset link for ${normalizedEmail}:\n${resetUrl}`)
+      void sendPasswordResetEmail(normalizedEmail, resetToken, resetUrl).catch((emailError) => {
+        console.warn('[DEV] Background email send failed:', emailError.message)
+      })
+      return res.json(successPayload)
+    }
+
     try {
       const emailResult = await sendPasswordResetEmail(normalizedEmail, resetToken, resetUrl)
-      
-      // In development mode, email might fail but we still want to allow testing
-      if (!emailResult.success && process.env.NODE_ENV === 'production') {
+      if (!emailResult.success) {
         throw new Error(emailResult.message || 'Failed to send reset email')
       }
     } catch (emailError) {
       console.error('Failed to send reset email:', emailError)
-      // Clear the reset token if email fails (only in production)
-      if (process.env.NODE_ENV === 'production') {
-        await prisma.user.update({
-          where: { id: user.id },
-          data: {
-            resetToken: null,
-            resetTokenExpiry: null
-          }
-        })
-        
-        return res.status(500).json({
-          success: false,
-          message: 'Failed to send reset email. Please try again later'
-        })
-      }
+      await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          resetToken: null,
+          resetTokenExpiry: null
+        }
+      })
+
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to send reset email. Please try again later'
+      })
     }
 
-    res.json({
-      success: true,
-      message: 'If an account exists with this email, you will receive a password reset link'
-    })
+    res.json(successPayload)
   } catch (error) {
     next(error)
   }
@@ -376,19 +390,11 @@ export async function resetPassword(req, res, next) {
       })
     }
 
-    // OWASP password validation
-    const passwordErrors = []
-    if (password.length < 8) passwordErrors.push('Minimal 8 karakter')
-    if (password.length > 64) passwordErrors.push('Maksimal 64 karakter')
-    if (!/[A-Z]/.test(password)) passwordErrors.push('Minimal 1 huruf besar')
-    if (!/[a-z]/.test(password)) passwordErrors.push('Minimal 1 huruf kecil')
-    if (!/[0-9]/.test(password)) passwordErrors.push('Minimal 1 angka')
-    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) passwordErrors.push('Minimal 1 karakter spesial (!@#$%^&*)')
-
-    if (passwordErrors.length > 0) {
+    const passwordValidation = validatePassword(password)
+    if (!passwordValidation.valid) {
       return res.status(400).json({
         success: false,
-        message: 'Password tidak memenuhi syarat: ' + passwordErrors.join(', ')
+        message: passwordValidation.message,
       })
     }
 

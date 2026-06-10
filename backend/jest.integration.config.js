@@ -29,6 +29,7 @@ export default {
     '/node_modules/',
     '/coverage/'
   ],
+  setupFiles: ['<rootDir>/tests/jest-test-env.cjs'],
   setupFilesAfterEnv: [],
   bail: false,
   forceExit: true,

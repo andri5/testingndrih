@@ -4,14 +4,14 @@
  */
 
 import { Router } from 'express'
-import { authenticateToken } from '../middleware/auth.js'
+import { adminAuth } from '../middleware/adminAuth.js'
 import { schedulerService } from '../services/schedulerService.js'
 import { prisma } from '../lib/prisma.js'
 
 const router = Router()
 
 /* Middleware: Require authentication for all scheduler routes */
-router.use(authenticateToken)
+router.use(...adminAuth)
 
 /**
  * GET /api/scheduler - List user's schedules

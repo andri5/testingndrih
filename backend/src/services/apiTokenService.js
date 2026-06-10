@@ -55,7 +55,7 @@ export async function resolveUserFromApiToken(bearerToken) {
   const tokenHash = hashToken(bearerToken)
   const record = await prisma.apiToken.findUnique({
     where: { tokenHash },
-    include: { user: { select: { id: true, email: true } } }
+    include: { user: { select: { id: true, email: true, role: true } } }
   })
   if (!record) return null
   if (record.expiresAt && record.expiresAt < new Date()) return null
@@ -63,5 +63,5 @@ export async function resolveUserFromApiToken(bearerToken) {
     where: { id: record.id },
     data: { lastUsedAt: new Date() }
   })
-  return { id: record.user.id, email: record.user.email }
+  return { id: record.user.id, email: record.user.email, role: record.user.role }
 }

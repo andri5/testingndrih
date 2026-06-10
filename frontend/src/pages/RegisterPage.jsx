@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
-import { useSettingsStore } from '../store/settingsStore'
-import { AlertCircle, Eye, EyeOff, Loader2, ShieldCheck, Globe } from 'lucide-react'
+import { AlertCircle, Eye, EyeOff, Loader2 } from 'lucide-react'
 import TurnstileWidget from '../components/TurnstileWidget'
 import { useTurnstileSiteKey } from '../hooks/useTurnstileSiteKey'
 import { validateEmail, validateFullName, NAME_MAX_LENGTH } from '../utils/validation'
+import AuthPageHeader from '../components/AuthPageHeader'
 
 const translations = {
   en: {
@@ -86,9 +86,8 @@ export default function RegisterPage() {
   const isLoading = useAuthStore((state) => state.isLoading)
   const error = useAuthStore((state) => state.error)
   const clearError = useAuthStore((state) => state.clearError)
-  const { language, setLanguage } = useSettingsStore()
   const turnstileSiteKey = useTurnstileSiteKey()
-  const t = translations[language] || translations.en
+  const t = translations.en
 
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -171,25 +170,7 @@ export default function RegisterPage() {
   return (
     <div className="auth-page-bg min-h-screen bg-[#0F0E11] flex items-center justify-center px-4 py-10">
       <div className="w-full max-w-sm animate-slide-up">
-        <div className="flex flex-col items-center mb-8">
-          <div className="w-9 h-9 rounded-lg bg-[#5E6AD2] flex items-center justify-center mb-4">
-            <ShieldCheck size={20} className="text-white" />
-          </div>
-          <h1 className="text-lg font-semibold text-[#E0E0E2]">Test Sambil Ngopi</h1>
-          <p className="text-sm text-[#8A8A8F] mt-0.5">{t.createAccount}</p>
-        </div>
-
-        {/* Language Toggle */}
-        <div className="flex justify-center mb-6">
-          <button
-            onClick={() => setLanguage(language === 'en' ? 'id' : 'en')}
-            className="px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 flex items-center gap-2 bg-[#2A2A2D] text-white hover:bg-[#3A3A3D]"
-            title={language === 'en' ? 'Ganti ke Bahasa Indonesia' : 'Switch to English'}
-          >
-            <Globe size={16} />
-            {language === 'en' ? 'ID' : 'EN'}
-          </button>
-        </div>
+        <AuthPageHeader subtitle={t.createAccount} />
 
         <div className="auth-card bg-[#161618] border border-[rgba(255,255,255,0.08)] rounded-xl p-6">
           {(localError || error) && (

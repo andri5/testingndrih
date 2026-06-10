@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { Alert } from '../components/ui'
 import IntegrationsSettings from '../components/IntegrationsSettings'
+import UserManagement from '../components/UserManagement'
 import { useAuthStore } from '../store/authStore'
 import { useSettingsStore } from '../store/settingsStore'
 
@@ -33,13 +34,13 @@ const i18n = {
     timeoutHint: 'Max timeout per step in seconds (5–300)',
     captureScreenshot: 'Capture screenshot after each step',
     captureDesc: 'Automatically saves screenshots during execution',
-    displaySettings: 'DISPLAY SETTINGS',
-    language: 'Language',
-    theme: 'Theme',
     saveSettings: 'Save Settings',
     profileSaved: 'Profile updated successfully',
     settingsSaved: 'Settings saved successfully',
     photoSizeError: 'Image size must be less than 5MB',
+    users: 'Users',
+    userManagement: 'USER MANAGEMENT',
+    userManagementDesc: 'View registered users and manage roles',
   },
   id: {
     settings: 'Pengaturan',
@@ -62,9 +63,6 @@ const i18n = {
     timeoutHint: 'Batas maksimal per langkah dalam detik (5–300)',
     captureScreenshot: 'Ambil screenshot setelah setiap langkah',
     captureDesc: 'Otomatis menyimpan screenshot saat eksekusi',
-    displaySettings: 'PENGATURAN TAMPILAN',
-    language: 'Bahasa',
-    theme: 'Tema',
     saveSettings: 'Simpan Pengaturan',
     profileSaved: 'Profil berhasil diperbarui',
     settingsSaved: 'Pengaturan berhasil disimpan',
@@ -77,7 +75,7 @@ export default function SettingsPage() {
   const user = useAuthStore((state) => state.user)
   const logout = useAuthStore((state) => state.logout)
 
-  const { theme, language, executionTimeout, autoScreenshot, setTheme, setLanguage, setExecutionTimeout, setAutoScreenshot } = useSettingsStore()
+  const { executionTimeout, autoScreenshot, setExecutionTimeout, setAutoScreenshot } = useSettingsStore()
 
   const [activeTab, setActiveTab] = useState('profile')
   const [success, setSuccess] = useState(null)
@@ -86,14 +84,25 @@ export default function SettingsPage() {
   const [email] = useState(user?.email || '')
   const [profilePicture, setProfilePicture] = useState(JSON.parse(localStorage.getItem('profilePicture') || 'null'))
 
-  const t = i18n[language] || i18n.id
+  const t = i18n.en
+
+  const isAdmin = user?.role === 'ADMIN'
 
   const tabs = [
     { id: 'profile', label: t.profile },
     { id: 'app', label: t.application },
-    { id: 'integrations', label: t.integrations },
+    ...(isAdmin ? [
+      { id: 'integrations', label: t.integrations },
+      { id: 'users', label: t.users },
+    ] : []),
     { id: 'about', label: t.about },
   ]
+
+  useEffect(() => {
+    if (!isAdmin && (activeTab === 'integrations' || activeTab === 'users')) {
+      setActiveTab('profile')
+    }
+  }, [isAdmin, activeTab])
 
   const handleProfilePictureChange = (e) => {
     const file = e.target.files?.[0]
@@ -176,11 +185,7 @@ export default function SettingsPage() {
                     <div>
                       <label className={labelCls}>{t.profilePicture}</label>
                       <div className="flex items-center gap-4">
-                        <div className={`w-24 h-24 rounded-lg flex items-center justify-center border-2 border-dashed ${
-                          theme === 'dark' 
-                            ? 'border-[#2D2D2F] bg-[#0F0E11]' 
-                            : 'border-[#E0E0E2] bg-white'
-                        } overflow-hidden`}>
+                        <div className="w-24 h-24 rounded-lg flex items-center justify-center border-2 border-dashed border-[#2D2D2F] bg-[#0F0E11] overflow-hidden">
                           {profilePicture ? (
                             <img 
                               src={profilePicture} 
@@ -188,22 +193,14 @@ export default function SettingsPage() {
                               className="w-full h-full object-cover"
                             />
                           ) : (
-                            <div className={`text-3xl font-bold ${
-                              theme === 'dark' 
-                                ? 'text-[#4A4A52]' 
-                                : 'text-[#A0A0A4]'
-                            }`}>
+                            <div className="text-3xl font-bold text-[#4A4A52]">
                               {user?.name?.charAt(0)?.toUpperCase() || 'U'}
                             </div>
                           )}
                         </div>
                         <div className="flex-1">
                           <label htmlFor="profile-picture-input" className="cursor-pointer">
-                            <div className={`px-4 py-2 rounded-lg text-sm font-medium text-center transition ${
-                              theme === 'dark'
-                                ? 'bg-[#5E6AD2] hover:bg-[#6872e5] text-white'
-                                : 'bg-[#5E6AD2] hover:bg-[#6872e5] text-white'
-                            }`}>
+                            <div className="px-4 py-2 rounded-lg text-sm font-medium text-center transition bg-[#5E6AD2] hover:bg-[#6872e5] text-white">
                               {profilePicture ? t.changePhoto : t.uploadPhoto}
                             </div>
                           </label>
@@ -214,11 +211,7 @@ export default function SettingsPage() {
                             onChange={handleProfilePictureChange}
                             className="hidden"
                           />
-                          <p className={`text-xs mt-2 ${
-                            theme === 'dark' 
-                              ? 'text-[#555]' 
-                              : 'text-[#999]'
-                          }`}>JPG, PNG or GIF (Max 5MB)</p>
+                          <p className="text-xs mt-2 text-[#555]">JPG, PNG or GIF (Max 5MB)</p>
                         </div>
                       </div>
                     </div>
@@ -233,6 +226,19 @@ export default function SettingsPage() {
                     <div>
                       <label className={labelCls}>{t.email}</label>
                       <input className={inputCls + ' opacity-50 cursor-not-allowed'} value={email} disabled />
+                    </div>
+
+                    <div>
+                      <label className={labelCls}>Role</label>
+                      <span
+                        className={`inline-flex px-2.5 py-1 rounded text-xs font-semibold border ${
+                          user?.role === 'ADMIN'
+                            ? 'bg-[#5E6AD2]/15 text-[#5E6AD2] border-[#5E6AD2]/25'
+                            : 'bg-[#2D2D2F] text-[#A0A0A4] border-[#3D3D3F]'
+                        }`}
+                      >
+                        {user?.role || 'USER'}
+                      </span>
                     </div>
 
                     {/* Save Button */}
@@ -299,61 +305,19 @@ export default function SettingsPage() {
                     </p>
                   </div>
                 </div>
-
-                <div className={cardCls}>
-                  <p className={sectionTitleCls}>{t.displaySettings}</p>
-                  <div className="space-y-5 max-w-md">
-                    <div>
-                      <label className={labelCls}>{t.language}</label>
-                      <div className="flex gap-2">
-                        {[{ value: 'en', label: 'English' }, { value: 'id', label: 'Bahasa Indonesia' }].map(opt => (
-                          <button
-                            key={opt.value}
-                            type="button"
-                            onClick={() => setLanguage(opt.value)}
-                            className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium border transition ${
-                              language === opt.value
-                                ? 'bg-[#5E6AD2]/15 border-[#5E6AD2] text-[#5E6AD2]'
-                                : 'bg-[#0F0E11] border-[#2D2D2F] text-[#A0A0A4] hover:border-[#555] hover:text-[#E0E0E2]'
-                            }`}
-                          >
-                            {opt.label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className={labelCls}>{t.theme}</label>
-                      <div className="flex gap-2">
-                        {[{ value: 'dark', label: 'Dark' }, { value: 'light', label: 'Light' }].map(opt => (
-                          <button
-                            key={opt.value}
-                            type="button"
-                            onClick={() => setTheme(opt.value)}
-                            className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium border transition ${
-                              theme === opt.value
-                                ? 'bg-[#5E6AD2]/15 border-[#5E6AD2] text-[#5E6AD2]'
-                                : 'bg-[#0F0E11] border-[#2D2D2F] text-[#A0A0A4] hover:border-[#555] hover:text-[#E0E0E2]'
-                            }`}
-                          >
-                            {opt.label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <p className="text-xs text-[#555] flex items-center gap-1.5">
-                      <span className="inline-block w-1.5 h-1.5 bg-[#5E6AD2] rounded-full"></span>
-                      Auto-saved
-                    </p>
-                  </div>
-                </div>
               </>
             )}
 
-            {activeTab === 'integrations' && (
-              <IntegrationsSettings language={language} />
+            {activeTab === 'integrations' && isAdmin && (
+              <IntegrationsSettings language="en" />
+            )}
+
+            {activeTab === 'users' && isAdmin && (
+              <div className={cardCls}>
+                <p className={sectionTitleCls}>{t.userManagement}</p>
+                <p className="text-sm text-[#666] mb-4">{t.userManagementDesc}</p>
+                <UserManagement />
+              </div>
             )}
 
             {/* About Tab */}

@@ -3,13 +3,13 @@
  */
 
 import { Router } from 'express'
-import { authenticateToken } from '../middleware/auth.js'
+import { adminAuth } from '../middleware/adminAuth.js'
 import { browserMatrixService } from '../services/browserMatrixService.js'
 import { prisma } from '../lib/prisma.js'
 
 const router = Router()
 
-router.use(authenticateToken)
+router.use(...adminAuth)
 
 /**
  * POST /api/browser-matrix/execute - Execute scenario on multiple browsers

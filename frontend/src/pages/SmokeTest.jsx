@@ -56,7 +56,7 @@ export default function SmokeTestPage() {
   const [runningAllTests, setRunningAllTests] = useState(false)
   const [summaryData, setSummaryData] = useState(null)
   const { language } = useSettingsStore()
-  const t = i18n[language] || i18n.id
+  const t = i18n[language] || i18n.en
 
   useEffect(() => {
     loadSmokeScenarios()

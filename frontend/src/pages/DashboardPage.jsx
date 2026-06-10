@@ -88,7 +88,7 @@ export default function DashboardPage() {
   const navigate = useNavigate()
   const user = useAuthStore((state) => state.user)
   const { language } = useSettingsStore()
-  const t = i18n[language] || i18n.id
+  const t = i18n[language] || i18n.en
   const locale = language === 'id' ? 'id-ID' : 'en-US'
   const [stats, setStats] = useState({ scenarios: 0, executions: 0, successRate: 0, passed: 0, failed: 0, avgDuration: 0 })
   const [analytics, setAnalytics] = useState(null)

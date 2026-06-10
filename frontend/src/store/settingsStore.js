@@ -1,34 +1,34 @@
 import { create } from 'zustand'
 
-const applyTheme = (theme) => {
-  if (theme === 'light') {
-    document.documentElement.classList.add('theme-light')
-    document.documentElement.classList.remove('theme-dark')
-  } else {
-    document.documentElement.classList.add('theme-dark')
-    document.documentElement.classList.remove('theme-light')
-  }
+const APP_THEME = 'dark'
+const APP_LANGUAGE = 'en'
+
+const applyTheme = () => {
+  document.documentElement.classList.add('theme-dark')
+  document.documentElement.classList.remove('theme-light')
 }
 
-// Apply theme immediately on module load (before React first render)
-applyTheme(localStorage.getItem('theme') || 'light')
+// Always dark theme + English on load
+applyTheme()
+localStorage.setItem('theme', APP_THEME)
+localStorage.setItem('language', APP_LANGUAGE)
 
 const useSettingsStore = create((set) => ({
-  theme: localStorage.getItem('theme') || 'light',
-  language: localStorage.getItem('language') || 'id',
+  theme: APP_THEME,
+  language: APP_LANGUAGE,
   executionTimeout: localStorage.getItem('executionTimeout') || '30',
   autoScreenshot: localStorage.getItem('autoScreenshot') !== 'false',
   selectedEnvironmentId: localStorage.getItem('selectedEnvironmentId') || '',
 
-  setTheme: (theme) => {
-    localStorage.setItem('theme', theme)
-    applyTheme(theme)
-    set({ theme })
+  setTheme: () => {
+    applyTheme()
+    localStorage.setItem('theme', APP_THEME)
+    set({ theme: APP_THEME })
   },
 
-  setLanguage: (language) => {
-    localStorage.setItem('language', language)
-    set({ language })
+  setLanguage: () => {
+    localStorage.setItem('language', APP_LANGUAGE)
+    set({ language: APP_LANGUAGE })
   },
 
   setExecutionTimeout: (executionTimeout) => {
@@ -47,8 +47,10 @@ const useSettingsStore = create((set) => ({
   },
 
   init: () => {
-    const theme = localStorage.getItem('theme') || 'light'
-    applyTheme(theme)
+    applyTheme()
+    localStorage.setItem('theme', APP_THEME)
+    localStorage.setItem('language', APP_LANGUAGE)
+    set({ theme: APP_THEME, language: APP_LANGUAGE })
   },
 }))
 

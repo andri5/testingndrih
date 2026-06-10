@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client'
 import { hashPassword } from '../src/utils/password.js'
+import { resolveRoleForEmail } from '../src/utils/roles.js'
 
 const prisma = new PrismaClient()
 
@@ -157,14 +158,41 @@ async function main() {
 
     let user = await prisma.user.findUnique({ where: { email: seedEmail } })
 
+    const seedRole = resolveRoleForEmail(seedEmail)
+
     if (!user) {
       const hashedPassword = await hashPassword(seedPassword)
       user = await prisma.user.create({
-        data: { email: seedEmail, password: hashedPassword, name: 'Admin User' }
+        data: {
+          email: seedEmail,
+          password: hashedPassword,
+          name: 'Admin User',
+          role: seedRole,
+        },
       })
-      console.log('✅ Seed user created:', user.email)
+      console.log('✅ Seed user created:', user.email, `(${seedRole})`)
     } else {
-      console.log('✅ Seed user already exists:', user.email)
+      if (user.role !== seedRole) {
+        user = await prisma.user.update({
+          where: { id: user.id },
+          data: { role: seedRole },
+        })
+        console.log('✅ Seed user role updated:', user.email, `→ ${seedRole}`)
+      } else {
+        console.log('✅ Seed user already exists:', user.email, `(${user.role})`)
+      }
+    }
+
+    // Ensure primary admin email always has ADMIN role
+    const primaryAdmin = await prisma.user.findUnique({
+      where: { email: 'donkditren@gmail.com' },
+    })
+    if (primaryAdmin && primaryAdmin.role !== 'ADMIN') {
+      await prisma.user.update({
+        where: { id: primaryAdmin.id },
+        data: { role: 'ADMIN' },
+      })
+      console.log('✅ Primary admin role set: donkditren@gmail.com')
     }
 
     let created = 0

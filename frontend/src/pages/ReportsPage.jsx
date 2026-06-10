@@ -96,7 +96,7 @@ function TrendChart({ data, passedLabel = 'Passed', failedLabel = 'Failed' }) {
 export default function ReportsPage() {
   const navigate = useNavigate()
   const { language } = useSettingsStore()
-  const t = i18n[language] || i18n.id
+  const t = i18n[language] || i18n.en
   const locale = language === 'id' ? 'id-ID' : 'en-US'
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)

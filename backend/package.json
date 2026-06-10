@@ -27,7 +27,12 @@
     "migrate:test": "dotenv -e .env.test -- npx prisma migrate deploy",
     "prisma:generate": "prisma generate",
     "prisma:studio": "prisma studio",
-    "db:seed": "node scripts/seed.js"
+    "db:seed": "node scripts/seed.js",
+    "db:audit": "node scripts/audit-database.js",
+    "db:maintenance": "node scripts/db-maintenance.js",
+    "db:cleanup-test": "node scripts/cleanup-test-data.js",
+    "db:cleanup-test:apply": "node scripts/cleanup-test-data.js --apply",
+    "db:setup-test": "dotenv -e .env.test -- npx prisma migrate deploy"
   },
   "keywords": [
     "testing",

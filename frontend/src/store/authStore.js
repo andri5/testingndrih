@@ -44,8 +44,11 @@ export const useAuthStore = create((set) => ({
       return response.data
     } catch (error) {
       const errorMessage = error.response?.data?.message || 'Login failed'
+      const errorCode = error.response?.data?.code
       set({ error: errorMessage, isLoading: false })
-      throw new Error(errorMessage)
+      const err = new Error(errorMessage)
+      err.code = errorCode
+      throw err
     }
   },
 
@@ -59,6 +62,29 @@ export const useAuthStore = create((set) => ({
   },
 
   setUser: (user) => {
+    if (user) {
+      localStorage.setItem('user', JSON.stringify(user))
+    }
     set({ user })
-  }
+  },
+
+  refreshUser: async () => {
+    const token = localStorage.getItem('authToken')
+    if (!token) return null
+
+    try {
+      const response = await authAPI.me()
+      const user = response.data.user
+      localStorage.setItem('user', JSON.stringify(user))
+      set({ user })
+      return user
+    } catch {
+      return null
+    }
+  },
+
+  isAdmin: () => {
+    const user = JSON.parse(localStorage.getItem('user') || 'null')
+    return user?.role === 'ADMIN'
+  },
 }))

@@ -5,12 +5,11 @@
 
 import express from 'express'
 import * as smokeTestController from '../controllers/smokeTestController.js'
-import { authenticateToken } from '../middleware/auth.js'
+import { adminAuth } from '../middleware/adminAuth.js'
 
 const router = express.Router()
 
-// All routes require authentication
-router.use(authenticateToken)
+router.use(...adminAuth)
 
 /**
  * POST /api/smoke

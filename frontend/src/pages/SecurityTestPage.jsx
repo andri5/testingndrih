@@ -55,7 +55,7 @@ export default function SecurityTestPage() {
   const [filterSeverity, setFilterSeverity] = useState('ALL')
   const [summaryData, setSummaryData] = useState(null)
   const { language } = useSettingsStore()
-  const t = i18n[language] || i18n.id
+  const t = i18n[language] || i18n.en
 
   useEffect(() => {
     loadScenarios()

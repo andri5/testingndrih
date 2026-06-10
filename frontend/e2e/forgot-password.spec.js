@@ -69,45 +69,13 @@ test.describe('Forgot Password Feature', () => {
     await expect(submitBtn).toBeVisible()
   })
 
-  test('should toggle dark/light theme', async ({ page, context }) => {
+  test('should use consistent auth header like login page', async ({ page, context }) => {
     await navigateToForgotPassword(page, context)
-    
-    const darkBtn = page.locator('button:has-text("🌙")')
-    const lightBtn = page.locator('button:has-text("☀️")')
-    
-    const isVisible = await darkBtn.isVisible() || await lightBtn.isVisible()
-    expect(isVisible).toBe(true)
-    
-    if (await lightBtn.isVisible()) {
-      await lightBtn.click()
-      await page.waitForTimeout(500)
-      const body = page.locator('body')
-      await expect(body).toBeVisible()
-    }
-  })
 
-  test('should toggle language (EN/ID)', async ({ page, context }) => {
-    await navigateToForgotPassword(page, context)
-    
-    const enBtn = page.locator('button:has-text("EN")')
-    const idBtn = page.locator('button:has-text("ID")')
-    
-    const langVisible = await enBtn.isVisible() || await idBtn.isVisible()
-    expect(langVisible).toBe(true)
-    
-    if (await idBtn.isVisible()) {
-      const title = page.locator('h2').first()
-      const initialText = await title.textContent()
-      
-      await idBtn.click()
-      await page.waitForTimeout(500)
-      
-      const newText = await title.textContent()
-      
-      if (initialText?.toLowerCase().includes('forgot')) {
-        expect(newText?.toLowerCase()).toContain('lupa')
-      }
-    }
+    await expect(page.getByRole('heading', { name: 'Test Sambil Ngopi' })).toBeVisible()
+    await expect(page.locator('.auth-page-bg')).toBeVisible()
+    await expect(page.locator('button:has-text("EN")')).toHaveCount(0)
+    await expect(page.locator('button:has-text("🌙")')).toHaveCount(0)
   })
 
   test('should validate email input', async ({ page, context }) => {
@@ -148,37 +116,6 @@ test.describe('Forgot Password Feature', () => {
     
     const content = page.locator('body')
     await expect(content).toBeVisible({ timeout: 10000 })
-  })
-
-  test('should display localStorage theme preference', async ({ page, context }) => {
-    await navigateToForgotPassword(page, context)
-    
-    await page.evaluate(() => {
-      localStorage.setItem('theme', 'dark')
-    })
-    
-    await page.reload()
-    await page.waitForURL('**/forgot-password')
-    
-    const title = page.locator('h2')
-    await expect(title).toBeVisible({ timeout: 10000 })
-  })
-
-  test('should display localStorage language preference', async ({ page, context }) => {
-    await navigateToForgotPassword(page, context)
-    
-    await page.evaluate(() => {
-      localStorage.setItem('language', 'id')
-    })
-    
-    await page.reload()
-    await page.waitForURL('**/forgot-password')
-    
-    const title = page.locator('h2').first()
-    await expect(title).toBeVisible({ timeout: 10000 })
-    
-    const titleText = await title.textContent()
-    expect(titleText?.toLowerCase()).toContain('lupa')
   })
 
   test('should show success message after form submission', async ({ page, context }) => {

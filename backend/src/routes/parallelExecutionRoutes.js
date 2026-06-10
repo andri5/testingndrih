@@ -3,13 +3,13 @@
  */
 
 import { Router } from 'express'
-import { authenticateToken } from '../middleware/auth.js'
+import { adminAuth } from '../middleware/adminAuth.js'
 import { parallelExecutionService } from '../services/parallelExecutionService.js'
 import { prisma } from '../lib/prisma.js'
 
 const router = Router()
 
-router.use(authenticateToken)
+router.use(...adminAuth)
 
 /**
  * POST /api/parallel/execute - Execute multiple scenarios in parallel

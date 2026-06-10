@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, Link, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
-import { useSettingsStore } from '../store/settingsStore'
-import { CheckCircle2, AlertCircle, Eye, EyeOff, Loader2, ShieldCheck, Globe } from 'lucide-react'
+import { CheckCircle2, AlertCircle, Eye, EyeOff, Loader2 } from 'lucide-react'
 import TurnstileWidget from '../components/TurnstileWidget'
 import { useTurnstileSiteKey } from '../hooks/useTurnstileSiteKey'
 import { validateEmail } from '../utils/validation'
+import AuthPageHeader from '../components/AuthPageHeader'
 
 const translations = {
   en: {
@@ -25,6 +25,8 @@ const translations = {
     emailMissingAt: 'Email must contain @ (example: user@email.com)',
     emailInvalid: 'Email format is invalid (example: user@email.com)',
     captchaRequired: 'Please complete the captcha verification',
+    notRegistered: 'No account found with this email. Please register first.',
+    createAccount: 'Create an account',
   },
   id: {
     title: 'Masuk ke workspace Anda',
@@ -43,6 +45,8 @@ const translations = {
     emailMissingAt: 'Email harus mengandung @ (contoh: user@email.com)',
     emailInvalid: 'Format email tidak valid (contoh: user@email.com)',
     captchaRequired: 'Selesaikan verifikasi captcha terlebih dahulu',
+    notRegistered: 'Email belum terdaftar. Silakan daftar terlebih dahulu.',
+    createAccount: 'Buat akun',
   }
 }
 
@@ -53,9 +57,8 @@ export default function LoginPage() {
   const isLoading = useAuthStore((state) => state.isLoading)
   const error = useAuthStore((state) => state.error)
   const clearError = useAuthStore((state) => state.clearError)
-  const { language, setLanguage } = useSettingsStore()
   const turnstileSiteKey = useTurnstileSiteKey()
-  const t = translations[language] || translations.en
+  const t = translations.en
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -64,6 +67,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [captchaToken, setCaptchaToken] = useState('')
   const [captchaResetKey, setCaptchaResetKey] = useState(0)
+  const [accountNotFound, setAccountNotFound] = useState(false)
 
   const validationMessages = {
     emailRequired: t.emailRequired,
@@ -105,6 +109,7 @@ export default function LoginPage() {
 
     try {
       setLocalError('')
+      setAccountNotFound(false)
       clearError()
       await login(email.trim(), password, captchaToken || undefined)
       setSuccessMessage(t.signedIn)
@@ -112,6 +117,7 @@ export default function LoginPage() {
         navigate('/dashboard')
       }, 1000)
     } catch (err) {
+      setAccountNotFound(err.code === 'ACCOUNT_NOT_FOUND')
       setLocalError(err.message)
       resetCaptcha()
     }
@@ -121,28 +127,7 @@ export default function LoginPage() {
     <div className="auth-page-bg min-h-screen bg-[#0F0E11] flex items-center justify-center px-4">
       <div className="w-full max-w-sm animate-slide-up">
 
-        {/* Logo mark */}
-        <div className="flex flex-col items-center mb-8">
-          <img 
-            src="/logo-icon.png" 
-            alt="Logo" 
-            className="w-9 h-9 mb-4 rounded"
-          />
-          <h1 className="text-lg font-semibold text-[#E0E0E2]">Test Sambil Ngopi</h1>
-          <p className="text-sm text-[#8A8A8F] mt-0.5">{t.title}</p>
-        </div>
-
-        {/* Language Toggle */}
-        <div className="flex justify-center mb-6">
-          <button
-            onClick={() => setLanguage(language === 'en' ? 'id' : 'en')}
-            className="px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 flex items-center gap-2 bg-[#2A2A2D] text-white hover:bg-[#3A3A3D]"
-            title={language === 'en' ? 'Ganti ke Bahasa Indonesia' : 'Switch to English'}
-          >
-            <Globe size={16} />
-            {language === 'en' ? 'ID' : 'EN'}
-          </button>
-        </div>
+        <AuthPageHeader subtitle={t.title} />
 
         {/* Card */}
         <div className="auth-card bg-[#161618] border border-[rgba(255,255,255,0.08)] rounded-xl p-6">
@@ -157,9 +142,19 @@ export default function LoginPage() {
 
           {/* Error */}
           {(localError || error) && (
-            <div className="mb-4 p-3 rounded-md bg-[#1F0F0F] border border-[#F87171]/30 text-[#F87171] text-sm flex items-center gap-2">
-              <AlertCircle size={15} className="shrink-0" />
-              {localError || error}
+            <div className="mb-4 p-3 rounded-md bg-[#1F0F0F] border border-[#F87171]/30 text-[#F87171] text-sm">
+              <div className="flex items-center gap-2">
+                <AlertCircle size={15} className="shrink-0" />
+                {localError || error}
+              </div>
+              {accountNotFound && (
+                <Link
+                  to="/register"
+                  className="inline-block mt-2 text-xs font-semibold text-[#9BA3F0] hover:text-[#5E6AD2] underline"
+                >
+                  {t.createAccount}
+                </Link>
+              )}
             </div>
           )}
 

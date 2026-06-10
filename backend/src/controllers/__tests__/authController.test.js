@@ -153,17 +153,18 @@ describe('AuthController', () => {
       expect(mockRes.status).toHaveBeenCalledWith(400)
     })
 
-    it('should return 401 if user not found', async () => {
+    it('should return 404 if user not found', async () => {
       mockReq.body = { email: 'nonexistent@example.com', password: 'Password123!' }
       prisma.user.findUnique.mockResolvedValue(null)
 
       await loginUser(mockReq, mockRes, mockNext)
 
-      expect(mockRes.status).toHaveBeenCalledWith(401)
+      expect(mockRes.status).toHaveBeenCalledWith(404)
       expect(mockRes.json).toHaveBeenCalledWith(
         expect.objectContaining({
           success: false,
-          message: 'Password atau email nya salah'
+          code: 'ACCOUNT_NOT_FOUND',
+          message: expect.stringContaining('register'),
         })
       )
     })
@@ -262,16 +263,18 @@ describe('AuthController', () => {
       expect(mockRes.status).toHaveBeenCalledWith(400)
     })
 
-    it('should return 200 even if user does not exist (security)', async () => {
+    it('should return 404 if user does not exist', async () => {
       mockReq.body = { email: 'nonexistent@example.com' }
       prisma.user.findUnique.mockResolvedValue(null)
 
       await forgotPassword(mockReq, mockRes, mockNext)
 
+      expect(mockRes.status).toHaveBeenCalledWith(404)
       expect(mockRes.json).toHaveBeenCalledWith(
         expect.objectContaining({
-          success: true,
-          message: expect.stringContaining('If an account exists')
+          success: false,
+          code: 'ACCOUNT_NOT_FOUND',
+          message: expect.stringContaining('register'),
         })
       )
     })

@@ -28,6 +28,7 @@ import SmokeTestHelpPage from './pages/SmokeTestHelpPage'
 import StressTestHelpPage from './pages/StressTestHelpPage'
 import SecurityTestHelpPage from './pages/SecurityTestHelpPage'
 import ProtectedRoute from './components/ProtectedRoute'
+import AdminRoute from './components/AdminRoute'
 import NotFoundPage from './pages/NotFoundPage'
 import MaintenancePage from './pages/MaintenancePage'
 import SessionExpiredPage from './pages/SessionExpiredPage'
@@ -40,10 +41,14 @@ import { useSettingsStore } from './store/settingsStore'
 
 export default function App() {
   const token = useAuthStore((state) => state.token)
+  const refreshUser = useAuthStore((state) => state.refreshUser)
   const init = useSettingsStore((state) => state.init)
 
   useEffect(() => {
     init()
+    if (token) {
+      refreshUser()
+    }
   }, [])
 
   return (
@@ -150,54 +155,12 @@ export default function App() {
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/scheduler"
-          element={
-            <ProtectedRoute>
-              <SchedulerPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/parallel"
-          element={
-            <ProtectedRoute>
-              <ParallelExecutionPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/browser-matrix"
-          element={
-            <ProtectedRoute>
-              <BrowserMatrixPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/smoke-test"
-          element={
-            <ProtectedRoute>
-              <SmokeTestPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/stress-test"
-          element={
-            <ProtectedRoute>
-              <StressTestPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/security-test"
-          element={
-            <ProtectedRoute>
-              <SecurityTestPage />
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/scheduler" element={<AdminRoute><SchedulerPage /></AdminRoute>} />
+        <Route path="/parallel" element={<AdminRoute><ParallelExecutionPage /></AdminRoute>} />
+        <Route path="/browser-matrix" element={<AdminRoute><BrowserMatrixPage /></AdminRoute>} />
+        <Route path="/smoke-test" element={<AdminRoute><SmokeTestPage /></AdminRoute>} />
+        <Route path="/stress-test" element={<AdminRoute><StressTestPage /></AdminRoute>} />
+        <Route path="/security-test" element={<AdminRoute><SecurityTestPage /></AdminRoute>} />
         <Route
           path="/api-testing"
           element={
@@ -232,30 +195,9 @@ export default function App() {
         />
 
         {/* Help Pages */}
-        <Route
-          path="/help/smoke-test"
-          element={
-            <ProtectedRoute>
-              <SmokeTestHelpPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/help/stress-test"
-          element={
-            <ProtectedRoute>
-              <StressTestHelpPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/help/security-test"
-          element={
-            <ProtectedRoute>
-              <SecurityTestHelpPage />
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/help/smoke-test" element={<AdminRoute><SmokeTestHelpPage /></AdminRoute>} />
+        <Route path="/help/stress-test" element={<AdminRoute><StressTestHelpPage /></AdminRoute>} />
+        <Route path="/help/security-test" element={<AdminRoute><SecurityTestHelpPage /></AdminRoute>} />
 
         {/* Maintenance */}
         <Route path="/maintenance" element={<MaintenancePage />} />

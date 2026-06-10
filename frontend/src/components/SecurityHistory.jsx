@@ -28,7 +28,7 @@ export default function SecurityHistory({ scenario }) {
   const [history, setHistory] = useState([])
   const [loading, setLoading] = useState(true)
   const { language } = useSettingsStore()
-  const t = i18n[language] || i18n.id
+  const t = i18n[language] || i18n.en
 
   useEffect(() => {
     if (scenario?.id) {

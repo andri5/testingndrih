@@ -17,7 +17,7 @@ export function QuickRecordModal({ onClose, onCreated }) {
   const handleStart = async (e) => {
     e.preventDefault()
     const trimmedUrl = url.trim()
-    if (!trimmedUrl) { setError('URL wajib diisi'); return }
+    if (!trimmedUrl) { setError('URL is required'); return }
 
     let finalUrl = trimmedUrl
     if (!finalUrl.startsWith('http://') && !finalUrl.startsWith('https://')) {
@@ -33,7 +33,7 @@ export function QuickRecordModal({ onClose, onCreated }) {
       const scenario = res.data.scenario || res.data
       onCreated(scenario, finalUrl)
     } catch (err) {
-      setError(err.response?.data?.message || 'Gagal membuat scenario')
+      setError(err.response?.data?.message || 'Failed to create scenario')
       setIsCreating(false)
     }
   }

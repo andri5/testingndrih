@@ -37,7 +37,7 @@ export default function StressTestRunner({ scenario, onTestComplete }) {
   const [result, setResult] = useState(null)
   const [error, setError] = useState(null)
   const { language } = useSettingsStore()
-  const t = i18n[language] || i18n.id
+  const t = i18n[language] || i18n.en
 
   const PROFILES = [
     { key: 'LIGHT', label: 'Light', desc: '2 concurrent × 3 iterations', time: '10m' },

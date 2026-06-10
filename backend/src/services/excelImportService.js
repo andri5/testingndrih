@@ -23,7 +23,7 @@ export async function parseExcelFile(buffer) {
 
     const worksheet = workbook.worksheets[0]
     if (!worksheet) {
-      throw new Error('File Excel tidak memiliki sheet')
+      throw new Error('Excel file has no worksheets')
     }
 
     // Baca header row
@@ -37,7 +37,7 @@ export async function parseExcelFile(buffer) {
     // Validasi kolom wajib
     const requiredCols = ['Step #', 'Type', 'Step Description']
     for (const col of requiredCols) {
-      if (!headers[col]) throw new Error(`Kolom wajib tidak ditemukan: "${col}"`)
+      if (!headers[col]) throw new Error(`Required column not found: "${col}"`)
     }
 
     const scenarios = []
@@ -66,9 +66,9 @@ export async function parseExcelFile(buffer) {
       // Mulai skenario baru
       if (scenarioName) {
         const url = get('Base URL')
-        if (!url) throw new Error(`Baris ${rowNumber}: "Base URL" wajib diisi saat memulai skenario baru`)
+        if (!url) throw new Error(`Row ${rowNumber}: "Base URL" is required when starting a new scenario`)
         if (!url.startsWith('http://') && !url.startsWith('https://')) {
-          throw new Error(`Baris ${rowNumber}: Base URL harus diawali http:// atau https://`)
+          throw new Error(`Row ${rowNumber}: Base URL must start with http:// or https://`)
         }
         currentScenario = {
           name: scenarioName,
@@ -80,7 +80,7 @@ export async function parseExcelFile(buffer) {
       }
 
       if (!currentScenario) {
-        throw new Error(`Baris ${rowNumber}: Step ditemukan sebelum ada Scenario Name`)
+        throw new Error(`Row ${rowNumber}: Step found before a Scenario Name`)
       }
 
       if (!stepNum) return // baris info skenario tanpa step
@@ -89,12 +89,12 @@ export async function parseExcelFile(buffer) {
       const type = rawType ? rawType.toUpperCase() : null
       if (!type || !VALID_TYPES.includes(type)) {
         throw new Error(
-          `Baris ${rowNumber}: Type "${rawType}" tidak valid. Pilih dari: ${VALID_TYPES.join(', ')}`
+          `Row ${rowNumber}: Type "${rawType}" is invalid. Choose from: ${VALID_TYPES.join(', ')}`
         )
       }
 
       const stepDesc = get('Step Description')
-      if (!stepDesc) throw new Error(`Baris ${rowNumber}: "Step Description" wajib diisi`)
+      if (!stepDesc) throw new Error(`Row ${rowNumber}: "Step Description" is required`)
 
       currentScenario.steps.push({
         stepNumber: parseInt(stepNum),
@@ -105,7 +105,7 @@ export async function parseExcelFile(buffer) {
       })
     })
 
-    if (scenarios.length === 0) throw new Error('Tidak ada skenario ditemukan dalam file Excel')
+    if (scenarios.length === 0) throw new Error('No scenarios found in the Excel file')
 
     // Sort steps per skenario
     scenarios.forEach(s => s.steps.sort((a, b) => a.stepNumber - b.stepNumber))
@@ -181,7 +181,7 @@ export async function createScenariosFromParsedData(userId, parsedData) {
       scenarios: results
     }
   } catch (error) {
-    throw new Error(`Gagal membuat skenario: ${error.message}`)
+    throw new Error(`Failed to create scenario: ${error.message}`)
   }
 }
 
@@ -261,7 +261,7 @@ export async function generateTemplateExcel() {
     showErrorMessage: true,
     errorStyle: 'stop',
     errorTitle: 'Type Tidak Valid',
-    error: `Pilih salah satu dari daftar: ${VALID_TYPES.join(', ')}`,
+    error: `Choose one from the list: ${VALID_TYPES.join(', ')}`,
     formulae: [`"${VALID_TYPES.join(',')}"`]
   })
 

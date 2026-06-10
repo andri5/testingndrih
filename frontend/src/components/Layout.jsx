@@ -43,7 +43,8 @@ export default function Layout({ children }) {
   const [profilePicture, setProfilePicture] = useState(null)
   const [toolsCollapsed, setToolsCollapsed] = useState(true)
   const userMenuRef = useRef(null)
-  const { language, setLanguage } = useSettingsStore()
+  const { language } = useSettingsStore()
+  const isAdmin = user?.role === 'ADMIN'
 
   // i18n translations for sidebar and common labels
   const i18n = {
@@ -104,7 +105,7 @@ export default function Layout({ children }) {
       howToUse: 'Cara Menggunakan',
     }
   }
-  const t = i18n[language] || i18n.id
+  const t = i18n[language] || i18n.en
 
   const handleLogout = () => {
     logout()
@@ -188,7 +189,8 @@ export default function Layout({ children }) {
     { name: t.browserTest,  path: '/browser-matrix',  icon: <Globe size={16} /> },
   ]
 
-  const allItems = [...mainItems, ...workspaceItems]
+  const visibleWorkspaceItems = isAdmin ? workspaceItems : []
+  const allItems = [...mainItems, ...visibleWorkspaceItems]
 
   const NavItem = ({ item, showLabel }) => {
     const isActive = location.pathname === item.path || location.pathname.startsWith(item.path + '/')
@@ -269,18 +271,22 @@ export default function Layout({ children }) {
             {mainItems.map(item => <NavItem key={item.path} item={item} showLabel={showLabels} />)}
           </div>
 
-          <div className="space-y-0.5">
-            {showLabels && (
-              <button
-                onClick={() => setToolsCollapsed(!toolsCollapsed)}
-                className="w-full flex items-center justify-between px-2.5 mb-1.5 hover:text-[#E0E0E2] transition-colors group"
-              >
-                <p className="text-[10px] font-semibold text-[#4A4A52] uppercase tracking-widest group-hover:text-[#5E6AD2]">{t.tools}</p>
-                <ChevronDown size={13} className={`text-[#4A4A52] transition-transform duration-200 ${toolsCollapsed ? '' : 'rotate-180'}`} />
-              </button>
-            )}
-            {!toolsCollapsed && workspaceItems.map(item => <NavItem key={item.path} item={item} showLabel={showLabels} />)}
-          </div>
+          {isAdmin && (
+            <div className="space-y-0.5">
+              {showLabels && (
+                <button
+                  onClick={() => setToolsCollapsed(!toolsCollapsed)}
+                  className="w-full flex items-center justify-between px-2.5 mb-1.5 hover:text-[#E0E0E2] transition-colors group"
+                >
+                  <p className="text-[10px] font-semibold text-[#4A4A52] uppercase tracking-widest group-hover:text-[#5E6AD2]">{t.tools}</p>
+                  <ChevronDown size={13} className={`text-[#4A4A52] transition-transform duration-200 ${toolsCollapsed ? '' : 'rotate-180'}`} />
+                </button>
+              )}
+              {!toolsCollapsed && visibleWorkspaceItems.map(item => (
+                <NavItem key={item.path} item={item} showLabel={showLabels} />
+              ))}
+            </div>
+          )}
         </nav>
 
         {/* Sign out */}
@@ -312,15 +318,6 @@ export default function Layout({ children }) {
             <span className="text-xs text-[#4A4A52] hidden sm:block mr-1">
               {allItems.find(m => location.pathname.startsWith(m.path))?.name ?? ''}
             </span>
-
-            {/* Language toggle */}
-            <button
-              onClick={() => setLanguage(language === 'id' ? 'en' : 'id')}
-              title={language === 'id' ? t.switchToEnglish : t.switchToIndonesian}
-              className="h-7 px-2 flex items-center justify-center rounded-md text-[#8A8A8F] hover:text-[#E0E0E2] hover:bg-[rgba(255,255,255,0.06)] transition-all text-[11px] font-semibold tracking-wide border border-transparent hover:border-[rgba(255,255,255,0.08)]"
-            >
-              {language === 'id' ? 'ID' : 'EN'}
-            </button>
 
             {/* Help icon */}
             <button
@@ -367,6 +364,15 @@ export default function Layout({ children }) {
                   <div className="px-3 py-2.5 user-dropdown-header">
                     <p className="text-xs font-semibold text-[#E0E0E2] truncate">{user?.name || 'User'}</p>
                     <p className="text-[11px] text-[#8A8A8F] truncate">{user?.email || ''}</p>
+                    {user?.role && (
+                      <span className={`inline-block mt-1 px-1.5 py-0.5 rounded text-[10px] font-semibold ${
+                        user.role === 'ADMIN'
+                          ? 'bg-[#5E6AD2]/15 text-[#5E6AD2]'
+                          : 'bg-[#2D2D2F] text-[#8A8A8F]'
+                      }`}>
+                        {user.role}
+                      </span>
+                    )}
                   </div>
                   <div className="p-1">
                     <Link

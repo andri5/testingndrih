@@ -1,6 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { X, ClipboardList, PlayCircle, Link2, Clock, Zap, ChevronRight, Flame, Gauge, Lock } from 'lucide-react'
-import { useSettingsStore } from '../store/settingsStore'
+import { useAuthStore } from '../store/authStore'
+
+const ADMIN_HELP_TAB_IDS = new Set(['smoke', 'stress', 'security', 'tools'])
 
 const content = {
   en: {
@@ -208,12 +210,20 @@ const content = {
 }
 
 export default function HelpModal({ onClose }) {
-  const { language } = useSettingsStore()
-  const lang = language === 'id' ? 'id' : 'en'
-  const c = content[lang]
+  const isAdmin = useAuthStore((state) => state.user)?.role === 'ADMIN'
+  const c = content.en
+  const visibleTabs = isAdmin
+    ? c.tabs
+    : c.tabs.filter((tab) => !ADMIN_HELP_TAB_IDS.has(tab.id))
   const [activeTab, setActiveTab] = useState('scenario')
 
-  const activeTabData = c.tabs.find(t => t.id === activeTab)
+  useEffect(() => {
+    if (!visibleTabs.some((tab) => tab.id === activeTab)) {
+      setActiveTab(visibleTabs[0]?.id ?? 'scenario')
+    }
+  }, [activeTab, visibleTabs])
+
+  const activeTabData = visibleTabs.find(t => t.id === activeTab) ?? visibleTabs[0]
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
@@ -238,7 +248,7 @@ export default function HelpModal({ onClose }) {
 
         {/* Tabs */}
         <div className="flex gap-1 px-5 pb-0 pt-1 help-modal-tabs-bar overflow-x-auto">
-          {c.tabs.map(tab => (
+          {visibleTabs.map(tab => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
@@ -269,13 +279,13 @@ export default function HelpModal({ onClose }) {
         {/* Footer */}
         <div className="px-5 py-3 flex items-center justify-between help-modal-footer">
           <p className="text-[11px] help-footer-text">
-            {lang === 'id' ? 'Gunakan tooltip pada tombol untuk panduan cepat.' : 'Hover buttons for quick inline tooltips.'}
+            Hover buttons for quick inline tooltips.
           </p>
           <button
             onClick={onClose}
             className="flex items-center gap-1 text-xs font-medium help-footer-btn transition-colors"
           >
-            {lang === 'id' ? 'Mengerti' : 'Got it'}
+            Got it
             <ChevronRight size={12} />
           </button>
         </div>

@@ -30,7 +30,7 @@ export default function ExportButtons({
   onExportComplete 
 }) {
   const { language } = useSettingsStore()
-  const t = i18n[language] || i18n.id
+  const t = i18n[language] || i18n.en
   const [exporting, setExporting] = React.useState(false)
 
   const handleExportHTML = async () => {

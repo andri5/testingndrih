@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { AlertCircle, Mail, Loader2, CheckCircle2, Moon, Sun, Globe } from 'lucide-react'
+import { AlertCircle, Mail, Loader2, CheckCircle2 } from 'lucide-react'
 import api from '../services/api'
-import { useSettingsStore } from '../store/settingsStore'
 import { validateEmail } from '../utils/validation'
+import AuthPageHeader from '../components/AuthPageHeader'
 
 const translations = {
   en: {
@@ -26,6 +26,8 @@ const translations = {
     emailMissingAt: 'Email must contain @ (example: user@email.com)',
     emailInvalid: 'Email format is invalid (example: user@email.com)',
     errorOccurred: 'Failed to send reset link',
+    notRegistered: 'No account found with this email. Please register first.',
+    createAccount: 'Create an account',
   },
   id: {
     title: 'Lupa Password?',
@@ -47,65 +49,18 @@ const translations = {
     emailMissingAt: 'Email harus mengandung @ (contoh: user@email.com)',
     emailInvalid: 'Format email tidak valid (contoh: user@email.com)',
     errorOccurred: 'Gagal mengirim link reset',
+    notRegistered: 'Email belum terdaftar. Silakan daftar terlebih dahulu.',
+    createAccount: 'Buat akun',
   },
 }
 
-function AuthShell({ isDarkMode, language, setTheme, setLanguage, t, children }) {
-  const textPrimaryClass = isDarkMode ? 'text-[#E0E0E2]' : 'text-gray-900'
-  const textSecondaryClass = isDarkMode ? 'text-[#8A8A8F]' : 'text-gray-600'
-  const bgClass = isDarkMode ? 'auth-page-bg bg-[#0F0E11]' : 'bg-gradient-to-br from-gray-50 to-gray-100'
-
+function AuthShell({ t, children }) {
   return (
-    <div className={`${bgClass} min-h-screen flex items-center justify-center px-4`}>
+    <div className="auth-page-bg min-h-screen bg-[#0F0E11] flex items-center justify-center px-4">
       <div className="w-full max-w-sm animate-slide-up">
-        <div className="flex flex-col items-center mb-8">
-          <img src="/logo-icon.png" alt="Logo" className="w-9 h-9 mb-4 rounded" />
-          <h1 className={`text-lg font-semibold ${textPrimaryClass}`}>Test Sambil Ngopi</h1>
-          <p className={`text-sm ${textSecondaryClass} mt-0.5`}>{t.workspace}</p>
-        </div>
-
-        <div className="flex justify-center gap-2 mb-8">
-          <div className="flex items-center gap-1 bg-gray-200 dark:bg-[#2A2A2D] rounded-lg p-1">
-            <button
-              type="button"
-              onClick={() => setTheme('dark')}
-              className={`px-3 py-2 rounded-md transition-all duration-200 flex items-center gap-1.5 ${
-                isDarkMode
-                  ? 'bg-[#5E6AD2] text-white shadow-lg shadow-[#5E6AD2]/20'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              <Moon size={16} />
-            </button>
-            <button
-              type="button"
-              onClick={() => setTheme('light')}
-              className={`px-3 py-2 rounded-md transition-all duration-200 flex items-center gap-1.5 ${
-                !isDarkMode
-                  ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20'
-                  : 'text-gray-400 hover:text-gray-300'
-              }`}
-            >
-              <Sun size={16} />
-            </button>
-          </div>
-          <button
-            type="button"
-            onClick={() => setLanguage(language === 'en' ? 'id' : 'en')}
-            className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 flex items-center gap-2 ${
-              isDarkMode
-                ? 'bg-[#2A2A2D] text-white hover:bg-[#3A3A3D]'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}
-          >
-            <Globe size={16} />
-            {language === 'en' ? 'ID' : 'EN'}
-          </button>
-        </div>
-
+        <AuthPageHeader subtitle={t.workspace} />
         {children}
-
-        <p className={`text-center text-xs ${textSecondaryClass} mt-5`}>
+        <p className="text-center text-xs text-[#4A4A52] mt-5">
           {t.copyright} &copy; {new Date().getFullYear()}
         </p>
       </div>
@@ -118,10 +73,8 @@ export default function ForgotPasswordPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [submitted, setSubmitted] = useState(false)
-  const { theme, language, setTheme, setLanguage } = useSettingsStore()
-  const isDarkMode = theme !== 'light'
-
-  const t = translations[language]
+  const [accountNotFound, setAccountNotFound] = useState(false)
+  const t = translations.en
 
   const validationMessages = {
     emailRequired: t.emailRequired,
@@ -129,28 +82,11 @@ export default function ForgotPasswordPage() {
     emailInvalid: t.emailInvalid,
   }
 
-  const cardClass = isDarkMode
-    ? 'auth-card bg-[#161618] border border-[rgba(255,255,255,0.08)] shadow-2xl shadow-black/30'
-    : 'bg-white border border-gray-200 shadow-2xl shadow-gray-200/50'
-  const textPrimaryClass = isDarkMode ? 'text-[#E0E0E2]' : 'text-gray-900'
-  const textSecondaryClass = isDarkMode ? 'text-[#8A8A8F]' : 'text-gray-600'
-  const inputClass = isDarkMode
-    ? 'auth-input bg-[#0F0E11] border border-[rgba(255,255,255,0.1)] text-[#E0E0E2] placeholder-[#4A4A52] focus:ring-[#5E6AD2] focus:border-[#5E6AD2] focus:ring-2 shadow-sm'
-    : 'bg-white border border-gray-300 text-gray-900 placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500 focus:ring-2 shadow-sm'
-  const buttonClass = isDarkMode
-    ? 'bg-[#5E6AD2] hover:bg-[#6B7AE8] active:bg-[#4D58C1] shadow-lg shadow-[#5E6AD2]/20 hover:shadow-[#6B7AE8]/30 focus:ring-offset-[#161618]'
-    : 'bg-blue-600 hover:bg-blue-700 active:bg-blue-800 shadow-lg shadow-blue-600/20 hover:shadow-blue-700/30 focus:ring-offset-white'
-  const successBgClass = isDarkMode
-    ? 'bg-[#0F1F17] border-[#34D399]/30 text-[#34D399]'
-    : 'bg-green-50 border-green-200 text-green-700'
-  const errorBgClass = isDarkMode
-    ? 'bg-[#1F0F0F] border-[#F87171]/30 text-[#F87171]'
-    : 'bg-red-50 border-red-200 text-red-700'
-
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
     setError('')
+    setAccountNotFound(false)
 
     const emailError = validateEmail(email, validationMessages)
     if (emailError) {
@@ -163,7 +99,10 @@ export default function ForgotPasswordPage() {
       await api.post('/auth/forgot-password', { email: email.trim() })
       setSubmitted(true)
     } catch (err) {
-      setError(err.response?.data?.message || t.errorOccurred)
+      const code = err.response?.data?.code
+      const message = err.response?.data?.message || t.errorOccurred
+      setAccountNotFound(code === 'ACCOUNT_NOT_FOUND')
+      setError(message)
     } finally {
       setLoading(false)
     }
@@ -176,38 +115,30 @@ export default function ForgotPasswordPage() {
 
   if (submitted) {
     return (
-      <AuthShell
-        isDarkMode={isDarkMode}
-        language={language}
-        setTheme={setTheme}
-        setLanguage={setLanguage}
-        t={t}
-      >
-        <div className={`${cardClass} rounded-xl p-6 text-center`}>
+      <AuthShell t={t}>
+        <div className="auth-card bg-[#161618] border border-[rgba(255,255,255,0.08)] rounded-xl p-6 text-center">
           <div className="flex justify-center mb-4">
-            <div className={`w-14 h-14 rounded-full flex items-center justify-center ${successBgClass} border`}>
+            <div className="w-14 h-14 rounded-full flex items-center justify-center bg-[#0F1F17] border border-[#34D399]/30 text-[#34D399]">
               <CheckCircle2 size={28} className="shrink-0" />
             </div>
           </div>
-          <h2 className={`text-xl font-semibold ${textPrimaryClass} mb-2`}>{t.successTitle}</h2>
-          <p className={`text-sm ${textSecondaryClass} mb-2`}>{t.successMessage}</p>
+          <h2 className="text-xl font-semibold text-[#E0E0E2] mb-2">{t.successTitle}</h2>
+          <p className="text-sm text-[#8A8A8F] mb-2">{t.successMessage}</p>
           {email && (
-            <p className={`text-xs ${textSecondaryClass} mb-4 font-mono`}>{email.trim()}</p>
+            <p className="text-xs text-[#8A8A8F] mb-4 font-mono">{email.trim()}</p>
           )}
-          <p className={`text-xs ${textSecondaryClass} mb-6`}>{t.successHint}</p>
+          <p className="text-xs text-[#8A8A8F] mb-6">{t.successHint}</p>
           <div className="flex flex-col gap-2">
             <Link
               to="/login"
-              className={`w-full py-2.5 px-4 rounded-lg font-semibold text-sm text-white ${buttonClass} transition-all duration-200 inline-block`}
+              className="w-full py-2.5 px-4 rounded-md font-medium text-sm text-white bg-[#5E6AD2] hover:bg-[#6B7AE8] transition-colors duration-150 inline-block"
             >
               {t.backToLogin}
             </Link>
             <button
               type="button"
               onClick={handleTryAgain}
-              className={`text-xs font-semibold transition-all underline ${
-                isDarkMode ? 'text-[#9BA3F0] hover:text-[#5E6AD2]' : 'text-blue-600 hover:text-blue-700'
-              }`}
+              className="text-xs font-semibold text-[#9BA3F0] hover:text-[#5E6AD2] transition-all underline"
             >
               {t.tryAgain}
             </button>
@@ -218,21 +149,15 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <AuthShell
-      isDarkMode={isDarkMode}
-      language={language}
-      setTheme={setTheme}
-      setLanguage={setLanguage}
-      t={t}
-    >
-      <div className={`${cardClass} rounded-xl p-6`}>
+    <AuthShell t={t}>
+      <div className="auth-card bg-[#161618] border border-[rgba(255,255,255,0.08)] rounded-xl p-6">
         <div className="flex items-center gap-3 mb-6">
           <div className="w-10 h-10 rounded-lg bg-[#5E6AD2]/20 flex items-center justify-center">
             <Mail size={20} className="text-[#5E6AD2]" />
           </div>
           <div>
-            <h2 className={`text-xl font-semibold ${textPrimaryClass}`}>{t.title}</h2>
-            <p className={`text-xs ${textSecondaryClass} mt-0.5`}>{t.subtitle}</p>
+            <h2 className="text-xl font-semibold text-[#E0E0E2]">{t.title}</h2>
+            <p className="text-xs text-[#8A8A8F] mt-0.5">{t.subtitle}</p>
           </div>
         </div>
 
@@ -240,7 +165,7 @@ export default function ForgotPasswordPage() {
           <div>
             <label
               htmlFor="email"
-              className={`block text-xs font-medium ${textSecondaryClass} mb-1.5 uppercase tracking-wider`}
+              className="block text-xs font-medium text-[#8A8A8F] mb-1.5 uppercase tracking-wider"
             >
               {t.emailLabel}
             </label>
@@ -253,21 +178,31 @@ export default function ForgotPasswordPage() {
               placeholder={t.emailPlaceholder}
               disabled={loading}
               autoComplete="email"
-              className={`${inputClass} w-full px-3 py-2 rounded-md focus:ring-1 outline-none transition-all text-sm disabled:opacity-50`}
+              className="auth-input w-full px-3 py-2 bg-[#0F0E11] border border-[rgba(255,255,255,0.1)] rounded-md focus:ring-1 focus:ring-[#5E6AD2] focus:border-[#5E6AD2] outline-none transition-all text-[#E0E0E2] placeholder-[#4A4A52] text-sm disabled:opacity-50"
             />
           </div>
 
           {error && (
-            <div className={`${errorBgClass} p-3 rounded-md border text-sm flex items-center gap-2`}>
-              <AlertCircle size={15} className="shrink-0" />
-              {error}
+            <div className="p-3 rounded-md border text-sm bg-[#1F0F0F] border-[#F87171]/30 text-[#F87171]">
+              <div className="flex items-center gap-2">
+                <AlertCircle size={15} className="shrink-0" />
+                {error}
+              </div>
+              {accountNotFound && (
+                <Link
+                  to="/register"
+                  className="inline-block mt-2 text-xs font-semibold text-[#9BA3F0] hover:text-[#5E6AD2] underline"
+                >
+                  {t.createAccount}
+                </Link>
+              )}
             </div>
           )}
 
           <button
             type="submit"
             disabled={loading}
-            className={`w-full py-2.5 px-4 rounded-lg font-semibold text-sm text-white ${buttonClass} transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#5E6AD2] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed`}
+            className="w-full py-2 px-4 rounded-md font-medium text-sm text-white bg-[#5E6AD2] hover:bg-[#6B7AE8] transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-[#5E6AD2] focus:ring-offset-2 focus:ring-offset-[#161618] disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? (
               <span className="flex items-center justify-center gap-2">
@@ -280,19 +215,11 @@ export default function ForgotPasswordPage() {
           </button>
         </form>
 
-        <div
-          className={`mt-5 pt-5 border-t ${
-            isDarkMode ? 'border-[rgba(255,255,255,0.06)]' : 'border-gray-200'
-          } text-center`}
-        >
-          <span className={`text-xs ${textSecondaryClass}`}>{t.noAccount}</span>
+        <div className="mt-5 pt-5 border-t border-[rgba(255,255,255,0.06)] text-center">
+          <span className="text-xs text-[#8A8A8F]">{t.noAccount}</span>
           <Link
             to="/login"
-            className={`text-xs font-semibold transition-all underline cursor-pointer ${
-              isDarkMode
-                ? 'text-[#9BA3F0] hover:text-[#5E6AD2] hover:underline-offset-2'
-                : 'text-blue-600 hover:text-blue-700 hover:underline-offset-2'
-            }`}
+            className="text-xs font-semibold text-[#9BA3F0] hover:text-[#5E6AD2] underline cursor-pointer hover:underline-offset-2 transition-all"
           >
             {t.noAccountLink}
           </Link>
