@@ -1,3 +1,10 @@
+## [1.1.10](https://github.com/andri5/testingndrih/compare/v1.1.9...v1.1.10) (2026-06-10)
+
+
+### Bug Fixes
+
+* **auth:** use FRONTEND_URL from env for reset links in production ([343ff96](https://github.com/andri5/testingndrih/commit/343ff964892ef6c9cea8c293220ba8433932afbe))
+
 ## [1.1.9](https://github.com/andri5/testingndrih/compare/v1.1.8...v1.1.9) (2026-06-10)
 
 
