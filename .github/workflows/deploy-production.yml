@@ -29,6 +29,9 @@ jobs:
     runs-on: [self-hosted, production]
     if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     environment: production
+    outputs:
+      deployed: ${{ steps.complete.outputs.deployed }}
+      tag: ${{ steps.tag.outputs.tag }}
 
     steps:
       - name: Resolve release tag
@@ -161,3 +164,58 @@ jobs:
           done
           echo "Production health check failed after retries"
           exit 1
+
+      - name: Mark deploy complete
+        if: success() && (github.event_name == 'workflow_dispatch' || steps.release_check.outputs.skip != 'true')
+        id: complete
+        run: echo "deployed=true" >> "$GITHUB_OUTPUT"
+
+  notify-telegram-success:
+    name: Telegram — deploy success
+    needs: deploy
+    runs-on: ubuntu-latest
+    if: needs.deploy.outputs.deployed == 'true'
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Notify deploy success
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          TAG="${{ needs.deploy.outputs.tag }}"
+          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          bash scripts/telegram-notify.sh "$(cat <<EOF
+          ✅ <b>Deploy production berhasil</b>
+
+          🌐 <a href="https://testsambilngopi.com">testsambilngopi.com</a>
+          🏷 Tag: <code>${TAG}</code>
+          📦 Repo: ${{ github.repository }}
+          🔗 <a href="${RUN_URL}">Lihat workflow run</a>
+          EOF
+          )"
+
+  notify-telegram-failure:
+    name: Telegram — deploy failed
+    needs: deploy
+    runs-on: ubuntu-latest
+    if: failure() && (github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success')
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Notify deploy failure
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          bash scripts/telegram-notify.sh "$(cat <<EOF
+          ❌ <b>Deploy production gagal</b>
+
+          🌐 Target: testsambilngopi.com
+          📦 Repo: ${{ github.repository }}
+          🔗 <a href="${RUN_URL}">Lihat log error</a>
+          EOF
+          )"

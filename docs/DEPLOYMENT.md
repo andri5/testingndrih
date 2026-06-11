@@ -203,6 +203,18 @@ server {
 | `PROD_SSH_USER` | `deploy` | User SSH |
 | `PROD_SSH_KEY` | `-----BEGIN OPENSSH...` | Private key |
 | `PROD_APP_PATH` | `/opt/testingndrih` | Path clone di server |
+| `TELEGRAM_BOT_TOKEN` | `123456:ABC...` | Token dari [@BotFather](https://t.me/BotFather) — notifikasi deploy |
+| `TELEGRAM_CHAT_ID` | `123456789` | Chat ID Anda (DM bot atau grup) |
+
+**Setup Telegram (sekali):**
+
+1. Buka [@BotFather](https://t.me/BotFather) → `/newbot` → salin **token**
+2. Kirim pesan ke bot Anda, lalu buka  
+   `https://api.telegram.org/bot<TOKEN>/getUpdates` → cari `"chat":{"id":...}`
+3. GitHub → Settings → Environments → **production** → Add secret:  
+   `TELEGRAM_BOT_TOKEN` dan `TELEGRAM_CHAT_ID`
+
+Setelah deploy sukses/gagal, notifikasi dikirim otomatis.
 
 ### Environment `production`
 
