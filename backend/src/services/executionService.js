@@ -37,6 +37,8 @@ executionEvents.setMaxListeners(50)
  * Used for live selector testing feature
  */
 const activePages = new Map()
+const debugSessionTimers = new Map()
+const DEBUG_SESSION_TTL_MS = 15 * 60 * 1000
 
 /**
  * Control signals for live viewer pause/stop
@@ -51,7 +53,201 @@ export const pausedExecutions = new Set()
  * Handles test scenario execution and step-by-step automation
  */
 
+const MOBILE_FILL_FALLBACKS = [
+  'role:searchbox-named',
+  'role:searchbox',
+  'role:textbox-search',
+  'ytm-searchbox input',
+  'input[name="search_query"]',
+  'input[name="q"]',
+  'input[type="search"]',
+  'input[aria-label*="Search" i]',
+  'input[placeholder*="Search" i]',
+]
+
+const MOBILE_CLICK_FALLBACKS = [
+  'a[href*="/watch"]',
+  'ytm-compact-video-renderer a',
+  'ytm-video-with-context-renderer a',
+]
+
 export const executionService = {
+  _executionOptions: null,
+
+  parseStepMetadata(step) {
+    if (!step?.metadata) return {}
+    try {
+      return typeof step.metadata === 'string' ? JSON.parse(step.metadata) : step.metadata
+    } catch {
+      return {}
+    }
+  },
+
+  isDesktopSpecificSelector(selector) {
+    if (!selector) return false
+    return /ytd-|yt-|\/html\/body\/ytd|masthead|custom-element/i.test(selector)
+  },
+
+  /**
+   * Self-heal only for known mobile/desktop layout mismatch — not for arbitrary wrong selectors.
+   * Wrong selectors like "fdcgnhgcgg" must fail so tests stay trustworthy.
+   */
+  shouldAllowSelfHeal(step) {
+    const meta = this.parseStepMetadata(step)
+    if (meta.selfHeal === false) return false
+    if (meta.selfHeal === true) return true
+    const opts = this._executionOptions || {}
+    return !!(opts.device && this.isDesktopSpecificSelector(step.selector))
+  },
+
+  /**
+   * On mobile sites (e.g. m.youtube.com) the search field is often hidden until
+   * the user taps the search icon — open it before trying FILL fallbacks.
+   */
+  async ensureMobileSearchOpen(page) {
+    const inputLocators = [
+      page.locator('input[name="search_query"]').first(),
+      page.locator('ytm-searchbox input').first(),
+      page.getByRole('searchbox').first(),
+      page.getByRole('textbox', { name: /search|cari/i }).first(),
+    ]
+
+    for (const input of inputLocators) {
+      try {
+        if (await input.isVisible({ timeout: 500 })) return true
+      } catch {
+        /* try next */
+      }
+    }
+
+    const searchTriggers = [
+      page.getByRole('button', { name: /search youtube|search/i }).first(),
+      page.locator('button[aria-label*="Search" i]').first(),
+      page.locator('ytm-searchbox button').first(),
+      page.locator('[aria-label*="Search YouTube" i]').first(),
+    ]
+
+    for (const trigger of searchTriggers) {
+      try {
+        if (await trigger.isVisible({ timeout: 1500 })) {
+          await trigger.click({ timeout: 5000 })
+          await page.waitForTimeout(800)
+          for (const input of inputLocators) {
+            try {
+              if (await input.isVisible({ timeout: 3000 })) return true
+            } catch {
+              /* try next */
+            }
+          }
+          break
+        }
+      } catch {
+        /* try next trigger */
+      }
+    }
+
+    return false
+  },
+
+  /** Resolve to a single element — avoids strict-mode violations on broad CSS selectors */
+  resolveLocatorSingle(page, selector) {
+    const locator = this.resolveLocator(page, selector)
+    if (
+      selector.startsWith('/') ||
+      selector.startsWith('//') ||
+      selector.startsWith('xpath=') ||
+      selector.startsWith('text=')
+    ) {
+      return locator.first()
+    }
+    if (selector.startsWith('role:')) {
+      return locator
+    }
+    if (selector.includes('aria-label=')) {
+      return locator.first()
+    }
+    return locator.first()
+  },
+
+  buildSelectorCandidates(step, stepType) {
+    const meta = this.parseStepMetadata(step)
+    const opts = this._executionOptions || {}
+    const candidates = []
+
+    if (opts.device && meta.mobileSelector) {
+      candidates.push(meta.mobileSelector)
+    }
+
+    if (opts.device && stepType === 'FILL' && this.isDesktopSpecificSelector(step.selector)) {
+      candidates.push(...MOBILE_FILL_FALLBACKS)
+    }
+
+    if (opts.device && stepType === 'CLICK' && this.isDesktopSpecificSelector(step.selector)) {
+      candidates.push(...MOBILE_CLICK_FALLBACKS)
+    }
+
+    if (step.selector) candidates.push(step.selector)
+
+    if (Array.isArray(meta.alternateSelectors)) {
+      candidates.push(...meta.alternateSelectors)
+    }
+
+    return [...new Set(candidates.filter(Boolean))]
+  },
+
+  async resolveLocatorWithFallbacks(page, step, stepType) {
+    if (stepType === 'FILL' && this._executionOptions?.device) {
+      await this.ensureMobileSearchOpen(page)
+    }
+
+    const candidates = this.buildSelectorCandidates(step, stepType)
+    const tried = []
+
+    for (const selector of candidates) {
+      try {
+        const locator = this.resolveLocatorSingle(page, selector)
+        await locator.waitFor({ state: 'visible', timeout: 8000 })
+        if (selector !== step.selector) {
+          console.log(`[LOCATOR] Using alternate selector for ${stepType}: ${selector}`)
+        }
+        return { locator, selector }
+      } catch {
+        try {
+          const locator = this.resolveLocatorSingle(page, selector)
+          await locator.waitFor({ state: 'attached', timeout: 4000 })
+          await locator.scrollIntoViewIfNeeded({ timeout: 2000 }).catch(() => {})
+          if (selector !== step.selector) {
+            console.log(`[LOCATOR] Using attached alternate selector for ${stepType}: ${selector}`)
+          }
+          return { locator, selector }
+        } catch (err) {
+          tried.push(`${selector} (${err.message})`)
+        }
+      }
+    }
+
+    if (ENABLE_SELF_HEALING && this.shouldAllowSelfHeal(step)) {
+      const repaired = await locatorRepairService.repairLocator(page, step.selector, {
+        type: stepType,
+        description: step.description,
+        value: step.value,
+      })
+      if (repaired) {
+        const locator = this.resolveLocatorSingle(page, repaired)
+        await locator.waitFor({ state: 'visible', timeout: 8000 }).catch(() =>
+          locator.waitFor({ state: 'attached', timeout: 4000 })
+        )
+        console.log(`[SELF_HEAL] Repaired selector (mobile/desktop): ${step.selector} → ${repaired}`)
+        return { locator, selector: repaired }
+      }
+    }
+
+    throw new Error(
+      `Element not found for ${stepType}. Tried ${candidates.length} selector(s).` +
+      (tried.length ? ` Last errors: ${tried.slice(-2).join('; ')}` : '')
+    )
+  },
+
   /**
    * Get active page for selector testing during live execution
    */
@@ -63,65 +259,93 @@ export const executionService = {
    * Test a selector on the active page and get element info
    * Returns: { found, text, tagName, className, boundingBox, preview }
    */
+  scheduleDebugSessionCleanup(executionId) {
+    if (debugSessionTimers.has(executionId)) {
+      clearTimeout(debugSessionTimers.get(executionId))
+    }
+    const timer = setTimeout(async () => {
+      debugSessionTimers.delete(executionId)
+      const data = activePages.get(executionId)
+      if (!data?.debugMode) return
+      activePages.delete(executionId)
+      await data.page?.close().catch(() => {})
+      await data.context?.close().catch(() => {})
+      await data.browser?.close().catch(() => {})
+      logger.info('executionService', `Debug session expired for execution ${executionId}`)
+    }, DEBUG_SESSION_TTL_MS)
+    debugSessionTimers.set(executionId, timer)
+  },
+
+  async closeDebugSession(executionId) {
+    if (debugSessionTimers.has(executionId)) {
+      clearTimeout(debugSessionTimers.get(executionId))
+      debugSessionTimers.delete(executionId)
+    }
+    const data = activePages.get(executionId)
+    if (!data) return
+    activePages.delete(executionId)
+    await data.page?.close().catch(() => {})
+    await data.context?.close().catch(() => {})
+    await data.browser?.close().catch(() => {})
+  },
+
   async testSelector(executionId, selector) {
     const pageData = activePages.get(executionId)
-    if (!pageData) {
-      throw new Error('Execution not running or page not available')
+    if (!pageData?.page) {
+      throw new Error(
+        'Debug session ended. Re-run the scenario to test selectors on the live page (sessions stay open 15 min after a failure).'
+      )
     }
 
     const { page } = pageData
+    const trimmed = (selector || '').trim()
+    if (!trimmed) {
+      return { found: false, selector: trimmed, error: 'Selector is empty' }
+    }
 
     try {
-      // Try to find element with the selector
-      const element = await page.$(selector)
-      if (!element) {
-        return { found: false, selector, error: 'Element not found' }
+      const locator = this.resolveLocatorSingle(page, trimmed)
+      const count = await locator.count()
+      if (count === 0) {
+        return { found: false, selector: trimmed, error: 'Element not found on the current page' }
       }
 
-      // Element found — get details
-      const info = await page.evaluate((sel) => {
-        const el = document.querySelector(sel)
-        if (!el) return null
-        
+      const target = locator.first()
+      await target.waitFor({ state: 'attached', timeout: 8000 })
+
+      const info = await target.evaluate((el) => {
         const rect = el.getBoundingClientRect()
         return {
           tagName: el.tagName,
-          text: el.textContent?.substring(0, 100) || '',
-          className: el.className,
-          id: el.id,
+          text: (el.textContent || '').substring(0, 100),
+          className: typeof el.className === 'string' ? el.className : '',
+          id: el.id || '',
           boundingBox: {
             x: Math.round(rect.x),
             y: Math.round(rect.y),
             width: Math.round(rect.width),
-            height: Math.round(rect.height)
+            height: Math.round(rect.height),
           },
-          isVisible: rect.width > 0 && rect.height > 0
+          isVisible: rect.width > 0 && rect.height > 0,
         }
-      }, selector)
+      })
 
-      if (!info) {
-        return { found: false, selector, error: 'Element found but cannot access properties' }
-      }
-
-      // Highlight element in browser
-      await page.evaluate((sel) => {
-        const el = document.querySelector(sel)
-        if (el && el.style) {
-          el.style.outline = '3px solid #10B981'
-          el.dataset.testingndrihHighlight = 'true'
-        }
-      }, selector)
+      await target.evaluate((el) => {
+        el.style.outline = '3px solid #10B981'
+        el.dataset.testingndrihHighlight = 'true'
+      })
 
       return {
         found: true,
-        selector,
-        ...info
+        selector: trimmed,
+        matchCount: count,
+        ...info,
       }
     } catch (err) {
       return {
         found: false,
-        selector,
-        error: err.message
+        selector: trimmed,
+        error: err.message,
       }
     }
   },
@@ -193,6 +417,10 @@ export const executionService = {
     let browser = null
     let context = null
     let page = null
+    let passedSteps = 0
+    let failedSteps = 0
+
+    this._executionOptions = options
 
     try {
       // Headed mode: we have Xvfb virtual display in Docker, so always run headed
@@ -284,8 +512,6 @@ export const executionService = {
         })
       })
 
-      let passedSteps = 0
-      let failedSteps = 0
       let stopped = false
 
       // Execute each step (with {{variable}} substitution applied)
@@ -385,24 +611,24 @@ export const executionService = {
           // Priority 3.1: Smart Retry Engine for CLICK and FILL steps
           // Use intelligent failure classification and retry strategies
           if (['CLICK', 'FILL'].includes(step.type)) {
-            const stepExecutor = async (params) => {
-              if (step.type === 'CLICK') {
-                await this.executeClick(params.page, step)
-              } else if (step.type === 'FILL') {
-                await this.executeFill(params.page, step)
-              }
-            }
-
-            try {
-              const retryResult = await retryEngineService.attemptRetry(stepExecutor, {
+            const runWithRetry = retryEngineService.createRetryExecutor(
+              async (params) => {
+                if (step.type === 'CLICK') {
+                  await this.executeClick(params.page, step)
+                } else if (step.type === 'FILL') {
+                  await this.executeFill(params.page, step)
+                }
+              },
+              {
                 page,
                 step,
-                stepType: step.type
-              })
-
-              if (!retryResult?.success) {
-                throw retryResult?.error || new Error('Step execution failed')
+                stepType: step.type,
+                allowSelfHeal: this.shouldAllowSelfHeal(step),
               }
+            )
+
+            try {
+              await runWithRetry()
             } catch (err) {
               // If retry engine doesn't handle it, at least log the failure type
               const failureType = retryEngineService.classifyFailure(err, {
@@ -451,6 +677,11 @@ export const executionService = {
             },
             page: {
               url: currentUrl
+            },
+            execution: {
+              device: options.device || null,
+              browser: options.browser || 'chromium',
+              isMobileViewport: !!options.device
             },
             consoleErrors: pageErrors.slice(-5),
             failedRequests: failedRequests.slice(-5)
@@ -742,18 +973,19 @@ export const executionService = {
       error.executionId = execution.id
       throw error
     } finally {
-      // Remove from active pages for selector testing
-      activePages.delete(execution.id)
+      this._executionOptions = null
 
-      // Cleanup
-      if (page) {
-        await page.close().catch(() => {})
-      }
-      if (context) {
-        await context.close().catch(() => {})
-      }
-      if (browser) {
-        await browser.close().catch(() => {})
+      // Keep browser open after failures so users can test selectors (15 min TTL)
+      const keepForDebug = failedSteps > 0 && page && context && browser
+      if (keepForDebug) {
+        activePages.set(execution.id, { page, context, browser, debugMode: true })
+        this.scheduleDebugSessionCleanup(execution.id)
+        logger.info('executionService', `Debug session kept open for execution ${execution.id} (${DEBUG_SESSION_TTL_MS / 60000} min)`)
+      } else {
+        activePages.delete(execution.id)
+        if (page) await page.close().catch(() => {})
+        if (context) await context.close().catch(() => {})
+        if (browser) await browser.close().catch(() => {})
       }
     }
   },
@@ -776,8 +1008,9 @@ export const executionService = {
     // Smart wait: wait for load + networkidle (with fallback timeout)
     await page.waitForLoadState('load').catch(() => {})
     await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {})
-    // Extra: wait for any SPA framework to finish rendering
-    await page.waitForTimeout(300)
+    // Extra: wait for SPA / mobile layouts to finish rendering
+    const isMobile = !!this._executionOptions?.device
+    await page.waitForTimeout(isMobile ? 1000 : 300)
   },
 
   /**
@@ -789,52 +1022,18 @@ export const executionService = {
       throw new Error('CLICK step requires a selector')
     }
 
-    let locator = this.resolveLocator(page, step.selector)
-
-    // Smart wait: try visible first, fallback to attached (for off-screen elements)
-    try {
-      await locator.waitFor({ state: 'visible', timeout: 10000 })
-    } catch {
-      // Element might exist but not be visible yet — wait for it to attach, then scroll
-      await locator.waitFor({ state: 'attached', timeout: 5000 })
-      await locator.scrollIntoViewIfNeeded({ timeout: 3000 }).catch(() => {})
+    const { locator, selector } = await this.resolveLocatorWithFallbacks(page, step, 'CLICK')
+    if (selector !== step.selector) {
+      step.selector = selector
     }
 
-    // Retry click once on failure (handles detached element / re-render race)
     try {
       await locator.click({ timeout: 10000 })
     } catch (firstErr) {
-      // Wait a beat for any re-render to settle, then retry
       await page.waitForTimeout(500)
-      try {
-        await locator.click({ timeout: 10000 })
-      } catch (secondErr) {
-        // Phase 2.1: Self Healing Selector fallback
-        if (ENABLE_SELF_HEALING) {
-          logger.debug('executionService', `Primary click failed, attempting repair for: ${step.selector}`)
-          try {
-            const repairedSelector = await locatorRepairService.repairLocator(page, step.selector, {
-              type: 'CLICK',
-              description: step.description,
-              value: step.value
-            })
-            if (repairedSelector) {
-              console.log(`[SELF_HEAL] ✅ Repaired selector: ${repairedSelector}`)
-              locator = this.resolveLocator(page, repairedSelector)
-              await locator.click({ timeout: 10000 })
-              // Update step with repaired selector for future use
-              step.selector = repairedSelector
-              return
-            }
-          } catch (repairErr) {
-            console.log(`[SELF_HEAL] Repair failed: ${repairErr.message}`)
-          }
-        }
-        throw secondErr
-      }
+      await locator.click({ timeout: 10000 })
     }
 
-    // After click: wait for potential navigation or network activity to settle
     await page.waitForLoadState('networkidle', { timeout: 3000 }).catch(() => {})
   },
 
@@ -849,43 +1048,9 @@ export const executionService = {
     }
 
     const value = step.value ?? ''
-    let locator = this.resolveLocator(page, step.selector)
-
-    // Smart wait: try visible, fallback to attached
-    try {
-      await locator.waitFor({ state: 'visible', timeout: 10000 })
-    } catch (waitErr) {
-      try {
-        await locator.waitFor({ state: 'attached', timeout: 5000 })
-        await locator.scrollIntoViewIfNeeded({ timeout: 3000 }).catch(() => {})
-      } catch (attachErr) {
-        // Phase 2.1: Self Healing Selector - Element not found
-        if (ENABLE_SELF_HEALING) {
-          logger.debug('executionService', `FILL locator not found, attempting repair for: ${step.selector}`)
-          try {
-            const repairedSelector = await locatorRepairService.repairLocator(page, step.selector, {
-              type: 'FILL',
-              description: step.description,
-              value: step.value
-            })
-            if (repairedSelector) {
-              console.log(`[SELF_HEAL] ✅ Repaired selector: ${repairedSelector}`)
-              locator = this.resolveLocator(page, repairedSelector)
-              await locator.waitFor({ state: 'visible', timeout: 10000 }).catch(() =>
-                locator.waitFor({ state: 'attached', timeout: 5000 })
-              )
-              step.selector = repairedSelector
-            } else {
-              throw attachErr
-            }
-          } catch (repairErr) {
-            console.log(`[SELF_HEAL] Repair failed: ${repairErr.message}`)
-            throw attachErr
-          }
-        } else {
-          throw attachErr
-        }
-      }
+    const { locator, selector } = await this.resolveLocatorWithFallbacks(page, step, 'FILL')
+    if (selector !== step.selector) {
+      step.selector = selector
     }
 
     // Detect element properties
@@ -1245,6 +1410,19 @@ export const executionService = {
    */
   resolveLocator(page, selector) {
     if (!selector) throw new Error('Selector is empty')
+
+    if (selector === 'role:searchbox') {
+      return page.getByRole('searchbox').first()
+    }
+    if (selector === 'role:searchbox-named') {
+      return page.getByRole('searchbox', { name: /search|cari/i }).first()
+    }
+    if (selector === 'role:textbox-search') {
+      return page.getByRole('textbox', { name: /search|cari/i }).first()
+    }
+    if (selector === 'role:button-search') {
+      return page.getByRole('button', { name: /search youtube|search|cari/i }).first()
+    }
 
     // Handle Shadow DOM piercing with >>> combinator
     if (selector.includes(' >>> ')) {

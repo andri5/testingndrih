@@ -1,16 +1,14 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import Layout from '../components/Layout'
-import { Card, Button, Badge, Spinner, Alert } from '../components/ui'
+import { Card, Button, Badge, Spinner, Alert, Tooltip } from '../components/ui'
 import BrowserSelector from '../components/BrowserSelector'
 import StepErrorDetail from '../components/StepErrorDetail'
 import TestStepList from '../components/TestStepList'
 import { scenarioAPI, executionAPI, recorderAPI } from '../services/api'
-import { CheckCircle2, XCircle, ClipboardList, Clock } from 'lucide-react'
-import { useSettingsStore } from '../store/settingsStore'
+import { CheckCircle2, XCircle, ClipboardList, Clock, HelpCircle } from 'lucide-react'
 
 const i18n = {
-  en: {
     loadScenarioError: 'Failed to load scenario',
     loadStepsError: 'Failed to load test steps',
     typeRequired: 'Type and description are required',
@@ -66,7 +64,13 @@ const i18n = {
     saveSteps: (c) => `💾 Save ${c} Steps`,
     discard: 'Discard',
     deleting: 'Deleting...',
-    deleteSelectedSteps: (c) => `Delete ${c} Steps`,
+    deleteSelectedSteps: (c) => `Delete ${c}`,
+    copySteps: 'Copy',
+    copySelectedSteps: (c) => `Copy ${c}`,
+    deleteSteps: 'Delete',
+    copying: 'Copying...',
+    stepsCopied: (c) => `${c} step${c !== 1 ? 's' : ''} copied`,
+    copyStepsError: 'Failed to copy steps',
     addStep: '+ Add Step',
     editStep: 'Edit Step',
     addNewStep: 'Add New Step',
@@ -93,113 +97,27 @@ const i18n = {
     fieldType: 'Type',
     fieldDescription: 'Description',
     fieldSelector: 'Selector',
+    selectorHelpTooltip: 'How to find a selector:\n1. Right-click the element → Inspect\n2. Has id? Use #id (e.g. #search)\n3. Or right-click the HTML tag → Copy → Copy XPath',
+    selectorHelpShort: 'Tip: Inspect the element in your browser, then use #id or Copy XPath.',
     fieldValue: 'Value',
     fieldMetadata: 'Metadata (JSON)',
     required: 'required',
     closeDialog: 'Close dialog',
-  },
-  id: {
-    loadScenarioError: 'Gagal memuat scenario',
-    loadStepsError: 'Gagal memuat test steps',
-    typeRequired: 'Type dan description wajib diisi',
-    invalidMetadata: 'Metadata harus berupa JSON yang valid',
-    stepUpdated: 'Step berhasil diupdate',
-    stepAdded: 'Step berhasil ditambahkan',
-    saveStepError: 'Gagal menyimpan step',
-    confirmDeleteStep: 'Hapus step ini?',
-    stepDeleted: 'Step berhasil dihapus',
-    deleteStepError: 'Gagal menghapus step',
-    confirmDeleteAll: (c) => `Hapus SEMUA ${c} step?`,
-    confirmDeleteSelected: (c) => `Hapus ${c} step yang dipilih?`,
-    stepsDeleted: (c) => `${c} step berhasil dihapus`,
-    deleteStepsError: 'Gagal menghapus steps',
-    reorderError: 'Gagal mengubah urutan step',
-    addStepFirst: 'Tambahkan minimal 1 step sebelum menjalankan skenario',
-    confirmExecute: (name) => `Jalankan skenario "${name}"?`,
-    startingExecution: 'Memulai eksekusi, mohon tunggu...',
-    executionFailed: (n) => `Eksekusi selesai dengan status FAILED (${n} step gagal)`,
-    executionSuccess: (s) => `Eksekusi selesai - Status: ${s}`,
-    executionError: 'Eksekusi gagal',
-    executionTimeout: 'Request timeout — eksekusi mungkin masih berjalan di server. Cek halaman Execution untuk hasilnya.',
-    updateSelectorError: 'Gagal mengupdate selector',
-    locatorUpdated: (o, n) => `Locator diperbarui: "${o}" → "${n}". Menjalankan kembali...`,
-    locatorsBatchUpdated: (c) => `✓ ${c} locator diperbarui. Menjalankan kembali scenario...`,
-    batchFixError: 'Batch fix gagal',
-    noFixableSteps: 'Tidak ada step yang bisa diperbaiki secara otomatis',
-    enterUrlForRecording: 'Masukkan URL target untuk recording',
-    recordingStarted: (msg) => `Recording dimulai dengan Playwright 🎥\nBackend: ${msg}`,
-    startRecordingError: 'Gagal memulai recording',
-    stepsSavedRecording: (c) => `${c} steps berhasil direkam dan disimpan`,
-    recordingAutoSaveError: (c, e) => `Recording selesai (${c} steps), tapi gagal auto-save: ${e}. Klik "Simpan" untuk coba lagi.`,
-    recordingNoSteps: 'Recording selesai — tidak ada steps yang tercatat',
-    stopRecordingError: 'Gagal menghentikan recording',
-    noStepsToSave: 'Tidak ada steps yang tercatat untuk disimpan',
-    stepsSaved: (c) => `${c} steps berhasil disimpan`,
-    saveRecordingError: 'Gagal menyimpan recorded steps',
-    confirmDiscardRecording: (c) => `Buang ${c} recorded steps?`,
-    scenarioNotFound: 'Scenario tidak ditemukan',
-    backToScenarios: '← Kembali ke Scenarios',
-    running: 'Menjalankan...',
-    runScenario: '▶ Jalankan Skenario',
-    recordingActive: 'Recording Aktif...',
-    recordingMode: 'Mode Recording',
-    startRecordingHint: 'Mulai recording untuk merekam interaksi Anda di browser. Browser Chromium akan terbuka secara otomatis — setiap klik, isian form, dan navigasi akan tercatat sebagai test steps.',
-    urlTarget: 'URL Target',
-    openingBrowser: 'Membuka Browser...',
-    startRecording: '🔴 Mulai Recording',
-    stepsRecorded: (c) => `${c} step${c !== 1 ? 's' : ''} tercatat`,
-    interactionHint: '— berinteraksilah dengan browser...',
-    waitingForInteraction: 'Menunggu interaksi... Klik, isi form, atau navigasi di browser yang terbuka.',
-    saving: 'Menyimpan...',
-    saveSteps: (c) => `💾 Simpan ${c} Steps`,
-    discard: 'Buang',
-    deleting: 'Menghapus...',
-    deleteSelectedSteps: (c) => `Hapus ${c} Step`,
-    addStep: '+ Tambah Step',
-    editStep: 'Edit Step',
-    addNewStep: 'Tambah Step Baru',
-    stepDescriptionPlaceholder: 'Deskripsi langkah ini',
-    saveStepBtn: 'Simpan Step',
-    updateStepBtn: 'Update Step',
-    cancel: 'Batal',
-    executionResults: 'Hasil Eksekusi',
-    passed: 'Lolos',
-    failed: 'Gagal',
-    duration: 'Durasi',
-    fixing: 'Memperbaiki...',
-    autoRetryError: 'Auto-retry gagal',
-    hints: {
-      NAVIGATE: '💡 Masukkan URL tujuan di field Value',
-      CLICK: '💡 Masukkan CSS selector atau XPath elemen yang akan di-klik',
-      FILL: '💡 Masukkan CSS selector atau XPath input dan text yang akan diketik',
-      SCREENSHOT: '💡 Akan mengambil screenshot halaman saat ini',
-      WAIT: '💡 Masukkan waktu tunggu dalam milidetik (contoh: 1000 = 1 detik)',
-      ASSERTION: '💡 Verifikasi elemen ada di halaman, dengan opsi pengecekan teks',
-      API_CALL: '💡 Masukkan URL endpoint dan konfigurasi di metadata (JSON)',
-    },
-    goBackToScenarios: 'Kembali ke Scenarios',
-    fieldType: 'Tipe',
-    fieldDescription: 'Deskripsi',
-    fieldSelector: 'Selector',
-    fieldValue: 'Value',
-    fieldMetadata: 'Metadata (JSON)',
-    required: 'wajib',
-    closeDialog: 'Tutup dialog',
-  },
+  
 }
 
 const STEP_TYPES = [
   { value: 'NAVIGATE', label: 'Navigate', icon: '🌐', fields: ['value'], placeholder: { value: 'https://example.com' } },
-  { value: 'CLICK', label: 'Click', icon: '👆', fields: ['selector', 'metadata'], placeholder: { selector: '#button-id, .class-name, atau //xpath', metadata: '{"maxRetries":2} (optional)' } },
-  { value: 'FILL', label: 'Fill', icon: '✏️', fields: ['selector', 'value', 'metadata'], placeholder: { selector: '#input-id atau //xpath', value: 'Text to type', metadata: '{"maxRetries":2} (optional)' } },
-  { value: 'HOVER', label: 'Hover', icon: '🖱️', fields: ['selector', 'metadata'], placeholder: { selector: '#element atau //xpath', metadata: '{"maxRetries":1} (optional)' } },
+  { value: 'CLICK', label: 'Click', icon: '👆', fields: ['selector', 'metadata'], placeholder: { selector: '#button-id, .class-name, or //xpath', metadata: '{"maxRetries":2} (optional)' } },
+  { value: 'FILL', label: 'Fill', icon: '✏️', fields: ['selector', 'value', 'metadata'], placeholder: { selector: '#input-id or //xpath', value: 'Text to type', metadata: '{"maxRetries":2} (optional)' } },
+  { value: 'HOVER', label: 'Hover', icon: '🖱️', fields: ['selector', 'metadata'], placeholder: { selector: '#element or //xpath', metadata: '{"maxRetries":1} (optional)' } },
   { value: 'SCROLL', label: 'Scroll', icon: '↕️', fields: ['selector', 'value'], placeholder: { selector: '#container (optional)', value: '300 (px, positif=bawah, negatif=atas)' } },
   { value: 'FILE_UPLOAD', label: 'File Upload', icon: '📁', fields: ['selector', 'value'], placeholder: { selector: 'input[type="file"]', value: '/path/to/file.pdf (pipe-separated for multiple)' } },
   { value: 'DRAG', label: 'Drag', icon: '🖱️', fields: ['selector', 'value', 'metadata'], placeholder: { selector: '#source-element (draggable)', value: '#target-element (drop zone)', metadata: '{"maxRetries":1} (optional)' } },
   { value: 'MOCK_ROUTE', label: 'Mock Route', icon: '🔀', fields: ['value', 'metadata'], placeholder: { value: '**/api/users* (URL glob pattern)', metadata: '{"status":200,"body":{"ok":true},"contentType":"application/json"}' } },
   { value: 'SCREENSHOT', label: 'Screenshot', icon: '📸', fields: [], placeholder: {} },
   { value: 'WAIT', label: 'Wait', icon: '⏱️', fields: ['value'], placeholder: { value: '1000 (ms)' } },
-  { value: 'ASSERTION', label: 'Assertion', icon: '✅', fields: ['selector', 'value', 'metadata'], placeholder: { selector: '#element atau //xpath', value: 'Expected text, regex:/pattern/, count:3, visible, not-exists', metadata: '{"maxRetries":2} (optional)' } },
+  { value: 'ASSERTION', label: 'Assertion', icon: '✅', fields: ['selector', 'value', 'metadata'], placeholder: { selector: '#element or //xpath', value: 'Expected text, regex:/pattern/, count:3, visible, not-exists', metadata: '{"maxRetries":2} (optional)' } },
   { value: 'API_CALL', label: 'API Call', icon: '📡', fields: ['value', 'metadata'], placeholder: { value: 'https://api.example.com/endpoint', metadata: '{"method":"GET","headers":{}}' } },
 ]
 
@@ -277,16 +195,13 @@ export default function ScenarioDetailPage() {
   // Checkbox selection state
   const [selectedStepIds, setSelectedStepIds] = useState(new Set())
   const [isDeletingBulk, setIsDeletingBulk] = useState(false)
+  const [isCopyingBulk, setIsCopyingBulk] = useState(false)
 
   const showSuccess = (msg) => {
     setSuccessMsg(msg)
     setTimeout(() => setSuccessMsg(null), 3000)
   }
-
-  const { language, theme } = useSettingsStore()
-  const t = i18n.en
-  const isDark = theme === 'dark'
-
+  const t = i18n
   // Close step form modal on Escape
   useEffect(() => {
     const handleEsc = (e) => { if (e.key === 'Escape' && showStepForm) cancelForm() }
@@ -466,19 +381,62 @@ export default function ScenarioDetailPage() {
     }
   }
 
-  const handleMoveStep = async (index, direction) => {
-    const newSteps = [...steps]
-    const targetIndex = index + direction
-    if (targetIndex < 0 || targetIndex >= newSteps.length) return
+  const parseStepMetadata = (metadata) => {
+    if (!metadata) return null
+    if (typeof metadata === 'object') return metadata
+    try {
+      return JSON.parse(metadata)
+    } catch {
+      return null
+    }
+  }
 
-    ;[newSteps[index], newSteps[targetIndex]] = [newSteps[targetIndex], newSteps[index]]
+  const handleBulkCopy = async () => {
+    const count = selectedStepIds.size
+    if (count === 0) return
+
+    const stepsToCopy = steps.filter((s) => selectedStepIds.has(s.id))
+    if (stepsToCopy.length === 0) return
+
+    setIsCopyingBulk(true)
+    setError(null)
+    try {
+      for (const step of stepsToCopy) {
+        await scenarioAPI.createStep(
+          id,
+          null,
+          step.type,
+          step.description,
+          step.selector || null,
+          step.value || null,
+          parseStepMetadata(step.metadata)
+        )
+      }
+      showSuccess(t.stepsCopied(count))
+      setSelectedStepIds(new Set())
+      await loadSteps()
+    } catch (err) {
+      setError(err.response?.data?.error || err.response?.data?.message || t.copyStepsError)
+      await loadSteps()
+    } finally {
+      setIsCopyingBulk(false)
+    }
+  }
+
+  const handleReorderSteps = async (fromIndex, toIndex) => {
+    if (fromIndex === toIndex) return
+    if (fromIndex < 0 || toIndex < 0 || fromIndex >= steps.length || toIndex >= steps.length) return
+
+    const newSteps = [...steps]
+    const [moved] = newSteps.splice(fromIndex, 1)
+    newSteps.splice(toIndex, 0, moved)
 
     const stepOrders = newSteps.map((s, i) => ({
       stepId: s.id,
-      sequenceNumber: i + 1
+      sequenceNumber: i + 1,
     }))
 
-    setSteps(newSteps)
+    setSteps(newSteps.map((s, i) => ({ ...s, stepNumber: i + 1 })))
 
     try {
       await scenarioAPI.reorderSteps(id, stepOrders)
@@ -967,10 +925,10 @@ export default function ScenarioDetailPage() {
         {showBrowserSelector && (
           <Card>
             <div className="flex items-center justify-between mb-3">
-              <h2 className={`text-base font-bold ${isDark ? 'text-[#E0E0E2]' : 'text-slate-900'}`}>Browser &amp; Device</h2>
+              <h2 className={`text-base font-bold ${'text-slate-900'}`}>Browser &amp; Device</h2>
               <button
                 onClick={() => setShowBrowserSelector(false)}
-                className={`text-xl leading-none ${isDark ? 'text-[#8A8A8F] hover:text-[#E0E0E2]' : 'text-slate-400 hover:text-slate-600'}`}
+                className={`text-xl leading-none ${'text-slate-400 hover:text-slate-600'}`}
               >
                 ✕
               </button>
@@ -1095,24 +1053,47 @@ export default function ScenarioDetailPage() {
         <Card>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-[#E0E0E2]">Test Steps</h2>
-            <div className="flex items-center gap-2">
-              {/* Bulk delete controls */}
-              {selectedStepIds.size > 0 && (
-                <Button
-                  variant="danger"
-                  size="sm"
-                  onClick={handleBulkDelete}
-                  disabled={isDeletingBulk}
+            {!showStepForm && (
+              <div
+                className="inline-flex items-stretch rounded-lg border border-[#DDDDE0] bg-white overflow-hidden shadow-sm"
+                role="group"
+                aria-label="Test step actions"
+              >
+                <button
+                  type="button"
+                  onClick={handleBulkCopy}
+                  disabled={selectedStepIds.size === 0 || isCopyingBulk || isDeletingBulk}
+                  className="px-3.5 py-2 text-sm font-medium text-[#555] hover:bg-[#F5F5F7] hover:text-[#1A1A1C] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent transition-colors"
                 >
-                  {isDeletingBulk ? t.deleting : t.deleteSelectedSteps(selectedStepIds.size)}
-                </Button>
-              )}
-              {!showStepForm && (
-                <Button variant="primary" onClick={openAddForm}>
+                  {isCopyingBulk
+                    ? t.copying
+                    : selectedStepIds.size > 0
+                      ? t.copySelectedSteps(selectedStepIds.size)
+                      : t.copySteps}
+                </button>
+                <span className="w-px self-stretch bg-[#E8E8EB]" aria-hidden />
+                <button
+                  type="button"
+                  onClick={handleBulkDelete}
+                  disabled={selectedStepIds.size === 0 || isDeletingBulk || isCopyingBulk}
+                  className="px-3.5 py-2 text-sm font-medium text-[#9B4B4B] hover:bg-[#FEF2F2] hover:text-[#7F3D3D] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent transition-colors"
+                >
+                  {isDeletingBulk
+                    ? t.deleting
+                    : selectedStepIds.size > 0
+                      ? t.deleteSelectedSteps(selectedStepIds.size)
+                      : t.deleteSteps}
+                </button>
+                <span className="w-px self-stretch bg-[#E8E8EB]" aria-hidden />
+                <button
+                  type="button"
+                  onClick={openAddForm}
+                  className="px-3.5 py-2 text-sm font-medium text-[#5E6AD2] hover:bg-[#EEF0FF] hover:text-[#4F5BBF] transition-colors"
+                >
                   {t.addStep}
-                </Button>
-              )}
-            </div>
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Step Form Modal */}
@@ -1121,7 +1102,7 @@ export default function ScenarioDetailPage() {
               {/* Backdrop */}
               <div
                 className={`absolute inset-0 backdrop-blur-sm ${
-                  isDark ? 'bg-black/60' : 'bg-black/40'
+                  'bg-black/40'
                 }`}
                 onClick={cancelForm}
                 aria-label={t.closeDialog}
@@ -1133,21 +1114,19 @@ export default function ScenarioDetailPage() {
                 aria-modal="true"
                 aria-label={editingStep ? t.editStep : t.addNewStep}
                 className={`relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl border transition-colors ${
-                  isDark
-                    ? 'bg-[#1C1C1E] border-[#2D2D2F]'
-                    : 'bg-white border-gray-200'
+                  'bg-white border-gray-200'
                 }`}
               >
                 {/* Header */}
                 <div className={`flex items-center justify-between px-6 py-4 border-b ${
-                  isDark ? 'border-[#2D2D2F]' : 'border-gray-100'
+                  'border-gray-100'
                 }`}>
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-lg bg-[#5E6AD2]/15 flex items-center justify-center">
                       <span className="text-[#5E6AD2] text-sm">{editingStep ? '✏️' : '+'}</span>
                     </div>
                     <h3 className={`text-lg font-semibold ${
-                      isDark ? 'text-[#E0E0E2]' : 'text-gray-900'
+                      'text-gray-900'
                     }`}>
                       {editingStep ? t.editStep : t.addNewStep}
                     </h3>
@@ -1156,9 +1135,7 @@ export default function ScenarioDetailPage() {
                     onClick={cancelForm}
                     aria-label={t.closeDialog}
                     className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
-                      isDark
-                        ? 'text-[#888] hover:text-[#E0E0E2] hover:bg-[#2D2D2F]'
-                        : 'text-gray-400 hover:text-gray-700 hover:bg-gray-100'
+                      'text-gray-400 hover:text-gray-700 hover:bg-gray-100'
                     }`}
                   >
                     ✕
@@ -1171,17 +1148,15 @@ export default function ScenarioDetailPage() {
                     {/* Type */}
                     <div>
                       <label className={`block text-sm font-medium mb-1 ${
-                        isDark ? 'text-[#A0A0A4]' : 'text-gray-700'
+                        'text-gray-700'
                       }`}>
-                        {t.fieldType} <span className={`text-xs ${isDark ? 'text-red-400' : 'text-red-600'}`}>*{t.required}</span>
+                        {t.fieldType} <span className={`text-xs ${'text-red-600'}`}>*{t.required}</span>
                       </label>
                       <select
                         value={stepForm.type}
                         onChange={(e) => setStepForm({ ...stepForm, type: e.target.value })}
                         className={`w-full px-3 py-2 rounded-lg border focus:ring-1 focus:ring-[#5E6AD2] focus:outline-none transition-colors ${
-                          isDark
-                            ? 'bg-[#161618] border-[#2D2D2F] text-[#E0E0E2]'
-                            : 'bg-white border-gray-300 text-gray-900'
+                          'bg-white border-gray-300 text-gray-900'
                         }`}
                       >
                         {STEP_TYPES.map(st => (
@@ -1195,9 +1170,9 @@ export default function ScenarioDetailPage() {
                     {/* Description */}
                     <div>
                       <label className={`block text-sm font-medium mb-1 ${
-                        isDark ? 'text-[#A0A0A4]' : 'text-gray-700'
+                        'text-gray-700'
                       }`}>
-                        {t.fieldDescription} <span className={`text-xs ${isDark ? 'text-red-400' : 'text-red-600'}`}>*{t.required}</span>
+                        {t.fieldDescription} <span className={`text-xs ${'text-red-600'}`}>*{t.required}</span>
                       </label>
                       <input
                         type="text"
@@ -1206,9 +1181,7 @@ export default function ScenarioDetailPage() {
                         placeholder={t.stepDescriptionPlaceholder}
                         autoFocus
                         className={`w-full px-3 py-2 rounded-lg border focus:ring-1 focus:ring-[#5E6AD2] focus:outline-none transition-colors ${
-                          isDark
-                            ? 'bg-[#161618] border-[#2D2D2F] text-[#E0E0E2] placeholder-[#4A4A52]'
-                            : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400'
+                          'bg-white border-gray-300 text-gray-900 placeholder-gray-400'
                         }`}
                       />
                     </div>
@@ -1216,22 +1189,28 @@ export default function ScenarioDetailPage() {
                     {/* Selector */}
                     {getStepTypeConfig(stepForm.type).fields.includes('selector') && (
                       <div>
-                        <label className={`block text-sm font-medium mb-1 ${
-                          isDark ? 'text-[#A0A0A4]' : 'text-gray-700'
-                        }`}>
-                          {t.fieldSelector}
-                        </label>
+                        <div className="flex items-center gap-1.5 mb-1">
+                          <label className="text-sm font-medium text-gray-700">
+                            {t.fieldSelector}
+                          </label>
+                          <Tooltip text={t.selectorHelpTooltip} position="right" multiline>
+                            <HelpCircle
+                              size={14}
+                              className="text-gray-400 hover:text-[#5E6AD2] cursor-help shrink-0"
+                              aria-label="How to find a selector"
+                            />
+                          </Tooltip>
+                        </div>
                         <input
                           type="text"
                           value={stepForm.selector}
                           onChange={(e) => setStepForm({ ...stepForm, selector: e.target.value })}
                           placeholder={getStepTypeConfig(stepForm.type).placeholder.selector}
                           className={`w-full px-3 py-2 rounded-lg border focus:ring-1 focus:ring-[#5E6AD2] focus:outline-none transition-colors ${
-                            isDark
-                              ? 'bg-[#161618] border-[#2D2D2F] text-[#E0E0E2] placeholder-[#4A4A52]'
-                              : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400'
+                            'bg-white border-gray-300 text-gray-900 placeholder-gray-400'
                           }`}
                         />
+                        <p className="mt-1 text-xs text-gray-500">{t.selectorHelpShort}</p>
                       </div>
                     )}
 
@@ -1239,7 +1218,7 @@ export default function ScenarioDetailPage() {
                     {getStepTypeConfig(stepForm.type).fields.includes('value') && (
                       <div>
                         <label className={`block text-sm font-medium mb-1 ${
-                          isDark ? 'text-[#A0A0A4]' : 'text-gray-700'
+                          'text-gray-700'
                         }`}>
                           {t.fieldValue}
                         </label>
@@ -1249,9 +1228,7 @@ export default function ScenarioDetailPage() {
                           onChange={(e) => setStepForm({ ...stepForm, value: e.target.value })}
                           placeholder={getStepTypeConfig(stepForm.type).placeholder.value}
                           className={`w-full px-3 py-2 rounded-lg border focus:ring-1 focus:ring-[#5E6AD2] focus:outline-none transition-colors ${
-                            isDark
-                              ? 'bg-[#161618] border-[#2D2D2F] text-[#E0E0E2] placeholder-[#4A4A52]'
-                              : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400'
+                            'bg-white border-gray-300 text-gray-900 placeholder-gray-400'
                           }`}
                         />
                       </div>
@@ -1261,7 +1238,7 @@ export default function ScenarioDetailPage() {
                     {getStepTypeConfig(stepForm.type).fields.includes('metadata') && (
                       <div className="md:col-span-2">
                         <label className={`block text-sm font-medium mb-1 ${
-                          isDark ? 'text-[#A0A0A4]' : 'text-gray-700'
+                          'text-gray-700'
                         }`}>
                           {t.fieldMetadata}
                         </label>
@@ -1271,9 +1248,7 @@ export default function ScenarioDetailPage() {
                           placeholder={getStepTypeConfig(stepForm.type).placeholder.metadata}
                           rows={3}
                           className={`w-full px-3 py-2 rounded-lg border focus:ring-1 focus:ring-[#5E6AD2] focus:outline-none font-mono text-sm transition-colors ${
-                            isDark
-                              ? 'bg-[#161618] border-[#2D2D2F] text-[#E0E0E2] placeholder-[#4A4A52]'
-                              : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400'
+                            'bg-white border-gray-300 text-gray-900 placeholder-gray-400'
                           }`}
                         />
                       </div>
@@ -1283,7 +1258,7 @@ export default function ScenarioDetailPage() {
                   {/* Type hint */}
                   {t.hints[stepForm.type] && (
                     <div className={`mt-4 px-3 py-2 rounded-lg text-sm ${
-                      isDark ? 'bg-[#5E6AD2]/10 text-[#9BA3F0]' : 'bg-blue-50 text-blue-700 border border-blue-200'
+                      'bg-blue-50 text-blue-700 border border-blue-200'
                     }`}>
                       {t.hints[stepForm.type]}
                     </div>
@@ -1292,7 +1267,7 @@ export default function ScenarioDetailPage() {
 
                 {/* Footer */}
                 <div className={`flex gap-3 px-6 py-4 border-t ${
-                  isDark ? 'border-[#2D2D2F]' : 'border-gray-100'
+                  'border-gray-100'
                 }`}>
                   <Button variant="primary" onClick={handleSaveStep} disabled={isSaving} className="flex-1 sm:flex-none">
                     {isSaving ? t.saving : editingStep ? t.updateStepBtn : t.saveStepBtn}
@@ -1308,7 +1283,7 @@ export default function ScenarioDetailPage() {
           {/* Steps List */}
           <TestStepList
             steps={steps}
-            onMoveStep={handleMoveStep}
+            onReorderSteps={handleReorderSteps}
             onEditStep={openEditForm}
             onDeleteStep={handleDeleteStep}
             onToggleSelection={toggleStepSelection}
@@ -1327,9 +1302,9 @@ export default function ScenarioDetailPage() {
           <Card>
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h2 className={`text-xl font-bold ${isDark ? 'text-[#E0E0E2]' : 'text-gray-900'}`}>{t.executionResults}</h2>
-                <p className={`text-xs mt-0.5 ${isDark ? 'text-[#8A8A8F]' : 'text-gray-500'}`}>
-                  {language === 'id' ? `Percobaan ke-${executionIteration}` : `Run #${executionIteration}`}
+                <h2 className={`text-xl font-bold ${'text-gray-900'}`}>{t.executionResults}</h2>
+                <p className={`text-xs mt-0.5 ${'text-gray-500'}`}>
+                  {`Run #${executionIteration}`}
                 </p>
               </div>
               <Badge variant={executionResult.status === 'PASSED' ? 'success' : 'danger'}>
@@ -1339,31 +1314,31 @@ export default function ScenarioDetailPage() {
 
             {/* Simple 2-Column Stats Row */}
             <div className="flex flex-wrap gap-3 mb-4">
-              <div className={`flex-1 min-w-[200px] p-4 rounded-lg border ${isDark ? 'bg-[#0F170F] border-[#34D399]/20' : 'bg-green-50 border-green-200'}`}>
+              <div className={`flex-1 min-w-[200px] p-4 rounded-lg border ${'bg-green-50 border-green-200'}`}>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className={`text-sm font-medium ${isDark ? 'text-[#8A8A8F]' : 'text-green-600'}`}>{t.passed || 'Passed'}</p>
-                    <p className={`text-2xl font-bold mt-1 ${isDark ? 'text-[#34D399]' : 'text-green-700'}`}>{executionResult.passedSteps || 0}</p>
+                    <p className={`text-sm font-medium ${'text-green-600'}`}>{t.passed || 'Passed'}</p>
+                    <p className={`text-2xl font-bold mt-1 ${'text-green-700'}`}>{executionResult.passedSteps || 0}</p>
                   </div>
-                  <CheckCircle2 size={24} className={`opacity-50 ${isDark ? 'text-[#34D399]' : 'text-green-600'}`} />
+                  <CheckCircle2 size={24} className={`opacity-50 ${'text-green-600'}`} />
                 </div>
               </div>
-              <div className={`flex-1 min-w-[200px] p-4 rounded-lg border ${isDark ? 'bg-[#170F0F] border-[#F87171]/20' : 'bg-red-50 border-red-200'}`}>
+              <div className={`flex-1 min-w-[200px] p-4 rounded-lg border ${'bg-red-50 border-red-200'}`}>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className={`text-sm font-medium ${isDark ? 'text-[#8A8A8F]' : 'text-red-600'}`}>{t.failed || 'Failed'}</p>
-                    <p className={`text-2xl font-bold mt-1 ${isDark ? 'text-[#F87171]' : 'text-red-700'}`}>{executionResult.failedSteps || 0}</p>
+                    <p className={`text-sm font-medium ${'text-red-600'}`}>{t.failed || 'Failed'}</p>
+                    <p className={`text-2xl font-bold mt-1 ${'text-red-700'}`}>{executionResult.failedSteps || 0}</p>
                   </div>
-                  <XCircle size={24} className={`opacity-50 ${isDark ? 'text-[#F87171]' : 'text-red-600'}`} />
+                  <XCircle size={24} className={`opacity-50 ${'text-red-600'}`} />
                 </div>
               </div>
-              <div className={`flex-1 min-w-[200px] p-4 rounded-lg border ${isDark ? 'bg-[#161618] border-[#2A2A2D]' : 'bg-blue-50 border-blue-200'}`}>
+              <div className={`flex-1 min-w-[200px] p-4 rounded-lg border ${'bg-blue-50 border-blue-200'}`}>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className={`text-sm font-medium ${isDark ? 'text-[#8A8A8F]' : 'text-blue-600'}`}>{t.duration || 'Duration'}</p>
-                    <p className={`text-2xl font-bold mt-1 ${isDark ? 'text-[#E0E0E2]' : 'text-blue-700'}`}>{executionResult.duration ? `${(executionResult.duration / 1000).toFixed(2)}s` : '−'}</p>
+                    <p className={`text-sm font-medium ${'text-blue-600'}`}>{t.duration || 'Duration'}</p>
+                    <p className={`text-2xl font-bold mt-1 ${'text-blue-700'}`}>{executionResult.duration ? `${(executionResult.duration / 1000).toFixed(2)}s` : '−'}</p>
                   </div>
-                  <Clock size={24} className={`opacity-50 ${isDark ? 'text-[#FBBF24]' : 'text-blue-600'}`} />
+                  <Clock size={24} className={`opacity-50 ${'text-blue-600'}`} />
                 </div>
               </div>
             </div>
@@ -1371,8 +1346,8 @@ export default function ScenarioDetailPage() {
 
 
             {executionResult.errorMessage && (
-              <div className="p-3 bg-red-950/30 border border-red-700/40 rounded-lg text-red-400 text-sm mb-4">
-                <strong>Error:</strong>
+              <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-800 text-sm mb-4">
+                <strong className="font-semibold">Error:</strong>
                 <StepErrorDetail 
                   errorMessage={executionResult.errorMessage} 
                   onRetest={handleExecute}
@@ -1404,19 +1379,19 @@ export default function ScenarioDetailPage() {
                         key={result.id || idx}
                         className={`p-3 rounded-lg border ${
                           result.status === 'PASSED'
-                            ? isDark ? 'bg-green-900/20 border-green-700/30' : 'bg-green-50 border-green-200'
-                            : isDark ? 'bg-red-900/20 border-red-700/30' : 'bg-red-50 border-red-200'
+                            ? 'bg-green-50 border-green-200'
+                            : 'bg-red-50 border-red-200'
                         }`}
                       >
                         <div className="flex items-center gap-3">
-                          <span className={`text-lg ${result.status === 'PASSED' ? isDark ? 'text-green-400' : 'text-green-600' : isDark ? 'text-red-400' : 'text-red-600'}`}>
+                          <span className={`text-lg ${result.status === 'PASSED' ? 'text-green-600' : 'text-red-600'}`}>
                             {result.status === 'PASSED' ? '✓' : '✗'}
                           </span>
                           <div className="flex-1">
-                            <p className={`font-medium ${isDark ? 'text-[#E0E0E2]' : 'text-gray-900'}`}>
+                            <p className={`font-medium ${'text-gray-900'}`}>
                               Step {result.testStep?.stepNumber || idx + 1}: {result.testStep?.type || result.type} — {result.testStep?.description || result.description || '-'}
                             </p>
-                            <p className={`text-xs ${isDark ? 'text-[#888]' : 'text-gray-500'}`}>
+                            <p className={`text-xs ${'text-gray-500'}`}>
                               {result.testStep?.type || result.type} 
                               {result.testStep?.selector ? ` • ${result.testStep.selector}` : ''}
                               {result.duration ? ` • ${result.duration}ms` : ''}

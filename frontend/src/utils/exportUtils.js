@@ -1,6 +1,5 @@
 /**
- * Export utilities for PDF and Excel
- * Supports Indonesian language for all exports
+ * Export utilities for PDF and Excel (English)
  */
 
 /**
@@ -107,41 +106,22 @@ const createSVGBarChart = (labels, values, colors, description = '') => {
  * @param {Object} analysis - Analysis data with conclusions, recommendations, solutions
  */
 export const exportToHTML = (title, summary, details, filename, language = 'en', analysis = null) => {
-  const lang = {
-    en: {
-      report: 'Test Report',
-      date: 'Generated Date',
-      summary: 'Summary',
-      details: 'Details',
-      conclusions: 'Conclusions',
-      recommendations: 'Recommendations',
-      solutions: 'Solutions & Action Items',
-      noDetails: 'No detailed data available',
-      passRate: 'Pass Rate',
-      responseTime: 'Response Time',
-      errorRate: 'Error Rate',
-      throughput: 'Throughput',
-      vulnerabilities: 'Vulnerabilities',
-    },
-    id: {
-      report: 'Laporan Pengujian',
-      date: 'Tanggal Dibuat',
-      summary: 'Ringkasan',
-      details: 'Detail',
-      conclusions: 'Kesimpulan',
-      recommendations: 'Saran',
-      solutions: 'Solusi & Tindakan Perbaikan',
-      noDetails: 'Data detail tidak tersedia',
-      passRate: 'Tingkat Lulus',
-      responseTime: 'Waktu Respons',
-      errorRate: 'Tingkat Error',
-      throughput: 'Throughput',
-      vulnerabilities: 'Kerentanan',
-    }
+  const l = {
+    report: 'Test Report',
+    date: 'Generated Date',
+    summary: 'Summary',
+    details: 'Details',
+    conclusions: 'Conclusions',
+    recommendations: 'Recommendations',
+    solutions: 'Solutions & Action Items',
+    noDetails: 'No detailed data available',
+    passRate: 'Pass Rate',
+    responseTime: 'Response Time',
+    errorRate: 'Error Rate',
+    throughput: 'Throughput',
+    vulnerabilities: 'Vulnerabilities',
   }
-
-  const l = lang[language] || lang.en
-  const now = new Date().toLocaleString(language === 'id' ? 'id-ID' : 'en-US')
+  const now = new Date().toLocaleString('en-US')
 
   let html = `
     <!DOCTYPE html>
@@ -306,35 +286,12 @@ export const exportToHTML = (title, summary, details, filename, language = 'en',
       <h2>📊 ${l.summary}</h2>
   `
 
-  // Key translation mapping (English to Indonesian)
-  const keyTranslations = {
-    'Total Tests': 'Total Tes',
-    'Pass Rate (%)': 'Tingkat Lulus (%)',
-    'Avg Duration (s)': 'Durasi Rata-rata (s)',
-    'Avg Response Time (ms)': 'Waktu Respons Rata-rata (ms)',
-    'Throughput (exec/sec)': 'Throughput (exec/detik)',
-    'Total Scans': 'Total Scan',
-    'Avg Risk Score': 'Skor Risiko Rata-rata',
-    'Critical Findings': 'Temuan Kritis',
-    'High Findings': 'Temuan Tinggi',
-    'Medium+Low Findings': 'Temuan Sedang+Rendah',
-    'Error Rate (%)': 'Tingkat Error (%)',
-    'Total Requests': 'Total Permintaan',
-    // Detail table headers
-    'Scenario Name': 'Nama Scenario',
-    'Test Steps': 'Langkah Tes',
-    'Status': 'Status',
-    'Created At': 'Dibuat Pada',
-    'URL': 'URL',
-    'Active': 'Aktif',
-  }
-
   // Create summary cards
   if (summary) {
     html += '<div class="summary-grid">'
     Object.entries(summary).forEach(([key, value]) => {
       const displayValue = typeof value === 'number' ? value.toFixed(1) : value
-      const translatedKey = keyTranslations[key] || key
+      const translatedKey = key
       html += `
         <div class="summary-card">
           <div class="label">${translatedKey}</div>
@@ -451,8 +408,7 @@ export const exportToHTML = (title, summary, details, filename, language = 'en',
 
     const headers = Object.keys(details[0])
     headers.forEach(header => {
-      const translatedHeader = keyTranslations[header] || header
-      html += `<th>${translatedHeader}</th>`
+      html += `<th>${header}</th>`
     })
 
     html += `
@@ -464,8 +420,7 @@ export const exportToHTML = (title, summary, details, filename, language = 'en',
     details.forEach(row => {
       html += '<tr>'
       Object.values(row).forEach(value => {
-        const translatedValue = keyTranslations[String(value)] || value
-        html += `<td>${translatedValue}</td>`
+        html += `<td>${value}</td>`
       })
       html += '</tr>'
     })

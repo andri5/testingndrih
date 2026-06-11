@@ -1,13 +1,10 @@
 import React, { useState } from 'react'
 import { Zap, ChevronDown, ChevronUp } from 'lucide-react'
-import Layout from '../components/Layout'
-import { useSettingsStore } from '../store/settingsStore'
+import Layout from '../components/Layout'
 
 export default function SmokeTestHelpPage() {
-  const [expandedSections, setExpandedSections] = useState({})
-  const { language } = useSettingsStore()
-  
-  const t = language === 'en' ? translations.en : translations.id
+  const [expandedSections, setExpandedSections] = useState({})  
+  const t = translations
 
   const toggleSection = (id) => {
     setExpandedSections(prev => ({
@@ -136,8 +133,7 @@ export default function SmokeTestHelpPage() {
   )
 }
 
-const translations = {
-  en: {
+const translations = {
     title: '💨 Smoke Tests Guide',
     description: 'Learn how to quickly validate your application core functionality',
     whatIs: 'What is a Smoke Test?',
@@ -196,65 +192,5 @@ const translations = {
         solution: 'Verify email is configured in the backend. Notifications are only sent if email service is properly set up'
       }
     ]
-  },
-  id: {
-    title: '💨 Panduan Smoke Tests',
-    description: 'Pelajari cara memvalidasi fungsionalitas inti aplikasi Anda dengan cepat',
-    whatIs: 'Apa itu Smoke Test?',
-    whatIsDesc: `Smoke Test adalah pengujian otomatis cepat yang memvalidasi fungsionalitas inti aplikasi Anda. Ini menjalankan alur bisnis kritis untuk memastikan fitur dasar berfungsi dengan baik. Disebut "smoke test" karena jika ada fungsionalitas kritis yang rusak, itu akan "berbau asap" (gagal langsung).`,
-    whatIsTips: [
-      'Biasanya berjalan dalam 2-5 menit',
-      'Hanya menguji alur pengguna kritis',
-      'Sempurna untuk validasi cepat setelah deployment',
-      'Ideal untuk pipeline CI/CD'
-    ],
-    stepByStep: 'Cara Menjalankan Smoke Test',
-    steps: [
-      { number: 1, title: 'Navigasi ke Smoke Test', description: 'Klik "Test Asap" di sidebar kiri di bawah bagian "Alat"' },
-      { number: 2, title: 'Lihat Scenario Tersedia', description: 'Anda akan melihat daftar scenario smoke test yang sudah dikonfigurasi mewakili alur pengguna kritis' },
-      { number: 3, title: 'Pilih Scenario', description: 'Klik scenario manapun untuk memilihnya. Scenario yang dipilih akan disorot dengan latar belakang terang' },
-      { number: 4, title: 'Tinjau Detail', description: 'Panel menampilkan informasi detail tentang apa yang akan diuji, termasuk URL target dan langkah test' },
-      { number: 5, title: 'Opsional - Aktifkan Notifikasi', description: 'Centang "Kirim notifikasi email" jika ingin menerima notifikasi email saat test selesai' },
-      { number: 6, title: 'Mulai Test', description: 'Klik tombol oranye "Mulai Pengujian Smoke" untuk memulai. Tombol menampilkan loading spinner saat berjalan' },
-      { number: 7, title: 'Pantau Progres', description: 'Tonton progres test secara real-time. Interface menampilkan langkah mana yang dieksekusi dan status test' },
-      { number: 8, title: 'Lihat Hasil', description: 'Setelah selesai, hasil muncul menampilkan: langkah passed/failed, durasi, dan timestamp. Hijau = BERHASIL, Merah = GAGAL' },
-      { number: 9, title: 'Jalankan Semua Test', description: 'Klik "Jalankan Semua Pengujian Smoke" untuk menjalankan semua smoke tests secara berurutan' }
-    ],
-    understanding: 'Memahami Hasil Test',
-    results: [
-      { label: 'Status Badge', description: 'Menampilkan BERHASIL dalam warna hijau atau GAGAL dalam warna merah' },
-      { label: 'Steps Passed', description: 'Menampilkan "X/Y steps" - berapa banyak langkah yang passed dari total' },
-      { label: 'Duration', description: 'Total waktu test berjalan dalam detik' },
-      { label: 'Timestamp', description: 'Kapan test dijalankan' }
-    ],
-    bestPractices: 'Best Practices',
-    practices: [
-      'Jalankan smoke tests setelah setiap deployment',
-      'Buat scenario smoke test sederhana dan cepat',
-      'Hanya uji alur pengguna yang paling kritis',
-      'Jalankan secara teratur dalam pipeline CI/CD Anda',
-      'Pantau history test untuk menangkap regresi lebih awal',
-      'Perbarui scenario ketika alur kritis berubah',
-      'Atur notifikasi email untuk test yang gagal'
-    ],
-    troubleshooting: 'Troubleshooting',
-    issues: [
-      {
-        problem: 'Test terus gagal',
-        solution: 'Periksa apakah aplikasi target sedang berjalan dan dapat diakses. Verifikasi URL aplikasi di detail scenario.'
-      },
-      {
-        problem: 'Error timeout test',
-        solution: 'Aplikasi mungkin lambat. Tingkatkan timeout eksekusi di Pengaturan > Pengaturan Eksekusi'
-      },
-      {
-        problem: 'Test berjalan tapi langkah gagal',
-        solution: 'UI aplikasi mungkin telah berubah. Klik scenario untuk melihat langkah dan verifikasi selector sudah benar'
-      },
-      {
-        problem: 'Notifikasi email tidak diterima',
-        solution: 'Verifikasi email dikonfigurasi di backend. Notifikasi hanya dikirim jika layanan email sudah diatur dengan benar'
-      }
-    ]
-  }
+  
 }

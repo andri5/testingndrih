@@ -1,13 +1,10 @@
 import React, { useState } from 'react'
 import { Gauge, ChevronDown, ChevronUp } from 'lucide-react'
-import Layout from '../components/Layout'
-import { useSettingsStore } from '../store/settingsStore'
+import Layout from '../components/Layout'
 
 export default function StressTestHelpPage() {
-  const [expandedSections, setExpandedSections] = useState({})
-  const { language } = useSettingsStore()
-  
-  const t = language === 'en' ? translations.en : translations.id
+  const [expandedSections, setExpandedSections] = useState({})  
+  const t = translations
 
   const toggleSection = (id) => {
     setExpandedSections(prev => ({
@@ -150,8 +147,7 @@ export default function StressTestHelpPage() {
   )
 }
 
-const translations = {
-  en: {
+const translations = {
     title: '⚡ Stress Tests Guide',
     description: 'Learn how to test your application under high load and concurrent traffic',
     whatIs: 'What is a Stress Test?',
@@ -222,78 +218,6 @@ const translations = {
         solution: 'Reduce load parameters or increase timeout in settings. Very heavy loads may take longer to complete.'
       }
     ]
-  },
-  id: {
-    title: '⚡ Panduan Stress Tests',
-    description: 'Pelajari cara menguji aplikasi Anda di bawah beban tinggi dan traffic concurrent',
-    whatIs: 'Apa itu Stress Test?',
-    whatIsDesc: `Stress Test mengevaluasi performa aplikasi Anda di bawah beban tinggi dan pengguna concurrent. Ini mensimulasikan banyak pengguna mengakses aplikasi Anda secara bersamaan untuk mengidentifikasi bottleneck performa, kapasitas maksimal, dan batas stabilitas. Ini membantu Anda memahami bagaimana sistem berperilaku saat dipaksakan ke batasnya.`,
-    whatIsTips: [
-      'Menguji dengan ratusan hingga ribuan concurrent requests',
-      'Mengukur response time dan error rates',
-      'Mengidentifikasi breaking points dan batas kapasitas',
-      'Penting sebelum major releases atau traffic spikes'
-    ],
-    profiles: 'Load Profiles yang Tersedia',
-    profileDetails: [
-      { name: '🟢 Light Profile', users: 'Concurrency: 10 pengguna', time: 'Waktu: ~1 menit' },
-      { name: '🟡 Medium Profile', users: 'Concurrency: 50 pengguna', time: 'Waktu: ~5 menit' },
-      { name: '🔴 Heavy Profile', users: 'Concurrency: 100 pengguna', time: 'Waktu: ~10 menit' },
-      { name: '⚫ Custom Profile', users: 'Tentukan pengguna Anda sendiri', time: 'Durasi fleksibel' }
-    ],
-    stepByStep: 'Cara Menjalankan Stress Test',
-    steps: [
-      { number: 1, title: 'Navigasi ke Stress Test', description: 'Klik "Test Beban" di sidebar kiri di bawah bagian "Alat"' },
-      { number: 2, title: 'Pilih Scenario', description: 'Pilih dari scenario yang tersedia. Setiap scenario mewakili workflow yang akan di-stress test' },
-      { number: 3, title: 'Pilih Load Profile', description: 'Pilih Light, Medium, Heavy, atau Custom profile. Mulai dengan Light dan tingkatkan secara bertahap' },
-      { number: 4, title: 'Untuk Custom Profile', description: 'Masukkan concurrency (pengguna simultan) dan iterations (pengulangan per pengguna) untuk konfigurasi beban custom' },
-      { number: 5, title: 'Tinjau Detail Target', description: 'Verifikasi URL aplikasi target dan endpoint test sebelum memulai' },
-      { number: 6, title: 'Mulai Stress Test', description: 'Klik tombol ungu "Jalankan Test Beban". Ini mungkin memakan beberapa menit tergantung profile' },
-      { number: 7, title: 'Pantau Live Metrics', description: 'Tonton metrics real-time: current load, response times (min/max/avg), error rate, dan current phase' },
-      { number: 8, title: 'Lihat Final Report', description: 'Setelah selesai, tinjau total requests, success/failure counts, average response time, dan peak response time' },
-      { number: 9, title: 'Analisis & Bandingkan', description: 'Periksa apakah response times dapat diterima dan error rate rendah. Bandingkan dengan run sebelumnya untuk identifikasi regressi' }
-    ],
-    metrics: 'Penjelasan Key Metrics',
-    metricDetails: [
-      { label: 'Load (X × Y)', description: 'X pengguna concurrent dengan Y iterations masing-masing. Total requests = X × Y' },
-      { label: 'Duration', description: 'Total waktu eksekusi test (termasuk ramp-up, steady state, dan cool-down phases)' },
-      { label: 'Avg Response Time', description: 'Waktu rata-rata untuk semua requests. Harus konsisten untuk performa baik' },
-      { label: 'Peak Response Time', description: 'Maximum response time yang observed. Menunjukkan worst-case latency' },
-      { label: 'Error Rate', description: 'Persentase requests yang gagal. Idealnya 0% atau sangat rendah' },
-      { label: 'Throughput', description: 'Requests per second. Menunjukkan berapa banyak requests yang dapat ditangani sistem' }
-    ],
-    bestPractices: 'Best Practices',
-    practices: [
-      'Mulai dengan profile Light dan secara bertahap tingkatkan load',
-      'Jalankan stress tests saat jam-jam off-peak',
-      'Tentukan baseline metrics dengan test awal',
-      'Jalankan tests berkali-kali untuk konsistensi',
-      'Monitor system resources (CPU, memory, disk) saat testing',
-      'Identifikasi saat performa mulai menurun signifikan',
-      'Dokumentasikan capacity limits dan bagikan dengan tim',
-      'Test critical paths dan high-traffic endpoints',
-      'Jalankan tests di isolated environment sebelum production',
-      'Gunakan hasil untuk optimize infrastructure'
-    ],
-    troubleshooting: 'Troubleshooting',
-    issues: [
-      {
-        problem: 'Test gagal langsung',
-        solution: 'Periksa aplikasi target sedang berjalan dan accessible. Verifikasi endpoints benar dan tidak diblok firewall.'
-      },
-      {
-        problem: 'Error rates tinggi',
-        solution: 'Aplikasi mungkin overload. Coba Light profile lebih dulu, lalu tingkatkan load secara bertahap. Periksa server logs.'
-      },
-      {
-        problem: 'Hasil tidak konsisten',
-        solution: 'Jalankan multiple tests untuk hasil rata-rata. Faktor eksternal mungkin mempengaruhi. Coba isolasi test environment.'
-      },
-      {
-        problem: 'Test timeout',
-        solution: 'Kurangi load parameters atau tingkatkan timeout di settings. Heavy loads mungkin perlu waktu lebih lama.'
-      }
-    ]
-  }
+  
 }
 

@@ -5,12 +5,10 @@ import StressTestRunner from '../components/StressTestRunner'
 import StressTestHistory from '../components/StressTestHistory'
 import ExportButtons from '../components/ExportButtons'
 import Layout from '../components/Layout'
-import { Zap, AlertCircle, Loader, Play, BarChart3, Gauge, TrendingUp, Layers } from 'lucide-react'
-import { useSettingsStore } from '../store/settingsStore'
+import { Zap, AlertCircle, Loader, Play, BarChart3, Gauge, TrendingUp, Layers } from 'lucide-react'
 import { analyzeStressTestResults } from '../utils/testAnalysis'
 
-const i18n = {
-  en: {
+const i18n = {
     title: 'Stress Tests',
     description: 'Validate system performance under load - measure throughput, response times, and error rates',
     selectScenario: 'Select Scenario',
@@ -27,25 +25,7 @@ const i18n = {
     loading: 'Loading scenarios...',
     error: 'Error',
     steps: 'steps',
-  },
-  id: {
-    title: 'Pengujian Stress',
-    description: 'Validasi kinerja sistem di bawah beban - ukur throughput, waktu respons, dan tingkat kesalahan',
-    selectScenario: 'Pilih Scenario',
-    noScenarios: 'Tidak ada scenario yang ditandai untuk pengujian stress',
-    runAll: 'Jalankan',
-    runAllTooltip: 'Jalankan tes stress pada semua scenario dengan profil ringan',
-    aboutTitle: '⚡ Tentang Pengujian Stress',
-    feature1: '4 profil beban: Ringan, Sedang, Berat, Ekstrem',
-    feature2: 'Eksekusi bersamaan dengan metrik terperinci',
-    feature3: 'Pelacakan waktu respons (min/rata-rata/maks/P95/P99)',
-    feature4: 'Pengukuran throughput (eksekusi/detik)',
-    feature5: 'Pemantauan dan analisis tingkat kesalahan',
-    feature6: 'Laporan kinerja komprehensif',
-    loading: 'Memuat scenario...',
-    error: 'Error',
-    steps: 'langkah',
-  },
+  
 }
 
 export default function StressTestPage() {
@@ -53,9 +33,7 @@ export default function StressTestPage() {
   const [selectedScenario, setSelectedScenario] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [summaryData, setSummaryData] = useState(null)
-  const { language } = useSettingsStore()
-  const t = i18n[language] || i18n.en
+  const [summaryData, setSummaryData] = useState(null)  const t = i18n
 
   useEffect(() => {
     loadScenarios()
@@ -170,7 +148,7 @@ export default function StressTestPage() {
               'Scenario Name': s.name,
               'Test Steps': s.testSteps?.length || 0,
               'Status': 'Active',
-              'Created At': new Date(s.createdAt).toLocaleDateString(language)
+              'Created At': new Date(s.createdAt).toLocaleDateString('en-US')
             }))}
             analysis={analyzeStressTestResults(
               summaryData ? {

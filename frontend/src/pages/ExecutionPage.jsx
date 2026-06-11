@@ -6,11 +6,9 @@ import StepErrorDetail from '../components/StepErrorDetail'
 import { useExecutionStore } from '../store/executionStore'
 import { useScenarioStore } from '../store/scenarioStore'
 import { ExecuteScenarioButton } from '../components/ExecuteScenarioButton'
-import { PlayCircle, CheckCircle2, XCircle, TrendingUp, ClipboardList, Clock } from 'lucide-react'
-import { useSettingsStore } from '../store/settingsStore'
+import { PlayCircle, CheckCircle2, XCircle, TrendingUp, ClipboardList, Clock } from 'lucide-react'
 
-const i18n = {
-  en: {
+const i18n = {
     title: 'Test Execution',
     subtitle: 'Run and monitor test scenarios',
     runScenario: 'Run Scenario',
@@ -33,37 +31,11 @@ const i18n = {
     html: 'HTML',
     pdf: 'PDF',
     export: 'Export',
-  },
-  id: {
-    title: 'Eksekusi Pengujian',
-    subtitle: 'Jalankan dan pantau skenario pengujian',
-    runScenario: 'Jalankan Skenario',
-    selectScenario: 'Pilih Skenario',
-    selectScenarioPlaceholder: 'Pilih skenario...',
-    status: 'Status',
-    action: 'Aksi',
-    selectScenarioFirst: '← Pilih scenario terlebih dahulu',
-    viewScreenshot: 'Lihat screenshot',
-    executionHistory: 'Riwayat Eksekusi',
-    scenario: 'Skenario',
-    steps: 'Langkah (B/G)',
-    duration: 'Durasi',
-    date: 'Tanggal',
-    totalExecutions: 'TOTAL EKSEKUSI',
-    passed: 'LULUS',
-    failed: 'GAGAL',
-    successRate: 'TINGKAT KEBERHASILAN',
-    view: 'Lihat',
-    html: 'HTML',
-    pdf: 'PDF',
-    export: 'Ekspor',
-  },
+  
 }
 
 export default function ExecutionPage() {
-  const navigate = useNavigate()
-  const { language } = useSettingsStore()
-  const t = i18n[language] || i18n.en
+  const navigate = useNavigate()  const t = i18n
   const [selectedScenarioId, setSelectedScenarioId] = useState(null)
   const [selectedScenarioName, setSelectedScenarioName] = useState('')
   const [screenshotModal, setScreenshotModal] = useState(null)

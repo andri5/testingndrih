@@ -249,8 +249,8 @@ VITE_APP_VERSION=3.0.0
 - **Hot Module Reload (HMR)**: Automatic refresh on file changes
 - **Vite Dev Server**: Ultra-fast build tool
 - **TailwindCSS**: Utility-first CSS framework
-- **Dark/Light Theme**: Automatic theme switching
-- **Multi-language**: Indonesian + English support
+- **Light Theme**: Fixed light UI for readability (no theme toggle)
+- **English UI**: All labels and exports use English (`en-US`)
 
 ### Running Tests
 

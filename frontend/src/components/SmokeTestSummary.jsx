@@ -1,33 +1,21 @@
 import React, { useState, useEffect } from 'react'
 import apiClient from '../services/api'
-import { AlertCircle, CheckCircle2, Clock, TrendingUp } from 'lucide-react'
-import { useSettingsStore } from '../store/settingsStore'
+import { AlertCircle, CheckCircle2, Clock, TrendingUp } from 'lucide-react'
 
-const i18n = {
-  en: { 
+const i18n = { 
     totalTests: 'Total Tests', 
     passRate: 'Pass Rate', 
     avgDuration: 'Avg Duration',
     totalTestsDesc: 'Total smoke tests executed',
     passRateDesc: 'Percentage of successful tests',
     avgDurationDesc: 'Average execution time per test'
-  },
-  id: { 
-    totalTests: 'Total Tes', 
-    passRate: 'Tingkat Keberhasilan', 
-    avgDuration: 'Durasi Rata-rata',
-    totalTestsDesc: 'Total tes smoke yang dijalankan',
-    passRateDesc: 'Persentase tes yang berhasil',
-    avgDurationDesc: 'Rata-rata waktu eksekusi per tes'
-  },
+  
 }
 
 export default function SmokeTestSummary() {
   const [summary, setSummary] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const { language } = useSettingsStore()
-  const t = i18n[language] || i18n.en
+  const [error, setError] = useState(null)  const t = i18n
 
   useEffect(() => {
     loadSummary()

@@ -135,7 +135,13 @@ export const retryEngineService = {
         console.log(`[RETRY] Attempt ${attempt + 1}/${strategy.maxRetries + 1}`)
 
         // Apply failure-specific pre-retry logic
-        if (attempt > 0 && failureType === 'SELECTOR_NOT_FOUND' && params.page && params.step) {
+        if (
+          attempt > 0 &&
+          failureType === 'SELECTOR_NOT_FOUND' &&
+          params.allowSelfHeal &&
+          params.page &&
+          params.step
+        ) {
           await this._applySelectorRepair(params.page, params.step)
         }
 

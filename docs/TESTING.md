@@ -202,9 +202,8 @@ Contoh remote run: `.github/workflows/ci-run-scenario.example.yml`
 
 ### LOW
 
-- [ ] Accessibility tests (axe) — mode EN/ID
+- [ ] Accessibility tests (axe)
 - [ ] Visual regression E2E otomatis di CI
-- [ ] Theme switching regression tests
 
 ---
 

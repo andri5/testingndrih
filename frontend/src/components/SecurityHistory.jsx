@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import apiClient from '../services/api'
-import { Clock } from 'lucide-react'
-import { useSettingsStore } from '../store/settingsStore'
+import { Clock } from 'lucide-react'
 
-const i18n = {
-  en: {
+const i18n = {
     scanHistory: 'Scan History',
     loadingHistory: 'Loading history...',
     noScans: 'No scans yet',
@@ -12,23 +10,12 @@ const i18n = {
     critical: 'Critical',
     high: 'High',
     medium: 'Medium',
-  },
-  id: {
-    scanHistory: 'Riwayat Pemindaian',
-    loadingHistory: 'Memuat riwayat...',
-    noScans: 'Belum ada pemindaian',
-    scan: 'Pemindaian',
-    critical: 'Kritis',
-    high: 'Tinggi',
-    medium: 'Sedang',
-  },
+  
 }
 
 export default function SecurityHistory({ scenario }) {
   const [history, setHistory] = useState([])
-  const [loading, setLoading] = useState(true)
-  const { language } = useSettingsStore()
-  const t = i18n[language] || i18n.en
+  const [loading, setLoading] = useState(true)  const t = i18n
 
   useEffect(() => {
     if (scenario?.id) {

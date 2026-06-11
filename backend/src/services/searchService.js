@@ -117,7 +117,11 @@ export async function getRecentScenarios(userId, limit = 5) {
         name: true,
         url: true,
         steps: true,
-        updatedAt: true
+        updatedAt: true,
+        createdAt: true,
+        _count: {
+          select: { testSteps: true }
+        }
       }
     })
   } catch (error) {

@@ -2,16 +2,14 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { Card, Button, Badge, Spinner } from '../components/ui'
-import { issueAPI } from '../services/api'
-import { useSettingsStore } from '../store/settingsStore'
+import { issueAPI } from '../services/api'
 import toast from 'react-hot-toast'
 import { AlertTriangle } from 'lucide-react'
 
 const STATUS_OPTIONS = ['OPEN', 'IN_PROGRESS', 'CLOSED']
 const SEVERITY_COLORS = { CRITICAL: 'danger', HIGH: 'danger', MEDIUM: 'warning', LOW: 'default' }
 
-const i18n = {
-  en: {
+const i18n = {
     title: 'Test Issues',
     subtitle: 'Failures auto-tracked from test executions',
     empty: 'No issues — all tests passing!',
@@ -22,25 +20,11 @@ const i18n = {
     update: 'Update',
     allStatuses: 'All statuses',
     viewScenario: 'View scenario',
-  },
-  id: {
-    title: 'Issue Pengujian',
-    subtitle: 'Kegagalan otomatis dari eksekusi test',
-    empty: 'Tidak ada issue — semua test lulus!',
-    scenario: 'Skenario',
-    status: 'Status',
-    severity: 'Severity',
-    step: 'Langkah',
-    update: 'Perbarui',
-    allStatuses: 'Semua status',
-    viewScenario: 'Lihat skenario',
-  },
+  
 }
 
 export default function IssuesPage() {
-  const navigate = useNavigate()
-  const { language } = useSettingsStore()
-  const t = i18n[language] || i18n.en
+  const navigate = useNavigate()  const t = i18n
   const [issues, setIssues] = useState([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('')

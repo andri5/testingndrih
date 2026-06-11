@@ -1,23 +1,14 @@
 import React from 'react'
 import { Download, FileText, FileSpreadsheet } from 'lucide-react'
 import { exportToHTML, exportToJSON } from '../utils/exportUtils'
-import { useSettingsStore } from '../store/settingsStore'
 
-const i18n = {
-  en: {
+const i18n = {
     export: 'Export',
     exportPDF: 'Export as PDF/HTML',
     exportExcel: 'Export as Excel',
     exportJSON: 'Export as JSON',
     exporting: 'Exporting...',
-  },
-  id: {
-    export: 'Ekspor',
-    exportPDF: 'Ekspor sebagai PDF/HTML',
-    exportExcel: 'Ekspor sebagai Excel',
-    exportJSON: 'Ekspor sebagai JSON',
-    exporting: 'Mengekspor...',
-  },
+  
 }
 
 export default function ExportButtons({ 
@@ -28,9 +19,7 @@ export default function ExportButtons({
   analysis,
   onExportStart,
   onExportComplete 
-}) {
-  const { language } = useSettingsStore()
-  const t = i18n[language] || i18n.en
+}) {  const t = i18n
   const [exporting, setExporting] = React.useState(false)
 
   const handleExportHTML = async () => {
@@ -40,7 +29,7 @@ export default function ExportButtons({
       
       await new Promise(resolve => setTimeout(resolve, 300))
       
-      exportToHTML(title, summary, details, filename, 'id', analysis)
+      exportToHTML(title, summary, details, filename, 'en', analysis)
       
       onExportComplete?.()
     } catch (err) {

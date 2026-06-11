@@ -8,8 +8,7 @@ import { Play, Plus, Trash2, Globe } from 'lucide-react'
 
 const METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD']
 
-const i18n = {
-  en: {
+const i18n = {
     title: 'API Testing',
     subtitle: 'HTTP request tests linked to scenarios',
     selectScenario: 'Select scenario',
@@ -29,35 +28,14 @@ const i18n = {
     headers: 'Headers (JSON)',
     body: 'Body',
     history: 'History',
-  },
-  id: {
-    title: 'Pengujian API',
-    subtitle: 'Tes request HTTP terhubung ke skenario',
-    selectScenario: 'Pilih skenario',
-    addTest: 'Tambah Tes API',
-    run: 'Jalankan',
-    noTests: 'Belum ada tes API',
-    name: 'Nama',
-    method: 'Metode',
-    url: 'URL',
-    expectedCode: 'Status diharapkan',
-    save: 'Simpan',
-    cancel: 'Batal',
-    lastResult: 'Hasil terakhir',
-    passed: 'Lulus',
-    failed: 'Gagal',
-    ms: 'md',
-    headers: 'Headers (JSON)',
-    body: 'Body',
-    history: 'Riwayat',
-  },
+  
 }
 
 const emptyForm = { name: '', method: 'GET', url: '', expectedCode: 200, headers: '', body: '' }
 
 export default function ApiTestingPage() {
-  const { language, selectedEnvironmentId } = useSettingsStore()
-  const t = i18n[language] || i18n.en
+  const { selectedEnvironmentId } = useSettingsStore()
+  const t = i18n
   const [scenarios, setScenarios] = useState([])
   const [scenarioId, setScenarioId] = useState('')
   const [tests, setTests] = useState([])

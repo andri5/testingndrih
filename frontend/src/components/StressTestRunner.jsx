@@ -1,11 +1,9 @@
 import React, { useState } from 'react'
 import apiClient from '../services/api'
 import StressTestMetrics from './StressTestMetrics'
-import { Play, RotateCcw, Zap } from 'lucide-react'
-import { useSettingsStore } from '../store/settingsStore'
+import { Play, RotateCcw, Zap } from 'lucide-react'
 
-const i18n = {
-  en: {
+const i18n = {
     selectLoadProfile: 'Select Load Profile',
     light: 'Light',
     medium: 'Medium',
@@ -16,28 +14,14 @@ const i18n = {
     reset: 'Reset',
     passed: 'Stress Test PASSED',
     failed: 'Stress Test FAILED',
-  },
-  id: {
-    selectLoadProfile: 'Pilih Profil Beban',
-    light: 'Ringan',
-    medium: 'Sedang',
-    heavy: 'Berat',
-    extreme: 'Ekstrem',
-    start: 'Mulai Tes Stress',
-    running: 'Menjalankan...',
-    reset: 'Setel Ulang',
-    passed: 'Tes Stress BERHASIL',
-    failed: 'Tes Stress GAGAL',
-  },
+  
 }
 
 export default function StressTestRunner({ scenario, onTestComplete }) {
   const [stressProfile, setStressProfile] = useState('LIGHT')
   const [isRunning, setIsRunning] = useState(false)
   const [result, setResult] = useState(null)
-  const [error, setError] = useState(null)
-  const { language } = useSettingsStore()
-  const t = i18n[language] || i18n.en
+  const [error, setError] = useState(null)  const t = i18n
 
   const PROFILES = [
     { key: 'LIGHT', label: 'Light', desc: '2 concurrent × 3 iterations', time: '10m' },

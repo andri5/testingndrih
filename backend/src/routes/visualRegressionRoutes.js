@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { authenticateToken } from '../middleware/auth.js'
+import { adminAuth } from '../middleware/adminAuth.js'
 import {
   captureHandler,
   runHandler,
@@ -10,7 +10,7 @@ import {
 } from '../controllers/visualRegressionController.js'
 
 const router = Router()
-router.use(authenticateToken)
+router.use(...adminAuth)
 
 router.get('/baselines', listBaselinesHandler)
 router.get('/comparisons', listComparisonsHandler)

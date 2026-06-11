@@ -2,7 +2,7 @@
 
 Struktur folder lengkap project **Test Sambil Ngopi** (TestingNDRIH).
 
-**Last Updated:** June 4, 2026
+**Last Updated:** June 11, 2026
 
 ---
 
@@ -221,9 +221,12 @@ frontend/
 │   │   ├── executionService.js
 │   │   └── analyticsService.js
 │   │
+│   ├── constants/
+│   │   └── app.js                  # APP_LOCALE (en-US), fixed UI defaults
+│   │
 │   ├── store/                      # Zustand
 │   │   ├── authStore.js
-│   │   ├── settingsStore.js
+│   │   ├── settingsStore.js        # Execution prefs only (no theme/language)
 │   │   └── uiStore.js
 │   │
 │   └── utils/
@@ -266,7 +269,7 @@ docs/
 | Backend routes | 24 |
 | Frontend pages | 33 |
 | Frontend components | 30+ |
-| Database migrations | 15 |
+| Database migrations | 17 |
 | E2E specs | 15 |
 
 ---
@@ -293,3 +296,12 @@ File berikut tidak lagi digunakan dan telah dihapus:
 - `frontend/src/data/helpContent.js` (konten inline di `HelpModal.jsx`)
 - `frontend/src/hooks/useLoading.js` (menggunakan `loadingStore` langsung)
 - `health-check.js` (root) → `scripts/health-check.js`
+
+## Kode yang Dibersihkan (Juni 2026)
+
+Fitur toggle tema dan bahasa telah dihapus dari codebase:
+
+- Tidak ada lagi `setTheme` / `setLanguage` di `settingsStore.js`
+- Terjemahan Indonesia (`id:`) dihapus dari komponen dan halaman — UI English only
+- E2E tests untuk dark mode toggle dan language switcher dihapus
+- `HelpModal.jsx` — konten bantuan English only

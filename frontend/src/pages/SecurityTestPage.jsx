@@ -6,12 +6,10 @@ import SecuritySummary from '../components/SecuritySummary'
 import SecurityHistory from '../components/SecurityHistory'
 import ExportButtons from '../components/ExportButtons'
 import Layout from '../components/Layout'
-import { Shield, AlertCircle, Loader, Lock, Bug, Code, Zap, Key } from 'lucide-react'
-import { useSettingsStore } from '../store/settingsStore'
+import { Shield, AlertCircle, Loader, Lock, Bug, Code, Zap, Key } from 'lucide-react'
 import { analyzeSecurityTestResults } from '../utils/testAnalysis'
 
-const i18n = {
-  en: {
+const i18n = {
     title: 'Security Testing',
     description: 'Identify vulnerabilities through comprehensive security scanning',
     selectScenario: 'Select Scenario',
@@ -26,23 +24,7 @@ const i18n = {
     all: 'All',
     loading: 'Loading scenarios...',
     error: 'Error',
-  },
-  id: {
-    title: 'Pengujian Keamanan',
-    description: 'Identifikasi kerentanan melalui pemindaian keamanan komprehensif',
-    selectScenario: 'Pilih Scenario',
-    noScenarios: 'Tidak ada scenario yang ditandai untuk pengujian keamanan',
-    aboutTitle: '🔐 Tentang Pengujian Keamanan',
-    feature1: 'Uji SQL Injection, XSS, Command Injection',
-    feature2: 'Validasi mekanisme autentikasi dan otorisasi',
-    feature3: 'Periksa header keamanan dan konfigurasi SSL/TLS',
-    feature4: 'Penilaian risiko dengan skor CVSS',
-    feature5: 'Rekomendasi remediasi terperinci',
-    feature6: 'Lacak temuan dan status remediasi',
-    all: 'Semua',
-    loading: 'Memuat scenario...',
-    error: 'Error',
-  },
+  
 }
 
 export default function SecurityTestPage() {
@@ -53,9 +35,7 @@ export default function SecurityTestPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [filterSeverity, setFilterSeverity] = useState('ALL')
-  const [summaryData, setSummaryData] = useState(null)
-  const { language } = useSettingsStore()
-  const t = i18n[language] || i18n.en
+  const [summaryData, setSummaryData] = useState(null)  const t = i18n
 
   useEffect(() => {
     loadScenarios()
@@ -178,7 +158,7 @@ export default function SecurityTestPage() {
               'Scenario Name': s.name,
               'URL': s.url || '-',
               'Status': 'Active',
-              'Created At': new Date(s.createdAt).toLocaleDateString(language)
+              'Created At': new Date(s.createdAt).toLocaleDateString('en-US')
             }))}
             analysis={analyzeSecurityTestResults(
               summaryData ? {

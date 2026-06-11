@@ -8,8 +8,7 @@ import { Layers, Plus, Trash2, Key, Star } from 'lucide-react'
 
 const inputCls = 'w-full px-3 py-2 bg-[#0F0E11] border border-[#2D2D2F] rounded-lg text-[#E0E0E2] text-sm focus:outline-none focus:border-[#5E6AD2]'
 
-const i18n = {
-  en: {
+const i18n = {
     title: 'Environments',
     subtitle: 'Manage profiles and variables for dev, staging, and production',
     hint: 'Use {{variableName}} in step URLs, selectors, and values — e.g. {{baseUrl}}/login',
@@ -33,40 +32,15 @@ const i18n = {
     created: 'Environment created',
     saved: 'Saved',
     deleted: 'Deleted',
-  },
-  id: {
-    title: 'Environment',
-    subtitle: 'Kelola profil dan variabel untuk dev, staging, dan production',
-    hint: 'Gunakan {{namaVariabel}} di URL, selector, dan value — mis. {{baseUrl}}/login',
-    addEnv: 'Tambah Environment',
-    name: 'Nama',
-    description: 'Deskripsi',
-    baseUrl: 'Base URL',
-    default: 'Default',
-    setDefault: 'Jadikan default',
-    variables: 'Variabel',
-    addVar: 'Tambah Variabel',
-    key: 'Key',
-    value: 'Nilai',
-    secret: 'Rahasia',
-    save: 'Simpan',
-    cancel: 'Batal',
-    delete: 'Hapus',
-    noEnv: 'Belum ada environment',
-    selectEnv: 'Pilih environment untuk kelola variabel',
-    preview: 'Pratinjau (rahasia disamarkan)',
-    created: 'Environment dibuat',
-    saved: 'Disimpan',
-    deleted: 'Dihapus',
-  },
+  
 }
 
 const emptyEnv = { name: '', description: '', baseUrl: '', isDefault: false }
 const emptyVar = { key: '', value: '', isSecret: false }
 
 export default function EnvironmentsPage() {
-  const { language, selectedEnvironmentId, setSelectedEnvironmentId } = useSettingsStore()
-  const t = i18n[language] || i18n.en
+  const { selectedEnvironmentId, setSelectedEnvironmentId } = useSettingsStore()
+  const t = i18n
   const [environments, setEnvironments] = useState([])
   const [selectedId, setSelectedId] = useState(selectedEnvironmentId || '')
   const [loading, setLoading] = useState(true)

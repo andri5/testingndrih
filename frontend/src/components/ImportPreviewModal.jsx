@@ -1,32 +1,22 @@
 import { useState } from 'react'
 import { X, AlertCircle, CheckCircle, ChevronDown, ChevronUp, FileUp, Edit2, HelpCircle } from 'lucide-react'
 import { Tooltip } from './ui'
-import { useSettingsStore } from '../store/settingsStore'
-
 export function ImportPreviewModal({ data, isLoading, onConfirm, onCancel }) {
-  const { theme } = useSettingsStore()
-  const isDarkMode = theme === 'dark'
   const [editingScenarioIdx, setEditingScenarioIdx] = useState(null)
   const [editingStepIdx, setEditingStepIdx] = useState(null)
   const [expandedScenario, setExpandedScenario] = useState(0)
   const [editedData, setEditedData] = useState(JSON.parse(JSON.stringify(data?.scenarios || [])))
 
   // Color classes
-  const bgClass = isDarkMode ? 'bg-[#161618]' : 'bg-white'
-  const borderClass = isDarkMode ? 'border-[rgba(255,255,255,0.08)]' : 'border-gray-200'
-  const textPrimaryClass = isDarkMode ? 'text-[#E0E0E2]' : 'text-gray-900'
-  const textSecondaryClass = isDarkMode ? 'text-[#8A8A8F]' : 'text-gray-600'
-  const inputBgClass = isDarkMode ? 'bg-[#1F1E22]' : 'bg-gray-50'
-  const inputBorderClass = isDarkMode ? 'border-[rgba(255,255,255,0.12)]' : 'border-gray-300'
-  const buttonPrimaryClass = isDarkMode
-    ? 'bg-[#5E6AD2] hover:bg-[#6B7AE8] text-white'
-    : 'bg-blue-600 hover:bg-blue-700 text-white'
-  const buttonSecondaryClass = isDarkMode
-    ? 'bg-[#2A2A2D] hover:bg-[#3A3A3D] text-[#E0E0E2]'
-    : 'bg-gray-200 hover:bg-gray-300 text-gray-900'
-  const hoverRowClass = isDarkMode
-    ? 'hover:bg-[#2A2A2D]'
-    : 'hover:bg-gray-50'
+  const bgClass = 'bg-white'
+  const borderClass = 'border-gray-200'
+  const textPrimaryClass = 'text-gray-900'
+  const textSecondaryClass = 'text-gray-600'
+  const inputBgClass = 'bg-gray-50'
+  const inputBorderClass = 'border-gray-300'
+  const buttonPrimaryClass = 'bg-blue-600 hover:bg-blue-700 text-white'
+  const buttonSecondaryClass = 'bg-gray-200 hover:bg-gray-300 text-gray-900'
+  const hoverRowClass = 'hover:bg-gray-50'
 
   const handleEditScenario = (idx, field, value) => {
     const updated = [...editedData]
@@ -75,7 +65,7 @@ export function ImportPreviewModal({ data, isLoading, onConfirm, onCancel }) {
         {/* Content */}
         <div className="flex-1 overflow-auto px-6 py-4">
           {/* Summary */}
-          <div className={`mb-6 p-4 rounded-lg ${isDarkMode ? 'bg-[#2A2A2D]' : 'bg-blue-50'} border ${borderClass}`}>
+          <div className={`mb-6 p-4 rounded-lg ${'bg-blue-50'} border ${borderClass}`}>
             <div className="flex items-start gap-3">
               <CheckCircle size={20} className="text-green-500 mt-0.5 flex-shrink-0" />
               <div className="flex-1">
@@ -108,7 +98,7 @@ export function ImportPreviewModal({ data, isLoading, onConfirm, onCancel }) {
                   <div className="flex-1 text-left">
                     <p className={`font-medium ${textPrimaryClass}`}>
                       {scenario.name}
-                      <span className={`ml-2 text-xs px-2 py-1 rounded ${isDarkMode ? 'bg-[#5E6AD2]/20 text-[#8FB3FF]' : 'bg-blue-100 text-blue-700'}`}>
+                      <span className={`ml-2 text-xs px-2 py-1 rounded ${'bg-blue-100 text-blue-700'}`}>
                         {scenario.steps?.length || 0} steps
                       </span>
                     </p>
@@ -119,7 +109,7 @@ export function ImportPreviewModal({ data, isLoading, onConfirm, onCancel }) {
 
                 {/* Scenario Details (Editable) */}
                 {expandedScenario === scenarioIdx && (
-                  <div className={`px-4 py-3 border-t ${borderClass} space-y-3 ${isDarkMode ? 'bg-[#1F1E22]' : 'bg-gray-50'}`}>
+                  <div className={`px-4 py-3 border-t ${borderClass} space-y-3 ${'bg-gray-50'}`}>
                   {/* Edit Scenario Fields */}
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
@@ -177,7 +167,7 @@ export function ImportPreviewModal({ data, isLoading, onConfirm, onCancel }) {
                       <div className={`rounded border ${borderClass} overflow-hidden`}>
                         <table className="w-full text-sm">
                           <thead>
-                            <tr className={isDarkMode ? 'bg-[#2A2A2D]' : 'bg-gray-100'}>
+                            <tr className={'bg-gray-100'}>
                               <th className={`px-3 py-2 text-left font-medium ${textPrimaryClass}`}>Step</th>
                               <th className={`px-3 py-2 text-left font-medium ${textPrimaryClass}`}>Type</th>
                               <th className={`px-3 py-2 text-left font-medium ${textPrimaryClass}`}>Description</th>
@@ -189,7 +179,7 @@ export function ImportPreviewModal({ data, isLoading, onConfirm, onCancel }) {
                               <tr key={stepIdx} className={`border-t ${borderClass} ${hoverRowClass}`}>
                                 <td className={`px-3 py-2 ${textPrimaryClass}`}>{step.stepNumber}</td>
                                 <td className={`px-3 py-2 ${textSecondaryClass}`}>
-                                  <span className={`px-2 py-1 rounded text-xs ${isDarkMode ? 'bg-[#5E6AD2]/20 text-[#8FB3FF]' : 'bg-blue-100 text-blue-700'}`}>
+                                  <span className={`px-2 py-1 rounded text-xs ${'bg-blue-100 text-blue-700'}`}>
                                     {step.type}
                                   </span>
                                 </td>

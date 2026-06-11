@@ -1,8 +1,6 @@
-import React from 'react'
-import { useSettingsStore } from '../store/settingsStore'
+import React from 'react'
 
-const i18n = {
-  en: {
+const i18n = {
     minResponse: 'Min Response',
     avgResponse: 'Avg Response',
     maxResponse: 'Max Response',
@@ -11,22 +9,10 @@ const i18n = {
     errorRate: 'Error Rate',
     executionsPerSec: 'executions/sec',
     percent: '%',
-  },
-  id: {
-    minResponse: 'Respons Min',
-    avgResponse: 'Respons Rata-rata',
-    maxResponse: 'Respons Max',
-    median: 'Median',
-    throughput: 'Throughput',
-    errorRate: 'Tingkat Error',
-    executionsPerSec: 'eksekusi/dtk',
-    percent: '%',
-  },
+  
 }
 
-export default function StressTestMetrics({ metrics }) {
-  const { language } = useSettingsStore()
-  const t = i18n[language] || i18n.en
+export default function StressTestMetrics({ metrics }) {  const t = i18n
   
   if (!metrics) return null
 

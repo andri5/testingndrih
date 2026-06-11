@@ -1,18 +1,13 @@
 import React, { useState, useEffect } from 'react'
 import apiClient from '../services/api'
-import { Clock, RefreshCw } from 'lucide-react'
-import { useSettingsStore } from '../store/settingsStore'
+import { Clock, RefreshCw } from 'lucide-react'
 
-const i18n = {
-  en: { recentTests: 'Recent Tests', noTests: 'No tests yet', profile: 'Profile', status: 'Status', duration: 'Duration' },
-  id: { recentTests: 'Tes Terakhir', noTests: 'Belum ada tes', profile: 'Profil', status: 'Status', duration: 'Durasi' },
+const i18n = { recentTests: 'Recent Tests', noTests: 'No tests yet', profile: 'Profile', status: 'Status', duration: 'Duration' 
 }
 
 export default function StressTestHistory({ scenario }) {
   const [history, setHistory] = useState([])
-  const [loading, setLoading] = useState(true)
-  const { language } = useSettingsStore()
-  const t = i18n[language] || i18n.en
+  const [loading, setLoading] = useState(true)  const t = i18n
 
   useEffect(() => {
     if (scenario?.id) {

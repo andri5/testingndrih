@@ -15,51 +15,34 @@ const STATUS_VARIANT = {
 }
 
 const i18n = {
-  en: {
-    title: 'Visual Regression',
-    subtitle: 'Compare screenshots against baselines with pixel-level diff',
-    selectScenario: 'Select scenario',
-    threshold: 'Diff threshold (%)',
-    capture: 'Capture Baselines',
-    run: 'Run Visual Test',
-    baselines: 'Baselines',
-    comparisons: 'Recent Comparisons',
-    noBaselines: 'No baselines yet — capture first',
-    noComparisons: 'No comparisons yet',
-    step: 'Step',
-    diff: 'Diff',
-    approve: 'Approve as baseline',
-    baseline: 'Baseline',
-    current: 'Current',
-    diffImage: 'Diff',
-    running: 'Running...',
-    capturing: 'Capturing...',
-  },
-  id: {
-    title: 'Regresi Visual',
-    subtitle: 'Bandingkan screenshot dengan baseline menggunakan diff pixel',
-    selectScenario: 'Pilih skenario',
-    threshold: 'Ambang diff (%)',
-    capture: 'Ambil Baseline',
-    run: 'Jalankan Tes Visual',
-    baselines: 'Baseline',
-    comparisons: 'Perbandingan Terbaru',
-    noBaselines: 'Belum ada baseline — ambil dulu',
-    noComparisons: 'Belum ada perbandingan',
-    step: 'Langkah',
-    diff: 'Diff',
-    approve: 'Setujui sebagai baseline',
-    baseline: 'Baseline',
-    current: 'Saat ini',
-    diffImage: 'Diff',
-    running: 'Menjalankan...',
-    capturing: 'Mengambil...',
-  },
+  title: 'Visual Regression',
+  subtitle: 'Detect unintended UI changes by comparing step screenshots to saved baselines',
+  howItWorks:
+    '1) Capture Baselines — run the scenario and save reference screenshots per step. 2) Run Visual Test — run again and pixel-compare each step. Steps that differ beyond the threshold are flagged.',
+  selectScenario: 'Select scenario',
+  threshold: 'Diff threshold (%)',
+  capture: 'Capture Baselines',
+  run: 'Run Visual Test',
+  baselines: 'Baselines',
+  comparisons: 'Recent Comparisons',
+  noBaselines: 'No baselines yet — click "Capture Baselines" first',
+  noComparisons: 'No comparisons yet — run a visual test after capturing baselines',
+  noScenarios: 'Create a scenario with browser steps (Navigate, Click, etc.) first',
+  noBaselinesWarning: 'No baselines for this scenario. Capture baselines before running a visual test.',
+  noScreenshots: 'No screenshots were compared. Ensure the scenario has browser steps (not API-only) and steps complete successfully.',
+  step: 'Step',
+  diff: 'Diff',
+  approve: 'Approve as baseline',
+  baseline: 'Baseline',
+  current: 'Current',
+  diffImage: 'Diff',
+  running: 'Running scenario & comparing screenshots…',
+  capturing: 'Running scenario & saving baselines…',
+  selectScenarioFirst: 'Select a scenario first',
 }
-
 export default function VisualRegressionPage() {
-  const { language, selectedEnvironmentId } = useSettingsStore()
-  const t = i18n[language] || i18n.en
+  const { selectedEnvironmentId } = useSettingsStore()
+  const t = i18n
   const [scenarios, setScenarios] = useState([])
   const [scenarioId, setScenarioId] = useState('')
   const [threshold, setThreshold] = useState(0.1)
@@ -69,6 +52,7 @@ export default function VisualRegressionPage() {
   const [running, setRunning] = useState(false)
   const [capturing, setCapturing] = useState(false)
   const [lastResult, setLastResult] = useState(null)
+  const [runError, setRunError] = useState('')
 
   const load = async (sid = scenarioId) => {
     try {
@@ -96,8 +80,12 @@ export default function VisualRegressionPage() {
   }, [scenarioId])
 
   const handleCapture = async () => {
-    if (!scenarioId) return
+    if (!scenarioId) {
+      setRunError(t.selectScenarioFirst)
+      return
+    }
     setCapturing(true)
+    setRunError('')
     try {
       const res = await visualRegressionAPI.capture(scenarioId, {
         headless: true,
@@ -113,28 +101,40 @@ export default function VisualRegressionPage() {
   }
 
   const handleRun = async () => {
-    if (!scenarioId) return
+    if (!scenarioId) {
+      setRunError(t.selectScenarioFirst)
+      return
+    }
+    if (baselines.length === 0) {
+      toast.error(t.noBaselinesWarning)
+    }
     setRunning(true)
     setLastResult(null)
+    setRunError('')
     try {
       const res = await visualRegressionAPI.run(scenarioId, {
         headless: true,
         threshold,
         environmentId: selectedEnvironmentId || undefined
       })
-      setLastResult(res.data)
-      toast.success(
-        res.data.summary?.failed
-          ? `${res.data.summary.failed} step(s) failed visual check`
-          : 'All visual checks passed'
-      )
+      const data = res.data
+      setLastResult(data)
+      if (data.summary?.total === 0) {
+        toast.error(t.noScreenshots)
+      } else if (data.summary?.failed > 0) {
+        toast.error(`${data.summary.failed} step(s) failed visual check`)
+      } else {
+        toast.success('All visual checks passed')
+      }
       await load()
     } catch (err) {
+      const msg = err.response?.data?.message || err.message || 'Visual test failed'
+      setRunError(msg)
       if (err.response?.data?.summary) {
         setLastResult(err.response.data)
         await load()
       }
-      toast.error(err.response?.data?.message || 'Visual test failed')
+      toast.error(msg)
     } finally {
       setRunning(false)
     }
@@ -168,6 +168,21 @@ export default function VisualRegressionPage() {
           </h1>
           <p className="text-sm text-[#666] mt-0.5">{t.subtitle}</p>
         </div>
+
+        <Alert type="info" message={t.howItWorks} />
+
+        {scenarios.length === 0 && (
+          <Alert type="warning" message={t.noScenarios} />
+        )}
+
+        {(running || capturing) && (
+          <Alert
+            type="info"
+            message={running ? t.running : t.capturing}
+          />
+        )}
+
+        {runError && <Alert type="error" message={runError} />}
 
         <Card className="flex flex-wrap gap-4 items-end">
           <div>
@@ -206,8 +221,18 @@ export default function VisualRegressionPage() {
 
         {lastResult?.summary && (
           <Alert
-            type={lastResult.summary.failed > 0 ? 'warning' : 'success'}
-            message={`${lastResult.summary.passed}/${lastResult.summary.total} passed · threshold ${lastResult.summary.threshold}%`}
+            type={
+              lastResult.summary.total === 0
+                ? 'warning'
+                : lastResult.summary.failed > 0
+                  ? 'warning'
+                  : 'success'
+            }
+            message={
+              lastResult.summary.total === 0
+                ? t.noScreenshots
+                : `${lastResult.summary.passed}/${lastResult.summary.total} passed · threshold ${lastResult.summary.threshold}%`
+            }
           />
         )}
 

@@ -229,44 +229,6 @@ test.describe('Navigation & UI E2E Tests', () => {
     expect(page.url()).toContain('chains')
   })
 
-  test('should support dark mode toggle', async ({ page }) => {
-    await page.goto(`${BASE_URL}/chains`)
-    await page.waitForTimeout(1000)
-
-    // Look for theme toggle
-    const themeToggle = page.locator('button:has-text("Dark"), button:has-text("Light"), [data-testid="theme-toggle"]')
-    if (await themeToggle.count() > 0) {
-      const initialTheme = await page.evaluate(() => {
-        return document.documentElement.getAttribute('data-theme') || document.documentElement.getAttribute('class')
-      })
-
-      await themeToggle.click()
-      await page.waitForTimeout(500)
-
-      const newTheme = await page.evaluate(() => {
-        return document.documentElement.getAttribute('data-theme') || document.documentElement.getAttribute('class')
-      })
-
-      // Theme should have changed
-      expect(newTheme).not.toBe(initialTheme)
-    }
-  })
-
-  test('should support language switcher', async ({ page }) => {
-    await page.goto(`${BASE_URL}/chains`)
-    await page.waitForTimeout(1000)
-
-    // Look for language selector
-    const langSelect = page.locator('select[name="language"], [data-testid="lang-select"]')
-    if (await langSelect.count() > 0) {
-      const options = page.locator('option')
-      if (await options.count() > 1) {
-        // Language switching would be tested here
-        expect(await options.count()).toBeGreaterThan(1)
-      }
-    }
-  })
-
   test('should display user profile menu', async ({ page }) => {
     await page.goto(`${BASE_URL}/chains`)
     await page.waitForTimeout(1000)

@@ -7,8 +7,7 @@ import { useTurnstileSiteKey } from '../hooks/useTurnstileSiteKey'
 import { validateEmail } from '../utils/validation'
 import AuthPageHeader from '../components/AuthPageHeader'
 
-const translations = {
-  en: {
+const translations = {
     title: 'Sign in to your workspace',
     emailLabel: 'Email',
     emailPlaceholder: 'your@email.com',
@@ -27,27 +26,7 @@ const translations = {
     captchaRequired: 'Please complete the captcha verification',
     notRegistered: 'No account found with this email. Please register first.',
     createAccount: 'Create an account',
-  },
-  id: {
-    title: 'Masuk ke workspace Anda',
-    emailLabel: 'Email',
-    emailPlaceholder: 'anda@email.com',
-    passwordLabel: 'Password',
-    passwordPlaceholder: '••••••••',
-    signingIn: 'Masuk...',
-    login: 'Masuk',
-    noAccount: 'Belum punya akun? ',
-    createOne: 'Buat satu',
-    forgotPassword: 'Lupa password?',
-    copyright: 'Test Sambil Ngopi',
-    signedIn: 'Masuk berhasil',
-    emailRequired: 'Email dan password wajib diisi',
-    emailMissingAt: 'Email harus mengandung @ (contoh: user@email.com)',
-    emailInvalid: 'Format email tidak valid (contoh: user@email.com)',
-    captchaRequired: 'Selesaikan verifikasi captcha terlebih dahulu',
-    notRegistered: 'Email belum terdaftar. Silakan daftar terlebih dahulu.',
-    createAccount: 'Buat akun',
-  }
+  
 }
 
 export default function LoginPage() {
@@ -58,7 +37,7 @@ export default function LoginPage() {
   const error = useAuthStore((state) => state.error)
   const clearError = useAuthStore((state) => state.clearError)
   const turnstileSiteKey = useTurnstileSiteKey()
-  const t = translations.en
+  const t = translations
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')

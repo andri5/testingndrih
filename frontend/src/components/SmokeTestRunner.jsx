@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import apiClient from '../services/api'
-import { AlertCircle, CheckCircle, Zap, Clock, Play, RotateCcw } from 'lucide-react'
-import { useSettingsStore } from '../store/settingsStore'
+import { AlertCircle, CheckCircle, Zap, Clock, Play, RotateCcw } from 'lucide-react'
 
-const i18n = {
-  en: {
+const i18n = {
     smokeTest: 'Smoke Test',
     description: 'Quick deployment validation',
     stepsPassed: 'Steps Passed',
@@ -16,20 +14,7 @@ const i18n = {
     reset: 'Reset',
     testPassed: 'PASSED',
     testFailed: 'FAILED',
-  },
-  id: {
-    smokeTest: 'Pengujian Smoke',
-    description: 'Validasi penyebaran cepat',
-    stepsPassed: 'Langkah Berhasil',
-    duration: 'Durasi',
-    timestamp: 'Waktu Stempel',
-    notifyCheckbox: 'Kirim notifikasi email setelah selesai',
-    startTest: 'Mulai Pengujian Smoke',
-    running: 'Menjalankan...',
-    reset: 'Setel Ulang',
-    testPassed: 'BERHASIL',
-    testFailed: 'GAGAL',
-  },
+  
 }
 
 export default function SmokeTestRunner({ scenarioId, scenarioName, onTestComplete }) {
@@ -37,9 +22,7 @@ export default function SmokeTestRunner({ scenarioId, scenarioName, onTestComple
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState(null)
   const [lastResult, setLastResult] = useState(null)
-  const [notifyOnComplete, setNotifyOnComplete] = useState(false)
-  const { language } = useSettingsStore()
-  const t = i18n[language] || i18n.en
+  const [notifyOnComplete, setNotifyOnComplete] = useState(false)  const t = i18n
 
   const handleStartTest = async () => {
     try {

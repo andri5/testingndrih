@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { authenticateToken } from '../middleware/auth.js'
+import { adminAuth } from '../middleware/adminAuth.js'
 import {
   listHandler,
   createHandler,
@@ -10,7 +10,7 @@ import {
 } from '../controllers/apiTestController.js'
 
 const router = Router()
-router.use(authenticateToken)
+router.use(...adminAuth)
 
 router.get('/scenarios/:scenarioId', listHandler)
 router.post('/scenarios/:scenarioId', createHandler)

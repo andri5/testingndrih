@@ -1,35 +1,16 @@
 import { create } from 'zustand'
 
-const APP_THEME = 'dark'
-const APP_LANGUAGE = 'en'
-
-const applyTheme = () => {
-  document.documentElement.classList.add('theme-dark')
-  document.documentElement.classList.remove('theme-light')
+const applyLightTheme = () => {
+  document.documentElement.classList.add('theme-light')
+  document.documentElement.classList.remove('theme-dark')
 }
 
-// Always dark theme + English on load
-applyTheme()
-localStorage.setItem('theme', APP_THEME)
-localStorage.setItem('language', APP_LANGUAGE)
+applyLightTheme()
 
 const useSettingsStore = create((set) => ({
-  theme: APP_THEME,
-  language: APP_LANGUAGE,
   executionTimeout: localStorage.getItem('executionTimeout') || '30',
   autoScreenshot: localStorage.getItem('autoScreenshot') !== 'false',
   selectedEnvironmentId: localStorage.getItem('selectedEnvironmentId') || '',
-
-  setTheme: () => {
-    applyTheme()
-    localStorage.setItem('theme', APP_THEME)
-    set({ theme: APP_THEME })
-  },
-
-  setLanguage: () => {
-    localStorage.setItem('language', APP_LANGUAGE)
-    set({ language: APP_LANGUAGE })
-  },
 
   setExecutionTimeout: (executionTimeout) => {
     localStorage.setItem('executionTimeout', executionTimeout)
@@ -47,10 +28,9 @@ const useSettingsStore = create((set) => ({
   },
 
   init: () => {
-    applyTheme()
-    localStorage.setItem('theme', APP_THEME)
-    localStorage.setItem('language', APP_LANGUAGE)
-    set({ theme: APP_THEME, language: APP_LANGUAGE })
+    applyLightTheme()
+    localStorage.removeItem('theme')
+    localStorage.removeItem('language')
   },
 }))
 

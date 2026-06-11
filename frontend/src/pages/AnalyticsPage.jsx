@@ -2,16 +2,14 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { analyticsAPI } from '../services/api'
-import toast from 'react-hot-toast'
-import { useSettingsStore } from '../store/settingsStore'
+import toast from 'react-hot-toast'
 import {
   LineChart, Line, BarChart, Bar, AreaChart, Area, ComposedChart, XAxis, YAxis,
   CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from 'recharts'
 import { Download, TrendingUp, Calendar, Zap, AlertTriangle, Activity } from 'lucide-react'
 
-const i18n = {
-  en: {
+const i18n = {
     title: 'Test Analytics Dashboard',
     subtitle: 'Comprehensive test execution metrics and performance tracking',
     exportJson: 'Export JSON',
@@ -36,39 +34,11 @@ const i18n = {
     failedExec: 'Failed Executions',
     count: 'Count',
     errorCount: 'Error Count',
-  },
-  id: {
-    title: 'Dashboard Analitik Test',
-    subtitle: 'Metrik eksekusi test komprehensif dan pelacakan kinerja',
-    exportJson: 'Ekspor JSON',
-    exportCsv: 'Ekspor CSV',
-    failedLoadAnalytics: 'Gagal memuat data analitik',
-    totalExecutions: 'Total Eksekusi',
-    last7Days: '7 hari terakhir:',
-    passRate: 'Tingkat Keberhasilan Keseluruhan',
-    avgDuration: 'Durasi Rata-rata',
-    totalScenarios: 'Total Scenario',
-    underTest: 'Sedang diuji',
-    passFail: 'Tren Lulus/Gagal',
-    executionVolume: 'Volume Eksekusi',
-    failingSteps: 'Step Teratas yang Gagal',
-    flakySteps: 'Step Flaky',
-    flakyHint: 'Step yang kadang gagal (tidak setiap run)',
-    scenarioPerformance: 'Kinerja Scenario',
-    failRate: 'Tingkat gagal',
-    noData: 'Tidak ada data',
-    daysShort: 'hari',
-    passedExec: 'Eksekusi Lulus',
-    failedExec: 'Eksekusi Gagal',
-    count: 'Jumlah',
-    errorCount: 'Jumlah Error',
-  },
+  
 }
 
 export default function AnalyticsPage() {
-  const navigate = useNavigate()
-  const { language } = useSettingsStore()
-  const t = i18n[language] || i18n.en
+  const navigate = useNavigate()  const t = i18n
   
   const [summary, setSummary] = useState(null)
   const [trendData, setTrendData] = useState([])

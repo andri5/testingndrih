@@ -4,7 +4,7 @@ import { Badge, Button } from './ui'
 
 export default function TestStepList({
   steps = [],
-  onMoveStep,
+  onReorderSteps,
   onEditStep,
   onDeleteStep,
   onToggleSelection,
@@ -33,10 +33,8 @@ export default function TestStepList({
       return
     }
 
-    // Calculate direction for move
-    const direction = destination.index > source.index ? 1 : -1
-    if (onMoveStep) {
-      onMoveStep(source.index, direction)
+    if (onReorderSteps) {
+      onReorderSteps(source.index, destination.index)
     }
   }
 
@@ -169,7 +167,7 @@ export default function TestStepList({
                               </div>
                             ) : (
                               <div className="w-8 h-8 bg-[#5E6AD2]/15 text-[#5E6AD2] rounded-full flex items-center justify-center font-bold text-sm">
-                                {step.stepNumber || index + 1}
+                                {index + 1}
                               </div>
                             )}
                           </div>

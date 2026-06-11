@@ -4,11 +4,9 @@ import Layout from '../components/Layout'
 import { Card, Button, Badge, Spinner, Alert } from '../components/ui'
 import { executionAPI } from '../services/api'
 import apiClient from '../services/api'
-import { PlayCircle, CheckCircle2, XCircle, TrendingUp } from 'lucide-react'
-import { useSettingsStore } from '../store/settingsStore'
+import { PlayCircle, CheckCircle2, XCircle, TrendingUp } from 'lucide-react'
 
-const i18n = {
-  en: {
+const i18n = {
     title: '📈 Reports',
     subtitle: 'Execution reports and analytics',
     exportCSV: '📥 Export CSV',
@@ -16,16 +14,7 @@ const i18n = {
     trendTitle: '📊 Pass/Fail Trend (last 14 days)',
     passed: 'Passed',
     failed: 'Failed',
-  },
-  id: {
-    title: '📈 Laporan',
-    subtitle: 'Laporan eksekusi dan analitik',
-    exportCSV: '📥 Ekspor CSV',
-    loadError: 'Gagal memuat data laporan',
-    trendTitle: '📊 Pass/Fail Trend (14 hari terakhir)',
-    passed: 'Lulus',
-    failed: 'Gagal',
-  },
+  
 }
 
 /** Pure SVG stacked bar chart for pass/fail trend */
@@ -94,10 +83,8 @@ function TrendChart({ data, passedLabel = 'Passed', failedLabel = 'Failed' }) {
 }
 
 export default function ReportsPage() {
-  const navigate = useNavigate()
-  const { language } = useSettingsStore()
-  const t = i18n[language] || i18n.en
-  const locale = language === 'id' ? 'id-ID' : 'en-US'
+  const navigate = useNavigate()  const t = i18n
+  const locale = 'en-US'
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [stats, setStats] = useState(null)

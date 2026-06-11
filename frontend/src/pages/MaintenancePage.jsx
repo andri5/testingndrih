@@ -1,24 +1,14 @@
-import { Wrench, RefreshCw } from 'lucide-react'
-import { useSettingsStore } from '../store/settingsStore'
+import { Wrench, RefreshCw } from 'lucide-react'
 
-const i18n = {
-  en: {
+const i18n = {
     title: 'Under Maintenance',
     description: 'We\'re currently performing scheduled maintenance. Please check back soon.',
     status: 'Maintenance in progress',
     tryAgain: 'Try again',
-  },
-  id: {
-    title: 'Dalam Perawatan',
-    description: 'Kami sedang melakukan pemeliharaan terjadwal. Silakan coba lagi nanti.',
-    status: 'Perawatan sedang berlangsung',
-    tryAgain: 'Coba Lagi',
-  },
+  
 }
 
-export default function MaintenancePage() {
-  const { language } = useSettingsStore()
-  const t = i18n[language] || i18n.en
+export default function MaintenancePage() {  const t = i18n
   return (
     <div className="auth-page-bg min-h-screen bg-[#0F0E11] flex items-center justify-center px-4">
       <div className="w-full max-w-sm text-center animate-slide-up">

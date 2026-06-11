@@ -178,7 +178,7 @@ export function CardContent({ children, className = '' }) {
 //   text      — string konten tooltip
 //   position  — 'top' | 'bottom' | 'left' | 'right' (default: 'top')
 //   delay     — delay muncul dalam ms (default: 300)
-export function Tooltip({ children, text, position = 'top', delay = 300 }) {
+export function Tooltip({ children, text, position = 'top', delay = 300, multiline = false }) {
   const [visible, setVisible] = useState(false)
   const timerRef = useRef(null)
 
@@ -218,7 +218,7 @@ export function Tooltip({ children, text, position = 'top', delay = 300 }) {
       {visible && (
         <span
           role="tooltip"
-          className={`tooltip-popup absolute z-50 whitespace-nowrap px-2.5 py-1.5 rounded-md text-xs font-medium bg-[#2A2A2E] text-[#E0E0E2] border border-[rgba(255,255,255,0.1)] shadow-lg pointer-events-none animate-fade-in ${posClasses[position] ?? posClasses.top}`}
+          className={`tooltip-popup absolute z-50 px-2.5 py-1.5 rounded-md text-xs font-medium bg-[#2A2A2E] text-[#E0E0E2] border border-[rgba(255,255,255,0.1)] shadow-lg pointer-events-none animate-fade-in ${multiline ? 'max-w-[260px] whitespace-pre-line text-left leading-relaxed' : 'whitespace-nowrap'} ${posClasses[position] ?? posClasses.top}`}
         >
           {text}
           <span className={`absolute w-0 h-0 border-4 ${arrowClasses[position] ?? arrowClasses.top}`} />

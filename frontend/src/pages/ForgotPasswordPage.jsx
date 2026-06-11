@@ -5,8 +5,7 @@ import api from '../services/api'
 import { validateEmail } from '../utils/validation'
 import AuthPageHeader from '../components/AuthPageHeader'
 
-const translations = {
-  en: {
+const translations = {
     title: 'Forgot Password?',
     subtitle: 'Enter your email to receive a password reset link.',
     emailLabel: 'Email Address',
@@ -28,30 +27,7 @@ const translations = {
     errorOccurred: 'Failed to send reset link',
     notRegistered: 'No account found with this email. Please register first.',
     createAccount: 'Create an account',
-  },
-  id: {
-    title: 'Lupa Password?',
-    subtitle: 'Masukkan email Anda untuk menerima link reset password.',
-    emailLabel: 'Alamat Email',
-    emailPlaceholder: 'anda@email.com',
-    submitBtn: 'Kirim Link Reset',
-    submitting: 'Mengirim...',
-    backToLogin: 'Kembali ke Login',
-    noAccount: 'Ingat passwordnya? ',
-    noAccountLink: 'Login di sini',
-    copyright: 'Test Sambil Ngopi',
-    successTitle: 'Email Terkirim!',
-    successMessage: 'Kami telah mengirim link reset password ke email Anda. Silakan cek inbox Anda (termasuk folder spam).',
-    successHint: 'Belum menerima? Cek folder spam atau coba lagi beberapa menit lagi.',
-    tryAgain: 'Coba Lagi',
-    workspace: 'Masuk ke workspace Anda',
-    emailRequired: 'Email wajib diisi',
-    emailMissingAt: 'Email harus mengandung @ (contoh: user@email.com)',
-    emailInvalid: 'Format email tidak valid (contoh: user@email.com)',
-    errorOccurred: 'Gagal mengirim link reset',
-    notRegistered: 'Email belum terdaftar. Silakan daftar terlebih dahulu.',
-    createAccount: 'Buat akun',
-  },
+  
 }
 
 function AuthShell({ t, children }) {
@@ -74,7 +50,7 @@ export default function ForgotPasswordPage() {
   const [error, setError] = useState('')
   const [submitted, setSubmitted] = useState(false)
   const [accountNotFound, setAccountNotFound] = useState(false)
-  const t = translations.en
+  const t = translations
 
   const validationMessages = {
     emailRequired: t.emailRequired,

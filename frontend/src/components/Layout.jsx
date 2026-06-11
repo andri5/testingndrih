@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate, Link, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
-import { useSettingsStore } from '../store/settingsStore'
 import { GlobalLoading } from './Loading'
 import HelpModal from './HelpModal'
 import {
@@ -26,7 +25,6 @@ import {
   Gauge,
   GitBranch,
   ChevronDown,
-  Bug,
   Layers,
   Image,
 } from 'lucide-react'
@@ -43,69 +41,34 @@ export default function Layout({ children }) {
   const [profilePicture, setProfilePicture] = useState(null)
   const [toolsCollapsed, setToolsCollapsed] = useState(true)
   const userMenuRef = useRef(null)
-  const { language } = useSettingsStore()
   const isAdmin = user?.role === 'ADMIN'
 
-  // i18n translations for sidebar and common labels
-  const i18n = {
-    en: {
-      main: 'Main',
-      tools: 'Tools',
-      dashboard: 'Dashboard',
-      scenarios: 'Scenarios',
-      chains: 'Chains',
-      execution: 'Execution',
-      reports: 'Reports',
-      analytics: 'Analytics',
-      apiTesting: 'API Testing',
-      issues: 'Issues',
-      environments: 'Environments',
-      visualRegression: 'Visual Regression',
-      scheduler: 'Scheduler',
-      parallel: 'Parallel',
-      smokeTest: 'Smoke Test',
-      stressTest: 'Stress Test',
-      securityTest: 'Security Test',
-      browserTest: 'Browser Test',
-      signOut: 'Sign out',
-      profileSettings: 'Profile & Settings',
-      settings: 'Settings',
-      toggleSidebar: 'Toggle sidebar',
-      switchToEnglish: 'Switch to English',
-      switchToIndonesian: 'Switch to Bahasa Indonesia',
-      workspace: 'Workspace',
-      howToUse: 'How to use',
-    },
-    id: {
-      main: 'Utama',
-      tools: 'Alat',
-      dashboard: 'Dasbor',
-      scenarios: 'Skenario',
-      chains: 'Rantai',
-      execution: 'Eksekusi',
-      reports: 'Laporan',
-      analytics: 'Analitik',
-      apiTesting: 'Tes API',
-      issues: 'Issue',
-      environments: 'Environment',
-      visualRegression: 'Regresi Visual',
-      scheduler: 'Penjadwal',
-      parallel: 'Paralel',
-      smokeTest: 'Test Asap',
-      stressTest: 'Test Beban',
-      securityTest: 'Test Keamanan',
-      browserTest: 'Test Browser',
-      signOut: 'Keluar',
-      profileSettings: 'Profil & Pengaturan',
-      settings: 'Pengaturan',
-      toggleSidebar: 'Buka/tutup sidebar',
-      switchToEnglish: 'Ganti ke English',
-      switchToIndonesian: 'Ganti ke Bahasa Indonesia',
-      workspace: 'Ruang Kerja',
-      howToUse: 'Cara Menggunakan',
-    }
+  const labels = {
+    main: 'Main',
+    tools: 'Tools',
+    dashboard: 'Dashboard',
+    scenarios: 'Scenarios',
+    chains: 'Chains',
+    execution: 'Execution',
+    reports: 'Reports',
+    analytics: 'Analytics',
+    apiTesting: 'API Testing',
+    environments: 'Environments',
+    visualRegression: 'Visual Regression',
+    scheduler: 'Scheduler',
+    parallel: 'Parallel',
+    smokeTest: 'Smoke Test',
+    stressTest: 'Stress Test',
+    securityTest: 'Security Test',
+    browserTest: 'Browser Test',
+    signOut: 'Sign out',
+    profileSettings: 'Profile & Settings',
+    settings: 'Settings',
+    toggleSidebar: 'Toggle sidebar',
+    workspace: 'Workspace',
+    howToUse: 'How to use',
   }
-  const t = i18n[language] || i18n.en
+  const t = labels
 
   const handleLogout = () => {
     logout()
@@ -170,17 +133,16 @@ export default function Layout({ children }) {
   const mainItems = [
     { name: t.dashboard,    path: '/dashboard',  icon: <LayoutDashboard size={16} /> },
     { name: t.scenarios,    path: '/scenarios',  icon: <ClipboardList size={16} /> },
-    { name: t.chains,       path: '/chains',     icon: <Link2 size={16} /> },
     { name: t.execution,    path: '/execution',  icon: <PlayCircle size={16} /> },
     { name: t.reports,      path: '/reports',    icon: <BarChart2 size={16} /> },
     { name: t.analytics,    path: '/analytics',  icon: <BarChart2 size={16} /> },
-    { name: t.apiTesting,   path: '/api-testing', icon: <Globe size={16} /> },
-    { name: t.issues,       path: '/issues',        icon: <Bug size={16} /> },
-    { name: t.environments, path: '/environments',      icon: <Layers size={16} /> },
-    { name: t.visualRegression, path: '/visual-regression', icon: <Image size={16} /> },
   ]
 
   const workspaceItems = [
+    { name: t.visualRegression, path: '/visual-regression', icon: <Image size={16} /> },
+    { name: t.chains,       path: '/chains',          icon: <Link2 size={16} /> },
+    { name: t.apiTesting,   path: '/api-testing',     icon: <Globe size={16} /> },
+    { name: t.environments, path: '/environments',    icon: <Layers size={16} /> },
     { name: t.scheduler,    path: '/scheduler',       icon: <Clock size={16} /> },
     { name: t.parallel,     path: '/parallel',        icon: <GitBranch size={16} /> },
     { name: t.smokeTest,    path: '/smoke-test',      icon: <Activity size={16} /> },

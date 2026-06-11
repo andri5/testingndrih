@@ -1,28 +1,17 @@
-import { useNavigate } from 'react-router-dom'
-import { useSettingsStore } from '../store/settingsStore'
+import { useNavigate } from 'react-router-dom'
 import { ServerCrash, RefreshCw, Home } from 'lucide-react'
 
-const i18n = {
-  en: {
+const i18n = {
     title: 'Server error',
     description: "Something went wrong on our end. We're working on it.",
     status: 'Service temporarily unavailable',
     tryAgain: 'Try again',
     backToDashboard: 'Back to Dashboard',
-  },
-  id: {
-    title: 'Kesalahan Server',
-    description: 'Ada yang salah di pihak kami. Kami sedang mengerjakannya.',
-    status: 'Layanan sementara tidak tersedia',
-    tryAgain: 'Coba Lagi',
-    backToDashboard: 'Kembali ke Dashboard',
-  },
+  
 }
 
 export default function ServerErrorPage() {
-  const navigate = useNavigate()
-  const { language } = useSettingsStore()
-  const t = i18n[language] || i18n.en
+  const navigate = useNavigate()  const t = i18n
 
   return (
     <div className="auth-page-bg min-h-screen bg-[#0F0E11] flex items-center justify-center px-4">

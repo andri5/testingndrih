@@ -1,19 +1,14 @@
 import React, { useState, useEffect } from 'react'
 import apiClient from '../services/api'
-import { Clock, CheckCircle, AlertCircle, TrendingUp } from 'lucide-react'
-import { useSettingsStore } from '../store/settingsStore'
+import { Clock, CheckCircle, AlertCircle, TrendingUp } from 'lucide-react'
 
-const i18n = {
-  en: { recentTests: 'Recent Tests', failed: 'FAILED', passed: 'PASSED' },
-  id: { recentTests: 'Tes Terbaru', failed: 'GAGAL', passed: 'BERHASIL' },
+const i18n = { recentTests: 'Recent Tests', failed: 'FAILED', passed: 'PASSED' 
 }
 
 export default function SmokeTestHistory({ scenarioId }) {
   const [history, setHistory] = useState([])
   const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const { language } = useSettingsStore()
-  const t = i18n[language] || i18n.en
+  const [error, setError] = useState(null)  const t = i18n
 
   useEffect(() => {
     loadHistory()

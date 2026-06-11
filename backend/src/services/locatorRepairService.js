@@ -21,11 +21,32 @@ class LocatorRepairService {
   async repairLocator(page, originalSelector, stepInfo = {}) {
     console.log(`[REPAIR] Attempting to repair selector: ${originalSelector}`);
 
-    // Strategy 1: Text match (paling reliable untuk buttons & links)
-    if (stepInfo.description || stepInfo.value) {
-      const textMatch = await this.findByText(page, stepInfo.description || stepInfo.value);
+    // Strategy 0: FILL — find visible search/text inputs (desktop + mobile layouts)
+    if (stepInfo.type === 'FILL') {
+      const fillMatch = await this.findFillInput(page, stepInfo);
+      if (fillMatch) {
+        console.log(`[REPAIR] ✅ Found fill input: ${fillMatch}`);
+        return fillMatch;
+      }
+    }
+
+    // Strategy 0b: CLICK on mobile-style pages — common video/link patterns
+    if (stepInfo.type === 'CLICK') {
+      const clickMatch = await this.findClickableFallback(page, stepInfo);
+      if (clickMatch) {
+        console.log(`[REPAIR] ✅ Found clickable fallback: ${clickMatch}`);
+        return clickMatch;
+      }
+    }
+
+    // Strategy 1: Text match — for FILL only use description (value is typed text, not UI label)
+    const textSource = stepInfo.type === 'FILL'
+      ? stepInfo.description
+      : (stepInfo.description || stepInfo.value);
+    if (textSource) {
+      const textMatch = await this.findByText(page, textSource);
       if (textMatch) {
-        console.log(`[REPAIR] ✅ Found by text: "${stepInfo.description || stepInfo.value}"`);
+        console.log(`[REPAIR] ✅ Found by text: "${textSource}"`);
         return textMatch;
       }
     }
@@ -56,6 +77,168 @@ class LocatorRepairService {
     }
 
     console.log(`[REPAIR] ❌ All strategies failed for: ${originalSelector}`);
+    return null;
+  }
+
+  /**
+   * Open mobile search overlay when the input is hidden (e.g. m.youtube.com home)
+   */
+  async openMobileSearchIfNeeded(page) {
+    const inputs = [
+      page.locator('input[name="search_query"]').first(),
+      page.locator('ytm-searchbox input').first(),
+      page.getByRole('searchbox').first(),
+    ];
+
+    for (const input of inputs) {
+      try {
+        if (await input.isVisible({ timeout: 500 })) return;
+      } catch (_) {
+        /* continue */
+      }
+    }
+
+    const triggers = [
+      page.getByRole('button', { name: /search youtube|search|cari/i }).first(),
+      page.locator('button[aria-label*="Search" i]').first(),
+      page.locator('ytm-searchbox button').first(),
+    ];
+
+    for (const trigger of triggers) {
+      try {
+        if (await trigger.isVisible({ timeout: 1500 })) {
+          await trigger.click({ timeout: 5000 });
+          await page.waitForTimeout(800);
+          return;
+        }
+      } catch (_) {
+        /* try next */
+      }
+    }
+  }
+
+  /**
+   * Try a selector and return a disambiguated version safe for resolveLocator
+   */
+  async tryVisibleSelector(page, selector) {
+    if (selector === 'role:searchbox') {
+      try {
+        await page.getByRole('searchbox').first().waitFor({ state: 'visible', timeout: 2000 });
+        return 'role:searchbox';
+      } catch (_) {
+        return null;
+      }
+    }
+    if (selector === 'role:searchbox-named') {
+      try {
+        await page.getByRole('searchbox', { name: /search|cari/i }).first()
+          .waitFor({ state: 'visible', timeout: 2000 });
+        return 'role:searchbox-named';
+      } catch (_) {
+        return null;
+      }
+    }
+    if (selector === 'role:textbox-search') {
+      try {
+        await page.getByRole('textbox', { name: /search|cari/i }).first()
+          .waitFor({ state: 'visible', timeout: 2000 });
+        return 'role:textbox-search';
+      } catch (_) {
+        return null;
+      }
+    }
+    if (selector === 'role:button-search') {
+      try {
+        await page.getByRole('button', { name: /search youtube|search|cari/i }).first()
+          .waitFor({ state: 'visible', timeout: 2000 });
+        return 'role:button-search';
+      } catch (_) {
+        return null;
+      }
+    }
+
+    try {
+      const locator = page.locator(selector).first();
+      await locator.waitFor({ state: 'visible', timeout: 2000 });
+      const ariaLabel = await locator.getAttribute('aria-label');
+      if (ariaLabel) {
+        return `[aria-label="${ariaLabel.replace(/"/g, '\\"')}"]`;
+      }
+      return selector;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /**
+   * Find a visible input for FILL steps (works on mobile + desktop search boxes)
+   */
+  async findFillInput(page, stepInfo = {}) {
+    await this.openMobileSearchIfNeeded(page);
+
+    const roleChecks = ['role:searchbox-named', 'role:searchbox', 'role:textbox-search'];
+    for (const roleSelector of roleChecks) {
+      const found = await this.tryVisibleSelector(page, roleSelector);
+      if (found) return found;
+    }
+
+    const cssCandidates = [
+      'ytm-searchbox input',
+      'input[name="search_query"]',
+      'input[name="q"]',
+      'input[type="search"]',
+      'input[aria-label*="Search" i]',
+      'input[placeholder*="Search" i]',
+      'textarea[name="q"]',
+      'form[role="search"] input',
+    ];
+
+    for (const selector of cssCandidates) {
+      const found = await this.tryVisibleSelector(page, selector);
+      if (found) return found;
+    }
+
+    return null;
+  }
+
+  /**
+   * Find clickable elements on mobile layouts when desktop XPath fails
+   */
+  async findClickableFallback(page, stepInfo = {}) {
+    const desc = (stepInfo.description || '').toLowerCase();
+    const cssCandidates = [];
+
+    // Search icon / bar — must come before generic "video" keyword matching
+    if (/search|cari|pencarian|query/.test(desc)) {
+      cssCandidates.push(
+        'role:button-search',
+        'button[aria-label*="Search" i]',
+        'ytm-searchbox button',
+        '[aria-label*="Search YouTube" i]'
+      );
+    }
+
+    // Video result clicks — exclude search/input steps whose description mentions "video"
+    const isVideoResultClick =
+      (/watch|play|klik.*video|tap.*video|pilih.*video/.test(desc) ||
+        (desc.includes('video') && !/pencarian|search|cari|input|nama/.test(desc)));
+
+    if (isVideoResultClick) {
+      cssCandidates.push(
+        'a[href*="/watch"]',
+        'ytm-compact-video-renderer a',
+        'ytm-video-with-context-renderer a',
+        'ytd-video-renderer a#thumbnail'
+      );
+    }
+
+    cssCandidates.push('button[type="submit"]', 'input[type="submit"]');
+
+    for (const selector of cssCandidates) {
+      const found = await this.tryVisibleSelector(page, selector);
+      if (found) return found;
+    }
+
     return null;
   }
 
@@ -149,8 +332,9 @@ class LocatorRepairService {
       for (const el of elements) {
         if (await el.isVisible()) {
           const ariaLabel = await el.getAttribute('aria-label');
-          if (ariaLabel) return `[role="${role}"][aria-label="${ariaLabel}"]`;
-          return `[role="${role}"]`;
+          if (ariaLabel) {
+            return `[role="${role}"][aria-label="${ariaLabel.replace(/"/g, '\\"')}"]`;
+          }
         }
       }
 

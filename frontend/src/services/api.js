@@ -205,7 +205,14 @@ export const executionAPI = {
 
   // Get available browsers for cross-browser testing
   getBrowsers: () =>
-    apiClient.get('/executions/browsers')
+    apiClient.get('/executions/browsers'),
+
+  // Test selector on debug session page (kept open 15 min after failure)
+  testSelector: (executionId, selector) =>
+    apiClient.post(`/executions/${executionId}/test-selector`, { selector }, { skipGlobalErrorRedirect: true }),
+
+  clearHighlight: (executionId) =>
+    apiClient.post(`/executions/${executionId}/clear-highlight`, {}, { skipGlobalErrorRedirect: true }),
 }
 
 export const recorderAPI = {
@@ -276,7 +283,10 @@ export const visualRegressionAPI = {
   capture: (scenarioId, options = {}) =>
     apiClient.post(`/visual-regression/capture/${scenarioId}`, options, { timeout: 600000 }),
   run: (scenarioId, options = {}) =>
-    apiClient.post(`/visual-regression/run/${scenarioId}`, options, { timeout: 600000 }),
+    apiClient.post(`/visual-regression/run/${scenarioId}`, options, {
+      timeout: 600000,
+      validateStatus: (status) => status < 500
+    }),
   approve: (comparisonId) => apiClient.post(`/visual-regression/comparisons/${comparisonId}/approve`)
 }
 

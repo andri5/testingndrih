@@ -1,10 +1,8 @@
 import React, { useState } from 'react'
 import apiClient from '../services/api'
-import { Play, Loader } from 'lucide-react'
-import { useSettingsStore } from '../store/settingsStore'
+import { Play, Loader } from 'lucide-react'
 
-const i18n = {
-  en: {
+const i18n = {
     startScan: 'Start Security Scan',
     scanType: 'Scan Type',
     fullScan: 'Full Scan',
@@ -14,27 +12,14 @@ const i18n = {
     target: 'Target',
     steps: 'steps',
     scanning: 'Scanning...',
-  },
-  id: {
-    startScan: 'Mulai Pemindaian Keamanan',
-    scanType: 'Jenis Pemindaian',
-    fullScan: 'Pemindaian Lengkap',
-    quickScan: 'Pemindaian Cepat',
-    custom: 'Kustom',
-    selectVulnerabilities: 'Pilih Kerentanan',
-    target: 'Target',
-    steps: 'langkah',
-    scanning: 'Memindai...',
-  },
+  
 }
 
 export default function SecurityScanRunner({ scenario, onScanComplete }) {
   const [scanning, setScanning] = useState(false)
   const [scanType, setScanType] = useState('full')
   const [selectedVulnTypes, setSelectedVulnTypes] = useState([])
-  const [progress, setProgress] = useState(0)
-  const { language } = useSettingsStore()
-  const t = i18n[language] || i18n.en
+  const [progress, setProgress] = useState(0)  const t = i18n
 
   const vulnerabilityTypes = [
     { id: 'SQL_INJECTION', name: 'SQL Injection', severity: 'CRITICAL' },

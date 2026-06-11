@@ -45,32 +45,6 @@ const i18n = {
     userActivity: 'User Activity',
     userActivityDesc: 'Monitor what USER accounts are doing and their latest actions',
   },
-  id: {
-    settings: 'Pengaturan',
-    subtitle: 'Kelola akun dan pengaturan aplikasi Anda',
-    profile: 'Profil',
-    application: 'Aplikasi',
-    about: 'Tentang',
-    integrations: 'Integrasi',
-    userProfile: 'PROFIL PENGGUNA',
-    profilePicture: 'Foto Profil',
-    changePhoto: 'Ubah Foto',
-    uploadPhoto: 'Unggah Foto',
-    name: 'Nama',
-    email: 'Email',
-    saveProfile: 'Simpan Profil',
-    accountActions: 'AKSI AKUN',
-    signOut: 'Keluar',
-    executionSettings: 'PENGATURAN EKSEKUSI',
-    executionTimeout: 'Batas Waktu Eksekusi (detik)',
-    timeoutHint: 'Batas maksimal per langkah dalam detik (5–300)',
-    captureScreenshot: 'Ambil screenshot setelah setiap langkah',
-    captureDesc: 'Otomatis menyimpan screenshot saat eksekusi',
-    saveSettings: 'Simpan Pengaturan',
-    profileSaved: 'Profil berhasil diperbarui',
-    settingsSaved: 'Pengaturan berhasil disimpan',
-    photoSizeError: 'Ukuran gambar harus kurang dari 5MB',
-  },
 }
 
 export default function SettingsPage() {
@@ -313,7 +287,7 @@ export default function SettingsPage() {
             )}
 
             {activeTab === 'integrations' && isAdmin && (
-              <IntegrationsSettings language="en" />
+              <IntegrationsSettings />
             )}
 
             {activeTab === 'users' && isAdmin && (

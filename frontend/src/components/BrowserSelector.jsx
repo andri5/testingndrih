@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Monitor, Smartphone, Loader } from 'lucide-react';
 import { Tooltip } from './ui'
-import { useSettingsStore } from '../store/settingsStore'
-
 const HEADLESS_TIP = {
   en: 'Browser will not appear on screen — faster and ideal for CI/CD',
   id: 'Browser tidak akan tampil di layar — lebih cepat dan cocok untuk CI/CD',
@@ -31,8 +29,6 @@ export default function BrowserSelector({
   headless = false,
   disabled = false
 }) {
-  const { language, theme } = useSettingsStore()
-  const isDark = theme !== 'light'
   const [browsers, setBrowsers] = useState(FALLBACK_BROWSERS)
   const [mobileDevices, setMobileDevices] = useState(FALLBACK_MOBILE)
   const [loading, setLoading] = useState(true)
@@ -66,19 +62,15 @@ export default function BrowserSelector({
   }
 
   // colours
-  const active = isDark
-    ? 'border-[#5E6AD2] bg-[#5E6AD2]/10 text-[#E0E0E2]'
-    : 'border-blue-500 bg-blue-50 text-slate-900'
-  const inactive = isDark
-    ? 'border-[#2D2D2F] bg-[#1A1A1C] text-[#8A8A8F] hover:border-[#5E6AD2]/50 hover:text-[#E0E0E2]'
-    : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
-  const label = isDark ? 'text-[#8A8A8F]' : 'text-slate-600'
-  const cardBg = isDark ? 'bg-[#1A1A1C] border-[#2D2D2F]' : 'bg-slate-50 border-slate-200'
+  const active = 'border-blue-500 bg-blue-50 text-slate-900'
+  const inactive = 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
+  const label = 'text-slate-600'
+  const cardBg = 'bg-slate-50 border-slate-200'
 
   if (loading) {
     return (
-      <div className={`flex items-center gap-2 p-3 rounded-lg ${isDark ? 'bg-[#1A1A1C]' : 'bg-slate-100'}`}>
-        <Loader className={`w-4 h-4 animate-spin ${isDark ? 'text-[#5E6AD2]' : 'text-blue-600'}`} />
+      <div className={`flex items-center gap-2 p-3 rounded-lg ${'bg-slate-100'}`}>
+        <Loader className={`w-4 h-4 animate-spin ${'text-blue-600'}`} />
         <span className={`text-sm ${label}`}>Loading...</span>
       </div>
     )
@@ -120,11 +112,11 @@ export default function BrowserSelector({
                 disabled={disabled}
                 className={`p-3 rounded-lg border-2 transition-all text-left w-full ${selectedBrowser === b.key ? active.replace('text-', 'border-blue-500 text-') : inactive} ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
               >
-                <div className={`font-medium text-sm ${isDark ? (selectedBrowser === b.key ? 'text-[#E0E0E2]' : 'text-[#8A8A8F]') : (selectedBrowser === b.key ? 'text-slate-900' : 'text-slate-700')}`}>
+                <div className={`font-medium text-sm ${selectedBrowser === b.key ? 'text-slate-900' : 'text-slate-700'}`}>
                   {b.displayName}
                 </div>
                 {b.isDefault && (
-                  <div className={`text-xs mt-1 ${isDark ? 'text-[#5E6AD2]' : 'text-blue-600'}`}>Default</div>
+                  <div className={`text-xs mt-1 ${'text-blue-600'}`}>Default</div>
                 )}
               </button>
             </Tooltip>
@@ -141,15 +133,15 @@ export default function BrowserSelector({
                 onClick={() => onDeviceChange && onDeviceChange(d.key)}
                 disabled={disabled}
                 className={`p-3 rounded-lg border-2 transition-all text-left w-full ${selectedDevice === d.key
-                    ? isDark ? 'border-[#5E6AD2] bg-[#5E6AD2]/10' : 'border-blue-500 bg-blue-50'
-                    : isDark ? 'border-[#2D2D2F] bg-[#1A1A1C] hover:border-[#5E6AD2]/50' : 'border-slate-200 bg-white hover:border-slate-300'
+                    ? 'border-blue-500 bg-blue-50'
+                    : 'border-slate-200 bg-white hover:border-slate-300'
                   } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
               >
                 <div className="flex items-center gap-2">
                   <span className="text-base">{d.type === 'tablet' ? '📟' : '📱'}</span>
                   <div>
-                    <div className={`font-medium text-sm ${isDark ? 'text-[#E0E0E2]' : 'text-slate-900'}`}>{d.displayName}</div>
-                    <div className={`text-xs ${isDark ? 'text-[#8A8A8F]' : 'text-slate-500'}`}>{d.viewport}</div>
+                    <div className={`font-medium text-sm ${'text-slate-900'}`}>{d.displayName}</div>
+                    <div className={`text-xs ${'text-slate-500'}`}>{d.viewport}</div>
                   </div>
                 </div>
               </button>
@@ -160,7 +152,7 @@ export default function BrowserSelector({
 
       {/* Headless toggle */}
       <div className={`flex items-center gap-3 p-3 rounded-lg border ${cardBg}`}>
-        <Tooltip text={HEADLESS_TIP[language] ?? HEADLESS_TIP.en} position="right">
+        <Tooltip text={HEADLESS_TIP.en} position="right">
           <input
             type="checkbox"
             id="headless"
@@ -171,7 +163,7 @@ export default function BrowserSelector({
           />
         </Tooltip>
         <label htmlFor="headless" className="flex-1 cursor-pointer">
-          <div className={`text-sm font-medium ${isDark ? 'text-[#E0E0E2]' : 'text-slate-900'}`}>Headless Mode</div>
+          <div className={`text-sm font-medium ${'text-slate-900'}`}>Headless Mode</div>
           <div className={`text-xs ${label}`}>Run without visible browser UI</div>
         </label>
       </div>

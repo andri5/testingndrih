@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useSettingsStore } from '../store/settingsStore'
 import Layout from '../components/Layout'
 import api from '../services/api'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, Button, Alert } from '../components/ui'
@@ -15,9 +14,6 @@ const FREQUENCIES = [
 
 export default function SchedulerPage() {
   const navigate = useNavigate()
-  const { theme, language } = useSettingsStore()
-  const isDark = theme === 'dark'
-
   const [schedules, setSchedules] = useState([])
   const [scenarios, setScenarios] = useState([])
   const [loading, setLoading] = useState(true)
@@ -33,8 +29,7 @@ export default function SchedulerPage() {
     daysOfWeek: []
   })
 
-  const i18n = {
-    en: {
+  const i18n = {
       title: 'Test Scheduler',
       description: 'Schedule automated test execution at specific times',
       newSchedule: 'New Schedule',
@@ -58,35 +53,10 @@ export default function SchedulerPage() {
       successRate: 'Success Rate',
       loading: 'Loading schedules...',
       creating: 'Creating schedule...'
-    },
-    id: {
-      title: 'Penjadwal Test',
-      description: 'Jadwalkan eksekusi test otomatis pada waktu tertentu',
-      newSchedule: 'Jadwal Baru',
-      noSchedules: 'Belum ada jadwal',
-      createOne: 'Buat satu untuk memulai',
-      scenario: 'Scenario',
-      frequency: 'Frekuensi',
-      time: 'Waktu',
-      days: 'Hari (Mingguan saja)',
-      create: 'Buat Jadwal',
-      cancel: 'Batalkan',
-      testNow: 'Test Sekarang',
-      delete: 'Hapus',
-      status: 'Status',
-      lastRun: 'Terakhir Dijalankan',
-      nextRun: 'Akan Dijalankan',
-      stats: 'Statistik',
-      passed: 'Berhasil',
-      failed: 'Gagal',
-      selectScenario: 'Pilih scenario',
-      successRate: 'Tingkat Keberhasilan',
-      loading: 'Memuat jadwal...',
-      creating: 'Membuat jadwal...'
-    }
+    
   }
 
-  const t = i18n[language] || i18n.en
+  const t = i18n
 
   useEffect(() => {
     loadSchedules()
@@ -174,7 +144,7 @@ export default function SchedulerPage() {
 
   const formatDateTime = (date) => {
     if (!date) return '—'
-    return new Date(date).toLocaleString(language === 'id' ? 'id-ID' : 'en-US')
+    return new Date(date).toLocaleString('en-US')
   }
 
   const getFrequencyLabel = (freq) => {
@@ -186,10 +156,10 @@ export default function SchedulerPage() {
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className={`text-3xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+          <h1 className={`text-3xl font-bold mb-2 ${'text-gray-900'}`}>
             {t.title}
           </h1>
-          <p className={`${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+          <p className={`${'text-gray-600'}`}>
             {t.description}
           </p>
         </div>
@@ -210,20 +180,20 @@ export default function SchedulerPage() {
 
         {/* Create Form */}
         {showForm && (
-          <Card className={`mb-6 border ${isDark ? 'border-gray-800 bg-gray-900' : 'border-gray-200 bg-white'}`}>
+          <Card className={`mb-6 border ${'border-gray-200 bg-white'}`}>
             <CardHeader>
               <CardTitle>{t.newSchedule}</CardTitle>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleCreateSchedule} className="space-y-4">
                 <div>
-                  <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                  <label className={`block text-sm font-medium mb-2 ${'text-gray-700'}`}>
                     {t.scenario}
                   </label>
                   <select
                     value={formData.scenarioId}
                     onChange={(e) => setFormData({ ...formData, scenarioId: e.target.value })}
-                    className={`w-full px-3 py-2 rounded border ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-300'}`}
+                    className={`w-full px-3 py-2 rounded border ${'bg-white border-gray-300'}`}
                   >
                     <option value="">{t.selectScenario}</option>
                     {scenarios.map(s => (
@@ -234,13 +204,13 @@ export default function SchedulerPage() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                    <label className={`block text-sm font-medium mb-2 ${'text-gray-700'}`}>
                       {t.frequency}
                     </label>
                     <select
                       value={formData.frequency}
                       onChange={(e) => setFormData({ ...formData, frequency: e.target.value })}
-                      className={`w-full px-3 py-2 rounded border ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-300'}`}
+                      className={`w-full px-3 py-2 rounded border ${'bg-white border-gray-300'}`}
                     >
                       {FREQUENCIES.map(f => (
                         <option key={f.value} value={f.value}>{f.label}</option>
@@ -249,14 +219,14 @@ export default function SchedulerPage() {
                   </div>
 
                   <div>
-                    <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                    <label className={`block text-sm font-medium mb-2 ${'text-gray-700'}`}>
                       {t.time}
                     </label>
                     <input
                       type="time"
                       value={formData.timeOfDay}
                       onChange={(e) => setFormData({ ...formData, timeOfDay: e.target.value })}
-                      className={`w-full px-3 py-2 rounded border ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-300'}`}
+                      className={`w-full px-3 py-2 rounded border ${'bg-white border-gray-300'}`}
                     />
                   </div>
                 </div>
@@ -279,7 +249,7 @@ export default function SchedulerPage() {
                   <Button
                     type="button"
                     onClick={() => setShowForm(false)}
-                    className={`flex-1 ${isDark ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-200 hover:bg-gray-300'}`}
+                    className={`flex-1 ${'bg-gray-200 hover:bg-gray-300'}`}
                   >
                     {t.cancel}
                   </Button>
@@ -292,16 +262,16 @@ export default function SchedulerPage() {
         {/* Schedules List */}
         {loading ? (
           <div className="text-center py-12">
-            <Loader className={`w-6 h-6 mx-auto animate-spin ${isDark ? 'text-gray-400' : 'text-gray-500'}`} />
-            <p className={`mt-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{t.loading}</p>
+            <Loader className={`w-6 h-6 mx-auto animate-spin ${'text-gray-500'}`} />
+            <p className={`mt-2 ${'text-gray-600'}`}>{t.loading}</p>
           </div>
         ) : schedules.length === 0 ? (
-          <Card className={`border ${isDark ? 'border-gray-800 bg-gray-900' : 'border-gray-200 bg-white'}`}>
+          <Card className={`border ${'border-gray-200 bg-white'}`}>
             <CardContent className="text-center py-12">
-              <p className={`text-lg font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+              <p className={`text-lg font-medium mb-2 ${'text-gray-600'}`}>
                 {t.noSchedules}
               </p>
-              <p className={isDark ? 'text-gray-500' : 'text-gray-500'}>
+              <p className={'text-gray-500'}>
                 {t.createOne}
               </p>
             </CardContent>
@@ -309,38 +279,38 @@ export default function SchedulerPage() {
         ) : (
           <div className="grid gap-4">
             {schedules.map(schedule => (
-              <Card key={schedule.id} className={`border ${isDark ? 'border-gray-800 bg-gray-900' : 'border-gray-200 bg-white'}`}>
+              <Card key={schedule.id} className={`border ${'border-gray-200 bg-white'}`}>
                 <CardContent className="p-6">
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                     <div>
-                      <p className={`text-xs font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                      <p className={`text-xs font-medium ${'text-gray-500'}`}>
                         Scenario
                       </p>
-                      <p className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                      <p className={`font-semibold ${'text-gray-900'}`}>
                         {schedule.scenario?.name || 'Unknown'}
                       </p>
                     </div>
                     <div>
-                      <p className={`text-xs font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                      <p className={`text-xs font-medium ${'text-gray-500'}`}>
                         {t.frequency}
                       </p>
-                      <p className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                      <p className={`font-semibold ${'text-gray-900'}`}>
                         {getFrequencyLabel(schedule.frequency)} @ {schedule.timeOfDay}
                       </p>
                     </div>
                     <div>
-                      <p className={`text-xs font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                      <p className={`text-xs font-medium ${'text-gray-500'}`}>
                         {t.stats}
                       </p>
-                      <p className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                      <p className={`font-semibold ${'text-gray-900'}`}>
                         {schedule.successCount || 0}✓ {schedule.failureCount || 0}✗
                       </p>
                     </div>
                     <div>
-                      <p className={`text-xs font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                      <p className={`text-xs font-medium ${'text-gray-500'}`}>
                         {t.nextRun}
                       </p>
-                      <p className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                      <p className={`font-semibold ${'text-gray-900'}`}>
                         {formatDateTime(schedule.nextRunAt)}
                       </p>
                     </div>
@@ -349,14 +319,14 @@ export default function SchedulerPage() {
                   <div className="flex gap-2 justify-end">
                     <Button
                       onClick={() => handleTestNow(schedule.id)}
-                      className={`${isDark ? 'bg-green-900 hover:bg-green-800' : 'bg-green-100 hover:bg-green-200 text-green-900'}`}
+                      className={`${'bg-green-100 hover:bg-green-200 text-green-900'}`}
                       size="sm"
                     >
                       {t.testNow}
                     </Button>
                     <Button
                       onClick={() => handleDeleteSchedule(schedule.id)}
-                      className={`${isDark ? 'bg-red-900 hover:bg-red-800' : 'bg-red-100 hover:bg-red-200 text-red-900'}`}
+                      className={`${'bg-red-100 hover:bg-red-200 text-red-900'}`}
                       size="sm"
                     >
                       {t.delete}

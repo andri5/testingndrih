@@ -1,13 +1,10 @@
 import React, { useState } from 'react'
 import { Shield, ChevronDown, ChevronUp } from 'lucide-react'
-import Layout from '../components/Layout'
-import { useSettingsStore } from '../store/settingsStore'
+import Layout from '../components/Layout'
 
 export default function SecurityTestHelpPage() {
-  const [expandedSections, setExpandedSections] = useState({})
-  const { language } = useSettingsStore()
-  
-  const t = language === 'en' ? translations.en : translations.id
+  const [expandedSections, setExpandedSections] = useState({})  
+  const t = translations
 
   const toggleSection = (id) => {
     setExpandedSections(prev => ({
@@ -182,8 +179,7 @@ export default function SecurityTestHelpPage() {
   )
 }
 
-const translations = {
-  en: {
+const translations = {
     title: '🔐 Security Testing Guide',
     description: 'Learn how to scan your application for security vulnerabilities and protect against threats',
     whatIs: 'What is a Security Test?',
@@ -271,94 +267,5 @@ const translations = {
         solution: 'Ensure fix was deployed correctly. Clear caches. Verify the issue is actually fixed before re-running scan.'
       }
     ]
-  },
-  id: {
-    title: '🔐 Panduan Security Testing',
-    description: 'Pelajari cara memindai aplikasi Anda untuk kerentanan keamanan dan melindungi dari ancaman',
-    whatIs: 'Apa itu Security Test?',
-    whatIsDesc: `Security Test memindai aplikasi Anda untuk potensi kerentanan dan kelemahan keamanan. Ini secara otomatis mendeteksi isu keamanan umum seperti SQL injection, cross-site scripting (XSS), kelemahan autentikasi, dan masalah konfigurasi. Ini membantu Anda mengidentifikasi dan memperbaiki masalah keamanan sebelum penyerang dapat mengeksploitasinya.`,
-    whatIsTips: [
-      'Mendeteksi tipe kerentanan umum (SQL injection, XSS, dll)',
-      'Mengidentifikasi kelemahan autentikasi dan otorisasi',
-      'Memeriksa konfigurasi yang tidak aman',
-      'Melaporkan tingkat severity (Critical, High, Medium, Low)'
-    ],
-    scanTypes: 'Jenis Scan yang Tersedia',
-    scanTypeDetails: [
-      { name: '🟢 Quick Scan', coverage: 'Coverage: Basic vulnerability checks', time: 'Durasi: ~2-5 menit' },
-      { name: '🟡 Standard Scan', coverage: 'Coverage: Common vulnerabilities + deep checks', time: 'Durasi: ~10-15 menit' },
-      { name: '🔴 Full Scan', coverage: 'Coverage: Semua tipe kerentanan + performance checks', time: 'Durasi: ~30+ menit' },
-      { name: '⚙️ Custom Scan', coverage: 'Coverage: Pilih checks spesifik', time: 'Durasi: Tergantung pilihan' }
-    ],
-    vulnLevels: 'Tingkat Severity Kerentanan',
-    vulnDetails: [
-      { level: '🔴 Critical', color: '#EF4444', description: 'Tindakan segera diperlukan. Eksploitasi kemungkinan besar dan dampaknya parah.' },
-      { level: '🟠 High', color: '#F97316', description: 'Harus diperbaiki segera. Eksploitasi mungkin dengan dampak signifikan.' },
-      { level: '🟡 Medium', color: '#EAB308', description: 'Harus ditangani. Eksploitasi mungkin tapi dampaknya terbatas.' },
-      { level: '🔵 Low', color: '#3B82F6', description: 'Bisa ditinjau. Eksploitasi sulit atau dampaknya minimal.' }
-    ],
-    stepByStep: 'Cara Menjalankan Security Test',
-    steps: [
-      { number: 1, title: 'Navigasi ke Security Test', description: 'Klik "Keamanan" di sidebar kiri di bawah bagian "Alat"' },
-      { number: 2, title: 'Pilih Target Application', description: 'Pilih aplikasi atau service yang ingin dipindai untuk kerentanan' },
-      { number: 3, title: 'Pilih Jenis Scan', description: 'Pilih Quick, Standard, Full, atau Custom scan berdasarkan kebutuhan Anda' },
-      { number: 4, title: 'Untuk Custom Scan', description: 'Pilih tipe kerentanan spesifik untuk diperiksa: SQL Injection, XSS, CSRF, dll' },
-      { number: 5, title: 'Konfigurasi Pengaturan Scan', description: 'Atur timeout, request rate, dan parameter lainnya jika diperlukan' },
-      { number: 6, title: 'Mulai Security Scan', description: 'Klik tombol "Mulai Scanning". Scan akan berjalan dan menguji kerentanan' },
-      { number: 7, title: 'Pantau Progress Scan', description: 'Tonton saat scan berjalan melalui kategori check dan endpoint berbeda' },
-      { number: 8, title: 'Tinjau Issues yang Ditemukan', description: 'Saat kerentanan ditemukan, tampil real-time dengan tingkat severity' },
-      { number: 9, title: 'Analisis Full Report', description: 'Setelah selesai, tinjau detailed report dengan findings, impact, dan rekomendasi' },
-      { number: 10, title: 'Ambil Tindakan', description: 'Perbaiki kerentanan mulai dari isu Critical dan High severity' }
-    ],
-    results: 'Memahami Hasil Scan',
-    resultDetails: [
-      { label: 'Nama Kerentanan', description: 'Tipe kerentanan yang ditemukan (mis: SQL Injection, XSS, Missing Authentication)' },
-      { label: 'Tingkat Severity', description: 'Critical, High, Medium, atau Low - menunjukkan serius tidaknya masalah' },
-      { label: 'CVSS Score', description: 'Common Vulnerability Scoring System score (0-10) - lebih tinggi berarti lebih parah' },
-      { label: 'Endpoint yang Terpengaruh', description: 'API endpoint atau page mana yang vulnerable' },
-      { label: 'Deskripsi', description: 'Penjelasan apa itu kerentanan dan mengapa penting' },
-      { label: 'Rekomendasi', description: 'Saran fix atau langkah remediation untuk mengatasi masalah' }
-    ],
-    bestPractices: 'Best Practices',
-    practices: [
-      'Jalankan security scans secara regular - minimal sebelum setiap major release',
-      'Gunakan Quick scans saat development, Full scans sebelum production',
-      'Atasi isu Critical dan High severity segera',
-      'Jaga framework dan dependencies tetap up to date',
-      'Gunakan Web Application Firewall (WAF) sebagai proteksi tambahan',
-      'Implementasikan secure authentication (OAuth2, JWT properly configured)',
-      'Validasi dan sanitize semua user inputs',
-      'Gunakan HTTPS untuk semua komunikasi',
-      'Jaga secrets dan API keys tetap keluar dari source code',
-      'Dokumentasikan dan track semua security issues dan fixes'
-    ],
-    action: 'Saat Kerentanan Ditemukan',
-    actionSteps: [
-      { title: 'Langkah 1: Prioritas', description: 'Urutkan berdasarkan severity. Perbaiki isu Critical dulu, kemudian High, kemudian Medium' },
-      { title: 'Langkah 2: Pahami', description: 'Baca deskripsi dan CVSS score untuk memahami dampaknya' },
-      { title: 'Langkah 3: Investigasi', description: 'Identifikasi root cause di kode Anda - jangan hanya patch gejala' },
-      { title: 'Langkah 4: Perbaiki', description: 'Implementasikan fix yang direkomendasikan. Ikuti security best practices' },
-      { title: 'Langkah 5: Test', description: 'Jalankan security scan lagi untuk confirm masalah sudah teratasi' },
-      { title: 'Langkah 6: Dokumentasi', description: 'Log masalah dan fix di security tracking system Anda' }
-    ],
-    troubleshooting: 'Troubleshooting',
-    issues: [
-      {
-        problem: 'Scan gagal atau timeout',
-        solution: 'Coba Quick scan daripada Full scan. Periksa aplikasi accessible dan merespons. Tingkatkan timeout di settings.'
-      },
-      {
-        problem: 'False positives dilaporkan',
-        solution: 'Tinjau findings dengan cermat dan validasi di kode Anda. Beberapa findings mungkin false positives - gunakan developer expertise.'
-      },
-      {
-        problem: 'Terlalu banyak isu ditemukan',
-        solution: 'Filter berdasarkan severity dan fokus pada Critical/High dulu. Buat action plan dan perbaiki secara sistematis.'
-      },
-      {
-        problem: 'Isu yang sama terus muncul',
-        solution: 'Pastikan fix sudah di-deploy dengan benar. Clear caches. Verifikasi masalah benar-benar sudah fixed sebelum re-run scan.'
-      }
-    ]
-  }
+  
 }

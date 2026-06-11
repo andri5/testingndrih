@@ -71,12 +71,10 @@
 - ✅ **Step Editor** — Form-based step creation and editing
 - ✅ **Execution Viewer** — Real-time execution with screenshot streaming
 - ✅ **Execution History** — View past results with full details
-- ✅ **Dark/Light Theme** — Full theme support with persistent preference
+- ✅ **Light Theme UI** — Clean, readable light interface across all pages
 - ✅ **Responsive Design** — Mobile-first layout with collapsible navigation
 - ✅ **Report Export** — Download execution reports (PDF/HTML)
-- ✅ **Profile Picture Upload** — User avatar with file size validation (max 5MB) (NEW)
-  - Dark/Light theme-aware styling
-  - Multi-language support (EN + ID)
+- ✅ **Profile Picture Upload** — User avatar with file size validation (max 5MB)
   - Profile picture preview with initials fallback
   - Change/upload controls with visual feedback
   - Persistent storage via localStorage
@@ -85,7 +83,7 @@
   - Preview data before creating
   - Edit inline (names, descriptions, URLs, steps)
   - Batch create with validation
-  - Dark/Light theme support with tooltips
+  - Inline preview with tooltips
 
 ### 🛡️ Error Handling & Resilience
 - ✅ **Custom Error Pages** — 404, 403, 500, Session Expired, Maintenance pages
@@ -142,8 +140,8 @@
    └─ Retry mechanism
    └─ Screenshot comparison
 
-✅ UI/UX & Themes                   100% Complete
-   └─ Dark/Light themes
+✅ UI/UX                            100% Complete
+   └─ Light theme (English UI)
    └─ Responsive design
    └─ Error pages
    └─ Report generation
@@ -163,8 +161,6 @@
 ✅ User Profile Management         100% Complete
    └─ Profile picture upload
    └─ File size validation (5MB)
-   └─ Dark/Light theme support
-   └─ Multi-language support (EN/ID)
    └─ localStorage persistence
 
 Overall Status: **100% Production Ready** ✅
@@ -256,7 +252,7 @@ npm run dev           # http://localhost:3001
 - Cross-browser testing (Chrome, Firefox, WebKit, Edge)
 - Parallel execution
 - Password reset via email
-- Dark/Light theme
+- Light theme (English UI)
 
 ---
 

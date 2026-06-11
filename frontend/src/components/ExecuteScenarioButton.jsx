@@ -3,11 +3,12 @@ import { Button, Alert, Spinner } from './ui'
 import { useExecutionStore } from '../store/executionStore'
 import { useSettingsStore } from '../store/settingsStore'
 import { environmentAPI } from '../services/api'
+import { useAuthStore } from '../store/authStore'
 
 export function ExecuteScenarioButton({ scenarioId, scenarioName, onExecutionStart = null }) {
   const { isRunning, executeScenario, clearError, error } = useExecutionStore()
-  const { theme, language, selectedEnvironmentId, setSelectedEnvironmentId } = useSettingsStore()
-  const isDark = theme !== 'light'
+  const { selectedEnvironmentId, setSelectedEnvironmentId } = useSettingsStore()
+  const isAdmin = useAuthStore((state) => state.user)?.role === 'ADMIN'
   const [showConfirm, setShowConfirm] = useState(false)
   const [browser, setBrowser] = useState('chromium')
   const [headless, setHeadless] = useState(false)
@@ -15,7 +16,7 @@ export function ExecuteScenarioButton({ scenarioId, scenarioName, onExecutionSta
   const [environmentId, setEnvironmentId] = useState(selectedEnvironmentId || '')
 
   useEffect(() => {
-    if (!showConfirm) return
+    if (!showConfirm || !isAdmin) return
     environmentAPI.list().then((res) => {
       const list = res.data.environments || []
       setEnvironments(list)
@@ -24,9 +25,9 @@ export function ExecuteScenarioButton({ scenarioId, scenarioName, onExecutionSta
         setEnvironmentId(def.id)
       }
     }).catch(() => {})
-  }, [showConfirm])
+  }, [showConfirm, isAdmin])
 
-  const envLabel = language === 'id' ? 'Environment' : 'Environment'
+  const envLabel = 'Environment'
 
   const handleExecute = async () => {
     try {
@@ -57,12 +58,10 @@ export function ExecuteScenarioButton({ scenarioId, scenarioName, onExecutionSta
 
       {showConfirm ? (
         <div className={`p-4 rounded-lg space-y-3 border ${
-          isDark
-            ? 'bg-[#1A1A1C] border-[#2D2D2F]'
-            : 'bg-blue-50 border-blue-200'
+          'bg-blue-50 border-blue-200'
         }`}>
           <p className={`text-sm font-medium ${
-            isDark ? 'text-[#E0E0E2]' : 'text-blue-900'
+            'text-blue-900'
           }`}>
             Execute: <strong>{scenarioName}</strong>
           </p>
@@ -70,15 +69,13 @@ export function ExecuteScenarioButton({ scenarioId, scenarioName, onExecutionSta
           <div className="flex flex-wrap gap-3">
             <div>
               <label className={`text-xs font-semibold block mb-1 ${
-                isDark ? 'text-[#8A8A8F]' : 'text-gray-600'
+                'text-gray-600'
               }`}>Browser</label>
               <select
                 value={browser}
                 onChange={e => setBrowser(e.target.value)}
                 className={`text-sm rounded px-2 py-1 focus:outline-none focus:ring-1 ${
-                  isDark
-                    ? 'bg-[#0F0E11] border border-[#2D2D2F] text-[#E0E0E2] focus:ring-[#5E6AD2]'
-                    : 'border border-gray-300 text-gray-900 focus:ring-indigo-500'
+                  'border border-gray-300 text-gray-900 focus:ring-indigo-500'
                 }`}
               >
                 <option value="chromium">Chromium</option>
@@ -86,37 +83,35 @@ export function ExecuteScenarioButton({ scenarioId, scenarioName, onExecutionSta
                 <option value="webkit">WebKit</option>
               </select>
             </div>
-            <div>
-              <label className={`text-xs font-semibold block mb-1 ${
-                isDark ? 'text-[#8A8A8F]' : 'text-gray-600'
-              }`}>{envLabel}</label>
-              <select
-                value={environmentId}
-                onChange={(e) => setEnvironmentId(e.target.value)}
-                className={`text-sm rounded px-2 py-1 focus:outline-none focus:ring-1 ${
-                  isDark
-                    ? 'bg-[#0F0E11] border border-[#2D2D2F] text-[#E0E0E2] focus:ring-[#5E6AD2]'
-                    : 'border border-gray-300 text-gray-900 focus:ring-indigo-500'
-                }`}
-              >
-                <option value="">—</option>
-                {environments.map((env) => (
-                  <option key={env.id} value={env.id}>{env.name}{env.isDefault ? ' ★' : ''}</option>
-                ))}
-              </select>
-            </div>
+            {isAdmin && (
+              <div>
+                <label className={`text-xs font-semibold block mb-1 ${
+                  'text-gray-600'
+                }`}>{envLabel}</label>
+                <select
+                  value={environmentId}
+                  onChange={(e) => setEnvironmentId(e.target.value)}
+                  className={`text-sm rounded px-2 py-1 focus:outline-none focus:ring-1 ${
+                    'border border-gray-300 text-gray-900 focus:ring-indigo-500'
+                  }`}
+                >
+                  <option value="">—</option>
+                  {environments.map((env) => (
+                    <option key={env.id} value={env.id}>{env.name}{env.isDefault ? ' ★' : ''}</option>
+                  ))}
+                </select>
+              </div>
+            )}
             <div className="flex items-end gap-2">
               <label className={`text-xs font-semibold block mb-1 ${
-                isDark ? 'text-[#8A8A8F]' : 'text-gray-600'
+                'text-gray-600'
               }`}>Headless</label>
               <input
                 type="checkbox"
                 checked={headless}
                 onChange={e => setHeadless(e.target.checked)}
                 className={`mb-1.5 h-4 w-4 rounded ${
-                  isDark
-                    ? 'bg-[#0F0E11] border-[#2D2D2F] accent-[#5E6AD2]'
-                    : 'border-gray-300 text-indigo-600'
+                  'border-gray-300 text-indigo-600'
                 }`}
               />
             </div>

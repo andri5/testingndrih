@@ -5,12 +5,10 @@ import SmokeTestHistory from '../components/SmokeTestHistory'
 import SmokeTestSummary from '../components/SmokeTestSummary'
 import ExportButtons from '../components/ExportButtons'
 import Layout from '../components/Layout'
-import apiClient from '../services/api'
-import { useSettingsStore } from '../store/settingsStore'
+import apiClient from '../services/api'
 import { analyzeSmokeTestResults } from '../utils/testAnalysis'
 
-const i18n = {
-  en: {
+const i18n = {
     title: 'Smoke Tests',
     description: 'Quick validation of core functionality through automated smoke tests',
     selectScenario: 'Select Scenario',
@@ -27,25 +25,7 @@ const i18n = {
     steps: 'steps',
     loading: 'Loading scenarios...',
     error: 'Error',
-  },
-  id: {
-    title: 'Pengujian Smoke',
-    description: 'Validasi cepat fungsionalitas inti melalui pengujian smoke otomatis',
-    selectScenario: 'Pilih Scenario',
-    noScenarios: 'Tidak ada scenario yang ditandai untuk pengujian smoke',
-    runAllTests: 'Jalankan Semua Pengujian Smoke',
-    runningAllTests: 'Menjalankan Semua Tes...',
-    aboutTitle: '💨 Tentang Pengujian Smoke',
-    feature1: 'Tes otomatis cepat yang memvalidasi fungsionalitas inti',
-    feature2: 'Umpan balik cepat tentang kesehatan sistem',
-    feature3: 'Ideal untuk pipeline CI/CD',
-    feature4: 'Pelacakan riwayat pengujian komprehensif',
-    feature5: 'Pemantauan eksekusi real-time',
-    feature6: 'Ringkasan kesuksesan/kegagalan scenario',
-    steps: 'langkah',
-    loading: 'Memuat scenario...',
-    error: 'Error',
-  },
+  
 }
 
 export default function SmokeTestPage() {
@@ -54,9 +34,7 @@ export default function SmokeTestPage() {
   const [error, setError] = useState(null)
   const [selectedScenario, setSelectedScenario] = useState(null)
   const [runningAllTests, setRunningAllTests] = useState(false)
-  const [summaryData, setSummaryData] = useState(null)
-  const { language } = useSettingsStore()
-  const t = i18n[language] || i18n.en
+  const [summaryData, setSummaryData] = useState(null)  const t = i18n
 
   useEffect(() => {
     loadSmokeScenarios()
@@ -150,7 +128,7 @@ export default function SmokeTestPage() {
               'Scenario Name': s.name,
               'Test Steps': s.testSteps?.length || 0,
               'Status': 'Active',
-              'Created At': new Date(s.createdAt).toLocaleDateString(language)
+              'Created At': new Date(s.createdAt).toLocaleDateString('en-US')
             }))}
             analysis={analyzeSmokeTestResults(
               summaryData ? {

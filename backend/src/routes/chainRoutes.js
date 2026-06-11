@@ -4,11 +4,11 @@
 
 import { Router } from 'express';
 import chainController from '../controllers/chainController.js';
-import { authenticateToken } from '../middleware/auth.js';
+import { adminAuth } from '../middleware/adminAuth.js';
 
 const chainRoutes = Router();
 
-chainRoutes.use(authenticateToken);
+chainRoutes.use(...adminAuth);
 
 // Chain management
 chainRoutes.post('/', chainController.createChainHandler);

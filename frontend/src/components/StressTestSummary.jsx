@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import apiClient from '../services/api'
-import { AlertCircle, Zap, Gauge, TrendingUp, BarChart3 } from 'lucide-react'
-import { useSettingsStore } from '../store/settingsStore'
+import { AlertCircle, Zap, Gauge, TrendingUp, BarChart3 } from 'lucide-react'
 
-const i18n = {
-  en: { 
+const i18n = { 
     totalTests: 'Total Tests', 
     passRate: 'Pass Rate', 
     avgResponse: 'Avg Response', 
@@ -13,24 +11,12 @@ const i18n = {
     passRateDesc: 'Percentage of successful test runs',
     avgResponseDesc: 'Average response time across all tests',
     avgThroughputDesc: 'Average executions per second'
-  },
-  id: { 
-    totalTests: 'Total Tes', 
-    passRate: 'Tingkat Keberhasilan', 
-    avgResponse: 'Respons Rata-rata', 
-    avgThroughput: 'Throughput',
-    totalTestsDesc: 'Total tes stress yang dijalankan',
-    passRateDesc: 'Persentase keberhasilan jalannya tes',
-    avgResponseDesc: 'Rata-rata waktu respons di semua tes',
-    avgThroughputDesc: 'Rata-rata eksekusi per detik'
-  },
+  
 }
 
 export default function StressTestSummary() {
   const [summary, setSummary] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const { language } = useSettingsStore()
-  const t = i18n[language] || i18n.en
+  const [loading, setLoading] = useState(true)  const t = i18n
 
   useEffect(() => {
     loadSummary()

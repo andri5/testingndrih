@@ -1,0 +1,135 @@
+import {
+  Plus,
+  PlayCircle,
+  TrendingUp,
+  Globe,
+  Layers,
+  Clock,
+  GitBranch,
+  Activity,
+  Gauge,
+  Shield,
+} from 'lucide-react'
+
+/**
+ * Dashboard quick actions — filtered by user role (ADMIN | USER).
+ * Admin-only items mirror the Tools section in the sidebar.
+ */
+export const QUICK_ACTIONS = [
+  {
+    id: 'create-scenario',
+    roles: ['ADMIN', 'USER'],
+    titleKey: 'createScenario',
+    descKey: 'startRecording',
+    path: '/scenarios',
+    icon: Plus,
+    iconBg: 'bg-[#5E6AD2]/10',
+    iconColor: 'text-[#9BA3F0]',
+  },
+  {
+    id: 'run-execution',
+    roles: ['ADMIN', 'USER'],
+    titleKey: 'runExecution',
+    descKey: 'executeScenario',
+    path: '/execution',
+    icon: PlayCircle,
+    iconBg: 'bg-[#34D399]/10',
+    iconColor: 'text-[#34D399]',
+  },
+  {
+    id: 'view-analytics',
+    roles: ['ADMIN', 'USER'],
+    titleKey: 'viewAnalytics',
+    descKey: 'detailedMetrics',
+    path: '/analytics',
+    icon: TrendingUp,
+    iconBg: 'bg-[#9BA3F0]/10',
+    iconColor: 'text-[#9BA3F0]',
+  },
+  // Admin — Tools (same as sidebar workspace section)
+  {
+    id: 'api-testing',
+    roles: ['ADMIN'],
+    titleKey: 'apiTesting',
+    descKey: 'apiTestingDesc',
+    path: '/api-testing',
+    icon: Globe,
+    iconBg: 'bg-[#4EC9B0]/10',
+    iconColor: 'text-[#4EC9B0]',
+  },
+  {
+    id: 'environments',
+    roles: ['ADMIN'],
+    titleKey: 'environments',
+    descKey: 'environmentsDesc',
+    path: '/environments',
+    icon: Layers,
+    iconBg: 'bg-[#5E6AD2]/10',
+    iconColor: 'text-[#9BA3F0]',
+  },
+  {
+    id: 'scheduler',
+    roles: ['ADMIN'],
+    titleKey: 'scheduler',
+    descKey: 'schedulerDesc',
+    path: '/scheduler',
+    icon: Clock,
+    iconBg: 'bg-[#5E6AD2]/10',
+    iconColor: 'text-[#9BA3F0]',
+  },
+  {
+    id: 'parallel',
+    roles: ['ADMIN'],
+    titleKey: 'parallel',
+    descKey: 'parallelDesc',
+    path: '/parallel',
+    icon: GitBranch,
+    iconBg: 'bg-[#34D399]/10',
+    iconColor: 'text-[#34D399]',
+  },
+  {
+    id: 'smoke-test',
+    roles: ['ADMIN'],
+    titleKey: 'smokeTest',
+    descKey: 'smokeTestDesc',
+    path: '/smoke-test',
+    icon: Activity,
+    iconBg: 'bg-[#4EC9B0]/10',
+    iconColor: 'text-[#4EC9B0]',
+  },
+  {
+    id: 'stress-test',
+    roles: ['ADMIN'],
+    titleKey: 'stressTest',
+    descKey: 'stressTestDesc',
+    path: '/stress-test',
+    icon: Gauge,
+    iconBg: 'bg-[#F87171]/10',
+    iconColor: 'text-[#F87171]',
+  },
+  {
+    id: 'security-test',
+    roles: ['ADMIN'],
+    titleKey: 'securityTest',
+    descKey: 'securityTestDesc',
+    path: '/security-test',
+    icon: Shield,
+    iconBg: 'bg-[#FBBF24]/10',
+    iconColor: 'text-[#FBBF24]',
+  },
+  {
+    id: 'browser-matrix',
+    roles: ['ADMIN'],
+    titleKey: 'browserMatrix',
+    descKey: 'browserMatrixDesc',
+    path: '/browser-matrix',
+    icon: Globe,
+    iconBg: 'bg-[#9BA3F0]/10',
+    iconColor: 'text-[#9BA3F0]',
+  },
+]
+
+export function getQuickActionsForRole(role) {
+  const effectiveRole = role === 'ADMIN' ? 'ADMIN' : 'USER'
+  return QUICK_ACTIONS.filter((action) => action.roles.includes(effectiveRole))
+}

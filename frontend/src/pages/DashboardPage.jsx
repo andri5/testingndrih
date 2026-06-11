@@ -11,18 +11,15 @@ import {
   Clock,
   Check,
   X,
-  Plus,
   Download,
   TrendingUp,
-  Globe,
-  Bug,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { useSettingsStore } from '../store/settingsStore'
+import { getQuickActionsForRole } from '../constants/quickActions'
+import OpenIssuesWidget from '../components/OpenIssuesWidget'
 
 // i18n translations
 const i18n = {
-  en: {
     welcome: 'Welcome back',
     hereIs: "Here's what's happening with your test automation today.",
     testScenarios: 'Test Scenarios',
@@ -49,53 +46,34 @@ const i18n = {
     steps: 'steps',
     apiTesting: 'API Testing',
     apiTestingDesc: 'Run HTTP request tests',
-    viewIssues: 'View Issues',
-    viewIssuesDesc: 'Track failed test executions',
-  },
-  id: {
-    welcome: 'Selamat datang kembali',
-    hereIs: 'Berikut adalah yang terjadi dengan otomasi pengujian Anda hari ini.',
-    testScenarios: 'Skenario Pengujian',
-    totalExecutions: 'Total Eksekusi',
-    successRate: 'Tingkat Keberhasilan',
-    avgDuration: 'Durasi Rata-rata',
-    passed: 'Lulus',
-    failed: 'Gagal',
-    quickActions: 'Aksi Cepat',
-    createScenario: 'Buat Skenario',
-    startRecording: 'Mulai merekam pengujian baru',
-    runExecution: 'Jalankan Eksekusi',
-    executeScenario: 'Jalankan skenario pengujian',
-    viewAnalytics: 'Lihat Analitik',
-    detailedMetrics: 'Metrik kinerja pengujian terperinci',
-    analyticsSummary: 'Ringkasan Analitik',
-    last7Days: '7 hari terakhir',
-    passRate: 'tingkat keberhasilan',
-    totalScenarios: 'Total Skenario',
-    recentScenarios: 'Skenario Terbaru',
-    recentExecutions: 'Eksekusi Terbaru',
-    noScenariosYet: 'Belum ada skenario',
-    noExecutionsYet: 'Belum ada eksekusi',
-    steps: 'langkah',
-    apiTesting: 'Tes API',
-    apiTestingDesc: 'Jalankan tes request HTTP',
-    viewIssues: 'Lihat Issue',
-    viewIssuesDesc: 'Lacak eksekusi test yang gagal',
-  }
+    environments: 'Environments',
+    environmentsDesc: 'Manage test variables per environment',
+    scheduler: 'Scheduler',
+    schedulerDesc: 'Schedule automated test runs',
+    parallel: 'Parallel Execution',
+    parallelDesc: 'Run scenarios in parallel',
+    smokeTest: 'Smoke Test',
+    smokeTestDesc: 'Quick health-check test suite',
+    stressTest: 'Stress Test',
+    stressTestDesc: 'Load and performance testing',
+    securityTest: 'Security Test',
+    securityTestDesc: 'Scan for security vulnerabilities',
+    browserMatrix: 'Browser Matrix',
+    browserMatrixDesc: 'Cross-browser compatibility tests',
 }
 
 export default function DashboardPage() {
   const navigate = useNavigate()
   const user = useAuthStore((state) => state.user)
-  const { language } = useSettingsStore()
-  const t = i18n[language] || i18n.en
-  const locale = language === 'id' ? 'id-ID' : 'en-US'
+  const t = i18n
+  const locale = 'en-US'
   const [stats, setStats] = useState({ scenarios: 0, executions: 0, successRate: 0, passed: 0, failed: 0, avgDuration: 0 })
   const [analytics, setAnalytics] = useState(null)
   const [recentScenarios, setRecentScenarios] = useState([])
   const [recentExecutions, setRecentExecutions] = useState([])
   const [loading, setLoading] = useState(true)
   const [exporting, setExporting] = useState(false)
+  const quickActions = getQuickActionsForRole(user?.role)
 
   useEffect(() => {
     loadDashboardData()
@@ -278,74 +256,29 @@ export default function DashboardPage() {
               </div>
             )}
 
-            {/* Quick Actions */}
+            {/* Quick Actions — filtered by role (USER vs ADMIN) */}
             <div className="linear-card p-5">
               <h2 className="text-sm font-semibold text-[#E0E0E2] mb-4">{t.quickActions}</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
-                <button
-                  onClick={() => navigate('/scenarios')}
-                  className="action-btn p-4 text-left"
-                >
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-8 h-8 rounded-lg bg-[#5E6AD2]/10 flex items-center justify-center">
-                      <Plus size={15} className="text-[#9BA3F0]" />
-                    </div>
-                    <p className="font-medium text-[#E0E0E2] text-sm">{t.createScenario}</p>
-                  </div>
-                  <p className="text-xs text-[#8A8A8F]">{t.startRecording}</p>
-                </button>
-
-                <button
-                  onClick={() => navigate('/execution')}
-                  className="action-btn p-4 text-left"
-                >
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-8 h-8 rounded-lg bg-[#34D399]/10 flex items-center justify-center">
-                      <PlayCircle size={15} className="text-[#34D399]" />
-                    </div>
-                    <p className="font-medium text-[#E0E0E2] text-sm">{t.runExecution}</p>
-                  </div>
-                  <p className="text-xs text-[#8A8A8F]">{t.executeScenario}</p>
-                </button>
-
-                <button
-                  onClick={() => navigate('/analytics')}
-                  className="action-btn p-4 text-left"
-                >
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-8 h-8 rounded-lg bg-[#9BA3F0]/10 flex items-center justify-center">
-                      <TrendingUp size={15} className="text-[#9BA3F0]" />
-                    </div>
-                    <p className="font-medium text-[#E0E0E2] text-sm">{t.viewAnalytics}</p>
-                  </div>
-                  <p className="text-xs text-[#8A8A8F]">{t.detailedMetrics}</p>
-                </button>
-
-                <button
-                  onClick={() => navigate('/api-testing')}
-                  className="action-btn p-4 text-left"
-                >
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-8 h-8 rounded-lg bg-[#4EC9B0]/10 flex items-center justify-center">
-                      <Globe size={15} className="text-[#4EC9B0]" />
-                    </div>
-                    <p className="font-medium text-[#E0E0E2] text-sm">{t.apiTesting}</p>
-                  </div>
-                  <p className="text-xs text-[#8A8A8F]">{t.apiTestingDesc}</p>
-                </button>
-
-                <button
-                  onClick={() => navigate('/issues')}
-                  className="action-btn p-4 text-left"
-                >
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-8 h-8 rounded-lg bg-[#FBBF24]/10 flex items-center justify-center">
-                      <Bug size={15} className="text-[#FBBF24]" />
-                    </div>
-                    <p className="font-medium text-[#E0E0E2] text-sm">{t.viewIssues}</p>
-                  </div>
-                  <p className="text-xs text-[#8A8A8F]">{t.viewIssuesDesc}</p>
-                </button>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3">
+                {quickActions.map((action) => {
+                  const Icon = action.icon
+                  return (
+                    <button
+                      key={action.id}
+                      type="button"
+                      onClick={() => navigate(action.path)}
+                      className="action-btn p-4 text-left"
+                    >
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className={`w-8 h-8 rounded-lg ${action.iconBg} flex items-center justify-center`}>
+                          <Icon size={15} className={action.iconColor} />
+                        </div>
+                        <p className="font-medium text-[#E0E0E2] text-sm">{t[action.titleKey]}</p>
+                      </div>
+                      <p className="text-xs text-[#8A8A8F]">{t[action.descKey]}</p>
+                    </button>
+                  )
+                })}
               </div>
             </div>
 
@@ -403,6 +336,8 @@ export default function DashboardPage() {
               </div>
             )}
 
+            <OpenIssuesWidget />
+
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
               {/* Recent Scenarios */}
               <div className="linear-card p-5">
@@ -422,7 +357,7 @@ export default function DashboardPage() {
                           <p className="text-xs text-[#8A8A8F] mt-0.5">{formatDate(s.updatedAt || s.createdAt)}</p>
                         </div>
                         <span className="text-xs text-[#8A8A8F] ml-3 shrink-0 bg-[rgba(255,255,255,0.04)] px-2 py-0.5 rounded">
-                          {s._count?.testSteps ?? s.testSteps?.length ?? 0} {t.steps}
+                          {s._count?.testSteps ?? s.testSteps?.length ?? s.steps ?? 0} {t.steps}
                         </span>
                       </div>
                     ))}

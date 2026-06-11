@@ -7,8 +7,7 @@ import { useTurnstileSiteKey } from '../hooks/useTurnstileSiteKey'
 import { validateEmail, validateFullName, NAME_MAX_LENGTH } from '../utils/validation'
 import AuthPageHeader from '../components/AuthPageHeader'
 
-const translations = {
-  en: {
+const translations = {
     createAccount: 'Create your account',
     fullName: 'Full Name',
     fullNamePlaceholder: 'John Doe',
@@ -42,42 +41,7 @@ const translations = {
     emailMissingAt: 'Email must contain @ (example: user@email.com)',
     emailInvalid: 'Email format is invalid (example: user@email.com)',
     captchaRequired: 'Please complete the captcha verification',
-  },
-  id: {
-    createAccount: 'Buat akun Anda',
-    fullName: 'Nama Lengkap',
-    fullNamePlaceholder: 'John Doe',
-    email: 'Email',
-    emailPlaceholder: 'anda@email.com',
-    password: 'Password',
-    confirmPassword: 'Konfirmasi Password',
-    passwordStrengthWeak: 'Lemah',
-    passwordStrengthFair: 'Cukup',
-    passwordStrengthStrong: 'Kuat',
-    passwordStrengthVeryStrong: 'Sangat Kuat',
-    passwordsDoNotMatch: 'Password tidak cocok',
-    createAccountBtn: 'Buat Akun',
-    creatingAccount: 'Membuat akun...',
-    alreadyHaveAccount: 'Sudah punya akun? ',
-    signIn: 'Masuk',
-    copyright: 'Test Sambil Ngopi',
-    fieldRequired: 'Semua field wajib diisi',
-    passwordNotMeet: 'Password tidak memenuhi semua persyaratan keamanan',
-    passwordDoNotMatch: 'Password tidak cocok',
-    rule8Chars: 'Setidaknya 8 karakter',
-    ruleMax64: 'Maksimal 64 karakter',
-    ruleUppercase: 'Setidaknya 1 huruf besar (A-Z)',
-    ruleLowercase: 'Setidaknya 1 huruf kecil (a-z)',
-    ruleNumber: 'Setidaknya 1 angka (0-9)',
-    ruleSpecial: 'Setidaknya 1 karakter spesial (!@#$%^&*)',
-    nameRequired: 'Nama lengkap wajib diisi',
-    nameMaxLength: 'Nama lengkap maksimal 30 karakter',
-    nameAlphabetOnly: 'Nama lengkap hanya boleh huruf dan spasi',
-    emailRequired: 'Email wajib diisi',
-    emailMissingAt: 'Email harus mengandung @ (contoh: user@email.com)',
-    emailInvalid: 'Format email tidak valid (contoh: user@email.com)',
-    captchaRequired: 'Selesaikan verifikasi captcha terlebih dahulu',
-  }
+  
 }
 
 export default function RegisterPage() {
@@ -87,7 +51,7 @@ export default function RegisterPage() {
   const error = useAuthStore((state) => state.error)
   const clearError = useAuthStore((state) => state.clearError)
   const turnstileSiteKey = useTurnstileSiteKey()
-  const t = translations.en
+  const t = translations
 
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')

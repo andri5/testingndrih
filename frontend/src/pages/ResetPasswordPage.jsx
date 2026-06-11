@@ -6,8 +6,7 @@ import TurnstileWidget from '../components/TurnstileWidget'
 import { useTurnstileSiteKey } from '../hooks/useTurnstileSiteKey'
 import AuthPageHeader from '../components/AuthPageHeader'
 
-const translations = {
-  en: {
+const translations = {
     title: 'Reset Password',
     subtitle: 'Enter your new password below.',
     emailLabel: 'Email',
@@ -33,34 +32,7 @@ const translations = {
     reqDigit: 'One digit (0-9)',
     reqSpecial: 'One special character (!@#$%^&*...)',
     captchaRequired: 'Please complete the captcha verification',
-  },
-  id: {
-    title: 'Reset Password',
-    subtitle: 'Masukkan password baru Anda di bawah ini.',
-    emailLabel: 'Email',
-    passwordLabel: 'Password Baru',
-    passwordPlaceholder: 'Minimal 8 karakter',
-    confirmPasswordLabel: 'Konfirmasi Password',
-    confirmPasswordPlaceholder: 'Ulangi password',
-    submitBtn: 'Reset Password',
-    submitting: 'Mereset...',
-    backToLogin: 'Kembali ke Login',
-    validating: 'Memverifikasi link reset...',
-    linkInvalid: 'Link Tidak Valid',
-    linkExpired: 'Token reset tidak valid atau sudah kadaluarsa. Silakan minta link baru.',
-    requestNew: 'Minta Link Baru',
-    workspace: 'Masuk ke workspace Anda',
-    passwordMismatch: 'Password tidak cocok',
-    copyright: 'Test Sambil Ngopi',
-    successMessage: 'Password berhasil direset. Silakan login dengan password baru Anda.',
-    requirements: 'Persyaratan Password',
-    req8Chars: 'Minimal 8 karakter',
-    reqUppercase: 'Satu huruf besar (A-Z)',
-    reqLowercase: 'Satu huruf kecil (a-z)',
-    reqDigit: 'Satu digit (0-9)',
-    reqSpecial: 'Satu karakter khusus (!@#$%^&*...)',
-    captchaRequired: 'Selesaikan verifikasi captcha terlebih dahulu',
-  },
+  
 }
 
 function AuthShell({ t, children }) {
@@ -91,7 +63,7 @@ export default function ResetPasswordPage() {
   const [captchaResetKey, setCaptchaResetKey] = useState(0)
   const turnstileSiteKey = useTurnstileSiteKey()
 
-  const t = translations.en
+  const t = translations
 
   const resetCaptcha = () => {
     setCaptchaToken('')

@@ -93,7 +93,14 @@ describe('SearchService', () => {
   describe('getRecentScenarios', () => {
     it('should return recent scenarios with default limit', async () => {
       const mockScenarios = [
-        { id: '1', name: 'Recent', url: 'http://test.com', steps: 2, updatedAt: new Date() }
+        {
+          id: '1',
+          name: 'Recent',
+          url: 'http://test.com',
+          steps: 2,
+          updatedAt: new Date(),
+          _count: { testSteps: 2 }
+        }
       ]
       prisma.scenario.findMany.mockResolvedValue(mockScenarios)
 

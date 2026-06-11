@@ -1,10 +1,8 @@
 import React, { useState } from 'react'
 import apiClient from '../services/api'
-import { ChevronDown, ChevronUp, AlertCircle, CheckCircle, XCircle } from 'lucide-react'
-import { useSettingsStore } from '../store/settingsStore'
+import { ChevronDown, ChevronUp, AlertCircle, CheckCircle, XCircle } from 'lucide-react'
 
-const i18n = {
-  en: {
+const i18n = {
     affectedUrl: 'Affected URL',
     affectedParameter: 'Affected Parameter',
     payload: 'Attack Payload',
@@ -14,24 +12,11 @@ const i18n = {
     acknowledge: 'Acknowledge',
     markFixed: 'Mark Fixed',
     falsePositive: 'False Positive',
-  },
-  id: {
-    affectedUrl: 'URL Terkena',
-    affectedParameter: 'Parameter Terkena',
-    payload: 'Payload Serangan',
-    evidence: 'Bukti',
-    remediation: 'Remediasi',
-    owasp: 'Kategori OWASP',
-    acknowledge: 'Akui',
-    markFixed: 'Tandai Diperbaiki',
-    falsePositive: 'Positif Palsu',
-  },
+  
 }
 
 export default function SecurityFindings({ findings }) {
-  const [expandedIds, setExpandedIds] = useState([])
-  const { language } = useSettingsStore()
-  const t = i18n[language] || i18n.en
+  const [expandedIds, setExpandedIds] = useState([])  const t = i18n
 
   const toggleExpand = (id) => {
     setExpandedIds(prev =>

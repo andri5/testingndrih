@@ -3,14 +3,12 @@
  */
 
 import React, { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
-import { useSettingsStore } from '../store/settingsStore'
+import { useParams, useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { chainAPI } from '../services/api'
 import { Play, ChevronDown, ChevronUp, Clock, Check, X, Loader } from 'lucide-react'
 
-const i18n = {
-  en: {
+const i18n = {
     loadingChain: 'Loading chain...',
     chainNotFound: 'Chain not found',
     backToChains: 'Back to Chains',
@@ -18,25 +16,12 @@ const i18n = {
     executeChain: 'Execute Chain',
     headlessMode: 'Headless Mode',
     executing: 'Executing...',
-  },
-  id: {
-    loadingChain: 'Memuat chain...',
-    chainNotFound: 'Chain tidak ditemukan',
-    backToChains: 'Kembali ke Chains',
-    back: 'Kembali',
-    executeChain: 'Jalankan Chain',
-    headlessMode: 'Mode Headless',
-    executing: 'Mengeksekusi...',
-  },
+  
 }
 
 export default function ChainExecutorPage() {
   const navigate = useNavigate()
-  const { chainId } = useParams()
-  const { theme, language } = useSettingsStore()
-  const t = i18n[language] || i18n.en
-  const isDark = theme !== 'light'
-
+  const { chainId } = useParams()  const t = i18n
   const [chain, setChain] = useState(null)
   const [loading, setLoading] = useState(true)
   const [executing, setExecuting] = useState(false)
@@ -95,7 +80,7 @@ export default function ChainExecutorPage() {
         <div className="flex items-center justify-center py-24">
           <div className="text-center">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-            <p className={`mt-4 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t.loadingChain}</p>
+            <p className={`mt-4 ${'text-gray-500'}`}>{t.loadingChain}</p>
           </div>
         </div>
       </Layout>
@@ -124,12 +109,12 @@ export default function ChainExecutorPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className={`text-3xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>{chain.name}</h1>
-            <p className={isDark ? 'text-gray-400' : 'text-gray-600'}>{chain.description}</p>
+            <h1 className={`text-3xl font-bold mb-2 ${'text-gray-900'}`}>{chain.name}</h1>
+            <p className={'text-gray-600'}>{chain.description}</p>
           </div>
           <button
             onClick={() => navigate('/chains')}
-            className={`px-6 py-3 rounded-lg font-medium transition ${isDark ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-gray-200 hover:bg-gray-300 text-gray-700'}`}
+            className={`px-6 py-3 rounded-lg font-medium transition ${'bg-gray-200 hover:bg-gray-300 text-gray-700'}`}
           >
             {t.back}
           </button>
@@ -145,8 +130,8 @@ export default function ChainExecutorPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Execution Control */}
           <div className="lg:col-span-1">
-            <div className={`border rounded-lg p-6 sticky top-8 ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
-              <h2 className={`text-xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>{t.executeChain}</h2>
+            <div className={`border rounded-lg p-6 sticky top-8 ${'bg-white border-gray-200'}`}>
+              <h2 className={`text-xl font-bold mb-4 ${'text-gray-900'}`}>{t.executeChain}</h2>
 
               <div className="space-y-4 mb-6">
                 <label className="flex items-center gap-3 cursor-pointer">
@@ -157,7 +142,7 @@ export default function ChainExecutorPage() {
                     disabled={executing}
                     className="w-4 h-4"
                   />
-                  <span className={isDark ? 'text-gray-300' : 'text-gray-700'}>{t.headlessMode}</span>
+                  <span className={'text-gray-700'}>{t.headlessMode}</span>
                 </label>
               </div>
 
@@ -185,20 +170,20 @@ export default function ChainExecutorPage() {
                 </p>
               )}
 
-              <div className={`mt-6 pt-6 border-t ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
-                <h3 className={`text-lg font-bold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>Chain Overview</h3>
+              <div className={`mt-6 pt-6 border-t ${'border-gray-200'}`}>
+                <h3 className={`text-lg font-bold mb-3 ${'text-gray-900'}`}>Chain Overview</h3>
                 <div className="space-y-2 text-sm">
                   <div>
-                    <span className={isDark ? 'text-gray-400' : 'text-gray-500'}>Total Steps:</span>
-                    <span className={`ml-2 font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{chain.steps}</span>
+                    <span className={'text-gray-500'}>Total Steps:</span>
+                    <span className={`ml-2 font-medium ${'text-gray-900'}`}>{chain.steps}</span>
                   </div>
                   <div>
-                    <span className={isDark ? 'text-gray-400' : 'text-gray-500'}>Total Executions:</span>
-                    <span className={`ml-2 font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{executions.length}</span>
+                    <span className={'text-gray-500'}>Total Executions:</span>
+                    <span className={`ml-2 font-medium ${'text-gray-900'}`}>{executions.length}</span>
                   </div>
                   <div>
-                    <span className={isDark ? 'text-gray-400' : 'text-gray-500'}>Status:</span>
-                    <span className={`ml-2 font-medium ${chain.isActive ? 'text-green-500' : isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                    <span className={'text-gray-500'}>Status:</span>
+                    <span className={`ml-2 font-medium ${chain.isActive ? 'text-green-500' : 'text-gray-500'}`}>
                       {chain.isActive ? 'Active' : 'Inactive'}
                     </span>
                   </div>
@@ -211,34 +196,34 @@ export default function ChainExecutorPage() {
           <div className="lg:col-span-2 space-y-6">
             {/* Current Execution */}
             {currentExecution && (
-              <div className={`border rounded-lg p-6 ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
-                <h2 className={`text-xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Current Execution</h2>
+              <div className={`border rounded-lg p-6 ${'bg-white border-gray-200'}`}>
+                <h2 className={`text-xl font-bold mb-4 ${'text-gray-900'}`}>Current Execution</h2>
                 <ExecutionResults execution={currentExecution} expandedSteps={expandedSteps} setExpandedSteps={setExpandedSteps} />
               </div>
             )}
 
             {/* Chain Steps */}
-            <div className={`border rounded-lg p-6 ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
-              <h2 className={`text-xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Chain Steps ({chain.chainSteps?.length || 0})</h2>
+            <div className={`border rounded-lg p-6 ${'bg-white border-gray-200'}`}>
+              <h2 className={`text-xl font-bold mb-4 ${'text-gray-900'}`}>Chain Steps ({chain.chainSteps?.length || 0})</h2>
               
               {chain.chainSteps && chain.chainSteps.length > 0 ? (
                 <div className="space-y-3">
                   {chain.chainSteps.map((step) => (
                     <div
                       key={step.id}
-                      className={`border rounded-lg p-4 ${isDark ? 'bg-gray-900/50 border-gray-600' : 'bg-gray-50 border-gray-300'}`}
+                      className={`border rounded-lg p-4 ${'bg-gray-50 border-gray-300'}`}
                     >
                       <div className="flex items-center gap-3">
                         <span className="flex items-center justify-center w-8 h-8 bg-blue-600 rounded-full text-white font-bold text-sm">
                           {step.stepNumber}
                         </span>
                         <div className="flex-1">
-                          <div className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{step.scenario.name}</div>
+                          <div className={`font-medium ${'text-gray-900'}`}>{step.scenario.name}</div>
                           {step.description && (
-                            <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{step.description}</div>
+                            <div className={`text-sm ${'text-gray-500'}`}>{step.description}</div>
                           )}
                         </div>
-                        <div className={`flex items-center gap-4 text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                        <div className={`flex items-center gap-4 text-xs ${'text-gray-500'}`}>
                           <span>Wait: {step.waitTime}ms</span>
                           <span>Retry: {step.retryCount}x</span>
                         </div>
@@ -247,34 +232,34 @@ export default function ChainExecutorPage() {
                   ))}
                 </div>
               ) : (
-                <p className={`text-center py-8 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>No steps in this chain</p>
+                <p className={`text-center py-8 ${'text-gray-500'}`}>No steps in this chain</p>
               )}
             </div>
 
             {/* Execution History */}
             {executions.length > 0 && (
-              <div className={`border rounded-lg p-6 ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
-                <h2 className={`text-xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Recent Executions</h2>
+              <div className={`border rounded-lg p-6 ${'bg-white border-gray-200'}`}>
+                <h2 className={`text-xl font-bold mb-4 ${'text-gray-900'}`}>Recent Executions</h2>
                 <div className="space-y-3">
                   {executions.map((exec) => (
                     <div
                       key={exec.id}
-                      className={`border rounded-lg p-4 ${isDark ? 'bg-gray-900/50 border-gray-600' : 'bg-gray-50 border-gray-300'}`}
+                      className={`border rounded-lg p-4 ${'bg-gray-50 border-gray-300'}`}
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                           <StatusIcon status={exec.status} />
                           <div>
-                            <div className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                            <div className={`font-medium ${'text-gray-900'}`}>
                               {exec.totalSteps} steps • {exec.passedSteps} passed • {exec.failedSteps} failed
                             </div>
-                            <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                            <div className={`text-sm ${'text-gray-500'}`}>
                               {new Date(exec.createdAt).toLocaleString()}
                             </div>
                           </div>
                         </div>
                         {exec.duration && (
-                          <div className={`text-sm flex items-center gap-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                          <div className={`text-sm flex items-center gap-1 ${'text-gray-500'}`}>
                             <Clock size={14} />
                             {(exec.duration / 1000).toFixed(1)}s
                           </div>

@@ -30,8 +30,8 @@ html {
 }
 
 body {
-  background-color: #0F0E11;
-  color: #E0E0E2;
+  background-color: #F5F5F7;
+  color: #1A1A1C;
 }
 
 /* App shell — consistent spacing & readable type on mobile */
@@ -58,7 +58,7 @@ body {
   font-size: clamp(1rem, 2vw, 1.25rem);
 }
 
-/* ─── Dark Theme (default) ─── */
+/* ─── Dark Theme ─── */
 html.theme-dark body {
   background-color: #0F0E11;
   color: #E0E0E2;

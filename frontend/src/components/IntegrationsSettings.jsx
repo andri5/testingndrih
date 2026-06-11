@@ -8,42 +8,27 @@ const cardCls = 'bg-[#1A1A1C] border border-[#2D2D2F] rounded-xl p-6'
 const labelCls = 'block text-sm font-medium text-[#A0A0A4] mb-1.5'
 const inputCls = 'w-full px-3 py-2 bg-[#0F0E11] border border-[#2D2D2F] rounded-lg text-[#E0E0E2] text-sm focus:outline-none focus:border-[#5E6AD2]'
 
-export default function IntegrationsSettings({ language = 'en' }) {
-  const t = language === 'id' ? {
-    notifications: 'Notifikasi',
-    emailOnFail: 'Email saat eksekusi gagal',
-    emailOnSmoke: 'Email saat smoke test gagal',
-    webhook: 'Webhook URL',
-    webhookEnabled: 'Aktifkan webhook',
-    webhookOnFail: 'Webhook saat eksekusi gagal',
-    webhookOnSmoke: 'Webhook saat smoke test gagal',
-    save: 'Simpan notifikasi',
-    ciTokens: 'Token CI/CD',
-    createToken: 'Buat token',
-    tokenName: 'Nama token',
-    revoke: 'Cabut',
-    copyHint: 'Salin token sekarang — tidak ditampilkan lagi',
-    ciExample: 'Contoh perintah CI',
-    saved: 'Pengaturan disimpan',
-    tokenCreated: 'Token dibuat',
-  } : {
-    notifications: 'Notifications',
-    emailOnFail: 'Email on execution failure',
-    emailOnSmoke: 'Email on smoke test failure',
-    webhook: 'Webhook URL',
-    webhookEnabled: 'Enable webhook',
-    webhookOnFail: 'Webhook on execution failure',
-    webhookOnSmoke: 'Webhook on smoke test failure',
-    save: 'Save notifications',
-    ciTokens: 'CI/CD API Tokens',
-    createToken: 'Create token',
-    tokenName: 'Token name',
-    revoke: 'Revoke',
-    copyHint: 'Copy this token now — it will not be shown again',
-    ciExample: 'CI example command',
-    saved: 'Settings saved',
-    tokenCreated: 'Token created',
-  }
+const labels = {
+  notifications: 'Notifications',
+  emailOnFail: 'Email on execution failure',
+  emailOnSmoke: 'Email on smoke test failure',
+  webhook: 'Webhook URL',
+  webhookEnabled: 'Enable webhook',
+  webhookOnFail: 'Webhook on execution failure',
+  webhookOnSmoke: 'Webhook on smoke test failure',
+  save: 'Save notifications',
+  ciTokens: 'CI/CD API Tokens',
+  createToken: 'Create token',
+  tokenName: 'Token name',
+  revoke: 'Revoke',
+  copyHint: 'Copy this token now — it will not be shown again',
+  ciExample: 'CI example command',
+  saved: 'Settings saved',
+  tokenCreated: 'Token created',
+}
+
+export default function IntegrationsSettings() {
+  const t = labels
 
   const [settings, setSettings] = useState(null)
   const [tokens, setTokens] = useState([])

@@ -1,9 +1,7 @@
 import { useState } from 'react'
-import { Button, Badge, Spinner, Card, Tooltip } from './ui'
-import { useSettingsStore } from '../store/settingsStore'
+import { Button, Badge, Spinner, Card, Tooltip } from './ui'
 
-const tooltipI18n = {
-  en: {
+const tooltipI18n = {
     view:   'View details & steps',
     edit:   'Edit name, description, and URL',
     clone:  'Duplicate scenario with all its steps',
@@ -14,19 +12,7 @@ const tooltipI18n = {
     unstress: 'Remove stress test marker',
     security: 'Mark for security testing and vulnerability scanning',
     unsecurity: 'Remove security testing marker',
-  },
-  id: {
-    view:   'Lihat detail & langkah-langkah scenario',
-    edit:   'Edit nama, deskripsi, dan URL scenario',
-    clone:  'Duplikat scenario beserta semua langkah-langkahnya',
-    delete: 'Hapus scenario ini secara permanen',
-    smoke:  'Tandai sebagai smoke test untuk validasi deployment',
-    unsmoke: 'Hapus penanda smoke test',
-    stress: 'Tandai sebagai stress test untuk pengujian performa',
-    unstress: 'Hapus penanda stress test',
-    security: 'Tandai untuk pengujian keamanan dan pemindaian kerentanan',
-    unsecurity: 'Hapus penanda pengujian keamanan',
-  },
+  
 }
 
 export function ScenariosList({ 
@@ -46,9 +32,7 @@ export function ScenariosList({
   onToggleSelect = null,
   onSelectAll = null,
   bulkSelectEnabled = false,
-}) {
-  const { language } = useSettingsStore()
-  const tt = tooltipI18n[language] ?? tooltipI18n.en
+}) {  const tt = tooltipI18n
 
   // Track per-action loading state
   const [loadingStates, setLoadingStates] = useState({})

@@ -1,24 +1,15 @@
-import { useNavigate } from 'react-router-dom'
-import { useSettingsStore } from '../store/settingsStore'
+import { useNavigate } from 'react-router-dom'
 import { ShieldCheck, Clock, LogIn } from 'lucide-react'
 
-const i18n = {
-  en: {
+const i18n = {
     title: 'Session Expired',
     description: 'Your session has timed out due to inactivity. Please sign in again to continue.',
     signInAgain: 'Sign in again',
-  },
-  id: {
-    title: 'Sesi Berakhir',
-    description: 'Sesi Anda telah kedaluwarsa karena tidak aktif. Silakan masuk lagi untuk melanjutkan.',
-    signInAgain: 'Masuk Lagi',
-  },
+  
 }
 
 export default function SessionExpiredPage() {
-  const navigate = useNavigate()
-  const { language } = useSettingsStore()
-  const t = i18n[language] || i18n.en
+  const navigate = useNavigate()  const t = i18n
 
   return (
     <div className="auth-page-bg min-h-screen bg-[#0F0E11] flex items-center justify-center px-4">

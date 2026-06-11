@@ -1,11 +1,15 @@
 /** Routes restricted to ADMIN role (Option A — strict). */
 export const ADMIN_ROUTE_PATHS = [
+  '/chains',
+  '/api-testing',
+  '/environments',
   '/scheduler',
   '/parallel',
   '/smoke-test',
   '/stress-test',
   '/security-test',
   '/browser-matrix',
+  '/visual-regression',
   '/help/smoke-test',
   '/help/stress-test',
   '/help/security-test',

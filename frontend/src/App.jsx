@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { useEffect } from 'react'
+import { Toaster } from 'react-hot-toast'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import ForgotPasswordPage from './pages/ForgotPasswordPage'
@@ -21,7 +22,6 @@ import SmokeTestPage from './pages/SmokeTest'
 import StressTestPage from './pages/StressTestPage'
 import SecurityTestPage from './pages/SecurityTestPage'
 import ApiTestingPage from './pages/ApiTestingPage'
-import IssuesPage from './pages/IssuesPage'
 import EnvironmentsPage from './pages/EnvironmentsPage'
 import VisualRegressionPage from './pages/VisualRegressionPage'
 import SmokeTestHelpPage from './pages/SmokeTestHelpPage'
@@ -53,6 +53,13 @@ export default function App() {
 
   return (
     <ErrorBoundary>
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          duration: 4000,
+          style: { background: '#1A1A1C', color: '#E0E0E2', border: '1px solid rgba(255,255,255,0.1)' }
+        }}
+      />
       <OfflineBanner />
       <Router>
       <Routes>
@@ -131,68 +138,19 @@ export default function App() {
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/chains"
-          element={
-            <ProtectedRoute>
-              <ChainsPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/chains/:chainId"
-          element={
-            <ProtectedRoute>
-              <ChainBuilderPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/chains/:chainId/execute"
-          element={
-            <ProtectedRoute>
-              <ChainExecutorPage />
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/chains" element={<AdminRoute><ChainsPage /></AdminRoute>} />
+        <Route path="/chains/:chainId" element={<AdminRoute><ChainBuilderPage /></AdminRoute>} />
+        <Route path="/chains/:chainId/execute" element={<AdminRoute><ChainExecutorPage /></AdminRoute>} />
         <Route path="/scheduler" element={<AdminRoute><SchedulerPage /></AdminRoute>} />
         <Route path="/parallel" element={<AdminRoute><ParallelExecutionPage /></AdminRoute>} />
         <Route path="/browser-matrix" element={<AdminRoute><BrowserMatrixPage /></AdminRoute>} />
         <Route path="/smoke-test" element={<AdminRoute><SmokeTestPage /></AdminRoute>} />
         <Route path="/stress-test" element={<AdminRoute><StressTestPage /></AdminRoute>} />
         <Route path="/security-test" element={<AdminRoute><SecurityTestPage /></AdminRoute>} />
-        <Route
-          path="/api-testing"
-          element={
-            <ProtectedRoute>
-              <ApiTestingPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/issues"
-          element={
-            <ProtectedRoute>
-              <IssuesPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/environments"
-          element={
-            <ProtectedRoute>
-              <EnvironmentsPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/visual-regression"
-          element={
-            <ProtectedRoute>
-              <VisualRegressionPage />
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/api-testing" element={<AdminRoute><ApiTestingPage /></AdminRoute>} />
+        <Route path="/issues" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/environments" element={<AdminRoute><EnvironmentsPage /></AdminRoute>} />
+        <Route path="/visual-regression" element={<AdminRoute><VisualRegressionPage /></AdminRoute>} />
 
         {/* Help Pages */}
         <Route path="/help/smoke-test" element={<AdminRoute><SmokeTestHelpPage /></AdminRoute>} />

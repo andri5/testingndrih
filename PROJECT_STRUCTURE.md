@@ -17,7 +17,7 @@ Dokumentasi struktur project telah dipindahkan ke folder `/docs` agar lebih muda
 ```
 testingndrih/
 ├── backend/              # API Express + Prisma + Playwright
-├── frontend/             # React + Vite SPA
+├── frontend/             # React + Vite SPA (English UI, light theme)
 ├── docs/                 # Dokumentasi terpusat
 ├── scripts/              # Utilitas root (health-check)
 ├── .github/workflows/    # CI/CD workflows
@@ -27,4 +27,10 @@ testingndrih/
 └── README.md
 ```
 
-**Last Updated:** June 4, 2026
+## UI Defaults (Juni 2026)
+
+- **Tema:** Light only — tidak ada toggle dark/light di UI
+- **Bahasa:** English only — tidak ada toggle bahasa
+- **Pengaturan app:** `settingsStore.js` hanya menyimpan execution timeout, auto-screenshot, dan environment terpilih
+
+**Last Updated:** June 11, 2026

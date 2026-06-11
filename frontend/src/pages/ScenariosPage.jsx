@@ -11,12 +11,10 @@ import { QuickRecordModal } from '../components/QuickRecordModal'
 import { ImportPreviewModal } from '../components/ImportPreviewModal'
 import { Tooltip } from '../components/ui'
 import { useScenarioStore } from '../store/scenarioStore'
-import { executionAPI } from '../services/api'
-import { useSettingsStore } from '../store/settingsStore'
+import { executionAPI } from '../services/api'
 import { useAuthStore } from '../store/authStore'
 
-const i18n = {
-  en: {
+const i18n = {
     title: 'Test Scenarios',
     subtitle: 'Create and manage your test scenarios',
     createScenarioBtn: 'Create Scenario',
@@ -39,31 +37,7 @@ const i18n = {
     importExcel: 'Import Excel',
     importExcelDesc: 'Bulk import',
     importExcelTooltip: 'Upload an Excel file with test scenarios. Use Ctrl+Click to view template.',
-  },
-  id: {
-    title: 'Skenario Pengujian',
-    subtitle: 'Buat dan kelola skenario pengujian Anda',
-    createScenarioBtn: 'Buat Scenario',
-    selectedCount: (n) => `${n} scenario dipilih`,
-    runningBulk: 'Menjalankan eksekusi secara berurutan (headless)...',
-    close: 'Tutup',
-    cancel: 'Batal',
-    quickRecordTitle: 'Buat scenario & langsung mulai recording',
-    templatesTitle: 'Buat scenario dari template siap pakai',
-    // Menu items
-    createManual: 'Buat Manual',
-    createManualDesc: 'Buat dengan form',
-    createManualTooltip: 'Buat scenario baru menggunakan form. Isi nama, URL, dan tambah langkah secara manual.',
-    quickRecord: 'Rekam Cepat',
-    quickRecordDesc: 'Rekam interaksi',
-    quickRecordTooltip: 'Masukkan URL dan mulai rekam interaksi pengguna untuk membuat langkah uji secara otomatis.',
-    templates: 'Template',
-    templatesDesc: 'Template siap pakai',
-    templatesMenuTooltip: 'Pilih dari template scenario siap pakai (Login, E-Commerce, Navigasi, Form Testing).',
-    importExcel: 'Impor Excel',
-    importExcelDesc: 'Impor massal',
-    importExcelTooltip: 'Unggah file Excel dengan scenario uji. Gunakan Ctrl+Klik untuk melihat template.',
-  },
+  
 }
 
 export default function ScenariosPage() {
@@ -96,12 +70,8 @@ export default function ScenariosPage() {
     duplicateScenario,
     setSelectedScenario,
     clearError
-  } = useScenarioStore()
-
-  const language = useSettingsStore((state) => state.language)
-  const theme = useSettingsStore((state) => state.theme)
-  const isAdmin = useAuthStore((state) => state.user)?.role === 'ADMIN'
-  const t = i18n[language] || i18n.en
+  } = useScenarioStore()  const isAdmin = useAuthStore((state) => state.user)?.role === 'ADMIN'
+  const t = i18n
 
   // Close menu when clicking outside
   useEffect(() => {
