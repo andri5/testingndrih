@@ -1,0 +1,45 @@
+name: Post-Maintenance Deploy
+
+# Probes production health; triggers Deploy Production when the VPS is reachable again.
+# After VPS maintenance: this runs on schedule, or run manually from Actions tab.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '*/15 * * * *'
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  probe:
+    name: Check production health
+    runs-on: ubuntu-latest
+    outputs:
+      healthy: ${{ steps.health.outputs.healthy }}
+    steps:
+      - name: Probe testsambilngopi.com
+        id: health
+        run: |
+          if curl -fsS --connect-timeout 20 https://testsambilngopi.com/health; then
+            echo "healthy=true" >> "$GITHUB_OUTPUT"
+            echo "Production is reachable."
+          else
+            echo "healthy=false" >> "$GITHUB_OUTPUT"
+            echo "Production still unreachable (maintenance or services down)."
+          fi
+
+  trigger-deploy:
+    name: Trigger production deploy
+    needs: probe
+    if: needs.probe.outputs.healthy == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Start Deploy Production workflow
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh workflow run deploy-production.yml \
+            --repo "${{ github.repository }}" \
+            --ref main
+          echo "Deploy Production triggered — approve in GitHub Environments if prompted."
