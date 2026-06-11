@@ -1,5 +1,5 @@
 /**
- * E2E — Platform features (API Testing, Issues, Environments, Visual Regression)
+ * E2E — Platform features (API Testing, Issues widget, Environments, Visual Regression)
  * Uses mocked API so pages can be tested without a running backend.
  */
 
@@ -86,6 +86,14 @@ function mockPlatformApis(page) {
       return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ apiTests: [] }) })
     }
 
+    if (url.includes('/api/scheduler')) {
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ schedules: [] })
+      })
+    }
+
     if (url.includes('/api/issues')) {
       return route.fulfill({
         status: 200,
@@ -142,6 +150,10 @@ function mockPlatformApis(page) {
   })
 }
 
+async function expandToolsMenu(page) {
+  await page.getByRole('button').filter({ hasText: /^Tools$/i }).click()
+}
+
 test.describe('Platform Features E2E', () => {
   test.beforeEach(async ({ page }) => {
     await setupAuth(page)
@@ -150,47 +162,54 @@ test.describe('Platform Features E2E', () => {
 
   test('API Testing page loads with title and scenario selector', async ({ page }) => {
     await page.goto('/api-testing')
-    await expect(page.locator('h1').filter({ hasText: /API Testing|Pengujian API/i })).toBeVisible()
-    await expect(page.getByText(/HTTP request|request HTTP/i)).toBeVisible()
+    await expect(page.locator('h1').filter({ hasText: /API Testing/i })).toBeVisible()
+    await expect(page.getByText(/HTTP request tests linked to scenarios/i)).toBeVisible()
     await expect(page.locator('select').first()).toBeVisible()
   })
 
-  test('Issues page loads and shows issue list', async ({ page }) => {
+  test('Dashboard shows open issues widget', async ({ page }) => {
+    await page.goto('/dashboard')
+    await expect(page.getByText('Open Issues')).toBeVisible({ timeout: 10000 })
+    await expect(page.getByText('Step failed: click button')).toBeVisible()
+  })
+
+  test('/issues redirects to dashboard', async ({ page }) => {
     await page.goto('/issues')
-    await expect(page.locator('h1').filter({ hasText: /Test Issues|Issue Pengujian/i })).toBeVisible()
-    await expect(page.getByText(/Step failed: click button/i)).toBeVisible()
-    await expect(page.getByText('HIGH').first()).toBeVisible()
+    await expect(page).toHaveURL(/\/dashboard$/)
   })
 
   test('Environments page loads with environment card', async ({ page }) => {
     await page.goto('/environments')
-    await expect(page.locator('h1').filter({ hasText: /^Environments$|^Environment$/i })).toBeVisible()
-    await expect(page.getByRole('heading', { name: 'Development' })).toBeVisible()
-    await expect(page.getByText(/{{variableName}}|{{namaVariabel}}/i)).toBeVisible()
+    await expect(page.locator('h1').filter({ hasText: /^Environments$/i })).toBeVisible()
+    await expect(page.getByText('Development')).toBeVisible()
+    await expect(page.getByText(/{{variableName}}/i)).toBeVisible()
   })
 
   test('Visual Regression page loads with action buttons', async ({ page }) => {
     await page.goto('/visual-regression')
-    await expect(page.locator('h1').filter({ hasText: /Visual Regression|Regresi Visual/i })).toBeVisible()
-    await expect(page.getByRole('button', { name: /Capture Baselines|Ambil Baseline/i })).toBeVisible()
-    await expect(page.getByRole('button', { name: /Run Visual Test|Jalankan Tes Visual/i })).toBeVisible()
+    await expect(page.locator('h1').filter({ hasText: /Visual Regression/i })).toBeVisible()
+    await expect(page.getByRole('button', { name: /Capture Baselines/i })).toBeVisible()
+    await expect(page.getByRole('button', { name: /Run Visual Test/i })).toBeVisible()
   })
 
-  test('Sidebar navigation links reach platform pages', async ({ page }) => {
+  test('Sidebar Tools navigation reaches admin platform pages', async ({ page }) => {
     await page.goto('/dashboard')
     await expect(page.locator('h1').first()).toBeVisible({ timeout: 10000 })
 
-    // API Testing & Issues live under Main (not admin-only Tools)
+    await expandToolsMenu(page)
     await page.getByRole('link', { name: /^API Testing$/i }).click()
     await expect(page).toHaveURL(/\/api-testing/)
-    await page.getByRole('link', { name: /^Issues$/i }).first().click()
-    await expect(page).toHaveURL(/\/issues/)
+
+    await expandToolsMenu(page)
+    await page.getByRole('link', { name: /^Visual Regression$/i }).click()
+    await expect(page).toHaveURL(/\/visual-regression/)
   })
 
   test('Admin Tools menu reaches scheduler page', async ({ page }) => {
     await page.goto('/dashboard')
-    await page.getByText(/^Tools$/i).click()
+    await expandToolsMenu(page)
     await page.getByRole('link', { name: /^Scheduler$/i }).click()
     await expect(page).toHaveURL(/\/scheduler/)
+    await expect(page.locator('h1').filter({ hasText: /Test Scheduler/i })).toBeVisible()
   })
 })
