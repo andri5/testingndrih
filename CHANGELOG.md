@@ -1,3 +1,16 @@
+# [1.6.0](https://github.com/andri5/testingndrih/compare/v1.5.0...v1.6.0) (2026-06-11)
+
+
+### Bug Fixes
+
+* **ci:** platform E2E strict mode and production smoke job ([e903172](https://github.com/andri5/testingndrih/commit/e903172254b17ff1bfee35bc8cd62b87faa11ed9))
+* **e2e:** align platform E2E with admin-only tools and issues widget ([bb3626f](https://github.com/andri5/testingndrih/commit/bb3626fadf66e1fbc803c16535cf5ceb432667e9))
+
+
+### Features
+
+* light theme, role-based access, execution UX, visual regression admin ([79eba29](https://github.com/andri5/testingndrih/commit/79eba29ff1f480c6fb477426a9d9e8f4c9bd09df))
+
 # [1.5.0](https://github.com/andri5/testingndrih/compare/v1.4.0...v1.5.0) (2026-06-10)
 
 
