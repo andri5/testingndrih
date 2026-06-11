@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { authAPI } from '../services/api'
+import { WELCOME_SPLASH_STORAGE_KEY } from '../constants/welcomeSplash'
 
 export const useAuthStore = create((set) => ({
   // State
@@ -18,6 +19,7 @@ export const useAuthStore = create((set) => ({
       // Save to localStorage
       localStorage.setItem('authToken', token)
       localStorage.setItem('user', JSON.stringify(user))
+      localStorage.setItem(WELCOME_SPLASH_STORAGE_KEY, user.id)
 
       // Update store
       set({ user, token, isLoading: false })

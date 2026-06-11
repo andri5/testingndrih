@@ -17,6 +17,8 @@ import {
 import toast from 'react-hot-toast'
 import { getQuickActionsForRole } from '../constants/quickActions'
 import OpenIssuesWidget from '../components/OpenIssuesWidget'
+import WelcomeSplashModal from '../components/WelcomeSplashModal'
+import { WELCOME_SPLASH_STORAGE_KEY } from '../constants/welcomeSplash'
 
 // i18n translations
 const i18n = {
@@ -73,11 +75,23 @@ export default function DashboardPage() {
   const [recentExecutions, setRecentExecutions] = useState([])
   const [loading, setLoading] = useState(true)
   const [exporting, setExporting] = useState(false)
+  const [showWelcomeSplash, setShowWelcomeSplash] = useState(false)
   const quickActions = getQuickActionsForRole(user?.role)
 
   useEffect(() => {
     loadDashboardData()
   }, [])
+
+  useEffect(() => {
+    if (user?.id && localStorage.getItem(WELCOME_SPLASH_STORAGE_KEY) === user.id) {
+      setShowWelcomeSplash(true)
+    }
+  }, [user?.id])
+
+  const dismissWelcomeSplash = () => {
+    localStorage.removeItem(WELCOME_SPLASH_STORAGE_KEY)
+    setShowWelcomeSplash(false)
+  }
 
   const loadDashboardData = async () => {
     setLoading(true)
@@ -160,6 +174,9 @@ export default function DashboardPage() {
 
   return (
     <Layout>
+      {showWelcomeSplash && (
+        <WelcomeSplashModal userName={user?.name} onClose={dismissWelcomeSplash} />
+      )}
       <div className="space-y-6 animate-fade-in">
         {/* Welcome */}
         <div>

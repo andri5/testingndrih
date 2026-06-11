@@ -77,6 +77,27 @@ jobs:
           npm install --no-save "@rollup/rollup-linux-x64-gnu@${ROLLUP_VERSION}"
       - run: npx playwright install chromium --with-deps
       - run: npm run build
+      # Build from source — validates the commit before deploy (prod may lag behind main)
       - run: npx playwright test e2e/platform-features-e2e.spec.js --project=chromium
         env:
           CI: true
+
+  production-smoke:
+    name: Production Smoke
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+        working-directory: .
+      - run: npx playwright install chromium --with-deps
+      - run: npx playwright test e2e/production-smoke-e2e.spec.js --project=chromium
+        env:
+          CI: true
+          PLAYWRIGHT_BASE_URL: https://testsambilngopi.com

@@ -181,7 +181,7 @@ test.describe('Platform Features E2E', () => {
   test('Environments page loads with environment card', async ({ page }) => {
     await page.goto('/environments')
     await expect(page.locator('h1').filter({ hasText: /^Environments$/i })).toBeVisible()
-    await expect(page.getByText('Development')).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Development' })).toBeVisible()
     await expect(page.getByText(/{{variableName}}/i)).toBeVisible()
   })
 

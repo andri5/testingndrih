@@ -1,5 +1,8 @@
 import { defineConfig, devices } from '@playwright/test'
 
+const baseURL = (process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3001').replace(/\/$/, '')
+const useExternalBase = !/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(baseURL)
+
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: false,
@@ -15,8 +18,7 @@ export default defineConfig({
   ],
 
   use: {
-    // Fixed port — avoid global PLAYWRIGHT_BASE_URL from other projects breaking local runs
-    baseURL: 'http://localhost:3001',
+    baseURL,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
@@ -39,11 +41,13 @@ export default defineConfig({
     }
   ],
 
-  webServer: {
-    command: process.env.CI ? 'npx vite preview --port 3001' : 'npm run dev',
-    cwd: '.',
-    url: 'http://localhost:3001',
-    reuseExistingServer: true,
-    timeout: 120000
-  },
+  webServer: useExternalBase
+    ? undefined
+    : {
+        command: process.env.CI ? 'npx vite preview --port 3001' : 'npm run dev',
+        cwd: '.',
+        url: 'http://localhost:3001',
+        reuseExistingServer: true,
+        timeout: 120000
+      },
 })
