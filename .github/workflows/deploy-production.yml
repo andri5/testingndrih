@@ -126,11 +126,25 @@ jobs:
             exit 1
           fi
 
+          docker compose up -d postgres
+          echo "Waiting for postgres..."
+          for i in $(seq 1 30); do
+            if docker compose exec -T postgres pg_isready -U testingndrih_user -d testingndrih >/dev/null 2>&1; then
+              echo "Postgres ready."
+              break
+            fi
+            sleep 2
+          done
+
           docker compose build app
           docker compose up -d app
 
-          echo "App redeployed for ${TAG} (database container unchanged)"
+          echo "Stack redeployed for ${TAG}"
           docker compose ps
+
+          if command -v nginx >/dev/null 2>&1; then
+            sudo nginx -t && sudo systemctl reload nginx || echo "WARN: nginx reload failed — check reverse proxy manually"
+          fi
 
       - name: Wait for production health check
         if: github.event_name == 'workflow_dispatch' || steps.release_check.outputs.skip != 'true'
