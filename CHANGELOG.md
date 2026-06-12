@@ -1,3 +1,12 @@
+## [1.9.1](https://github.com/andri5/testingndrih/compare/v1.9.0...v1.9.1) (2026-06-12)
+
+
+### Bug Fixes
+
+* **ci:** move production smoke out of main CI pipeline ([5bcf79e](https://github.com/andri5/testingndrih/commit/5bcf79e660a5d310335258506ba6de4d229ceca6))
+* **ci:** stabilize Run Test Scenario and Production Monitor workflows ([0b7c326](https://github.com/andri5/testingndrih/commit/0b7c326fed38e6d152d494a41388ef0ed718ca57))
+* **e2e:** stub health fetch in production smoke browser tests ([d5b6793](https://github.com/andri5/testingndrih/commit/d5b67938d4e0a509364c7ec4e897c208c114e0f4))
+
 # [1.9.0](https://github.com/andri5/testingndrih/compare/v1.8.0...v1.9.0) (2026-06-12)
 
 
