@@ -1,3 +1,17 @@
+# [1.7.0](https://github.com/andri5/testingndrih/compare/v1.6.0...v1.7.0) (2026-06-12)
+
+
+### Bug Fixes
+
+* **ci:** harden production smoke tests and add use_main deploy ([a1ccd58](https://github.com/andri5/testingndrih/commit/a1ccd583a1ee8a4beefea44a85c18e4142a0dbbf))
+* **deploy:** add production recovery script and resilient deploy ([43fe11b](https://github.com/andri5/testingndrih/commit/43fe11bdf0b25c6b49ef687f82db4a8074510d67))
+
+
+### Features
+
+* **deploy:** playful telegram notify with changelog and authors ([5671cd3](https://github.com/andri5/testingndrih/commit/5671cd3a6c4699e8de3b6509f8b5091685d807ac))
+* **deploy:** telegram notification on production deploy ([1405f73](https://github.com/andri5/testingndrih/commit/1405f73974a5e14ebad6698f648845a2accb1704))
+
 # [1.6.0](https://github.com/andri5/testingndrih/compare/v1.5.0...v1.6.0) (2026-06-11)
 
 
