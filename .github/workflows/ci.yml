@@ -82,24 +82,5 @@ jobs:
         env:
           CI: true
 
-  production-smoke:
-    name: Production Smoke
-    # Only on main — prod downtime must not block feature branches / PRs
-    if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: frontend
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: npm
-      - run: npm ci
-        working-directory: .
-      - run: npx playwright install chromium --with-deps
-      - run: npx playwright test e2e/production-smoke-e2e.spec.js --project=chromium
-        env:
-          CI: true
-          PLAYWRIGHT_BASE_URL: https://testsambilngopi.com
+  # Production smoke lives in prod-monitor.yml (scheduled) — not gated on CI
+  # so prod issues or deploy lag do not block releases.
