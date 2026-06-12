@@ -42,6 +42,44 @@ html_escape() {
   sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g'
 }
 
+# Prefer git author name, then GitHub login, then committer name
+committer_label() {
+  jq -r '
+    if .commit.author.name != null and .commit.author.name != "" then .commit.author.name
+    elif .author.login != null and .author.login != "" then .author.login
+    elif .commit.committer.name != null and .commit.committer.name != "" then .commit.committer.name
+    else "unknown"
+    end
+  '
+}
+
+fetch_head_commit_block() {
+  local tag="$1"
+  local sha="${tag#main@}"
+
+  if [ -z "${GH_TOKEN}" ] || [ -z "${REPO}" ] || [ -z "${sha}" ] || [ "${sha}" = "${tag}" ]; then
+    return
+  fi
+
+  local commit_json
+  commit_json=$(curl -fsSL \
+    -H "Authorization: Bearer ${GH_TOKEN}" \
+    -H "Accept: application/vnd.github+json" \
+    "https://api.github.com/repos/${REPO}/commits/${sha}")
+
+  local subject author short_sha
+  subject=$(echo "${commit_json}" | jq -r '.commit.message | split("\n")[0]')
+  author=$(echo "${commit_json}" | committer_label)
+  short_sha=$(echo "${sha}" | cut -c1-7)
+
+  HEAD_COMMIT_BLOCK=$(
+    printf '🎯 <b>Commit deploy ini:</b>\n<code>%s</code> — %s\n👤 Nama committer: <b>%s</b>' \
+      "${short_sha}" \
+      "$(printf '%s' "${subject}" | html_escape)" \
+      "$(printf '%s' "${author}" | html_escape)"
+  )
+}
+
 fetch_changelog_block() {
   local tag="$1"
   local prev_tag=""
@@ -78,14 +116,20 @@ fetch_changelog_block() {
 
     commits_block=$(echo "${compare_json}" | jq -r '
       [.commits[]? |
-        "• " + (.commit.message | split("\n")[0]) + " — " +
-        (if .author.login then .author.login elif .commit.author.name then .commit.author.name else "unknown" end)
+        "• " + (.commit.message | split("\n")[0]) + "\n  👤 " +
+        (if .commit.author.name != null and .commit.author.name != "" then .commit.author.name
+         elif .author.login != null then .author.login
+         elif .commit.committer.name != null then .commit.committer.name
+         else "unknown" end)
       ] | .[:12][] 
     ' 2>/dev/null | html_escape || true)
 
     authors_block=$(echo "${compare_json}" | jq -r '
       [.commits[]? |
-        (if .author.login then .author.login elif .commit.author.name then .commit.author.name else "unknown" end)
+        (if .commit.author.name != null and .commit.author.name != "" then .commit.author.name
+         elif .author.login != null then .author.login
+         elif .commit.committer.name != null then .commit.committer.name
+         else "unknown" end)
       ] | unique | .[:8] | join(", ")
     ' 2>/dev/null || true)
   fi
@@ -105,11 +149,18 @@ fetch_changelog_block() {
 }
 
 if [ "${MODE}" = "success" ]; then
+  HEAD_COMMIT_BLOCK=""
   CHANGELOG=$(fetch_changelog_block "${TAG}")
+  fetch_head_commit_block "${TAG}"
   AUTHORS="${AUTHORS_CACHE:-${ACTOR}}"
   RELEASE_LINK="${RELEASE_URL_CACHE:-${RUN_URL}}"
 
   DEPLOYED_AT=$(date -u '+%d %b %Y %H:%M UTC')
+
+  HEAD_SECTION=""
+  if [ -n "${HEAD_COMMIT_BLOCK:-}" ]; then
+    HEAD_SECTION="${HEAD_COMMIT_BLOCK}"$'\n\n'
+  fi
 
   read -r -d '' MESSAGE <<EOF || true
 ☕🚀 <b>NGOPI DULU — DEPLOY SUKSES!</b>
@@ -121,10 +172,10 @@ Production udah live. Bug? Mereka lagi ngantri di luar pintu.
 👤 Deploy dipicu oleh: <b>${ACTOR}</b>
 🕐 Waktu: ${DEPLOYED_AT}
 
-<b>📝 Perubahan di versi ini:</b>
+${HEAD_SECTION}<b>📝 Perubahan di versi ini:</b>
 ${CHANGELOG}
 
-<b>🧑‍💻 Yang ngoprek kode:</b>
+<b>🧑‍💻 Nama-nama committer:</b>
 ${AUTHORS}
 
 <i>“Bukan bug, itu fitur spontan — kecuali user yang komplain.”</i>

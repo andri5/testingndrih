@@ -14,6 +14,14 @@ const SKIP_PREFIXES = [
 const POLL_MS = 30000
 const FAIL_THRESHOLD = 2
 
+function shouldMonitorHealth() {
+  if (import.meta.env.VITE_DISABLE_HEALTH_MONITOR === 'true') return false
+  const host = window.location.hostname
+  // Local dev/preview (CI E2E) has no backend /health on the same origin
+  if (host === 'localhost' || host === '127.0.0.1') return false
+  return true
+}
+
 async function probeHealth() {
   const res = await fetch('/health', {
     cache: 'no-store',
@@ -29,6 +37,8 @@ export default function ServerHealthMonitor() {
   const failuresRef = useRef(0)
 
   useEffect(() => {
+    if (!shouldMonitorHealth()) return undefined
+
     const path = location.pathname
     if (SKIP_PREFIXES.some((p) => path === p || path.startsWith(`${p}/`))) {
       return undefined
