@@ -1,3 +1,10 @@
+# [1.8.0](https://github.com/andri5/testingndrih/compare/v1.7.0...v1.8.0) (2026-06-12)
+
+
+### Features
+
+* **frontend:** add coffee cup favicon for browser tab ([387b100](https://github.com/andri5/testingndrih/commit/387b10039ce25e5b681195ad6fdc6848019988e0))
+
 # [1.7.0](https://github.com/andri5/testingndrih/compare/v1.6.0...v1.7.0) (2026-06-12)
 
 
