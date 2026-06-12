@@ -136,7 +136,7 @@ export default function UserActivityLog() {
               users.map((u) => (
                 <tr
                   key={u.id}
-                  className="border-b border-[#2D2D2F] last:border-0 hover:bg-[#0F0E11]/50"
+                  className="border-b border-[#2D2D2F] last:border-0 transition-colors hover:bg-[#5E6AD2]/10"
                 >
                   <td className="px-4 py-3">
                     <p className="text-[#E0E0E2]">{u.name || '—'}</p>

@@ -1,0 +1,31 @@
+name: Production Monitor
+
+# Live production checks — separate from branch CI so feature work is not blocked when prod is down.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 */6 * * *'
+
+env:
+  HUSKY: 0
+
+jobs:
+  production-smoke:
+    name: Production Smoke
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+        working-directory: .
+      - run: npx playwright install chromium --with-deps
+      - run: npx playwright test e2e/production-smoke-e2e.spec.js --project=chromium
+        env:
+          CI: true
+          PLAYWRIGHT_BASE_URL: https://testsambilngopi.com

@@ -269,7 +269,7 @@ export default function UserManagement() {
               return (
                 <tr
                   key={u.id}
-                  className={`border-b border-[#2D2D2F] last:border-0 hover:bg-[#0F0E11]/50 ${!isActive ? 'opacity-70' : ''}`}
+                  className={`border-b border-[#2D2D2F] last:border-0 transition-colors hover:bg-[#5E6AD2]/10 ${!isActive ? 'opacity-70' : ''}`}
                 >
                   <td className="px-4 py-3 text-[#E0E0E2]">{u.name || '—'}</td>
                   <td className="px-4 py-3 text-[#A0A0A4]">
@@ -326,7 +326,7 @@ export default function UserManagement() {
                         type="button"
                         title="View"
                         onClick={() => openView(u)}
-                        className="p-1.5 rounded text-[#8A8A8F] hover:text-[#E0E0E2] hover:bg-[#252528]"
+                        className="p-1.5 rounded text-[#8A8A8F] hover:text-[#5E6AD2] hover:bg-[#5E6AD2]/15 transition-colors"
                       >
                         <Eye size={14} />
                       </button>
@@ -334,7 +334,7 @@ export default function UserManagement() {
                         type="button"
                         title="Edit"
                         onClick={() => openEdit(u)}
-                        className="p-1.5 rounded text-[#8A8A8F] hover:text-[#E0E0E2] hover:bg-[#252528]"
+                        className="p-1.5 rounded text-[#8A8A8F] hover:text-[#5E6AD2] hover:bg-[#5E6AD2]/15 transition-colors"
                       >
                         <Pencil size={14} />
                       </button>

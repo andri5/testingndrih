@@ -164,6 +164,8 @@ html.theme-light .hover\:bg-\[\#1A1A1C\]:hover { background-color: #EAEAEC !impo
 html.theme-light .hover\:bg-\[\#1A1A2E\]:hover { background-color: #EEF0FF !important; }
 html.theme-light .hover\:bg-\[\#252528\]:hover  { background-color: #E0E0E2 !important; }
 html.theme-light .hover\:bg-\[\#0F0E11\]:hover  { background-color: #F0F0F2 !important; }
+html.theme-light .hover\:bg-\[\#5E6AD2\]\/10:hover { background-color: #EEF0FF !important; }
+html.theme-light .hover\:bg-\[\#5E6AD2\]\/15:hover { background-color: #E8EAFF !important; }
 html.theme-light .hover\:bg-\[rgba\(255\,255\,255\,0\.04\)\]:hover { background-color: rgba(0,0,0,0.04) !important; }
 html.theme-light .hover\:bg-\[rgba\(255\,255\,255\,0\.06\)\]:hover { background-color: rgba(0,0,0,0.06) !important; }
 

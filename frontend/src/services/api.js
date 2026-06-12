@@ -44,6 +44,11 @@ apiClient.interceptors.response.use(
       if (!isAuthPage) {
         window.location.href = '/forbidden'
       }
+    } else if (status === 503) {
+      const isErrorPage = ['/session-expired', '/forbidden', '/server-error', '/maintenance'].includes(currentPath)
+      if (!isAuthPage && !isErrorPage) {
+        window.location.href = '/maintenance?reason=maintenance'
+      }
     } else if (status >= 500) {
       if (!isAuthPage) {
         window.location.href = '/server-error'

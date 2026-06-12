@@ -41,5 +41,6 @@ jobs:
         run: |
           gh workflow run deploy-production.yml \
             --repo "${{ github.repository }}" \
-            --ref main
-          echo "Deploy Production triggered — approve in GitHub Environments if prompted."
+            --ref main \
+            -f use_main=true
+          echo "Deploy Production triggered (latest main) — approve in GitHub Environments if prompted."

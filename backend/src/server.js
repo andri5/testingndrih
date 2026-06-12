@@ -90,11 +90,19 @@ app.get('/api/config/public', (req, res) => {
 
 // Health check endpoint
 app.get('/health', (req, res) => {
+  if (process.env.MAINTENANCE_MODE === 'true') {
+    return res.status(503).json({
+      status: 'maintenance',
+      message: 'Scheduled maintenance in progress',
+      timestamp: new Date().toISOString(),
+    })
+  }
+
   res.json({
     status: 'ok',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
-    environment: process.env.NODE_ENV || 'development'
+    environment: process.env.NODE_ENV || 'development',
   })
 })
 

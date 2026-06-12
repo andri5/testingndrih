@@ -36,6 +36,7 @@ import ForbiddenPage from './pages/ForbiddenPage'
 import ServerErrorPage from './pages/ServerErrorPage'
 import ErrorBoundary from './components/ErrorBoundary'
 import OfflineBanner from './components/OfflineBanner'
+import ServerHealthMonitor from './components/ServerHealthMonitor'
 import { useAuthStore } from './store/authStore'
 import { useSettingsStore } from './store/settingsStore'
 
@@ -62,6 +63,7 @@ export default function App() {
       />
       <OfflineBanner />
       <Router>
+      <ServerHealthMonitor />
       <Routes>
         {/* Public Routes */}
         <Route
