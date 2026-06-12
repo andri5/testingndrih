@@ -10,8 +10,12 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Release tag to deploy (leave empty for latest)'
+        description: 'Release tag to deploy (leave empty for latest release)'
         required: false
+      use_main:
+        description: 'Deploy latest main branch (all commits not yet in a release)'
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -37,6 +41,11 @@ jobs:
       - name: Resolve release tag
         id: tag
         run: |
+          if [ "${{ github.event.inputs.use_main }}" = "true" ]; then
+            echo "tag=main@${{ github.sha }}" >> "$GITHUB_OUTPUT"
+            echo "Deploying latest main (${{ github.sha }})"
+            exit 0
+          fi
           if [ -n "${{ github.event.inputs.tag }}" ]; then
             TAG="${{ github.event.inputs.tag }}"
           else
@@ -115,8 +124,13 @@ jobs:
             exit 1
           fi
 
-          git fetch --tags origin
-          git checkout -f "${TAG}"
+          if [ "${{ github.event.inputs.use_main }}" = "true" ]; then
+            git fetch origin main
+            git checkout -f origin/main
+          else
+            git fetch --tags origin
+            git checkout -f "${TAG}"
+          fi
 
           if [ -f .env ]; then
             sed -i 's/\r$//' .env
