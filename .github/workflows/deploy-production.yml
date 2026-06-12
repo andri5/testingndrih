@@ -183,18 +183,13 @@ jobs:
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        run: |
-          TAG="${{ needs.deploy.outputs.tag }}"
-          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          bash scripts/telegram-notify.sh "$(cat <<EOF
-          ✅ <b>Deploy production berhasil</b>
-
-          🌐 <a href="https://testsambilngopi.com">testsambilngopi.com</a>
-          🏷 Tag: <code>${TAG}</code>
-          📦 Repo: ${{ github.repository }}
-          🔗 <a href="${RUN_URL}">Lihat workflow run</a>
-          EOF
-          )"
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEPLOY_TAG: ${{ needs.deploy.outputs.tag }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+          GITHUB_SERVER_URL: ${{ github.server_url }}
+        run: bash scripts/telegram-deploy-notify.sh success
 
   notify-telegram-failure:
     name: Telegram — deploy failed
@@ -209,13 +204,10 @@ jobs:
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        run: |
-          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          bash scripts/telegram-notify.sh "$(cat <<EOF
-          ❌ <b>Deploy production gagal</b>
-
-          🌐 Target: testsambilngopi.com
-          📦 Repo: ${{ github.repository }}
-          🔗 <a href="${RUN_URL}">Lihat log error</a>
-          EOF
-          )"
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEPLOY_TAG: ${{ needs.deploy.outputs.tag }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+          GITHUB_SERVER_URL: ${{ github.server_url }}
+        run: bash scripts/telegram-deploy-notify.sh failure
