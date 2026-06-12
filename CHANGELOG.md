@@ -1,3 +1,15 @@
+# [1.9.0](https://github.com/andri5/testingndrih/compare/v1.8.0...v1.9.0) (2026-06-12)
+
+
+### Bug Fixes
+
+* **ci:** skip health monitor on localhost; show committer names in Telegram ([4498011](https://github.com/andri5/testingndrih/commit/4498011f7d686ce1d39bb599e9d6b92b2f977073))
+
+
+### Features
+
+* reliable CI deploy and maintenance down page ([fe3b782](https://github.com/andri5/testingndrih/commit/fe3b782307e2caa19b7c212757e4981e91fd548f))
+
 # [1.8.0](https://github.com/andri5/testingndrih/compare/v1.7.0...v1.8.0) (2026-06-12)
 
 
