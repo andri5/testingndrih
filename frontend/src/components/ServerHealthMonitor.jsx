@@ -16,6 +16,8 @@ const FAIL_THRESHOLD = 2
 
 function shouldMonitorHealth() {
   if (import.meta.env.VITE_DISABLE_HEALTH_MONITOR === 'true') return false
+  // Playwright / automated browsers — avoid redirecting during production smoke tests
+  if (typeof navigator !== 'undefined' && navigator.webdriver) return false
   const host = window.location.hostname
   // Local dev/preview (CI E2E) has no backend /health on the same origin
   if (host === 'localhost' || host === '127.0.0.1') return false

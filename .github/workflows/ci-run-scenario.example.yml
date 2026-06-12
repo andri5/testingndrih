@@ -1,27 +1,75 @@
-# Example: run a scenario from GitHub Actions using API token
-# 1. Create token in Settings → Integrations
-# 2. Add secrets: TSN_API_TOKEN, TSN_SCENARIO_ID
-# 3. Rename this file (remove .example) to enable
+# Run a scenario from GitHub Actions via API token.
+# Setup: Settings → Secrets → TSN_API_TOKEN, TSN_SCENARIO_ID (optional: TSN_API_URL)
+# Manual only — does not run on push (avoids red CI when secrets are not set).
 
 name: Run Test Scenario
 
 on:
   workflow_dispatch:
-  # push disabled — rename file (remove .example) and set secrets before enabling
+    inputs:
+      scenario_id:
+        description: Scenario UUID (overrides TSN_SCENARIO_ID secret)
+        required: false
 
 jobs:
   run-scenario:
     runs-on: ubuntu-latest
     steps:
-      - name: Run scenario via API
+      - name: Resolve configuration
+        id: cfg
+        env:
+          TOKEN: ${{ secrets.TSN_API_TOKEN }}
+          SCENARIO_ID: ${{ inputs.scenario_id || secrets.TSN_SCENARIO_ID }}
+          API_URL: ${{ secrets.TSN_API_URL }}
         run: |
-          curl -sf -X POST "${{ secrets.TSN_API_URL || 'http://localhost:5001' }}/api/ci/run/${{ secrets.TSN_SCENARIO_ID }}" \
-            -H "Authorization: Bearer ${{ secrets.TSN_API_TOKEN }}" \
+          API_URL="${API_URL:-https://testsambilngopi.com}"
+          echo "api_url=${API_URL}" >> "$GITHUB_OUTPUT"
+          if [ -z "${TOKEN}" ] || [ -z "${SCENARIO_ID}" ]; then
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+            echo "scenario_id=${SCENARIO_ID}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Skip — secrets not configured
+        if: steps.cfg.outputs.configured != 'true'
+        run: |
+          echo "::notice::Run Test Scenario skipped — not a failure."
+          echo "Add repository secrets:"
+          echo "  TSN_API_TOKEN  (Settings → Integrations → API token)"
+          echo "  TSN_SCENARIO_ID (UUID of scenario to run)"
+          echo "Optional: TSN_API_URL (default https://testsambilngopi.com)"
+
+      - name: Verify CI API
+        if: steps.cfg.outputs.configured == 'true'
+        env:
+          TOKEN: ${{ secrets.TSN_API_TOKEN }}
+          API_URL: ${{ steps.cfg.outputs.api_url }}
+        run: |
+          curl -fsS "${API_URL}/api/ci/health" \
+            -H "Authorization: Bearer ${TOKEN}"
+
+      - name: Run scenario via API
+        if: steps.cfg.outputs.configured == 'true'
+        env:
+          TOKEN: ${{ secrets.TSN_API_TOKEN }}
+          API_URL: ${{ steps.cfg.outputs.api_url }}
+          SCENARIO_ID: ${{ steps.cfg.outputs.scenario_id }}
+        run: |
+          http_code=$(curl -sS -w "%{http_code}" -o result.json -X POST \
+            "${API_URL}/api/ci/run/${SCENARIO_ID}" \
+            -H "Authorization: Bearer ${TOKEN}" \
             -H "Content-Type: application/json" \
-            -d '{"headless": true}' \
-            -o result.json -w "%{http_code}" | tee http_code.txt
-          code=$(cat http_code.txt)
-          if [ "$code" != "200" ]; then
-            cat result.json
+            -d '{"headless": true}')
+          echo "HTTP ${http_code}"
+          cat result.json | jq . 2>/dev/null || cat result.json
+          if [ "${http_code}" = "200" ]; then
+            echo "Scenario passed."
+            exit 0
+          fi
+          if [ "${http_code}" = "422" ]; then
+            echo "::error::Scenario ran but tests did not pass."
             exit 1
           fi
+          echo "::error::CI API request failed (HTTP ${http_code})."
+          exit 1

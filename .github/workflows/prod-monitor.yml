@@ -8,10 +8,30 @@ on:
 
 env:
   HUSKY: 0
+  PROD_URL: https://testsambilngopi.com
 
 jobs:
+  pre-check:
+    name: Production reachability
+    runs-on: ubuntu-latest
+    steps:
+      - name: Probe health API
+        run: |
+          for attempt in 1 2 3; do
+            if curl -fsS --connect-timeout 15 "${PROD_URL}/health"; then
+              echo ""
+              echo "Production health OK"
+              exit 0
+            fi
+            echo "Attempt ${attempt}: health check failed, retrying..."
+            sleep 10
+          done
+          echo "::error::Production unreachable — skipping browser smoke."
+          exit 1
+
   production-smoke:
     name: Production Smoke
+    needs: pre-check
     runs-on: ubuntu-latest
     defaults:
       run:
