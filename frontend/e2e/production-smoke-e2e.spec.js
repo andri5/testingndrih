@@ -12,6 +12,24 @@ test.describe('Production Smoke', () => {
 
   test.describe.configure({ mode: 'serial' })
 
+  // Stub /health in the browser so client-side ServerHealthMonitor (any deployed version)
+  // does not redirect to /maintenance during smoke navigation tests.
+  test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => {
+      const originalFetch = window.fetch.bind(window)
+      window.fetch = async (input, init) => {
+        const url = typeof input === 'string' ? input : input.url
+        if (url.includes('/health')) {
+          return new Response(JSON.stringify({ status: 'ok' }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+          })
+        }
+        return originalFetch(input, init)
+      }
+    })
+  })
+
   test('health endpoint responds', async ({ request }) => {
     const res = await request.get(`${baseURL}/health`, { timeout: 20000 })
     expect(res.ok()).toBeTruthy()
