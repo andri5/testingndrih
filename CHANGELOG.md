@@ -1,3 +1,11 @@
+## [1.9.2](https://github.com/andri5/testingndrih/compare/v1.9.1...v1.9.2) (2026-06-15)
+
+
+### Bug Fixes
+
+* **deploy:** stop repeated Telegram notifications on prod deploy ([4c4bc71](https://github.com/andri5/testingndrih/commit/4c4bc7121a25659283083903414b8a7dd360aecc))
+* **security:** remove exposed credentials from docs and examples ([4478769](https://github.com/andri5/testingndrih/commit/447876971728f6903ecd7d8c28b8f7f21d1f82d3))
+
 ## [1.9.1](https://github.com/andri5/testingndrih/compare/v1.9.0...v1.9.1) (2026-06-12)
 
 
