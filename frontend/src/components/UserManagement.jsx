@@ -4,8 +4,6 @@ import { Alert, Button, Input, Spinner } from './ui'
 import { userAPI } from '../services/api'
 import { useAuthStore } from '../store/authStore'
 
-const PRIMARY_ADMIN_EMAIL = 'donkditren@gmail.com'
-
 const emptyForm = {
   name: '',
   email: '',
@@ -259,8 +257,7 @@ export default function UserManagement() {
               </tr>
             ) : (
             filteredUsers.map((u) => {
-              const isPrimaryAdmin =
-                u.email?.toLowerCase() === PRIMARY_ADMIN_EMAIL.toLowerCase()
+              const isPrimaryAdmin = u.isPrimaryAdmin === true
               const isSelf = u.id === currentUser?.id
               const canDelete = !isPrimaryAdmin && !isSelf
               const isActive = u.isActive !== false

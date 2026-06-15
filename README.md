@@ -242,8 +242,8 @@ npm run dev           # http://localhost:3001
 
 #### Step 5: Login
 - **URL**: http://localhost:3001
-- **Email**: `admin@testingndrih.local` (from seed)
-- **Password**: `changeme123`
+- **Email / password**: values from `SEED_EMAIL` and `SEED_PASSWORD` in your `.env` (see [`.env.example`](./.env.example))
+- **Never commit real credentials** — use strong unique passwords in production
 
 ### Available Features ✅
 - Record scenarios with Playwright headless browser
@@ -276,7 +276,7 @@ docker-compose up -d
 **Wait 15 seconds**, then access:
 - 🌐 Frontend: http://localhost:3000
 - 📚 API Docs: http://localhost:3000/api/docs
-- 🔐 Login: `admin@testingndrih.local` / `changeme123`
+- 🔐 Login: use `SEED_EMAIL` / `SEED_PASSWORD` from your `.env` (copy from `.env.example`)
 
 ### Common Docker Commands
 ```bash
@@ -502,7 +502,15 @@ Bantuan lebih lanjut:
 
 ---
 
-## 📞 Support
+## 🔒 Security (public repository)
+
+- **Never commit** `.env`, API tokens, Telegram bot tokens, SMTP passwords, or SSH private keys
+- Copy [`.env.example`](./.env.example) → `.env` and use your own values locally
+- Set `ADMIN_EMAIL`, `SEED_PASSWORD`, and `JWT_SECRET` on the server only (see [`docs/DEPLOYMENT.md`](./docs/DEPLOYMENT.md))
+- GitHub Actions secrets: configure under **Settings → Secrets and variables → Actions**
+- If credentials were ever exposed in git history, **rotate them** (JWT, DB password, SMTP app password, Telegram bot token)
+
+---
 
 ### Documentation
 - **Index**: [`docs/README.md`](docs/README.md)

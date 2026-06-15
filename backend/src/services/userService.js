@@ -43,10 +43,14 @@ function resolveAssignableRole(email, requestedRole) {
 }
 
 export async function listUsers() {
-  return prisma.user.findMany({
+  const users = await prisma.user.findMany({
     select: userSelect,
     orderBy: { createdAt: 'asc' },
   })
+  return users.map((user) => ({
+    ...user,
+    isPrimaryAdmin: isPrimaryAdmin(user.email),
+  }))
 }
 
 export async function getUserById(userId) {

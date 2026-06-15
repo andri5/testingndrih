@@ -8,7 +8,7 @@ test.describe('Test Execution E2E Tests', () => {
     
     // Use existing test user
     email = process.env.TEST_EMAIL || 'admin@testingndrih.local'
-    password = process.env.TEST_PASSWORD || 'changeme123'
+    password = process.env.TEST_PASSWORD || 'change-me-local-only'
 
     const context = await browser.newContext()
     const page = await context.newPage()

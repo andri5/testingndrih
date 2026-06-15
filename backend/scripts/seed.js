@@ -1,6 +1,6 @@
 import { PrismaClient } from '@prisma/client'
 import { hashPassword } from '../src/utils/password.js'
-import { resolveRoleForEmail } from '../src/utils/roles.js'
+import { resolveRoleForEmail, PRIMARY_ADMIN_EMAIL } from '../src/utils/roles.js'
 
 const prisma = new PrismaClient()
 
@@ -154,7 +154,7 @@ async function main() {
     console.log('🌱 Starting database seed...')
 
     const seedEmail = process.env.SEED_EMAIL || 'admin@testingndrih.local'
-    const seedPassword = process.env.SEED_PASSWORD || 'changeme123'
+    const seedPassword = process.env.SEED_PASSWORD || 'change-me-local-only'
 
     let user = await prisma.user.findUnique({ where: { email: seedEmail } })
 
@@ -183,16 +183,16 @@ async function main() {
       }
     }
 
-    // Ensure primary admin email always has ADMIN role
+    // Ensure configured primary admin email always has ADMIN role
     const primaryAdmin = await prisma.user.findUnique({
-      where: { email: 'donkditren@gmail.com' },
+      where: { email: PRIMARY_ADMIN_EMAIL },
     })
     if (primaryAdmin && primaryAdmin.role !== 'ADMIN') {
       await prisma.user.update({
         where: { id: primaryAdmin.id },
         data: { role: 'ADMIN' },
       })
-      console.log('✅ Primary admin role set: donkditren@gmail.com')
+      console.log('✅ Primary admin role set:', PRIMARY_ADMIN_EMAIL)
     }
 
     let created = 0

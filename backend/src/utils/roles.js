@@ -1,5 +1,5 @@
 export const PRIMARY_ADMIN_EMAIL = (
-  process.env.ADMIN_EMAIL || 'donkditren@gmail.com'
+  process.env.ADMIN_EMAIL || 'admin@testingndrih.local'
 ).trim().toLowerCase()
 
 export function normalizeEmail(email) {

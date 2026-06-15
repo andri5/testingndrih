@@ -40,7 +40,7 @@ test.describe('Scenario Management E2E Tests', () => {
         // Fallback: use known test user
         const fallbackResponse = await page.request.post('http://localhost:5001/api/auth/login', {
           headers: { 'Content-Type': 'application/json' },
-          data: { email: process.env.TEST_EMAIL || 'admin@testingndrih.local', password: process.env.TEST_PASSWORD || 'changeme123' }
+          data: { email: process.env.TEST_EMAIL || 'admin@testingndrih.local', password: process.env.TEST_PASSWORD || 'change-me-local-only' }
         })
         if (fallbackResponse.ok()) {
           const data = await fallbackResponse.json()
@@ -129,7 +129,7 @@ test.describe('Scenario Management E2E Tests', () => {
     // First create a scenario via API to get its ID
     const response = await page.request.post('http://localhost:5001/api/auth/login', {
       headers: { 'Content-Type': 'application/json' },
-      data: { email: process.env.TEST_EMAIL || 'admin@testingndrih.local', password: process.env.TEST_PASSWORD || 'changeme123' }
+      data: { email: process.env.TEST_EMAIL || 'admin@testingndrih.local', password: process.env.TEST_PASSWORD || 'change-me-local-only' }
     })
     const loginData = await response.json()
     const token = loginData.token

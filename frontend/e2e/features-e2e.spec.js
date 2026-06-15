@@ -5,7 +5,7 @@ test.describe.serial('Complete Feature E2E Testing', () => {
   
   const testUser = {
     email: process.env.TEST_EMAIL || 'admin@testingndrih.local',
-    password: process.env.TEST_PASSWORD || 'changeme123'
+    password: process.env.TEST_PASSWORD || 'change-me-local-only'
   }
   
   let authToken

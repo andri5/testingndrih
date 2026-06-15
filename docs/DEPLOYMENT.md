@@ -104,7 +104,13 @@ sudo adduser deploy
 sudo usermod -aG docker deploy
 ```
 
-### 2. SSH key untuk GitHub Actions
+### 2. Deploy runner (self-hosted)
+
+Deploy production memakai **self-hosted runner** di VPS (bukan SSH dari GitHub cloud).
+Setup sekali: `bash scripts/setup-github-runner.sh` di server.
+
+<details>
+<summary>Legacy: SSH key (tidak dipakai workflow deploy saat ini)</summary>
 
 Di laptop Anda:
 
@@ -113,7 +119,9 @@ ssh-keygen -t ed25519 -C "github-actions-deploy" -f deploy_key -N ""
 ```
 
 - Public key (`deploy_key.pub`) → `~deploy/.ssh/authorized_keys` di VPS
-- Private key (`deploy_key`) → GitHub Secret `PROD_SSH_KEY`
+- Private key → GitHub Secret (jangan commit ke repo)
+
+</details>
 
 ### 3. Clone repository
 
@@ -149,9 +157,9 @@ FRONTEND_URL=https://testsambilngopi.com
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_SECURE=false
-SMTP_USER=testsambilngopi@gmail.com
+SMTP_USER=your-email@gmail.com
 SMTP_PASSWORD=<gmail-app-password>
-SMTP_FROM=Test Sambil Ngopi <testsambilngopi@gmail.com>
+SMTP_FROM="Test Sambil Ngopi <your-email@gmail.com>"
 
 # First deploy only — set false after admin user exists
 RUN_SEED=true
@@ -194,6 +202,9 @@ server {
 ---
 
 ## GitHub configuration
+
+> **Jangan pernah** commit token Telegram, password SMTP, atau private key ke repository publik.
+> Simpan hanya di GitHub **Secrets** / environment **production** di VPS.
 
 ### Secrets (Settings → Secrets and variables → Actions)
 
@@ -243,7 +254,7 @@ Checklist setelah server live:
 3. **Ganti password admin** di VPS:
    ```bash
    cd /opt/testingndrih
-   docker compose exec -e NEW_ADMIN_PASSWORD='YourStrongPass123!' app node scripts/rotate-admin-password.js
+   docker compose exec -e NEW_ADMIN_PASSWORD='<your-strong-password>' app node scripts/rotate-admin-password.js
    ```
 4. **Pastikan** `RUN_SEED=false` setelah user admin ada.
 5. **Restart app** setelah mengubah `.env`:

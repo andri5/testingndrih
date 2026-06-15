@@ -4,7 +4,7 @@ test.describe.serial('Authentication E2E Tests', () => {
   // Test account - using pre-existing user for reliable testing
   const testUser = {
     email: process.env.TEST_EMAIL || 'admin@testingndrih.local',
-    password: process.env.TEST_PASSWORD || 'changeme123'
+    password: process.env.TEST_PASSWORD || 'change-me-local-only'
   }
   
   let authToken = null

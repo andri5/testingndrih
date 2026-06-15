@@ -26,7 +26,7 @@ test.describe('Search & Filter E2E Tests', () => {
         // Fallback: use known test user
         const loginResponse = await page.request.post('http://localhost:5001/api/auth/login', {
           headers: { 'Content-Type': 'application/json' },
-          data: { email: process.env.TEST_EMAIL || 'admin@testingndrih.local', password: process.env.TEST_PASSWORD || 'changeme123' }
+          data: { email: process.env.TEST_EMAIL || 'admin@testingndrih.local', password: process.env.TEST_PASSWORD || 'change-me-local-only' }
         })
         if (loginResponse.ok()) {
           const data = await loginResponse.json()

@@ -64,7 +64,7 @@ export async function seedDefaultEnvironments(userId) {
       variables: [
         { key: 'baseUrl', value: 'http://localhost:3000', isSecret: false },
         { key: 'username', value: 'test@example.com', isSecret: false },
-        { key: 'password', value: 'changeme123', isSecret: true }
+        { key: 'password', value: 'example-secret', isSecret: true }
       ]
     },
     {

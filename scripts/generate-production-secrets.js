@@ -21,4 +21,4 @@ console.log('# After updating DB_PASSWORD, recreate postgres only on a fresh ser
 console.log('# On an existing server, change the DB password inside postgres first.')
 console.log('')
 console.log('# Rotate admin login password:')
-console.log('# docker compose exec -e NEW_ADMIN_PASSWORD="YourStrongPass123!" app node scripts/rotate-admin-password.js')
+console.log('# docker compose exec -e NEW_ADMIN_PASSWORD="<your-strong-password>" app node scripts/rotate-admin-password.js')

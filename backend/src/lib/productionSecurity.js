@@ -10,6 +10,9 @@ const WEAK_JWT_SECRETS = new Set([
 const WEAK_DB_PASSWORD_FRAGMENTS = [
   'testpass123',
   'changeme123',
+  'change-me-local-only',
+  'change-me-before-first-run',
+  'devonly-db-password',
   'password',
   'postgres',
 ]
@@ -40,7 +43,8 @@ export function validateProductionSecurity() {
     )
   }
 
-  if ((process.env.SEED_PASSWORD || '') === 'changeme123' && process.env.RUN_SEED === 'true') {
+  const weakSeedPasswords = ['changeme123', 'change-me-local-only', 'change-me-before-first-run']
+  if (weakSeedPasswords.includes(process.env.SEED_PASSWORD || '') && process.env.RUN_SEED === 'true') {
     warnings.push('SEED_PASSWORD is still the default while RUN_SEED=true')
   }
 
