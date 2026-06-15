@@ -67,34 +67,14 @@ jobs:
           echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
           echo "Deploying tag: ${TAG}"
 
-      - name: Skip auto-deploy when no new release
+      - name: Proceed after Release workflow
         if: github.event_name == 'workflow_run'
         id: release_check
         run: |
-          REPO="${{ github.repository }}"
-          TOKEN="${{ secrets.GITHUB_TOKEN }}"
-          RUN_START="${{ github.event.workflow_run.created_at }}"
-
-          PUBLISHED=$(curl -fsSL \
-            -H "Authorization: Bearer ${TOKEN}" \
-            -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/repos/${REPO}/releases/latest" \
-            | jq -r .published_at)
-
-          RUN_EPOCH=$(date -d "${RUN_START}" +%s)
-          PUB_EPOCH=$(date -d "${PUBLISHED}" +%s)
-          AGE=$((RUN_EPOCH - PUB_EPOCH))
-
-          echo "Release workflow started: ${RUN_START}"
-          echo "Latest GitHub release published: ${PUBLISHED} (${AGE}s before this workflow)"
-
-          if [ "${AGE}" -ge -60 ] && [ "${AGE}" -le 900 ]; then
-            echo "skip=false" >> "$GITHUB_OUTPUT"
-            echo "Fresh release detected — continuing deploy."
-          else
-            echo "skip=true" >> "$GITHUB_OUTPUT"
-            echo "No new release for this run — skipping production deploy."
-          fi
+          # Always attempt deploy when Release completes successfully.
+          # The deploy step already skips rebuild if the server runs the target revision.
+          echo "skip=false" >> "$GITHUB_OUTPUT"
+          echo "Release workflow completed — attempting production deploy."
 
       - name: Validate deploy path
         if: github.event_name == 'workflow_dispatch' || steps.release_check.outputs.skip != 'true'
@@ -178,7 +158,7 @@ jobs:
             sleep 2
           done
 
-          docker compose build app
+          docker compose build --no-cache app
           docker compose up -d app
 
           echo "Stack redeployed for ${TAG}"
