@@ -123,19 +123,18 @@ jobs:
           echo "Current on server: ${CURRENT_REV}"
           echo "Target deploy:     ${TARGET_REV}"
 
-          if [ "${CURRENT_REV}" = "${TARGET_REV}" ]; then
-            echo "Already running this revision — skipping rebuild/restart."
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-            exit 0
+          if [ "${CURRENT_REV}" != "${TARGET_REV}" ]; then
+            if [ "${{ github.event.inputs.use_main }}" = "true" ]; then
+              git checkout -f origin/main
+            else
+              git checkout -f "${TAG}"
+            fi
+            echo "Git updated to ${TARGET_REV}"
+          else
+            echo "Git already at target revision — rebuilding app container anyway."
           fi
 
           echo "changed=true" >> "$GITHUB_OUTPUT"
-
-          if [ "${{ github.event.inputs.use_main }}" = "true" ]; then
-            git checkout -f origin/main
-          else
-            git checkout -f "${TAG}"
-          fi
 
           if [ -f .env ]; then
             sed -i 's/\r$//' .env
