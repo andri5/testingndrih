@@ -29,6 +29,10 @@ function sessionKey(userId, scenarioId) {
   return `${userId}:${scenarioId}`
 }
 
+function appendRecordingStep(session, step) {
+  session.steps.push({ ...step, stepNumber: session.steps.length + 1 })
+}
+
 /**
  * JavaScript injected into the target page to capture user interactions.
  * Communication: PRIMARY postMessage (reliable), FALLBACK console.log (CSP-proof).
@@ -848,13 +852,28 @@ export const recorderService = {
       })
       
       const page = await context.newPage()
-      
+
+      // Register session before navigation so early interactions are not dropped
+      const session = {
+        steps: [],
+        status: 'recording',
+        startedAt: new Date(),
+        scenarioId,
+        userId,
+        startUrl: url,
+        browser,
+        context,
+        page,
+        recordStartTime: Date.now(),
+      }
+      sessions.set(key, session)
+
       // ═══ Expose step callback — steps sent from page JS → Node.js directly ═══
       // This bypasses HTTP/auth entirely, no need for authToken in the Playwright browser
       await page.exposeFunction('__playwrightAddStep', (step) => {
         const sess = sessions.get(key)
         if (!sess || sess.status !== 'recording') return
-        sess.steps.push({ ...step, stepNumber: sess.steps.length + 1 })
+        appendRecordingStep(sess, step)
         console.log(`[RECORDER] ✓ Step ${sess.steps.length}: ${step.type} "${(step.description || '').substring(0, 60)}"`)
       })
 
@@ -899,39 +918,21 @@ export const recorderService = {
       // ═══ Navigate to target URL ═══
       console.log(`[RECORDER] 🌐 Navigating to ${url}`)
       try {
-        await page.goto(url, { waitUntil: 'networkidle', timeout: 30000 }).catch(() => {
-          // Timeout OK, page might still be loading interactively
+        await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 }).catch(() => {
           console.log(`[RECORDER] Navigation timeout (continuing anyway)`)
         })
       } catch (err) {
         console.warn(`[RECORDER] Navigation error: ${err.message}`)
       }
 
-      // ═══ Store session with browser instance ═══
-      const session = {
-        steps: [],
-        status: 'recording',
-        startedAt: new Date(),
-        scenarioId,
-        userId,
-        startUrl: url,
-        browser,       // ⭐ Keep browser instance
-        context,
-        page,          // ⭐ Keep page instance
-        recordStartTime: Date.now()
-      }
-
-      sessions.set(key, session)
-
       // ═══ Add initial NAVIGATE step ═══
-      session.steps.push({
+      appendRecordingStep(session, {
         type: 'NAVIGATE',
         selector: '',
         value: url,
         description: `Navigate to ${url}`,
         tagName: '',
         timestamp: Date.now(),
-        stepNumber: 1
       })
 
       console.log(`[RECORDER] ✅ Recording started for ${key}`)
@@ -965,7 +966,7 @@ export const recorderService = {
       console.warn(`[RECORDER] Session ${key} has status=${session.status}, cannot add step`)
       return false
     }
-    session.steps.push({ ...step, stepNumber: session.steps.length + 1 })
+    appendRecordingStep(session, step)
     console.log(`[RECORDER] Step added to ${key}: ${step.type} (total: ${session.steps.length})`)
     return true
   },
@@ -1050,13 +1051,13 @@ export const recorderService = {
       const lastStep = await tx.testStep.findFirst({
         where: { scenarioId },
         orderBy: { stepNumber: 'desc' },
-        select: { stepNumber: true }
+        select: { stepNumber: true },
       })
       let nextStepNumber = (lastStep?.stepNumber || 0) + 1
 
       const results = []
       for (const step of recordedSteps) {
-        const created = await tx.testStep.create({
+        const createdStep = await tx.testStep.create({
           data: {
             scenarioId,
             stepNumber: nextStepNumber++,
@@ -1064,11 +1065,18 @@ export const recorderService = {
             description: step.description || `${step.type} step`,
             selector: step.selector || null,
             value: step.value || null,
-            metadata: null
-          }
+            metadata: null,
+          },
         })
-        results.push(created)
+        results.push(createdStep)
       }
+
+      const stepCount = await tx.testStep.count({ where: { scenarioId } })
+      await tx.scenario.update({
+        where: { id: scenarioId },
+        data: { steps: stepCount },
+      })
+
       return results
     })
 

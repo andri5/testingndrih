@@ -4,12 +4,13 @@ import Layout from '../components/Layout'
 import { Card, Button, Badge, Spinner, Alert } from '../components/ui'
 import { executionAPI } from '../services/api'
 import apiClient from '../services/api'
-import { PlayCircle, CheckCircle2, XCircle, TrendingUp } from 'lucide-react'
+import ExportFormatButton from '../components/ExportFormatButton'
+import { PlayCircle, CheckCircle2, XCircle, TrendingUp } from 'lucide-react'
 
-const i18n = {
+const i18n = {
     title: '📈 Reports',
     subtitle: 'Execution reports and analytics',
-    exportCSV: '📥 Export CSV',
+    exportCSV: 'Export CSV',
     loadError: 'Failed to load report data',
     trendTitle: '📊 Pass/Fail Trend (last 14 days)',
     passed: 'Passed',
@@ -83,7 +84,8 @@ function TrendChart({ data, passedLabel = 'Passed', failedLabel = 'Failed' }) {
 }
 
 export default function ReportsPage() {
-  const navigate = useNavigate()  const t = i18n
+  const navigate = useNavigate()
+  const t = i18n
   const locale = 'en-US'
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -209,9 +211,13 @@ export default function ReportsPage() {
             <h1 className="text-2xl sm:text-3xl font-bold text-[#E0E0E2]">{t.title}</h1>
             <p className="text-[#A0A0A4] mt-1">{t.subtitle}</p>
           </div>
-          <Button onClick={() => handleExportCSV(null)} variant="secondary" className="self-start sm:self-auto">
+          <ExportFormatButton
+            format="csv"
+            onClick={() => handleExportCSV(null)}
+            className="self-start sm:self-auto"
+          >
             {t.exportCSV}
-          </Button>
+          </ExportFormatButton>
         </div>
 
         {error && <Alert type="error" message={error} onClose={() => setError(null)} />}

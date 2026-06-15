@@ -1,36 +1,32 @@
 import React from 'react'
-import { Download, FileText, FileSpreadsheet } from 'lucide-react'
 import { exportToHTML, exportToJSON } from '../utils/exportUtils'
+import ExportFormatButton from './ExportFormatButton'
 
-const i18n = {
-    export: 'Export',
-    exportPDF: 'Export as PDF/HTML',
-    exportExcel: 'Export as Excel',
-    exportJSON: 'Export as JSON',
-    exporting: 'Exporting...',
-  
+const i18n = {
+  exportHTML: 'Export HTML',
+  exportCSV: 'Export CSV',
+  exportJSON: 'Export JSON',
+  exporting: 'Exporting...',
 }
 
-export default function ExportButtons({ 
-  title, 
-  summary, 
-  details, 
+export default function ExportButtons({
+  title,
+  summary,
+  details,
   filename,
   analysis,
   onExportStart,
-  onExportComplete 
-}) {  const t = i18n
+  onExportComplete,
+}) {
+  const t = i18n
   const [exporting, setExporting] = React.useState(false)
 
   const handleExportHTML = async () => {
     try {
       setExporting(true)
       onExportStart?.()
-      
-      await new Promise(resolve => setTimeout(resolve, 300))
-      
+      await new Promise((resolve) => setTimeout(resolve, 300))
       exportToHTML(title, summary, details, filename, 'en', analysis)
-      
       onExportComplete?.()
     } catch (err) {
       console.error('Export error:', err)
@@ -44,17 +40,11 @@ export default function ExportButtons({
     try {
       setExporting(true)
       onExportStart?.()
-      
-      await new Promise(resolve => setTimeout(resolve, 300))
-      
-      const exportData = {
-        title,
-        timestamp: new Date().toISOString(),
-        summary,
-        details,
-      }
-      exportToJSON(exportData, filename)
-      
+      await new Promise((resolve) => setTimeout(resolve, 300))
+      exportToJSON(
+        { title, timestamp: new Date().toISOString(), summary, details },
+        filename
+      )
       onExportComplete?.()
     } catch (err) {
       console.error('Export error:', err)
@@ -68,25 +58,25 @@ export default function ExportButtons({
     try {
       setExporting(true)
       onExportStart?.()
-      
-      await new Promise(resolve => setTimeout(resolve, 300))
-      
+      await new Promise((resolve) => setTimeout(resolve, 300))
+
       if (!details || details.length === 0) {
         alert('No data to export')
         setExporting(false)
         return
       }
 
-      // Build CSV
       const headers = Object.keys(details[0])
-      const csvHeaders = headers.map(h => `"${h}"`).join(',')
-      const csvRows = details.map(row => {
-        return headers.map(header => {
-          const value = row[header]
-          if (value === undefined || value === null) return '""'
-          return `"${String(value).replace(/"/g, '""')}"`
-        }).join(',')
-      })
+      const csvHeaders = headers.map((h) => `"${h}"`).join(',')
+      const csvRows = details.map((row) =>
+        headers
+          .map((header) => {
+            const value = row[header]
+            if (value === undefined || value === null) return '""'
+            return `"${String(value).replace(/"/g, '""')}"`
+          })
+          .join(',')
+      )
 
       const csv = [csvHeaders, ...csvRows].join('\n')
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
@@ -98,7 +88,7 @@ export default function ExportButtons({
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
-      
+
       onExportComplete?.()
     } catch (err) {
       console.error('Export error:', err)
@@ -110,40 +100,32 @@ export default function ExportButtons({
 
   return (
     <div className="flex items-center gap-2 flex-wrap">
-      <div className="flex items-center gap-1 text-sm font-medium text-gray-600 dark:text-gray-400">
-        <Download className="w-4 h-4" />
-        <span>{t.export}:</span>
-      </div>
-      
-      <button
+      <ExportFormatButton
+        format="html"
         onClick={handleExportHTML}
         disabled={exporting || !summary || !details}
-        title={t.exportPDF}
-        className="px-3 py-1.5 text-xs font-medium rounded bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+        title={t.exportHTML}
       >
-        <FileText className="w-3.5 h-3.5" />
-        {exporting ? t.exporting : 'PDF/HTML'}
-      </button>
+        {exporting ? t.exporting : t.exportHTML}
+      </ExportFormatButton>
 
-      <button
+      <ExportFormatButton
+        format="csv"
         onClick={handleExportCSV}
         disabled={exporting || !details || details.length === 0}
-        title={t.exportExcel}
-        className="px-3 py-1.5 text-xs font-medium rounded bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+        title={t.exportCSV}
       >
-        <FileSpreadsheet className="w-3.5 h-3.5" />
-        {exporting ? t.exporting : 'Excel'}
-      </button>
+        {exporting ? t.exporting : t.exportCSV}
+      </ExportFormatButton>
 
-      <button
+      <ExportFormatButton
+        format="json"
         onClick={handleExportJSON}
         disabled={exporting || !summary}
         title={t.exportJSON}
-        className="px-3 py-1.5 text-xs font-medium rounded bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 hover:bg-purple-200 dark:hover:bg-purple-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
       >
-        <Download className="w-3.5 h-3.5" />
-        {exporting ? t.exporting : 'JSON'}
-      </button>
+        {exporting ? t.exporting : t.exportJSON}
+      </ExportFormatButton>
     </div>
   )
 }

@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ChevronDown, HelpCircle } from 'lucide-react'
+import { ChevronDown, HelpCircle, Plus, PenLine, Zap, LayoutTemplate, FileSpreadsheet } from 'lucide-react'
 import Layout from '../components/Layout'
 import { Card, Button, Alert, Spinner } from '../components/ui'
+import ExportFormatButton, { SoftIconBadge } from '../components/ExportFormatButton'
 import { ScenarioForm } from '../components/ScenarioForm'
 import { ScenarioSearch } from '../components/ScenarioSearch'
 import { ScenariosList } from '../components/ScenariosList'
@@ -11,10 +12,10 @@ import { QuickRecordModal } from '../components/QuickRecordModal'
 import { ImportPreviewModal } from '../components/ImportPreviewModal'
 import { Tooltip } from '../components/ui'
 import { useScenarioStore } from '../store/scenarioStore'
-import { executionAPI } from '../services/api'
+import { executionAPI } from '../services/api'
 import { useAuthStore } from '../store/authStore'
 
-const i18n = {
+const i18n = {
     title: 'Test Scenarios',
     subtitle: 'Create and manage your test scenarios',
     createScenarioBtn: 'Create Scenario',
@@ -70,7 +71,8 @@ export default function ScenariosPage() {
     duplicateScenario,
     setSelectedScenario,
     clearError
-  } = useScenarioStore()  const isAdmin = useAuthStore((state) => state.user)?.role === 'ADMIN'
+  } = useScenarioStore()
+  const isAdmin = useAuthStore((state) => state.user)?.role === 'ADMIN'
   const t = i18n
 
   // Close menu when clicking outside
@@ -422,107 +424,111 @@ export default function ScenariosPage() {
                   }}
                   className="hidden"
                 />
-                <Button
+                <ExportFormatButton
+                  format="primary"
+                  icon={Plus}
                   onClick={() => setShowCreateMenu(!showCreateMenu)}
-                  variant="primary"
-                  size="md"
-                  className="flex items-center gap-1"
+                  className="text-sm !px-3 !py-2"
+                  iconSize={16}
                   data-testid="create-scenario-btn"
+                  trailing={
+                    <ChevronDown
+                      size={16}
+                      className={`transition-transform ${showCreateMenu ? 'rotate-180' : ''}`}
+                    />
+                  }
                 >
-                  + {t.createScenarioBtn}
-                  <ChevronDown size={18} className={`transition-transform ${showCreateMenu ? 'rotate-180' : ''}`} />
-                </Button>
-                
+                  {t.createScenarioBtn}
+                </ExportFormatButton>
+
                 {/* Dropdown Menu */}
                 {showCreateMenu && (
-                  <div className="absolute top-full right-0 mt-2 w-56 bg-white dark:bg-[#1F1E22] html.theme-light:bg-white border border-[#DDDDE0] dark:border-[rgba(255,255,255,0.12)] html.theme-light:border-[#DDDDE0] rounded-lg shadow-lg z-10 overflow-hidden">
-                    {/* Create Manual */}
+                  <div className="absolute top-full right-0 mt-2 w-60 bg-white dark:bg-[#1F1E22] html.theme-light:bg-white border border-[#DDDDE0] dark:border-[rgba(255,255,255,0.12)] html.theme-light:border-[#DDDDE0] rounded-xl shadow-lg z-10 overflow-hidden p-1.5">
                     <button
+                      type="button"
                       onClick={() => {
                         setShowCreateForm(true)
                         setShowCreateMenu(false)
                       }}
                       title={t.createManualTooltip}
-                      className="w-full px-4 py-2.5 text-left text-[#1A1A1C] dark:text-[#E0E0E2] html.theme-light:text-[#1A1A1C] hover:bg-[#F5F5F7] dark:hover:bg-[#2A2A2D] html.theme-light:hover:bg-[#F5F5F7] transition-colors border-b border-[#DDDDE0] dark:border-[rgba(255,255,255,0.08)] html.theme-light:border-[#DDDDE0] flex items-center gap-2 group relative"
+                      className="w-full px-2.5 py-2 text-left rounded-lg text-[#1A1A1C] dark:text-[#E0E0E2] html.theme-light:text-[#1A1A1C] hover:bg-[#F5F5F7] dark:hover:bg-[#2A2A2D] html.theme-light:hover:bg-[#F5F5F7] transition-colors flex items-center gap-2.5 group"
                     >
-                      <span>📝</span>
-                      <div className="flex-1">
-                        <div className="font-medium flex items-center gap-1">
+                      <SoftIconBadge variant="json" icon={PenLine} />
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium flex items-center gap-1">
                           {t.createManual}
                           <Tooltip text={t.createManualTooltip} position="right">
-                            <HelpCircle size={14} className="text-[#999] dark:text-[#B0B0B5] html.theme-light:text-[#999] opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <HelpCircle size={13} className="text-[#999] opacity-0 group-hover:opacity-100 transition-opacity" />
                           </Tooltip>
                         </div>
-                        <div className="text-xs text-[#666] dark:text-[#A0A0A4] html.theme-light:text-[#666]">{t.createManualDesc}</div>
+                        <div className="text-xs text-[#666] dark:text-[#A0A0A4]">{t.createManualDesc}</div>
                       </div>
                     </button>
 
-                    {/* Quick Record */}
                     <button
+                      type="button"
                       onClick={() => {
                         setShowQuickRecord(true)
                         setShowCreateMenu(false)
                       }}
                       title={t.quickRecordTooltip}
-                      className="w-full px-4 py-2.5 text-left text-[#1A1A1C] dark:text-[#E0E0E2] html.theme-light:text-[#1A1A1C] hover:bg-[#F5F5F7] dark:hover:bg-[#2A2A2D] html.theme-light:hover:bg-[#F5F5F7] transition-colors border-b border-[#DDDDE0] dark:border-[rgba(255,255,255,0.08)] html.theme-light:border-[#DDDDE0] flex items-center gap-2 group relative"
+                      className="w-full px-2.5 py-2 text-left rounded-lg text-[#1A1A1C] dark:text-[#E0E0E2] hover:bg-[#F5F5F7] dark:hover:bg-[#2A2A2D] html.theme-light:hover:bg-[#F5F5F7] transition-colors flex items-center gap-2.5 group mt-0.5"
                     >
-                      <span>⚡</span>
-                      <div className="flex-1">
-                        <div className="font-medium flex items-center gap-1">
+                      <SoftIconBadge variant="csv" icon={Zap} />
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium flex items-center gap-1">
                           {t.quickRecord}
                           <Tooltip text={t.quickRecordTooltip} position="right">
-                            <HelpCircle size={14} className="text-[#999] dark:text-[#B0B0B5] html.theme-light:text-[#999] opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <HelpCircle size={13} className="text-[#999] opacity-0 group-hover:opacity-100 transition-opacity" />
                           </Tooltip>
                         </div>
-                        <div className="text-xs text-[#666] dark:text-[#A0A0A4] html.theme-light:text-[#666]">{t.quickRecordDesc}</div>
+                        <div className="text-xs text-[#666] dark:text-[#A0A0A4]">{t.quickRecordDesc}</div>
                       </div>
                     </button>
 
-                    {/* Templates */}
                     <button
+                      type="button"
                       onClick={() => {
                         setShowTemplatePicker(true)
                         setShowCreateMenu(false)
                       }}
                       title={t.templatesMenuTooltip}
-                      className="w-full px-4 py-2.5 text-left text-[#1A1A1C] dark:text-[#E0E0E2] html.theme-light:text-[#1A1A1C] hover:bg-[#F5F5F7] dark:hover:bg-[#2A2A2D] html.theme-light:hover:bg-[#F5F5F7] transition-colors border-b border-[#DDDDE0] dark:border-[rgba(255,255,255,0.08)] html.theme-light:border-[#DDDDE0] flex items-center gap-2 group relative"
+                      className="w-full px-2.5 py-2 text-left rounded-lg text-[#1A1A1C] dark:text-[#E0E0E2] hover:bg-[#F5F5F7] dark:hover:bg-[#2A2A2D] html.theme-light:hover:bg-[#F5F5F7] transition-colors flex items-center gap-2.5 group mt-0.5"
                     >
-                      <span>📋</span>
-                      <div className="flex-1">
-                        <div className="font-medium flex items-center gap-1">
+                      <SoftIconBadge variant="html" icon={LayoutTemplate} />
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium flex items-center gap-1">
                           {t.templates}
                           <Tooltip text={t.templatesMenuTooltip} position="right">
-                            <HelpCircle size={14} className="text-[#999] dark:text-[#B0B0B5] html.theme-light:text-[#999] opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <HelpCircle size={13} className="text-[#999] opacity-0 group-hover:opacity-100 transition-opacity" />
                           </Tooltip>
                         </div>
-                        <div className="text-xs text-[#666] dark:text-[#A0A0A4] html.theme-light:text-[#666]">{t.templatesDesc}</div>
+                        <div className="text-xs text-[#666] dark:text-[#A0A0A4]">{t.templatesDesc}</div>
                       </div>
                     </button>
 
-                    {/* Import Excel (Merged with View Template) */}
                     <button
+                      type="button"
                       onClick={(e) => {
                         if (e.ctrlKey || e.metaKey) {
-                          // Ctrl+Click: View template
                           handleDownloadTemplate()
                         } else {
-                          // Regular click: Import Excel
                           document.getElementById('excel-upload').click()
                         }
                         setShowCreateMenu(false)
                       }}
                       title={t.importExcelTooltip}
-                      className="w-full px-4 py-2.5 text-left text-[#1A1A1C] dark:text-[#E0E0E2] html.theme-light:text-[#1A1A1C] hover:bg-[#F5F5F7] dark:hover:bg-[#2A2A2D] html.theme-light:hover:bg-[#F5F5F7] transition-colors flex items-center gap-2 group relative"
+                      className="w-full px-2.5 py-2 text-left rounded-lg text-[#1A1A1C] dark:text-[#E0E0E2] hover:bg-[#F5F5F7] dark:hover:bg-[#2A2A2D] html.theme-light:hover:bg-[#F5F5F7] transition-colors flex items-center gap-2.5 group mt-0.5"
                     >
-                      <span>📥</span>
-                      <div className="flex-1">
-                        <div className="font-medium flex items-center gap-1">
+                      <SoftIconBadge variant="csv" icon={FileSpreadsheet} />
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium flex items-center gap-1">
                           {t.importExcel}
                           <Tooltip text={t.importExcelTooltip} position="right">
-                            <HelpCircle size={14} className="text-[#999] dark:text-[#B0B0B5] html.theme-light:text-[#999] opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <HelpCircle size={13} className="text-[#999] opacity-0 group-hover:opacity-100 transition-opacity" />
                           </Tooltip>
                         </div>
-                        <div className="text-xs text-[#666] dark:text-[#A0A0A4] html.theme-light:text-[#666]">{t.importExcelDesc}</div>
+                        <div className="text-xs text-[#666] dark:text-[#A0A0A4]">{t.importExcelDesc}</div>
                       </div>
                     </button>
                   </div>

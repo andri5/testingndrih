@@ -11,13 +11,13 @@ import {
   Clock,
   Check,
   X,
-  Download,
   TrendingUp,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { getQuickActionsForRole } from '../constants/quickActions'
 import OpenIssuesWidget from '../components/OpenIssuesWidget'
 import WelcomeSplashModal from '../components/WelcomeSplashModal'
+import ExportFormatButton from '../components/ExportFormatButton'
 import { WELCOME_SPLASH_STORAGE_KEY } from '../constants/welcomeSplash'
 
 // i18n translations
@@ -40,6 +40,8 @@ const i18n = {
     analyticsSummary: 'Analytics Summary',
     last7Days: 'Last 7 days',
     passRate: 'pass rate',
+    exportJson: 'Export JSON',
+    exportCsv: 'Export CSV',
     totalScenarios: 'Total Scenarios',
     recentScenarios: 'Recent Scenarios',
     recentExecutions: 'Recent Executions',
@@ -308,27 +310,25 @@ export default function DashboardPage() {
                       <TrendingUp size={18} className="text-[#9BA3F0]" />
                     </div>
                     <div>
-                      <h2 className="text-sm font-semibold text-[#E0E0E2]">📊 {t.analyticsSummary}</h2>
+                      <h2 className="text-sm font-semibold text-[#E0E0E2]">{t.analyticsSummary}</h2>
                       <p className="text-xs text-[#8A8A8F] mt-0.5">{t.last7Days}: {analytics.last7Days?.passRate || 0}% {t.passRate}</p>
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <button
+                    <ExportFormatButton
+                      format="json"
                       onClick={() => handleExport('json')}
                       disabled={exporting}
-                      className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#5E6AD2]/10 hover:bg-[#5E6AD2]/20 text-[#9BA3F0] text-xs font-medium transition-colors disabled:opacity-50"
                     >
-                      <Download size={14} />
-                      JSON
-                    </button>
-                    <button
+                      {t.exportJson}
+                    </ExportFormatButton>
+                    <ExportFormatButton
+                      format="csv"
                       onClick={() => handleExport('csv')}
                       disabled={exporting}
-                      className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#4EC9B0]/10 hover:bg-[#4EC9B0]/20 text-[#4EC9B0] text-xs font-medium transition-colors disabled:opacity-50"
                     >
-                      <Download size={14} />
-                      CSV
-                    </button>
+                      {t.exportCsv}
+                    </ExportFormatButton>
                   </div>
                 </div>
 

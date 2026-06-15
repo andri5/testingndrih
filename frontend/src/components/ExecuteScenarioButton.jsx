@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
-import { Button, Alert, Spinner } from './ui'
+import { Play, Loader2 } from 'lucide-react'
+import { Alert } from './ui'
+import ExportFormatButton from './ExportFormatButton'
 import { useExecutionStore } from '../store/executionStore'
 import { useSettingsStore } from '../store/settingsStore'
 import { environmentAPI } from '../services/api'
@@ -57,13 +59,9 @@ export function ExecuteScenarioButton({ scenarioId, scenarioName, onExecutionSta
       )}
 
       {showConfirm ? (
-        <div className={`p-4 rounded-lg space-y-3 border ${
-          'bg-blue-50 border-blue-200'
-        }`}>
-          <p className={`text-sm font-medium ${
-            'text-blue-900'
-          }`}>
-            Execute: <strong>{scenarioName}</strong>
+        <div className="p-4 rounded-lg space-y-3 border bg-emerald-50/80 border-emerald-200/80">
+          <p className="text-sm font-medium text-emerald-900">
+            Run scenario: <strong>{scenarioName}</strong>
           </p>
           {/* Browser & headless options */}
           <div className="flex flex-wrap gap-3">
@@ -116,39 +114,37 @@ export function ExecuteScenarioButton({ scenarioId, scenarioName, onExecutionSta
               />
             </div>
           </div>
-          <div className="flex gap-2">
-            <Button
-              variant="primary"
-              size="sm"
+          <div className="flex flex-wrap gap-2">
+            <ExportFormatButton
+              format="csv"
+              icon={isRunning ? Loader2 : Play}
               onClick={handleExecute}
               disabled={isRunning}
+              className={`w-full sm:w-auto justify-center ${isRunning ? '[&_svg]:animate-spin' : ''}`}
             >
-              {isRunning ? 'Running...' : 'Confirm'}
-            </Button>
-            <Button
-              variant="secondary"
-              size="sm"
+              {isRunning ? 'Running...' : 'Confirm & Run'}
+            </ExportFormatButton>
+            <ExportFormatButton
+              format="json"
               onClick={() => setShowConfirm(false)}
               disabled={isRunning}
+              className="w-full sm:w-auto justify-center"
+              icon={null}
             >
               Cancel
-            </Button>
+            </ExportFormatButton>
           </div>
         </div>
       ) : (
-        <Button
-          variant="primary"
+        <ExportFormatButton
+          format="csv"
+          icon={isRunning ? Loader2 : Play}
           onClick={() => setShowConfirm(true)}
           disabled={isRunning}
+          className={`w-full justify-center ${isRunning ? '[&_svg]:animate-spin' : ''}`}
         >
-          {isRunning ? (
-            <>
-              <Spinner size="sm" /> Running...
-            </>
-          ) : (
-            '▶️ Execute'
-          )}
-        </Button>
+          {isRunning ? 'Running...' : 'Run Scenario'}
+        </ExportFormatButton>
       )}
     </>
   )

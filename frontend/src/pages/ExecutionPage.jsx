@@ -5,10 +5,13 @@ import { Card, Button, Badge, Spinner, Alert } from '../components/ui'
 import StepErrorDetail from '../components/StepErrorDetail'
 import { useExecutionStore } from '../store/executionStore'
 import { useScenarioStore } from '../store/scenarioStore'
+import ExportFormatButton from '../components/ExportFormatButton'
+import StepResultCard, { StepResultsSummary } from '../components/StepResultCard'
 import { ExecuteScenarioButton } from '../components/ExecuteScenarioButton'
-import { PlayCircle, CheckCircle2, XCircle, TrendingUp, ClipboardList, Clock } from 'lucide-react'
+import SoftSelect from '../components/SoftSelect'
+import { PlayCircle, CheckCircle2, XCircle, TrendingUp, ClipboardList, Clock, Eye, ListTree } from 'lucide-react'
 
-const i18n = {
+const i18n = {
     title: 'Test Execution',
     subtitle: 'Run and monitor test scenarios',
     runScenario: 'Run Scenario',
@@ -28,14 +31,14 @@ const i18n = {
     failed: 'FAILED',
     successRate: 'SUCCESS RATE',
     view: 'View',
-    html: 'HTML',
-    pdf: 'PDF',
-    export: 'Export',
+    exportHTML: 'Export HTML',
+    exportPDF: 'Export PDF',
   
 }
 
 export default function ExecutionPage() {
-  const navigate = useNavigate()  const t = i18n
+  const navigate = useNavigate()
+  const t = i18n
   const [selectedScenarioId, setSelectedScenarioId] = useState(null)
   const [selectedScenarioName, setSelectedScenarioName] = useState('')
   const [screenshotModal, setScreenshotModal] = useState(null)
@@ -61,7 +64,7 @@ export default function ExecutionPage() {
   useEffect(() => {
     fetchExecutions()
     fetchExecutionStats()
-    fetchScenarios()
+    fetchScenarios(0, 100)
   }, [])
 
   // Refresh executions when execution completes
@@ -135,6 +138,25 @@ export default function ExecutionPage() {
     }
   }
 
+  const scenarioOptions = [
+    { value: '', label: t.selectScenarioPlaceholder },
+    ...(scenarios || []).map((scenario) => ({
+      value: scenario.id,
+      label: `${scenario.name} (${scenario.stepCount ?? scenario.steps ?? 0} steps)`,
+    })),
+  ]
+
+  const handleScenarioSelect = (scenarioId) => {
+    if (!scenarioId) {
+      setSelectedScenarioId(null)
+      setSelectedScenarioName('')
+      return
+    }
+    const scenario = scenarios.find((s) => s.id === scenarioId)
+    setSelectedScenarioId(scenarioId)
+    setSelectedScenarioName(scenario?.name || '')
+  }
+
   return (
     <Layout>
       <div className="space-y-6">
@@ -157,53 +179,46 @@ export default function ExecutionPage() {
 
         {/* Execution Control Panel */}
         <Card>
-          <h2 className="text-lg sm:text-xl font-bold text-[#E0E0E2] mb-4">{t.runScenario}</h2>
+          <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-4">{t.runScenario}</h2>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
             {/* Scenario Selector */}
             <div>
-              <label className="block text-sm font-semibold text-[#A0A0A4] mb-2">
+              <label className="block text-sm font-semibold text-gray-500 mb-2">
                 {t.selectScenario}
               </label>
-              <select
+              <SoftSelect
                 value={selectedScenarioId || ''}
-                onChange={(e) => {
-                  const scenarioId = e.target.value
-                  const scenario = scenarios.find(s => s.id === scenarioId)
-                  setSelectedScenarioId(scenarioId)
-                  setSelectedScenarioName(scenario?.name || '')
-                }}
-                className="w-full px-3 py-2 bg-[#161618] border border-[#2D2D2F] text-[#E0E0E2] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5E6AD2]"
-              >
-                <option value="" className="bg-[#161618]">{t.selectScenarioPlaceholder}</option>
-                {scenarios && scenarios.map((scenario) => (
-                  <option key={scenario.id} value={scenario.id}>
-                    {scenario.name} ({scenario.steps || 0} steps)
-                  </option>
-                ))}
-              </select>
+                onChange={handleScenarioSelect}
+                options={scenarioOptions}
+                placeholder={t.selectScenarioPlaceholder}
+                className="w-full"
+              />
             </div>
 
             {/* Status Info */}
             <div>
-              <label className="block text-sm font-semibold text-[#A0A0A4] mb-2">
+              <label className="block text-sm font-semibold text-gray-500 mb-2">
                 {t.status}
               </label>
-              <div className="px-3 py-2 bg-[#1A1A1C] rounded-lg">
+              <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg min-h-[42px] flex items-center">
                 {isRunning ? (
-                  <div className="flex items-center gap-2 text-blue-400">
+                  <div className="flex items-center gap-2 text-[#5E6AD2] text-sm font-medium">
                     <Spinner size="sm" />
                     <span>Running...</span>
                   </div>
                 ) : (
-                  <span className="text-[#A0A0A4]">Ready</span>
+                  <span className="inline-flex items-center gap-1.5 text-sm font-medium text-emerald-600">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                    Ready
+                  </span>
                 )}
               </div>
             </div>
 
             {/* Execute Button */}
             <div>
-              <label className="block text-sm font-semibold text-[#A0A0A4] mb-2">
+              <label className="block text-sm font-semibold text-gray-500 mb-2">
                 {t.action}
               </label>
               {selectedScenarioId ? (
@@ -211,7 +226,6 @@ export default function ExecutionPage() {
                   scenarioId={selectedScenarioId}
                   scenarioName={selectedScenarioName}
                   onExecutionStart={() => {
-                    // Refresh executions and stats after execution starts
                     setTimeout(() => {
                       fetchExecutions()
                       fetchExecutionStats()
@@ -219,7 +233,7 @@ export default function ExecutionPage() {
                   }}
                 />
               ) : (
-                <div className="w-full px-3.5 py-2 text-sm font-medium rounded-md border border-dashed border-[#3D3D40] text-[#8A8A8F] bg-[#161618] text-center select-none">
+                <div className="inline-flex items-center justify-center gap-2 w-full px-3 py-2 rounded-lg text-xs font-medium bg-gray-100 text-gray-500 border border-gray-200">
                   {t.selectScenarioFirst}
                 </div>
               )}
@@ -366,52 +380,31 @@ export default function ExecutionPage() {
                 {/* Per-Step Results */}
                 {currentExecution.stepResults && currentExecution.stepResults.length > 0 && (
                   <div className="mt-4">
-                    <h3 className="font-semibold text-[#E0E0E2] mb-2">Detail Per-Step</h3>
-                    <div className="space-y-2">
+                    <div className="flex items-center gap-2 mb-3">
+                      <ListTree size={18} className="text-[#9BA3F0]" />
+                      <h3 className="font-semibold text-gray-900">
+                        Detail Per-Step ({currentExecution.stepResults.length})
+                      </h3>
+                    </div>
+                    <StepResultsSummary stepResults={currentExecution.stepResults} />
+                    <div className="space-y-3 mt-3">
                       {currentExecution.stepResults.map((result, idx) => (
-                        <div
+                        <StepResultCard
                           key={result.id || idx}
-                          className={`flex items-center gap-3 p-2 rounded border ${
-                            result.status === 'PASSED'
-                              ? 'bg-green-900/20 border-green-700/30'
-                              : 'bg-red-900/20 border-red-700/30'
-                          }`}
-                        >
-                          <span className={`text-sm ${result.status === 'PASSED' ? 'text-green-600' : 'text-red-600'}`}>
-                            {result.status === 'PASSED' ? '✓' : '✗'}
-                          </span>
-                          <div className="flex-1">
-                            <p className="text-sm font-medium text-[#E0E0E2] truncate">
-                              Step {result.testStep?.stepNumber || idx + 1}: {result.testStep?.type || ''} — {result.testStep?.description || '-'}
-                            </p>
-                            {result.testStep?.selector && (
-                              <p className="text-xs text-[#666] truncate font-mono">Selector: {result.testStep.selector}</p>
-                            )}
-                            {result.errorMessage && (
-                              <StepErrorDetail errorMessage={result.errorMessage} size="small" />
-                            )}
-                          </div>
-                          {result.screenshot && (
-                            <button
-                              onClick={() => setScreenshotModal({
-                                url: result.screenshot.url,
-                                stepNumber: result.testStep?.stepNumber || idx + 1,
-                                description: result.testStep?.description || ''
-                              })}
-                              className="flex-shrink-0 border-2 border-gray-300 rounded overflow-hidden hover:border-indigo-500 transition cursor-pointer"
-                              title={t.viewScreenshot}
-                            >
-                              <img
-                                src={result.screenshot.url}
-                                alt={`Step ${result.testStep?.stepNumber || idx + 1}`}
-                                className="w-20 h-14 object-cover"
-                              />
-                            </button>
-                          )}
-                          <span className="text-xs text-gray-500">
-                            {result.duration ? `${result.duration}ms` : ''}
-                          </span>
-                        </div>
+                          result={result}
+                          index={idx}
+                          errorSize="small"
+                          onScreenshotClick={
+                            result.screenshot
+                              ? () =>
+                                  setScreenshotModal({
+                                    url: result.screenshot.url,
+                                    stepNumber: result.testStep?.stepNumber || idx + 1,
+                                    description: result.testStep?.description || '',
+                                  })
+                              : undefined
+                          }
+                        />
                       ))}
                     </div>
                   </div>
@@ -495,39 +488,28 @@ export default function ExecutionPage() {
                       </td>
                       <td className="py-3 px-4 text-center">
                         <div className="flex items-center justify-center gap-1.5 flex-wrap">
-                          <button
+                          <ExportFormatButton
+                            format="primary"
+                            icon={Eye}
                             onClick={() => handleViewDetails(execution.id)}
                             title="View execution details"
-                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-semibold
-                              bg-[#5E6AD2] hover:bg-[#6B78E0] text-white
-                              dark:bg-[#5E6AD2] dark:hover:bg-[#6B78E0] dark:text-white
-                              transition-colors cursor-pointer select-none"
                           >
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                             {t.view}
-                          </button>
-                          <button
+                          </ExportFormatButton>
+                          <ExportFormatButton
+                            format="html"
                             onClick={() => handleExportReport(execution.id, 'html')}
                             title="Download HTML report"
-                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-semibold
-                              bg-amber-500 hover:bg-amber-600 text-white
-                              dark:bg-amber-500 dark:hover:bg-amber-600 dark:text-white
-                              transition-colors cursor-pointer select-none"
                           >
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                            {t.html}
-                          </button>
-                          <button
+                            {t.exportHTML}
+                          </ExportFormatButton>
+                          <ExportFormatButton
+                            format="pdf"
                             onClick={() => handleExportReport(execution.id, 'pdf')}
                             title="Download PDF report"
-                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-semibold
-                              bg-red-500 hover:bg-red-600 text-white
-                              dark:bg-red-500 dark:hover:bg-red-600 dark:text-white
-                              transition-colors cursor-pointer select-none"
                           >
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                            {t.pdf}
-                          </button>
+                            {t.exportPDF}
+                          </ExportFormatButton>
                         </div>
                       </td>
                     </tr>

@@ -1,5 +1,12 @@
 import { useState } from 'react'
 import { Input } from './ui'
+import SoftSelect from './SoftSelect'
+
+const FILTER_OPTIONS = [
+  { value: 'all', label: 'All Scenarios' },
+  { value: 'recent', label: 'Recently Created' },
+  { value: 'active', label: 'Most Executed' },
+]
 
 export function ScenarioSearch({ onSearch, onFilterChange, isLoading = false }) {
   const [searchText, setSearchText] = useState('')
@@ -10,8 +17,7 @@ export function ScenarioSearch({ onSearch, onFilterChange, isLoading = false }) 
     onSearch(value)
   }
 
-  const handleFilterChange = (e) => {
-    const newFilter = e.target.value
+  const handleFilterChange = (newFilter) => {
     setFilterType(newFilter)
     onFilterChange(newFilter)
   }
@@ -46,16 +52,12 @@ export function ScenarioSearch({ onSearch, onFilterChange, isLoading = false }) 
 
       {/* Filters */}
       <div className="flex gap-4 flex-wrap">
-        <select
+        <SoftSelect
           value={filterType}
           onChange={handleFilterChange}
+          options={FILTER_OPTIONS}
           disabled={isLoading}
-          className="px-4 py-2 bg-[#161618] border border-[#2D2D2F] text-[#E0E0E2] rounded-lg focus:ring-2 focus:ring-[#5E6AD2] focus:border-transparent outline-none transition cursor-pointer"
-        >
-          <option value="all">All Scenarios</option>
-          <option value="recent">Recently Created</option>
-          <option value="active">Most Executed</option>
-        </select>
+        />
       </div>
     </div>
   )

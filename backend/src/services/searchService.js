@@ -1,4 +1,5 @@
 import { prisma } from '../lib/prisma.js'
+import { withLiveStepCount } from './scenarioService.js'
 
 /**
  * Search scenarios with filters
@@ -54,18 +55,21 @@ export async function searchScenarios(userId, options = {}) {
         createdAt: true,
         updatedAt: true,
         _count: {
-          select: { executions: true }
-        }
-      }
+          select: { executions: true, testSteps: true },
+        },
+      },
     })
 
     const total = await prisma.scenario.count({ where })
 
     return {
-      scenarios: scenarios.map((s) => ({
-        ...s,
-        executionCount: s._count.executions
-      })),
+      scenarios: scenarios.map((s) => {
+        const mapped = withLiveStepCount(s)
+        return {
+          ...mapped,
+          executionCount: s._count.executions,
+        }
+      }),
       total,
       hasMore: skip + take < total
     }

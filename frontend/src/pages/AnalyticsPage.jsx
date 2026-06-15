@@ -2,14 +2,15 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { analyticsAPI } from '../services/api'
-import toast from 'react-hot-toast'
+import toast from 'react-hot-toast'
 import {
   LineChart, Line, BarChart, Bar, AreaChart, Area, ComposedChart, XAxis, YAxis,
   CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from 'recharts'
-import { Download, TrendingUp, Calendar, Zap, AlertTriangle, Activity } from 'lucide-react'
+import ExportFormatButton from '../components/ExportFormatButton'
+import { TrendingUp, Calendar, Zap, AlertTriangle, Activity } from 'lucide-react'
 
-const i18n = {
+const i18n = {
     title: 'Test Analytics Dashboard',
     subtitle: 'Comprehensive test execution metrics and performance tracking',
     exportJson: 'Export JSON',
@@ -38,7 +39,8 @@ const i18n = {
 }
 
 export default function AnalyticsPage() {
-  const navigate = useNavigate()  const t = i18n
+  const navigate = useNavigate()
+  const t = i18n
   
   const [summary, setSummary] = useState(null)
   const [trendData, setTrendData] = useState([])
@@ -143,22 +145,22 @@ export default function AnalyticsPage() {
             <p className="text-[#8A8A8F] mt-1">{t.subtitle}</p>
           </div>
           <div className="flex gap-2 flex-wrap">
-            <button
+            <ExportFormatButton
+              format="json"
               onClick={() => handleExport('json')}
               disabled={exporting}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#5E6AD2]/10 hover:bg-[#5E6AD2]/20 text-[#9BA3F0] font-medium transition-colors disabled:opacity-50"
+              iconSize={16}
             >
-              <Download size={16} />
               {t.exportJson}
-            </button>
-            <button
+            </ExportFormatButton>
+            <ExportFormatButton
+              format="csv"
               onClick={() => handleExport('csv')}
               disabled={exporting}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#4EC9B0]/10 hover:bg-[#4EC9B0]/20 text-[#4EC9B0] font-medium transition-colors disabled:opacity-50"
+              iconSize={16}
             >
-              <Download size={16} />
               {t.exportCsv}
-            </button>
+            </ExportFormatButton>
           </div>
         </div>
 

@@ -1,12 +1,16 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import Layout from '../components/Layout'
-import { Card, Button, Badge, Spinner, Alert, Tooltip } from '../components/ui'
+import { Card, Badge, Spinner, Alert, Tooltip } from '../components/ui'
 import BrowserSelector from '../components/BrowserSelector'
 import StepErrorDetail from '../components/StepErrorDetail'
+import StepResultCard, { StepResultsSummary } from '../components/StepResultCard'
 import TestStepList from '../components/TestStepList'
 import { scenarioAPI, executionAPI, recorderAPI } from '../services/api'
-import { CheckCircle2, XCircle, ClipboardList, Clock, HelpCircle } from 'lucide-react'
+import ExportFormatButton from '../components/ExportFormatButton'
+import { CheckCircle2, XCircle, ClipboardList, Clock, HelpCircle, Globe, Play, Circle, Square, ChevronDown, ListTree, Plus, Copy, Trash2, Save, Loader2 } from 'lucide-react'
+
+const RecordIcon = (props) => <Circle {...props} className="text-red-500 fill-red-500" />
 
 const i18n = {
     loadScenarioError: 'Failed to load scenario',
@@ -50,7 +54,8 @@ const i18n = {
     scenarioNotFound: 'Scenario not found',
     backToScenarios: '← Back to Scenarios',
     running: 'Running...',
-    runScenario: '▶ Run Scenario',
+    runScenario: 'Run Scenario',
+    stopRecording: 'Stop',
     recordingActive: 'Recording Active...',
     recordingMode: 'Recording Mode',
     startRecordingHint: 'Start recording to capture your browser interactions. Chromium will open automatically — every click, form fill, and navigation will be recorded as test steps.',
@@ -71,7 +76,7 @@ const i18n = {
     copying: 'Copying...',
     stepsCopied: (c) => `${c} step${c !== 1 ? 's' : ''} copied`,
     copyStepsError: 'Failed to copy steps',
-    addStep: '+ Add Step',
+    addStep: 'Add Step',
     editStep: 'Edit Step',
     addNewStep: 'Add New Step',
     stepDescriptionPlaceholder: 'Step description',
@@ -694,7 +699,7 @@ export default function ScenarioDetailPage() {
       } catch {
         // ignore polling errors
       }
-    }, 1000)
+    }, 400)
   }, [id])
 
   const stopPolling = useCallback(() => {
@@ -836,9 +841,9 @@ export default function ScenarioDetailPage() {
         <Card>
           <div className="text-center py-12">
             <p className="text-[#888] text-lg">{t.scenarioNotFound}</p>
-            <Button variant="primary" className="mt-4" onClick={() => navigate('/scenarios')}>
+            <ExportFormatButton format="primary" onClick={() => navigate('/scenarios')}>
               {t.goBackToScenarios}
-            </Button>
+            </ExportFormatButton>
           </div>
         </Card>
       </Layout>
@@ -867,53 +872,50 @@ export default function ScenarioDetailPage() {
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-2 shrink-0">
-            <Button
-              variant="outline"
-              size="lg"
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            <ExportFormatButton
+              format="primary"
+              icon={Globe}
               onClick={() => setShowBrowserSelector(!showBrowserSelector)}
               disabled={isExecuting}
+              className="capitalize"
             >
-              {selectedDevice ? `📱 ${selectedDevice}` : `🌐 ${selectedBrowser}`}
-            </Button>
+              {selectedDevice || selectedBrowser}
+            </ExportFormatButton>
+
             {!isRecording ? (
-              <Button
-                variant="secondary"
-                size="lg"
+              <ExportFormatButton
+                format="pdf"
+                icon={RecordIcon}
                 onClick={() => {
                   setRecordingUrl(scenario.url || '')
                   setShowRecordingPanel(true)
                 }}
                 disabled={isExecuting}
               >
-                🔴 Record
-              </Button>
+                Record
+              </ExportFormatButton>
             ) : (
-              <Button
-                variant="danger"
-                size="lg"
+              <ExportFormatButton
+                format="pdf"
+                icon={isStoppingRecording ? Loader2 : Square}
                 onClick={handleStopRecording}
                 disabled={isStoppingRecording}
+                className={isStoppingRecording ? '[&_svg]:animate-spin' : ''}
               >
-                {isStoppingRecording ? (
-                  <span className="flex items-center gap-2"><Spinner size="sm" /> Stopping...</span>
-                ) : '⏹ Stop Recording'}
-              </Button>
+                {isStoppingRecording ? '…' : t.stopRecording}
+              </ExportFormatButton>
             )}
-            <Button
-              variant="primary"
-              size="lg"
+
+            <ExportFormatButton
+              format="csv"
+              icon={isExecuting ? Loader2 : Play}
               onClick={handleExecute}
               disabled={isExecuting || steps.length === 0 || isRecording}
+              className={isExecuting ? '[&_svg]:animate-spin' : ''}
             >
-              {isExecuting ? (
-                <span className="flex items-center gap-2">
-                  <Spinner size="sm" /> {t.running}
-                </span>
-              ) : (
-                t.runScenario
-              )}
-            </Button>
+              {isExecuting ? t.running : t.runScenario}
+            </ExportFormatButton>
           </div>
         </div>
 
@@ -980,15 +982,15 @@ export default function ScenarioDetailPage() {
                       className="w-full px-3 py-2 bg-[#161618] border border-[#2D2D2F] text-[#E0E0E2] placeholder-[#4A4A52] rounded-lg focus:ring-1 focus:ring-[#5E6AD2] focus:outline-none"
                     />
                   </div>
-                  <Button
-                    variant="primary"
+                  <ExportFormatButton
+                    format="pdf"
+                    icon={isStartingRecording ? Loader2 : RecordIcon}
                     onClick={handleStartRecording}
                     disabled={isStartingRecording}
+                    className={isStartingRecording ? '[&_svg]:animate-spin' : ''}
                   >
-                    {isStartingRecording ? (
-                      <span className="flex items-center gap-2"><Spinner size="sm" /> {t.openingBrowser}</span>
-                    ) : t.startRecording}
-                  </Button>
+                    {isStartingRecording ? t.openingBrowser : 'Start Recording'}
+                  </ExportFormatButton>
                 </div>
               </div>
             )}
@@ -1002,18 +1004,19 @@ export default function ScenarioDetailPage() {
                     {isRecording && ` ${t.interactionHint}`}
                   </p>
                   {!isRecording && recordingSteps.length > 0 && (
-                    <div className="flex gap-2">
-                      <Button
-                        variant="primary"
-                        size="sm"
+                    <div className="flex flex-wrap gap-2">
+                      <ExportFormatButton
+                        format="csv"
+                        icon={isSavingRecording ? Loader2 : Save}
                         onClick={handleSaveRecordedSteps}
                         disabled={isSavingRecording}
+                        className={isSavingRecording ? '[&_svg]:animate-spin' : ''}
                       >
                         {isSavingRecording ? t.saving : t.saveSteps(recordingSteps.length)}
-                      </Button>
-                      <Button variant="secondary" size="sm" onClick={handleDiscardRecording}>
+                      </ExportFormatButton>
+                      <ExportFormatButton format="json" icon={null} onClick={handleDiscardRecording}>
                         {t.discard}
-                      </Button>
+                      </ExportFormatButton>
                     </div>
                   )}
                 </div>
@@ -1054,44 +1057,36 @@ export default function ScenarioDetailPage() {
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-[#E0E0E2]">Test Steps</h2>
             {!showStepForm && (
-              <div
-                className="inline-flex items-stretch rounded-lg border border-[#DDDDE0] bg-white overflow-hidden shadow-sm"
-                role="group"
-                aria-label="Test step actions"
-              >
-                <button
-                  type="button"
+              <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Test step actions">
+                <ExportFormatButton
+                  format="json"
+                  icon={isCopyingBulk ? Loader2 : Copy}
                   onClick={handleBulkCopy}
                   disabled={selectedStepIds.size === 0 || isCopyingBulk || isDeletingBulk}
-                  className="px-3.5 py-2 text-sm font-medium text-[#555] hover:bg-[#F5F5F7] hover:text-[#1A1A1C] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent transition-colors"
+                  className={isCopyingBulk ? '[&_svg]:animate-spin' : ''}
                 >
                   {isCopyingBulk
                     ? t.copying
                     : selectedStepIds.size > 0
                       ? t.copySelectedSteps(selectedStepIds.size)
                       : t.copySteps}
-                </button>
-                <span className="w-px self-stretch bg-[#E8E8EB]" aria-hidden />
-                <button
-                  type="button"
+                </ExportFormatButton>
+                <ExportFormatButton
+                  format="pdf"
+                  icon={isDeletingBulk ? Loader2 : Trash2}
                   onClick={handleBulkDelete}
                   disabled={selectedStepIds.size === 0 || isDeletingBulk || isCopyingBulk}
-                  className="px-3.5 py-2 text-sm font-medium text-[#9B4B4B] hover:bg-[#FEF2F2] hover:text-[#7F3D3D] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent transition-colors"
+                  className={isDeletingBulk ? '[&_svg]:animate-spin' : ''}
                 >
                   {isDeletingBulk
                     ? t.deleting
                     : selectedStepIds.size > 0
                       ? t.deleteSelectedSteps(selectedStepIds.size)
                       : t.deleteSteps}
-                </button>
-                <span className="w-px self-stretch bg-[#E8E8EB]" aria-hidden />
-                <button
-                  type="button"
-                  onClick={openAddForm}
-                  className="px-3.5 py-2 text-sm font-medium text-[#5E6AD2] hover:bg-[#EEF0FF] hover:text-[#4F5BBF] transition-colors"
-                >
+                </ExportFormatButton>
+                <ExportFormatButton format="primary" icon={Plus} onClick={openAddForm}>
                   {t.addStep}
-                </button>
+                </ExportFormatButton>
               </div>
             )}
           </div>
@@ -1266,15 +1261,21 @@ export default function ScenarioDetailPage() {
                 </div>
 
                 {/* Footer */}
-                <div className={`flex gap-3 px-6 py-4 border-t ${
+                <div className={`flex flex-wrap gap-3 px-6 py-4 border-t ${
                   'border-gray-100'
                 }`}>
-                  <Button variant="primary" onClick={handleSaveStep} disabled={isSaving} className="flex-1 sm:flex-none">
+                  <ExportFormatButton
+                    format="primary"
+                    icon={isSaving ? Loader2 : Save}
+                    onClick={handleSaveStep}
+                    disabled={isSaving}
+                    className={`flex-1 sm:flex-none justify-center ${isSaving ? '[&_svg]:animate-spin' : ''}`}
+                  >
                     {isSaving ? t.saving : editingStep ? t.updateStepBtn : t.saveStepBtn}
-                  </Button>
-                  <Button variant="secondary" onClick={cancelForm} className="flex-1 sm:flex-none">
+                  </ExportFormatButton>
+                  <ExportFormatButton format="json" icon={null} onClick={cancelForm} className="flex-1 sm:flex-none justify-center">
                     {t.cancel}
-                  </Button>
+                  </ExportFormatButton>
                 </div>
               </div>
             </div>
@@ -1364,71 +1365,53 @@ export default function ScenarioDetailPage() {
             {/* Step Results - Collapsible */}
             {executionResult.stepResults && executionResult.stepResults.length > 0 && (
               <div>
-                <button
+                <ExportFormatButton
+                  format="primary"
+                  icon={ListTree}
                   onClick={() => setShowStepDetails(!showStepDetails)}
-                  className="flex items-center gap-2 text-sm font-medium text-[#5E6AD2] hover:text-[#8B95E3] transition mb-3"
+                  className="mb-3"
+                  trailing={
+                    <ChevronDown
+                      size={14}
+                      className={`transition-transform ${showStepDetails ? 'rotate-180' : ''}`}
+                    />
+                  }
                 >
-                  <span>{showStepDetails ? '▼' : '▶'}</span>
-                  <span>Detail Per-Step ({executionResult.stepResults.length})</span>
-                </button>
+                  Detail Per-Step ({executionResult.stepResults.length})
+                </ExportFormatButton>
 
                 {showStepDetails && (
                   <div className="space-y-3">
+                    <StepResultsSummary stepResults={executionResult.stepResults} />
                     {executionResult.stepResults.map((result, idx) => (
-                      <div
+                      <StepResultCard
                         key={result.id || idx}
-                        className={`p-3 rounded-lg border ${
-                          result.status === 'PASSED'
-                            ? 'bg-green-50 border-green-200'
-                            : 'bg-red-50 border-red-200'
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <span className={`text-lg ${result.status === 'PASSED' ? 'text-green-600' : 'text-red-600'}`}>
-                            {result.status === 'PASSED' ? '✓' : '✗'}
-                          </span>
-                          <div className="flex-1">
-                            <p className={`font-medium ${'text-gray-900'}`}>
-                              Step {result.testStep?.stepNumber || idx + 1}: {result.testStep?.type || result.type} — {result.testStep?.description || result.description || '-'}
-                            </p>
-                            <p className={`text-xs ${'text-gray-500'}`}>
-                              {result.testStep?.type || result.type} 
-                              {result.testStep?.selector ? ` • ${result.testStep.selector}` : ''}
-                              {result.duration ? ` • ${result.duration}ms` : ''}
-                            </p>
-                            {result.errorMessage && (
-                              <StepErrorDetail 
-                                errorMessage={result.errorMessage} 
-                                onRetest={handleExecute}
-                                step={result.testStep}
-                                pageUrl={scenario?.url}
-                                onApplyAIFix={result.testStep ? (locator) => handleApplyAIFix(result.testStep.id, locator) : null}
-                                onAutoRetry={result.testStep ? (selector) => handleAutoRetry(result.testStep.id, selector) : null}
-                                isAutoRetrying={isAutoRetrying}
-                                executionId={executionResult.id}
-                              />
-                            )}
-                          </div>
-                          {/* Screenshot thumbnail */}
-                          {result.screenshot && (
-                            <button
-                              onClick={() => setScreenshotModal({
-                                url: result.screenshot.url,
-                                stepNumber: result.testStep?.stepNumber || idx + 1,
-                                description: result.testStep?.description || ''
-                              })}
-                              className="flex-shrink-0 border-2 border-[#2D2D2F] rounded-lg overflow-hidden hover:border-[#5E6AD2] transition cursor-pointer"
-                              title="Klik untuk memperbesar screenshot"
-                            >
-                              <img
-                                src={result.screenshot.url}
-                                alt={`Screenshot step ${result.testStep?.stepNumber || idx + 1}`}
-                                className="w-24 h-16 object-cover"
-                              />
-                            </button>
-                          )}
-                        </div>
-                      </div>
+                        result={result}
+                        index={idx}
+                        onScreenshotClick={
+                          result.screenshot
+                            ? () =>
+                                setScreenshotModal({
+                                  url: result.screenshot.url,
+                                  stepNumber: result.testStep?.stepNumber || idx + 1,
+                                  description: result.testStep?.description || '',
+                                })
+                            : undefined
+                        }
+                        onRetest={handleExecute}
+                        onApplyAIFix={
+                          result.testStep
+                            ? (locator) => handleApplyAIFix(result.testStep.id, locator)
+                            : null
+                        }
+                        onAutoRetry={
+                          result.testStep
+                            ? (selector) => handleAutoRetry(result.testStep.id, selector)
+                            : null
+                        }
+                        isAutoRetrying={isAutoRetrying}
+                        executionId={executionResult.id}
+                      />
                     ))}
                   </div>
                 )}
@@ -1475,9 +1458,9 @@ export default function ScenarioDetailPage() {
                 >
                   Buka di tab baru ↗
                 </a>
-                <Button variant="secondary" onClick={() => setScreenshotModal(null)}>
+                <ExportFormatButton format="json" icon={null} onClick={() => setScreenshotModal(null)}>
                   Tutup
-                </Button>
+                </ExportFormatButton>
               </div>
             </div>
           </div>

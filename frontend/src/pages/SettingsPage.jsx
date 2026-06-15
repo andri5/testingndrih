@@ -1,7 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { Image, Save, LogOut } from 'lucide-react'
 import Layout from '../components/Layout'
 import { Alert } from '../components/ui'
+import ExportFormatButton from '../components/ExportFormatButton'
 import IntegrationsSettings from '../components/IntegrationsSettings'
 import UserManagement from '../components/UserManagement'
 import UserActivityLog from '../components/UserActivityLog'
@@ -60,6 +62,7 @@ export default function SettingsPage() {
   const [name, setName] = useState(user?.name || '')
   const [email] = useState(user?.email || '')
   const [profilePicture, setProfilePicture] = useState(JSON.parse(localStorage.getItem('profilePicture') || 'null'))
+  const fileInputRef = useRef(null)
 
   const t = i18n.en
 
@@ -177,12 +180,16 @@ export default function SettingsPage() {
                           )}
                         </div>
                         <div className="flex-1">
-                          <label htmlFor="profile-picture-input" className="cursor-pointer">
-                            <div className="px-4 py-2 rounded-lg text-sm font-medium text-center transition bg-[#5E6AD2] hover:bg-[#6872e5] text-white">
-                              {profilePicture ? t.changePhoto : t.uploadPhoto}
-                            </div>
-                          </label>
+                          <ExportFormatButton
+                            format="primary"
+                            icon={Image}
+                            onClick={() => fileInputRef.current?.click()}
+                            className="w-full justify-center"
+                          >
+                            {profilePicture ? t.changePhoto : t.uploadPhoto}
+                          </ExportFormatButton>
                           <input
+                            ref={fileInputRef}
                             id="profile-picture-input"
                             type="file"
                             accept="image/*"
@@ -220,23 +227,17 @@ export default function SettingsPage() {
                     </div>
 
                     {/* Save Button */}
-                    <button
-                      onClick={handleSaveProfile}
-                      className="px-4 py-2 bg-[#5E6AD2] hover:bg-[#6872e5] text-white text-sm font-medium rounded-lg transition"
-                    >
+                    <ExportFormatButton format="primary" icon={Save} onClick={handleSaveProfile}>
                       {t.saveProfile}
-                    </button>
+                    </ExportFormatButton>
                   </div>
                 </div>
 
                 <div className={cardCls}>
                   <p className={sectionTitleCls}>{t.accountActions}</p>
-                  <button
-                    onClick={handleLogout}
-                    className="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 text-sm font-medium rounded-lg border border-red-500/20 transition"
-                  >
+                  <ExportFormatButton format="pdf" icon={LogOut} onClick={handleLogout}>
                     {t.signOut}
-                  </button>
+                  </ExportFormatButton>
                 </div>
               </>
             )}

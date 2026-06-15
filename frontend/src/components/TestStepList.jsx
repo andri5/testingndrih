@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd'
-import { Badge, Button } from './ui'
+import { Badge } from './ui'
+import ExportFormatButton from './ExportFormatButton'
+import { Pencil, Trash2 } from 'lucide-react'
 
 export default function TestStepList({
   steps = [],
@@ -221,19 +223,21 @@ export default function TestStepList({
 
                           {/* Action Buttons */}
                           <div className="flex gap-1 flex-shrink-0">
-                            <button
+                            <ExportFormatButton
+                              format="primary"
+                              icon={Pencil}
                               onClick={() => onEditStep(step)}
-                              className="px-2 py-1 text-sm bg-[#5E6AD2]/10 text-[#5E6AD2] rounded hover:bg-[#5E6AD2]/20 transition"
                             >
                               Edit
-                            </button>
-                            <button
+                            </ExportFormatButton>
+                            <ExportFormatButton
+                              format="pdf"
+                              icon={Trash2}
                               onClick={() => onDeleteStep(step.id)}
-                              className="px-2 py-1 text-sm bg-red-500/10 text-red-400 rounded hover:bg-red-500/20 transition"
                               disabled={isDeletingBulk}
                             >
                               Hapus
-                            </button>
+                            </ExportFormatButton>
                           </div>
                         </div>
                       </div>

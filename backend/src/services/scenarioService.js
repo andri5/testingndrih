@@ -1,5 +1,11 @@
 import { prisma } from '../lib/prisma.js'
 
+export function withLiveStepCount(scenario) {
+  const count = scenario._count?.testSteps ?? scenario.steps ?? 0
+  const { _count, ...rest } = scenario
+  return { ...rest, steps: count, stepCount: count }
+}
+
 /**
  * Create a new scenario
  */
@@ -53,15 +59,16 @@ export async function getUserScenarios(userId, options = {}) {
         url: true,
         steps: true,
         createdAt: true,
-        updatedAt: true
-      }
+        updatedAt: true,
+        _count: { select: { testSteps: true } },
+      },
     })
 
     const total = await prisma.scenario.count({
-      where: { userId }
+      where: { userId },
     })
 
-    return { scenarios, total }
+    return { scenarios: scenarios.map(withLiveStepCount), total }
   } catch (error) {
     throw new Error(`Failed to fetch scenarios: ${error.message}`)
   }

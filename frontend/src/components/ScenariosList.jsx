@@ -1,7 +1,9 @@
 import { useState } from 'react'
-import { Button, Badge, Spinner, Card, Tooltip } from './ui'
+import { Eye, Copy, Trash2 } from 'lucide-react'
+import { Button, Badge, Spinner, Card, Tooltip } from './ui'
+import ExportFormatButton from './ExportFormatButton'
 
-const tooltipI18n = {
+const tooltipI18n = {
     view:   'View details & steps',
     edit:   'Edit name, description, and URL',
     clone:  'Duplicate scenario with all its steps',
@@ -32,7 +34,8 @@ export function ScenariosList({
   onToggleSelect = null,
   onSelectAll = null,
   bulkSelectEnabled = false,
-}) {  const tt = tooltipI18n
+}) {
+  const tt = tooltipI18n
 
   // Track per-action loading state
   const [loadingStates, setLoadingStates] = useState({})
@@ -160,14 +163,14 @@ export function ScenariosList({
               {/* Actions */}
               <div className="flex flex-wrap gap-2 ml-2 shrink-0">
                 <Tooltip text={tt.view}>
-                <Button
-                  variant="primary"
-                  size="sm"
+                <ExportFormatButton
+                  format="primary"
+                  icon={Eye}
                   onClick={() => onView(scenario)}
                   disabled={isLoading}
                 >
                   View
-                </Button>
+                </ExportFormatButton>
                 </Tooltip>
                 <Tooltip text={tt.edit}>
                 <Button
@@ -180,14 +183,14 @@ export function ScenariosList({
                 </Button>
                 </Tooltip>
                 <Tooltip text={tt.clone}>
-                <Button
-                  variant="cyan"
-                  size="sm"
+                <ExportFormatButton
+                  format="json"
+                  icon={Copy}
                   onClick={() => onDuplicate(scenario.id)}
                   disabled={isLoading}
                 >
-                  📋 Clone
-                </Button>
+                  Clone
+                </ExportFormatButton>
                 </Tooltip>
                 {onMarkSmoke && (
                   <Tooltip text={scenario.isSmoke ? tt.unsmoke : tt.smoke}>
@@ -247,9 +250,9 @@ export function ScenariosList({
                   </Tooltip>
                 )}
                 <Tooltip text={tt.delete}>
-                <Button
-                  variant="danger"
-                  size="sm"
+                <ExportFormatButton
+                  format="pdf"
+                  icon={Trash2}
                   onClick={() => {
                     if (window.confirm(`Delete "${scenario.name}"?`)) {
                       onDelete(scenario.id)
@@ -258,7 +261,7 @@ export function ScenariosList({
                   disabled={isLoading}
                 >
                   Delete
-                </Button>
+                </ExportFormatButton>
                 </Tooltip>
               </div>
             </div>
