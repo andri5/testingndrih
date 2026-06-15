@@ -1,7 +1,7 @@
 name: Post-Maintenance Deploy
 
-# Probes production health; triggers Deploy Production when the VPS is reachable again.
-# After VPS maintenance: this runs on schedule, or run manually from Actions tab.
+# Probes production health every 15 min.
+# Triggers deploy ONLY when prod recovers from down → up (not on every healthy check).
 on:
   workflow_dispatch:
   schedule:
@@ -17,7 +17,24 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       healthy: ${{ steps.health.outputs.healthy }}
+      previous: ${{ steps.prev.outputs.previous }}
+      recovered: ${{ steps.recovery.outputs.recovered }}
     steps:
+      - name: Restore last probe state
+        uses: actions/cache/restore@v4
+        with:
+          path: .probe-state
+          key: prod-probe-state-v1
+
+      - name: Read previous probe status
+        id: prev
+        run: |
+          if [ -f .probe-state/status ]; then
+            echo "previous=$(cat .probe-state/status)" >> "$GITHUB_OUTPUT"
+          else
+            echo "previous=unknown" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Probe testsambilngopi.com
         id: health
         run: |
@@ -26,13 +43,42 @@ jobs:
             echo "Production is reachable."
           else
             echo "healthy=false" >> "$GITHUB_OUTPUT"
-            echo "Production still unreachable (maintenance or services down)."
+            echo "Production unreachable (maintenance or services down)."
           fi
 
+      - name: Detect recovery (was down, now up)
+        id: recovery
+        run: |
+          prev="${{ steps.prev.outputs.previous }}"
+          now="${{ steps.health.outputs.healthy }}"
+          if [ "${now}" = "true" ] && [ "${prev}" = "unhealthy" ]; then
+            echo "recovered=true" >> "$GITHUB_OUTPUT"
+            echo "Production recovered — will trigger one deploy."
+          else
+            echo "recovered=false" >> "$GITHUB_OUTPUT"
+            if [ "${now}" = "true" ]; then
+              echo "Production healthy — no deploy needed."
+            fi
+          fi
+
+      - name: Save probe status
+        run: |
+          mkdir -p .probe-state
+          if [ "${{ steps.health.outputs.healthy }}" = "true" ]; then
+            echo "healthy" > .probe-state/status
+          else
+            echo "unhealthy" > .probe-state/status
+          fi
+
+      - uses: actions/cache/save@v4
+        with:
+          path: .probe-state
+          key: prod-probe-state-v1
+
   trigger-deploy:
-    name: Trigger production deploy
+    name: Trigger production deploy (recovery only)
     needs: probe
-    if: needs.probe.outputs.healthy == 'true'
+    if: needs.probe.outputs.recovered == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Start Deploy Production workflow
@@ -42,5 +88,6 @@ jobs:
           gh workflow run deploy-production.yml \
             --repo "${{ github.repository }}" \
             --ref main \
-            -f use_main=true
-          echo "Deploy Production triggered (latest main) — approve in GitHub Environments if prompted."
+            -f use_main=true \
+            -f notify_telegram=false
+          echo "Recovery deploy triggered (no Telegram — use Release deploy for notifications)."

@@ -16,6 +16,10 @@ on:
         description: 'Deploy latest main branch (all commits not yet in a release)'
         type: boolean
         default: false
+      notify_telegram:
+        description: 'Send Telegram notification (off by default; Release deploys always notify)'
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -35,6 +39,7 @@ jobs:
     environment: production
     outputs:
       deployed: ${{ steps.complete.outputs.deployed }}
+      deploy_changed: ${{ steps.deploy_check.outputs.changed }}
       tag: ${{ steps.tag.outputs.tag }}
 
     steps:
@@ -108,6 +113,7 @@ jobs:
 
       - name: Deploy application
         if: github.event_name == 'workflow_dispatch' || steps.release_check.outputs.skip != 'true'
+        id: deploy_check
         env:
           APP_PATH: ${{ secrets.PROD_APP_PATH }}
           TAG: ${{ steps.tag.outputs.tag }}
@@ -126,9 +132,28 @@ jobs:
 
           if [ "${{ github.event.inputs.use_main }}" = "true" ]; then
             git fetch origin main
-            git checkout -f origin/main
+            TARGET_REV=$(git rev-parse origin/main)
           else
             git fetch --tags origin
+            git checkout -f "${TAG}" 2>/dev/null || true
+            TARGET_REV=$(git rev-parse "${TAG}^{commit}" 2>/dev/null || git rev-parse HEAD)
+          fi
+
+          CURRENT_REV=$(git rev-parse HEAD 2>/dev/null || echo "none")
+          echo "Current on server: ${CURRENT_REV}"
+          echo "Target deploy:     ${TARGET_REV}"
+
+          if [ "${CURRENT_REV}" = "${TARGET_REV}" ]; then
+            echo "Already running this revision — skipping rebuild/restart."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+          if [ "${{ github.event.inputs.use_main }}" = "true" ]; then
+            git checkout -f origin/main
+          else
             git checkout -f "${TAG}"
           fi
 
@@ -182,13 +207,29 @@ jobs:
       - name: Mark deploy complete
         if: success() && (github.event_name == 'workflow_dispatch' || steps.release_check.outputs.skip != 'true')
         id: complete
-        run: echo "deployed=true" >> "$GITHUB_OUTPUT"
+        run: |
+          changed="${{ steps.deploy_check.outputs.changed }}"
+          if [ "${changed}" = "false" ]; then
+            echo "deployed=false" >> "$GITHUB_OUTPUT"
+            echo "No deploy performed (same revision already live)."
+          else
+            echo "deployed=true" >> "$GITHUB_OUTPUT"
+          fi
 
   notify-telegram-success:
     name: Telegram — deploy success
     needs: deploy
     runs-on: ubuntu-latest
-    if: needs.deploy.outputs.deployed == 'true'
+    if: >-
+      needs.deploy.outputs.deployed == 'true' &&
+      needs.deploy.outputs.deploy_changed == 'true' &&
+      (
+        github.event_name == 'workflow_run' ||
+        (
+          github.event_name == 'workflow_dispatch' &&
+          github.event.inputs.notify_telegram != 'false'
+        )
+      )
     environment: production
     steps:
       - uses: actions/checkout@v4
@@ -209,7 +250,15 @@ jobs:
     name: Telegram — deploy failed
     needs: deploy
     runs-on: ubuntu-latest
-    if: failure() && (github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success')
+    if: >-
+      failure() &&
+      (
+        github.event_name == 'workflow_run' ||
+        (
+          github.event_name == 'workflow_dispatch' &&
+          github.event.inputs.notify_telegram != 'false'
+        )
+      )
     environment: production
     steps:
       - uses: actions/checkout@v4
