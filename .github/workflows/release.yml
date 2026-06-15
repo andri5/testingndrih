@@ -1,5 +1,6 @@
 name: Release
 
+# CI (main) → semantic-release → dispatch Deploy Production
 on:
   workflow_run:
     workflows: [CI]
@@ -10,6 +11,7 @@ permissions:
   contents: write
   issues: write
   pull-requests: write
+  actions: write
 
 env:
   HUSKY: 0
@@ -18,23 +20,22 @@ jobs:
   release:
     name: Semantic Release
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == 'main'
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           ref: main
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: npm
 
-      - name: Install dependencies
-        run: npm ci
+      - run: npm ci
 
       - name: Run semantic-release
         run: npx semantic-release
@@ -45,13 +46,10 @@ jobs:
           GIT_COMMITTER_NAME: github-actions[bot]
           GIT_COMMITTER_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
 
-  trigger-production-deploy:
-    name: Trigger production deploy
+  deploy-production:
+    name: Deploy to production
     needs: release
     runs-on: ubuntu-latest
-    permissions:
-      actions: write
-      contents: read
     steps:
       - name: Dispatch Deploy Production workflow
         env:
@@ -61,4 +59,4 @@ jobs:
             --repo "${{ github.repository }}" \
             --ref main \
             -f notify_telegram=true
-          echo "Production deploy workflow dispatched."
+          echo "Deploy Production workflow dispatched."

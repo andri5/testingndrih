@@ -1,5 +1,6 @@
 name: CI
 
+# Pipeline: push main → CI → Release → Deploy Production
 on:
   push:
     branches: [main, 'feat/**', 'fix/**', 'hotfix/**']

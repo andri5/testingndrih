@@ -1,25 +1,21 @@
 name: Deploy Production
 
-# Deploy runs on a self-hosted runner ON the VPS (no inbound SSH from GitHub cloud).
-# One-time setup: scripts/setup-github-runner.sh on the server.
+# Triggered by Release workflow (gh workflow run) or manual dispatch.
+# Runs on self-hosted runner on the VPS — see scripts/setup-github-runner.sh
 on:
-  workflow_run:
-    workflows: [Release]
-    types: [completed]
-    branches: [main]
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Release tag to deploy (leave empty for latest release)'
+        description: 'Release tag (empty = latest GitHub release)'
         required: false
       use_main:
-        description: 'Deploy latest main branch (all commits not yet in a release)'
+        description: 'Deploy latest main instead of a release tag'
         type: boolean
         default: false
       notify_telegram:
-        description: 'Send Telegram notification (off by default; Release deploys always notify)'
+        description: 'Send Telegram notification on success/failure'
         type: boolean
-        default: false
+        default: true
 
 permissions:
   contents: read
@@ -35,20 +31,18 @@ jobs:
   deploy:
     name: Deploy to testsambilngopi.com
     runs-on: [self-hosted, production]
-    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     environment: production
     outputs:
       deployed: ${{ steps.complete.outputs.deployed }}
-      deploy_changed: ${{ steps.deploy_check.outputs.changed }}
       tag: ${{ steps.tag.outputs.tag }}
 
     steps:
-      - name: Resolve release tag
+      - name: Resolve deploy target
         id: tag
         run: |
           if [ "${{ github.event.inputs.use_main }}" = "true" ]; then
-            echo "tag=main@${{ github.sha }}" >> "$GITHUB_OUTPUT"
-            echo "Deploying latest main (${{ github.sha }})"
+            echo "tag=main" >> "$GITHUB_OUTPUT"
+            echo "Target: latest main branch"
             exit 0
           fi
           if [ -n "${{ github.event.inputs.tag }}" ]; then
@@ -65,24 +59,14 @@ jobs:
             exit 1
           fi
           echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
-          echo "Deploying tag: ${TAG}"
-
-      - name: Proceed after Release workflow
-        if: github.event_name == 'workflow_run'
-        id: release_check
-        run: |
-          # Always attempt deploy when Release completes successfully.
-          # The deploy step already skips rebuild if the server runs the target revision.
-          echo "skip=false" >> "$GITHUB_OUTPUT"
-          echo "Release workflow completed — attempting production deploy."
+          echo "Target release tag: ${TAG}"
 
       - name: Validate deploy path
-        if: github.event_name == 'workflow_dispatch' || steps.release_check.outputs.skip != 'true'
         env:
           PROD_APP_PATH: ${{ secrets.PROD_APP_PATH }}
         run: |
           if [ -z "${PROD_APP_PATH}" ]; then
-            echo "Missing secret PROD_APP_PATH in environment production"
+            echo "Missing secret PROD_APP_PATH"
             exit 1
           fi
           if [ ! -d "${PROD_APP_PATH}" ]; then
@@ -92,7 +76,6 @@ jobs:
           echo "Deploy path OK: ${PROD_APP_PATH}"
 
       - name: Deploy application
-        if: github.event_name == 'workflow_dispatch' || steps.release_check.outputs.skip != 'true'
         id: deploy_check
         env:
           APP_PATH: ${{ secrets.PROD_APP_PATH }}
@@ -112,38 +95,23 @@ jobs:
 
           if [ "${{ github.event.inputs.use_main }}" = "true" ]; then
             git fetch origin main
-            TARGET_REV=$(git rev-parse origin/main)
+            git checkout -f origin/main
+            TARGET_REV=$(git rev-parse HEAD)
           else
             git fetch --tags origin
-            git checkout -f "${TAG}" 2>/dev/null || true
-            TARGET_REV=$(git rev-parse "${TAG}^{commit}" 2>/dev/null || git rev-parse HEAD)
+            git checkout -f "${TAG}"
+            TARGET_REV=$(git rev-parse HEAD)
           fi
 
-          CURRENT_REV=$(git rev-parse HEAD 2>/dev/null || echo "none")
-          echo "Current on server: ${CURRENT_REV}"
-          echo "Target deploy:     ${TARGET_REV}"
+          echo "Deployed revision: ${TARGET_REV}"
 
-          if [ "${CURRENT_REV}" != "${TARGET_REV}" ]; then
-            if [ "${{ github.event.inputs.use_main }}" = "true" ]; then
-              git checkout -f origin/main
-            else
-              git checkout -f "${TAG}"
-            fi
-            echo "Git updated to ${TARGET_REV}"
-          else
-            echo "Git already at target revision — rebuilding app container anyway."
-          fi
-
-          echo "changed=true" >> "$GITHUB_OUTPUT"
-
-          if [ -f .env ]; then
-            sed -i 's/\r$//' .env
-            if grep -qE '^RUN_SEED=(true|1|yes|TRUE|YES)' .env; then
-              echo "ERROR: RUN_SEED is enabled — refusing deploy to protect production data"
-              exit 1
-            fi
-          else
+          if [ ! -f .env ]; then
             echo "ERROR: missing ${APP_PATH}/.env"
+            exit 1
+          fi
+          sed -i 's/\r$//' .env
+          if grep -qE '^RUN_SEED=(true|1|yes|TRUE|YES)' .env; then
+            echo "ERROR: RUN_SEED is enabled — refusing deploy"
             exit 1
           fi
 
@@ -164,11 +132,10 @@ jobs:
           docker compose ps
 
           if command -v nginx >/dev/null 2>&1; then
-            sudo nginx -t && sudo systemctl reload nginx || echo "WARN: nginx reload failed — check reverse proxy manually"
+            sudo nginx -t && sudo systemctl reload nginx || echo "WARN: nginx reload failed"
           fi
 
       - name: Wait for production health check
-        if: github.event_name == 'workflow_dispatch' || steps.release_check.outputs.skip != 'true'
         run: |
           echo "Checking ${PROD_HEALTH_URL}"
           for attempt in 1 2 3 4 5 6 8 10 12; do
@@ -180,35 +147,21 @@ jobs:
             echo "Attempt ${attempt}: not ready, waiting ${attempt}s..."
             sleep "${attempt}"
           done
-          echo "Production health check failed after retries"
+          echo "Production health check failed"
           exit 1
 
       - name: Mark deploy complete
-        if: success() && (github.event_name == 'workflow_dispatch' || steps.release_check.outputs.skip != 'true')
         id: complete
-        run: |
-          changed="${{ steps.deploy_check.outputs.changed }}"
-          if [ "${changed}" = "false" ]; then
-            echo "deployed=false" >> "$GITHUB_OUTPUT"
-            echo "No deploy performed (same revision already live)."
-          else
-            echo "deployed=true" >> "$GITHUB_OUTPUT"
-          fi
+        run: echo "deployed=true" >> "$GITHUB_OUTPUT"
 
   notify-telegram-success:
     name: Telegram — deploy success
     needs: deploy
     runs-on: ubuntu-latest
     if: >-
+      success() &&
       needs.deploy.outputs.deployed == 'true' &&
-      needs.deploy.outputs.deploy_changed == 'true' &&
-      (
-        github.event_name == 'workflow_run' ||
-        (
-          github.event_name == 'workflow_dispatch' &&
-          github.event.inputs.notify_telegram != 'false'
-        )
-      )
+      github.event.inputs.notify_telegram == 'true'
     environment: production
     steps:
       - uses: actions/checkout@v4
@@ -231,13 +184,7 @@ jobs:
     runs-on: ubuntu-latest
     if: >-
       failure() &&
-      (
-        github.event_name == 'workflow_run' ||
-        (
-          github.event_name == 'workflow_dispatch' &&
-          github.event.inputs.notify_telegram != 'false'
-        )
-      )
+      github.event.inputs.notify_telegram == 'true'
     environment: production
     steps:
       - uses: actions/checkout@v4
