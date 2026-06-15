@@ -1,3 +1,10 @@
+## [1.10.1](https://github.com/andri5/testingndrih/compare/v1.10.0...v1.10.1) (2026-06-15)
+
+
+### Bug Fixes
+
+* **deploy:** always deploy after release and force fresh app rebuild ([5895585](https://github.com/andri5/testingndrih/commit/5895585447bba20d99456db31208010fe37e5648))
+
 # [1.10.0](https://github.com/andri5/testingndrih/compare/v1.9.2...v1.10.0) (2026-06-15)
 
 
