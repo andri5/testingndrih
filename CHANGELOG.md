@@ -1,3 +1,10 @@
+## [1.10.3](https://github.com/andri5/testingndrih/compare/v1.10.2...v1.10.3) (2026-06-15)
+
+
+### Bug Fixes
+
+* **ci:** simplify release-to-prod pipeline and remove duplicate deploy ([bcfb2f8](https://github.com/andri5/testingndrih/commit/bcfb2f8ee53f56d1c034be1697b61cbf6db6ea1a))
+
 ## [1.10.2](https://github.com/andri5/testingndrih/compare/v1.10.1...v1.10.2) (2026-06-15)
 
 
