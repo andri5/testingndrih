@@ -2,7 +2,7 @@
 
 Struktur folder lengkap project **Test Sambil Ngopi** (TestingNDRIH).
 
-**Last Updated:** June 11, 2026
+**Last Updated:** June 2026
 
 ---
 
@@ -11,7 +11,7 @@ Struktur folder lengkap project **Test Sambil Ngopi** (TestingNDRIH).
 ```
 testingndrih/
 ├── README.md                       # Overview & quick start
-├── PROJECT_STRUCTURE.md            # Redirect ke /docs
+├── PROJECT_STRUCTURE.md            # High-level repo map
 ├── package.json                    # Monorepo workspaces + health-check script
 ├── docker-compose.yml              # PostgreSQL + app
 ├── Dockerfile                      # Multi-stage build
@@ -19,11 +19,20 @@ testingndrih/
 ├── commitlint.config.js            # Conventional commits
 │
 ├── scripts/
-│   └── health-check.js             # Cek kesehatan backend/frontend/DB
+│   ├── health-check.js             # Backend/frontend/DB health
+│   ├── telegram-deploy-notify.sh   # Release deploy Telegram notify
+│   ├── production-recover.sh       # VPS recovery helper
+│   └── maintenance-mode.sh         # Toggle maintenance on server
+│
+├── deploy/nginx/                   # Example reverse-proxy config
 │
 ├── .github/workflows/
+│   ├── ci.yml                      # Lint + test + platform E2E
 │   ├── release.yml                 # Semantic release
-│   └── ci-run-scenario.example.yml # Contoh CI dengan API token
+│   ├── deploy-production.yml       # VPS deploy
+│   ├── prod-monitor.yml            # Live production smoke
+│   ├── post-maintenance-deploy.yml
+│   └── ci-run-scenario.example.yml # CI with API token example
 │
 ├── backend/                        # Node.js Express API
 ├── frontend/                       # React SPA
@@ -47,7 +56,7 @@ backend/
 ├── src/
 │   ├── server.js                   # Entry point Express
 │   │
-│   ├── controllers/                # HTTP handlers (22 controllers)
+│   ├── controllers/                # HTTP handlers (21 controllers)
 │   │   ├── authController.js
 │   │   ├── scenarioController.js
 │   │   ├── testStepController.js
@@ -251,11 +260,13 @@ frontend/
 
 ```
 docs/
-├── README.md               # Index dokumentasi
-├── ARCHITECTURE.md         # Arsitektur teknis
-├── DIRECTORY_STRUCTURE.md  # File ini
-├── SETUP.md                # Instalasi & troubleshooting
-└── TESTING.md              # Strategi & panduan testing
+├── README.md               # Documentation index
+├── ARCHITECTURE.md         # Architecture & record/playback
+├── DIRECTORY_STRUCTURE.md  # This file
+├── SETUP.md                # Install & troubleshooting
+├── TESTING.md              # Test strategy & commands
+├── API_ENDPOINTS.md        # REST API reference
+└── DEPLOYMENT.md           # Production deploy guide
 ```
 
 ---
@@ -264,13 +275,13 @@ docs/
 
 | Area | Count |
 |------|-------|
-| Backend controllers | 22 |
-| Backend services | 30+ |
-| Backend routes | 24 |
-| Frontend pages | 33 |
+| Backend controllers | 21 |
+| Backend services | 33 |
+| Frontend pages | 32 |
 | Frontend components | 30+ |
 | Database migrations | 17 |
-| E2E specs | 15 |
+| E2E spec files | 17 |
+| GitHub workflows | 6 |
 
 ---
 

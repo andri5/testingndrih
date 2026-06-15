@@ -1,167 +1,196 @@
-# 🏗️ Architecture Overview
+# Architecture Overview
 
-## Project Structure
+**Test Sambil Ngopi** is an automated testing platform that records browser interactions with Playwright and replays them as reusable test scenarios.
 
-**Test Sambil Ngopi** adalah platform automated testing yang memungkinkan pengguna merekam interaksi browser dan memutar ulang sebagai test cases.
-
-- **Tech Stack**: React 18 + Vite + TailwindCSS | Node.js + Express | PostgreSQL + Prisma | Playwright
-- **Architecture**: Monorepo (backend + frontend) dengan Docker orchestration
-- **Status**: Production Ready ✅
+- **Tech stack:** React 18 + Vite + TailwindCSS | Node.js 20 + Express | PostgreSQL 16 + Prisma 7 | Playwright 1.58
+- **Architecture:** npm workspaces monorepo (`backend/` + `frontend/`) with optional Docker Compose
+- **Production:** [testsambilngopi.com](https://testsambilngopi.com)
+- **Status:** Production ready (v1.9.x)
 
 ---
 
-## 📂 Directory Layout
+## Directory layout
 
 ```
 testingndrih/
-├── backend/              # Node.js Express API Server
+├── backend/              # Express API + Playwright engine
 │   └── src/
-│       ├── controllers/  # HTTP request handlers
-│       ├── services/     # Business logic layer
-│       ├── routes/       # Express route definitions
-│       ├── middleware/   # Express middleware
-│       ├── lib/          # Shared utilities & Prisma
-│       └── utils/        # Helper functions
+│       ├── controllers/  # HTTP handlers (21)
+│       ├── services/     # Business logic (33)
+│       ├── routes/       # REST route definitions
+│       ├── middleware/   # JWT + API token auth
+│       ├── lib/          # Prisma, browser launcher, logger
+│       └── utils/        # JWT, password, roles, image diff
 │
-├── frontend/             # React 18 + Vite Application
+├── frontend/             # React SPA
 │   └── src/
-│       ├── pages/        # Page components (28 pages)
-│       ├── components/   # Reusable UI components
-│       ├── services/     # API clients & helpers
-│       ├── store/        # Zustand state management
-│       ├── hooks/        # Custom React hooks
-│       ├── utils/        # Utility functions
-│       ├── data/         # Static content (help, etc)
-│       └── __tests__/    # Unit tests
+│       ├── pages/        # 32 route-level screens
+│       ├── components/   # Layout, modals, UI
+│       ├── store/        # Zustand (auth, settings)
+│       ├── services/     # Axios API client
+│       └── hooks/        # Custom React hooks
 │
-└── docs/                 # Documentation
+├── docs/                 # Documentation
+├── scripts/              # Ops scripts (health, deploy notify)
+└── .github/workflows/    # CI, release, deploy, monitor
 ```
+
+Full file map: [DIRECTORY_STRUCTURE.md](./DIRECTORY_STRUCTURE.md) · [PROJECT_STRUCTURE.md](../PROJECT_STRUCTURE.md)
 
 ---
 
-## 🔑 Key Technologies
+## Key technologies
 
 | Layer | Technology | Purpose |
-|-------|-----------|---------|
-| **Frontend UI** | React 18 + Vite | Component-based UI with HMR |
-| **Styling** | TailwindCSS | Utility-first CSS framework |
-| **State Management** | Zustand | Lightweight state management |
-| **API Client** | Axios | HTTP requests to backend |
-| **Testing** | Playwright | Browser automation & E2E tests |
-| **Backend API** | Express.js | RESTful API server |
-| **Database** | PostgreSQL | Relational database |
-| **ORM** | Prisma | Database client & migrations |
-| **Automation** | Playwright | Headless browser automation |
-| **Deployment** | Docker | Containerization |
+|-------|------------|---------|
+| Frontend UI | React 18 + Vite 5 | SPA with HMR |
+| Styling | TailwindCSS 3.4 | Light theme, responsive |
+| State | Zustand | Auth & settings |
+| API client | Axios | HTTP with JWT interceptors |
+| Charts | Recharts | Analytics dashboard |
+| Backend | Express 4 | REST API on port 5001 |
+| Database | PostgreSQL 16 | Persistent storage |
+| ORM | Prisma 7 | Migrations & queries |
+| Automation | Playwright 1.58 | Record, execute, E2E |
+| Auth | JWT + bcrypt | Role-based (ADMIN / USER) |
+| Captcha | Cloudflare Turnstile | Login / register / reset |
+| Deploy | Docker + GitHub Actions | Self-hosted runner on VPS |
 
 ---
 
-## 📊 Data Flow
+## Data flow
 
-1. **User Records** → Browser Recording (Playwright Headless)
-2. **Steps Stored** → PostgreSQL (via Prisma ORM)
-3. **Playback Execution** → Step-by-step Playwright automation
-4. **Analytics Collected** → Performance metrics & reporting
-5. **PDF Export** → Generated with SVG charts & analysis
+```
+User (browser)
+    ↓ HTTP /api/*
+Express routes → controllers → services
+    ↓
+PostgreSQL (Prisma)          Playwright (recorder / executor)
+    ↓
+Analytics, reports, issues, notifications
+```
+
+1. **Record** — Playwright opens target URL, injected script captures interactions
+2. **Store** — Steps saved to PostgreSQL via Prisma
+3. **Execute** — `executionService` replays steps with waits, screenshots, retries
+4. **Report** — Results feed analytics, issue tracker, PDF/HTML export
 
 ---
 
-## 🔄 Feature Modules
+## Record & playback
 
-- **Core Testing**: Scenarios, Test Steps, Execution, Reports
-- **Advanced Testing**: Smoke Test, Stress Test, Security Test
-- **Test Chains**: Chain builder for multi-scenario workflows
-- **Scheduling**: Cron-based test automation
-- **Parallel Execution**: Run multiple tests concurrently
-- **Browser Matrix**: Cross-browser compatibility testing
-- **Analytics**: Execution history, performance metrics
-- **User Management**: Authentication, password reset
-- **Import/Export**: CSV/JSON/PDF data export
+### Recording pipeline
+
+```mermaid
+sequenceDiagram
+    participant UI as Frontend
+    participant API as Express API
+    participant Rec as recorderService
+    participant PW as Playwright
+    participant DB as PostgreSQL
+
+    UI->>API: POST /api/recorder/start
+    API->>Rec: launch session (userId:scenarioId)
+    Rec->>PW: open browser, navigate, inject script
+    loop Poll ~1.5s
+        UI->>API: GET /api/recorder/status
+        API->>Rec: pending steps
+        Rec-->>UI: step queue
+    end
+    UI->>API: POST /api/recorder/stop
+    Rec->>DB: persist TestStep rows
+```
+
+**Selector priority:** `data-testid` → `id` → CSS → XPath  
+**Key files:** `recorderService.js`, `recorderController.js`, `ScenarioDetailPage.jsx`
+
+### Playback pipeline
+
+1. Client triggers execution (`POST /api/executions`)
+2. `executionService` loads scenario steps + environment variables
+3. Playwright runs each step (NAVIGATE, CLICK, FILL, ASSERTION, …)
+4. On failure: screenshot, locator suggestions, optional retry via `retryEngineService`
+5. Execution record stored; webhooks / email on failure if configured
 
 ---
 
-## 🗂️ File Organization
+## Feature modules
 
-### Backend Controllers
-```
-authController.js          # Login, register, password reset
-scenarioController.js      # CRUD operations for scenarios
-testStepController.js      # Test step management
-executionController.js     # Execute scenarios & chains
-recorderController.js      # Start/stop recording sessions
-chainController.js         # Test chain management
-analyticsController.js     # Analytics & reporting
-smokeTestController.js     # Smoke test execution
-stressTestController.js    # Stress test execution
-securityTestController.js  # Security testing
-```
-
-### Backend Services
-```
-authService.js            # JWT, user auth
-scenarioService.js        # Scenario business logic
-executionService.js       # Playwright execution engine
-recordingService.js       # Headless browser recording
-schedulerService.js       # Cron job scheduling
-parallelExecutionService  # Multi-scenario runs
-browserMatrixService.js   # Cross-browser testing
-reportService.js          # Report generation
-```
-
-### Frontend Pages (28 total)
-```
-Dashboard        → Overview & quick stats
-Scenarios        → Scenario management
-Chains          → Test chain builder
-Execution       → Manual scenario execution
-Parallel        → Parallel batch execution
-Smoke Test      → Smoke test runner
-Stress Test     → Performance testing
-Security Test   → Vulnerability scanning
-Browser Matrix  → Cross-browser testing
-Scheduler       → Cron job configuration
-Reports         → Historical analytics
-Analytics       → Metrics & insights
-Settings        → User preferences
-```
+| Module | Backend | Frontend |
+|--------|---------|----------|
+| **Core** | scenario, testStep, execution, search | Scenarios, ScenarioDetail, Execution |
+| **Recording** | recorderService | Record controls on ScenarioDetail |
+| **Chains** | chainService | Chains, ChainBuilder, ChainExecutor |
+| **Scheduler** | schedulerService | SchedulerPage |
+| **Parallel** | parallelExecutionService | ParallelExecutionPage |
+| **Browser matrix** | browserMatrixService | BrowserMatrixPage |
+| **Smoke / stress / security** | *TestService | Admin tool pages |
+| **API testing** | apiTestService | ApiTestingPage |
+| **Visual regression** | visualRegressionService | VisualRegressionPage (admin) |
+| **Environments** | environmentService | EnvironmentsPage |
+| **Analytics** | analyticsService | AnalyticsPage, ReportsPage |
+| **Users** | userService, userActivityService | UserManagement (admin) |
+| **CI** | ciController, apiTokenService | API tokens in Settings |
+| **Auth** | authController | Login, Register, Reset |
 
 ---
 
-## 🔐 Security Features
+## Security
 
-- JWT authentication for API endpoints
-- Password hashing (bcrypt)
-- CORS enabled with proper headers
-- Input validation & sanitization
-- Protected routes with auth middleware
-- Secure password reset via email tokens
-
----
-
-## 📈 Performance Optimizations
-
-- Frontend HMR (Hot Module Reload) with Vite
-- Lazy loading for route components
-- SVG-based charts (no heavy chart library)
-- Database query optimization via Prisma
-- Parallel test execution support
-- Caching & memoization in React components
-- Responsive design (mobile-first)
+- JWT on protected `/api/*` routes (`middleware/auth.js`)
+- Role checks: `ADMIN` vs `USER` (`utils/roles.js`, `AdminRoute` on frontend)
+- API tokens for CI runs (`middleware/apiTokenAuth.js`)
+- bcrypt password hashing
+- Turnstile captcha on auth forms
+- CORS + input validation
+- Secrets only in `.env` — never committed (public repo)
 
 ---
 
-## 🚀 Deployment
+## Resilience & maintenance
 
-### Docker Compose
-- PostgreSQL database
-- Backend API server
-- Frontend React app (Nginx reverse proxy)
-- Volume management for data persistence
+| Component | Role |
+|-----------|------|
+| `ServerHealthMonitor.jsx` | Polls `/health`, redirects to `/maintenance` when down |
+| `MaintenancePage.jsx` | Auto-retry UI when API unavailable |
+| `maintenance.html` | Static fallback when nginx/Docker is down |
+| `MAINTENANCE_MODE=true` | Backend returns 503 on `/health` |
+| `scripts/maintenance-mode.sh` | Toggle maintenance on VPS |
 
-### Environment Variables
-See `.env.example` for required variables:
-- Database credentials
-- JWT secret
-- Mail server config
-- API URLs
+---
 
+## CI/CD architecture
+
+| Workflow | Purpose |
+|----------|---------|
+| `ci.yml` | Lint, backend Jest, platform E2E |
+| `release.yml` | semantic-release → git tag |
+| `deploy-production.yml` | Deploy to VPS (self-hosted runner) |
+| `prod-monitor.yml` | Scheduled live smoke against production |
+| `post-maintenance-deploy.yml` | Redeploy once when prod recovers |
+
+Telegram notifications fire on **release deploy** success/failure only (not routine maintenance redeploys).
+
+---
+
+## Performance
+
+- Vite HMR for fast frontend dev
+- Lazy-loaded route components
+- Prisma query optimization
+- Parallel scenario execution
+- SVG/Recharts for analytics (no heavy chart bundle on critical path)
+
+---
+
+## Deployment
+
+**Docker Compose:** PostgreSQL + single `app` container (nginx serves frontend, proxies `/api` to Express).
+
+**Environment variables:** see `.env.example` and [SETUP.md](./SETUP.md).
+
+**Production:** GitHub Actions → self-hosted runner → `docker compose` on VPS. See [DEPLOYMENT.md](./DEPLOYMENT.md).
+
+---
+
+**Last updated:** June 2026

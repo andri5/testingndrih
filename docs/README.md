@@ -1,219 +1,175 @@
-# 📖 Documentation Index
+# Documentation Index
 
-Welcome to the **Test Sambil Ngopi** documentation. This folder contains comprehensive guides for understanding, setting up, and developing the automated testing platform.
+Welcome to **Test Sambil Ngopi** documentation — guides for setup, development, testing, and production deployment.
 
----
-
-## 📚 Documentation Files
-
-### [ARCHITECTURE.md](./ARCHITECTURE.md)
-**Project Overview & Technical Architecture**
-- Technology stack overview
-- Project structure & modules
-- Data flow diagram
-- Feature modules breakdown
-- Performance optimizations
-- Deployment guide
-
-*Read this to understand:* How the project is organized, what technologies are used, and how components interact.
+**Live:** [testsambilngopi.com](https://testsambilngopi.com)  
+**Last updated:** June 2026 · **Project version:** 1.9.x
 
 ---
 
-### [DIRECTORY_STRUCTURE.md](./DIRECTORY_STRUCTURE.md)
-**Complete Directory Layout**
-- Full backend folder structure with file explanations
-- Full frontend folder structure with file explanations
-- Naming conventions & best practices
-- File organization patterns
-- File count summary
+## Documentation files
 
-*Read this to understand:* Where to find specific files and how the codebase is organized.
-
----
-
-### [SETUP.md](./SETUP.md)
-**Installation & Configuration Guide**
-- Prerequisites & system requirements
-- Local development setup
-- Docker setup instructions
-- Backend configuration details
-- Frontend configuration details
-- Database migrations & schema
-- Authentication setup
-- Troubleshooting guide
-
-*Read this to:* Set up the project on your local machine or in production.
+| Document | Description |
+|----------|-------------|
+| [ARCHITECTURE.md](./ARCHITECTURE.md) | Tech stack, data flow, record/playback, modules |
+| [DIRECTORY_STRUCTURE.md](./DIRECTORY_STRUCTURE.md) | Full folder layout & naming conventions |
+| [SETUP.md](./SETUP.md) | Local install, Docker, env vars, troubleshooting |
+| [TESTING.md](./TESTING.md) | Jest, Vitest, Playwright E2E, CI coverage |
+| [API_ENDPOINTS.md](./API_ENDPOINTS.md) | REST API reference |
+| [DEPLOYMENT.md](./DEPLOYMENT.md) | Release, VPS deploy, GitHub Actions |
+| [../PROJECT_STRUCTURE.md](../PROJECT_STRUCTURE.md) | High-level repo map |
+| [../README.md](../README.md) | Main readme (quick start, features) |
 
 ---
 
-### [API_ENDPOINTS.md](./API_ENDPOINTS.md)
-**REST API Reference**
-- All endpoints grouped by feature
-- Auth requirements and base URL
-- CI token usage
+## Quick navigation
 
-*Read this to:* Integrate with the API or debug requests during development.
+### Getting started
+1. **New to the project?** → [ARCHITECTURE.md](./ARCHITECTURE.md)
+2. **Set up locally** → [SETUP.md](./SETUP.md)
+3. **Find a file** → [DIRECTORY_STRUCTURE.md](./DIRECTORY_STRUCTURE.md)
 
----
+### Development
+- Backend: [SETUP.md](./SETUP.md) — backend section
+- Frontend: [SETUP.md](./SETUP.md) — frontend section
+- Database: `backend/prisma/schema.prisma`
+- API: [API_ENDPOINTS.md](./API_ENDPOINTS.md)
 
-### [TESTING.md](./TESTING.md)
-**Testing Strategy & Guide**
-- Backend unit, integration, security tests
-- Frontend E2E (Playwright)
-- Visual regression & environment variable testing
-- CI/CD test workflow
-- Coverage targets & troubleshooting
-
-*Read this to:* Run tests and understand current test coverage.
-
----
-
-## 🎯 Quick Navigation
-
-### 🚀 Getting Started
-1. **New to the project?** → Start with [ARCHITECTURE.md](./ARCHITECTURE.md)
-2. **Need to set up locally?** → Follow [SETUP.md](./SETUP.md)
-3. **Looking for a specific file?** → Check [DIRECTORY_STRUCTURE.md](./DIRECTORY_STRUCTURE.md)
-
-### 💻 Development
-- **Backend Development**: See [SETUP.md](./SETUP.md#-backend-setup-details)
-- **Frontend Development**: See [SETUP.md](./SETUP.md#-frontend-setup-details)
-- **Database Changes**: See [SETUP.md](./SETUP.md#-database-schema)
-- **Testing**: See [TESTING.md](./TESTING.md)
-
-### 🐳 Deployment
-- **Release & Production Deploy**: See [DEPLOYMENT.md](./DEPLOYMENT.md) — branching, semantic commit, CI, approval deploy ke `testsambilngopi.com`
-- **Docker Setup**: See [SETUP.md](./SETUP.md#-docker-setup)
-- **Production Build**: See [SETUP.md](./SETUP.md#building-for-production)
-- **Environment Variables**: See [SETUP.md](./SETUP.md#-backend-setup-details)
-
-### 🔧 Configuration
-- **JWT Setup**: See [SETUP.md](./SETUP.md#-authentication-setup)
-- **Email Configuration**: See [SETUP.md](./SETUP.md#email-configuration-password-reset)
-- **Database Connection**: See [SETUP.md](./SETUP.md#database-setup)
+### Deployment & ops
+- Production deploy: [DEPLOYMENT.md](./DEPLOYMENT.md)
+- Docker: [SETUP.md](./SETUP.md) — Docker section
+- Maintenance mode: `scripts/maintenance-mode.sh`, `frontend/public/maintenance.html`
+- Health check: `npm run health-check`
 
 ---
 
-## 📊 Project Statistics
+## Project statistics
 
 | Metric | Count |
 |--------|-------|
-| **Backend Controllers** | 22 |
-| **Backend Services** | 30+ |
-| **Backend Routes** | 24 |
-| **Frontend Pages** | 33 |
-| **Frontend Components** | 30+ |
-| **Database Migrations** | 15 |
-| **E2E Specs** | 16 |
-| **Total Production Files** | 150+ |
-| **Lines of Code** | 15,000+ |
+| Backend controllers | 21 |
+| Backend services | 33 |
+| Frontend pages | 32 |
+| E2E spec files | 17 |
+| Database migrations | 17 |
+| GitHub workflows | 6 |
 
 ---
 
-## 🔑 Key Features
+## Tech stack (summary)
 
-✅ **Test Recording**: Capture browser interactions  
-✅ **Test Playback**: Replay recorded scenarios  
-✅ **Smoke Testing**: Quick functionality checks  
-✅ **Stress Testing**: Performance under load  
-✅ **Security Testing**: Vulnerability scanning  
-✅ **Parallel Execution**: Run multiple tests concurrently  
-✅ **Cross-browser Testing**: Test on multiple browsers  
-✅ **Scheduling**: Cron-based test automation  
-✅ **Analytics & Reports**: Performance metrics  
-✅ **PDF Export**: Generate professional reports  
-✅ **API Testing**: HTTP request builder & assertions  
-✅ **Issue Tracker**: Auto-create dari execution gagal  
-✅ **Environment Variables**: `{{var}}` substitution  
-✅ **Visual Regression**: Baseline capture & pixel diff  
-✅ **CI/CD Integration**: API tokens & remote run  
+| Layer | Stack |
+|-------|-------|
+| Frontend | React 18, Vite 5, TailwindCSS, Zustand, Axios, Recharts |
+| Backend | Node.js 20, Express 4, Prisma 7, Playwright 1.58 |
+| Database | PostgreSQL 16 |
+| Auth | JWT, bcrypt, Cloudflare Turnstile |
+| Infra | Docker Compose, GitHub Actions, self-hosted runner |
 
 ---
 
-## 🛠️ Technology Stack
+## Key features
 
-### Frontend
-- React 18 + Vite
-- TailwindCSS
-- Zustand (State Management)
-- Playwright (Testing)
-- Axios (HTTP Client)
-
-### Backend
-- Node.js + Express
-- PostgreSQL
-- Prisma (ORM)
-- Playwright (Automation)
-- JWT (Authentication)
-
-### Infrastructure
-- Docker & Docker Compose
-- PostgreSQL Database
-- Nginx Reverse Proxy
+- **Record & playback** — server-side Playwright recording, step editor, execution engine
+- **Test chains** — multi-scenario workflows
+- **Admin tools** — smoke, stress, security, API testing, visual regression
+- **Automation** — scheduler, parallel runs, browser matrix
+- **Platform** — environments, analytics, reports, issue tracker, CI API tokens
+- **Users** — role-based access (ADMIN / USER), activity log, welcome splash
+- **Resilience** — maintenance page, server health monitor, offline banner
 
 ---
 
-## 📖 How to Use This Documentation
+## Record & playback (overview)
 
-1. **Read in Order**: ARCHITECTURE → DIRECTORY_STRUCTURE → SETUP
-2. **Use as Reference**: Jump to specific sections as needed
-3. **Search Keywords**: Look for section headers that match your question
-4. **Check Troubleshooting**: See SETUP.md for common issues
+```
+Record  → POST /api/recorder/start → Playwright browser + injected script
+Poll    → GET  /api/recorder/status → step queue updates
+Stop    → POST /api/recorder/stop  → steps persisted to PostgreSQL
+Run     → POST /api/executions     → executionService replays steps
+```
 
----
-
-## ❓ FAQ
-
-### Q: How do I set up the project?
-**A:** Follow [SETUP.md](./SETUP.md) for complete installation instructions.
-
-### Q: Where is the user authentication code?
-**A:** See `backend/src/controllers/authController.js` and `backend/src/services/authService.js`
-
-### Q: How do I add a new test type?
-**A:** Create a new service in `backend/src/services/`, controller in `backend/src/controllers/`, and routes in `backend/src/routes/`.
-
-### Q: Where are the test scenarios stored?
-**A:** All data is in PostgreSQL database, managed through Prisma ORM. Schema is in `backend/prisma/schema.prisma`.
-
-### Q: How do I export a test report?
-**A:** See `frontend/src/utils/exportUtils.js` for export functionality.
-
-### Q: Where are environment variables defined?
-**A:** Copy `.env.example` to `.env` and edit with your configuration.
+Details: [ARCHITECTURE.md](./ARCHITECTURE.md#record--playback)
 
 ---
 
-## 🚀 Next Steps
+## Current status
 
-1. **Setup**: Follow [SETUP.md](./SETUP.md) to get running locally
-2. **Explore**: Review [DIRECTORY_STRUCTURE.md](./DIRECTORY_STRUCTURE.md) to understand the codebase
-3. **Develop**: Start making changes and contributions
-4. **Test**: Run unit and E2E tests before committing
-5. **Deploy**: Use Docker Compose for production deployment
-
----
-
-## 📞 Support
-
-- **Issues**: Check GitHub Issues or create a new one
-- **Questions**: Contact the development team
-- **Bugs**: Report with reproduction steps and screenshots
-- **Features**: Submit feature requests with use cases
+| Area | Status |
+|------|--------|
+| Core testing (scenarios, steps, execution) | Production |
+| Recording (Playwright v2) | Production |
+| Admin tools & visual regression | Production |
+| User management & roles | Production |
+| CI/CD + semantic release | Production |
+| Live deployment (testsambilngopi.com) | Production |
+| Maintenance / downtime UX | Production |
 
 ---
 
-## 📝 Document Updates
+## Tested features
+
+| Area | Coverage |
+|------|----------|
+| Auth (login, register, reset) | Unit + E2E |
+| Scenarios & search | E2E + API |
+| Execution & chains | E2E |
+| Scheduler, parallel, browser matrix | E2E |
+| Admin pages (smoke/stress/security) | E2E |
+| Platform E2E (from source) | CI on every push |
+| Production smoke (live URL) | `prod-monitor` workflow |
+
+See [TESTING.md](./TESTING.md) for commands and coverage targets.
+
+---
+
+## Quick start
+
+```bash
+git clone https://github.com/andri5/testingndrih.git
+cd testingndrih
+npm install
+cp .env.example .env
+cp backend/.env.example backend/.env
+# Edit .env — DATABASE_URL, JWT_SECRET, ADMIN_EMAIL, SEED_PASSWORD
+
+cd backend && npx prisma migrate dev && npm run db:seed
+cd ..
+npm run dev:backend    # :5001
+npm run dev:frontend   # :3001
+```
+
+Open http://localhost:3001 — credentials from your `.env` seed settings.
+
+---
+
+## FAQ
+
+**How do I set up the project?**  
+Follow [SETUP.md](./SETUP.md).
+
+**Where is authentication handled?**  
+`backend/src/controllers/authController.js`, `backend/src/middleware/auth.js`
+
+**How do I add a new API feature?**  
+Service in `backend/src/services/`, controller in `controllers/`, route in `routes/`, mount in `server.js`.
+
+**Where are scenarios stored?**  
+PostgreSQL via Prisma — schema in `backend/prisma/schema.prisma`.
+
+**How do I deploy to production?**  
+See [DEPLOYMENT.md](./DEPLOYMENT.md) — release tag triggers deploy; manual option uses `use_main`.
+
+---
+
+## Document history
 
 | Date | Version | Changes |
 |------|---------|---------|
-| May 13, 2026 | 3.0 | Created comprehensive documentation structure |
-| June 4, 2026 | 3.1 | Cleanup unused files, update structure & testing docs |
+| May 2026 | 3.0 | Initial documentation structure |
+| June 4, 2026 | 3.1 | Cleanup, testing docs |
+| June 2026 | 4.0 | README/PROJECT_STRUCTURE refresh, roles, maintenance, CI workflows, v1.9.x stats |
 
 ---
 
-**Last Updated:** June 4, 2026  
-**Documentation Version:** 3.1  
-**Project Version:** 3.0.0  
-**Status:** Production Ready ✅
-
+**Status:** Production ready

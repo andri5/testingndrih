@@ -1,6 +1,6 @@
 # 🚀 Setup & Installation Guide
 
-Last Updated: May 13, 2026
+Last Updated: June 2026
 
 ---
 
@@ -8,9 +8,9 @@ Last Updated: May 13, 2026
 
 Ensure you have the following installed:
 
-- **Node.js** 18+ (LTS recommended)
+- **Node.js** 20+ (LTS recommended)
 - **npm** 9+ or **yarn**
-- **PostgreSQL** 14+ (for local development)
+- **PostgreSQL** 16+ (for local development)
 - **Git** for version control
 - **Docker & Docker Compose** (optional, for containerized setup)
 
@@ -30,7 +30,7 @@ docker --version
 
 ```bash
 # Clone repository
-git clone <repository-url>
+git clone https://github.com/andri5/testingndrih.git
 cd testingndrih
 
 # Install root dependencies (monorepo)
