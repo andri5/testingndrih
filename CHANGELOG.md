@@ -1,3 +1,10 @@
+# [1.10.0](https://github.com/andri5/testingndrih/compare/v1.9.2...v1.10.0) (2026-06-15)
+
+
+### Features
+
+* **ui:** unify pastel soft buttons, custom selects, and step results ([a8fa07e](https://github.com/andri5/testingndrih/commit/a8fa07eb43c453b1dda4990d7368b6c90a2a7bc9))
+
 ## [1.9.2](https://github.com/andri5/testingndrih/compare/v1.9.1...v1.9.2) (2026-06-15)
 
 
