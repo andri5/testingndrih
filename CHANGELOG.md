@@ -1,3 +1,10 @@
+## [1.10.2](https://github.com/andri5/testingndrih/compare/v1.10.1...v1.10.2) (2026-06-15)
+
+
+### Bug Fixes
+
+* **deploy:** always rebuild app image and dispatch deploy after release ([2bb7315](https://github.com/andri5/testingndrih/commit/2bb73153259d2cd486a9967c225ae653ff3008b9))
+
 ## [1.10.1](https://github.com/andri5/testingndrih/compare/v1.10.0...v1.10.1) (2026-06-15)
 
 
