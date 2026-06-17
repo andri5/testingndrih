@@ -14,24 +14,52 @@ jobs:
   pre-check:
     name: Production reachability
     runs-on: ubuntu-latest
+    outputs:
+      in_maintenance: ${{ steps.probe.outputs.in_maintenance }}
     steps:
       - name: Probe health API
+        id: probe
         run: |
-          for attempt in 1 2 3; do
-            if curl -fsS --connect-timeout 15 "${PROD_URL}/health"; then
+          probe() {
+            local raw code body status
+            raw=$(curl -sS --connect-timeout 20 -w "\n%{http_code}" "${PROD_URL}/health" 2>/dev/null) || return 1
+            code=$(echo "$raw" | tail -n1)
+            body=$(echo "$raw" | sed '$d')
+            status=$(echo "$body" | jq -r '.status // empty' 2>/dev/null || true)
+
+            if [ "$code" = "200" ] && [ "$status" = "ok" ]; then
+              echo "in_maintenance=false" >> "$GITHUB_OUTPUT"
+              echo "$body"
+              return 0
+            fi
+
+            if [ "$code" = "503" ] && [ "$status" = "maintenance" ]; then
+              echo "in_maintenance=true" >> "$GITHUB_OUTPUT"
+              echo "$body"
+              echo "Production is in maintenance mode (deploy/restart) — server reachable."
+              return 0
+            fi
+
+            return 1
+          }
+
+          for attempt in 1 2 3 4 5 6 8 10 12 15; do
+            if probe; then
               echo ""
-              echo "Production health OK"
+              echo "Production reachability OK"
               exit 0
             fi
-            echo "Attempt ${attempt}: health check failed, retrying..."
-            sleep 10
+            echo "Attempt ${attempt}: not ready, waiting ${attempt}s..."
+            sleep "${attempt}"
           done
-          echo "::error::Production unreachable — skipping browser smoke."
+
+          echo "::error::Production unreachable after extended retries — skipping browser smoke."
           exit 1
 
   production-smoke:
     name: Production Smoke
     needs: pre-check
+    if: needs.pre-check.outputs.in_maintenance != 'true'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -44,8 +72,21 @@ jobs:
           cache: npm
       - run: npm ci
         working-directory: .
+      - name: Install Rollup native binding for Linux
+        working-directory: .
+        run: |
+          ROLLUP_VERSION=$(node -p "require('./frontend/node_modules/rollup/package.json').version")
+          npm install --no-save "@rollup/rollup-linux-x64-gnu@${ROLLUP_VERSION}"
       - run: npx playwright install chromium --with-deps
       - run: npx playwright test e2e/production-smoke-e2e.spec.js --project=chromium
         env:
           CI: true
           PLAYWRIGHT_BASE_URL: https://testsambilngopi.com
+
+  maintenance-note:
+    name: Maintenance — smoke skipped
+    needs: pre-check
+    if: needs.pre-check.outputs.in_maintenance == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Production in maintenance — browser smoke skipped (expected during deploy)."
