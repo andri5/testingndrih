@@ -1,3 +1,10 @@
+## [1.10.4](https://github.com/andri5/testingndrih/compare/v1.10.3...v1.10.4) (2026-06-17)
+
+
+### Bug Fixes
+
+* **monitor:** tolerate deploy downtime and maintenance in prod health checks ([e7d540f](https://github.com/andri5/testingndrih/commit/e7d540f8e16d1fcbb11ab9620f19120e4d5b5682))
+
 ## [1.10.3](https://github.com/andri5/testingndrih/compare/v1.10.2...v1.10.3) (2026-06-15)
 
 
