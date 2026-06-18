@@ -41,6 +41,11 @@ validateProductionSecurity()
 const app = express()
 const PORT = process.env.PORT || 5001
 
+// nginx reverse proxy in production sets X-Forwarded-For
+if (process.env.NODE_ENV === 'production') {
+  app.set('trust proxy', 1)
+}
+
 // Middleware — allow Cloudflare Turnstile on login/register
 const cspDirectives = helmet.contentSecurityPolicy.getDefaultDirectives()
 cspDirectives['script-src'] = ["'self'", 'https://challenges.cloudflare.com']

@@ -1,25 +1,25 @@
 #!/usr/bin/env bash
 # Production deploy — run on VPS self-hosted runner (see .github/workflows/deploy-production.yml).
+# Source code comes from Actions checkout (GITHUB_WORKSPACE), not git fetch in APP_PATH,
+# so deploy user never needs write access to ${APP_PATH}/.git/objects.
 set -euo pipefail
 
 APP_PATH="${APP_PATH:?APP_PATH is required}"
-USE_MAIN="${USE_MAIN:-false}"
-DEPLOY_REF="${DEPLOY_REF:-}"
+SOURCE_PATH="${GITHUB_WORKSPACE:-${APP_PATH}}"
 FORCE_NO_CACHE="${FORCE_NO_CACHE:-false}"
 HEALTH_LOCAL="${HEALTH_LOCAL:-http://127.0.0.1:3000/health}"
 HEALTH_PUBLIC="${HEALTH_PUBLIC:-https://testsambilngopi.com/health}"
 
-cd "${APP_PATH}"
-
 maintenance() {
-  if [ -f scripts/maintenance-mode.sh ] && command -v nginx >/dev/null 2>&1; then
-    sudo bash scripts/maintenance-mode.sh "$1" || echo "WARN: maintenance ${1} failed (continuing)"
+  if [ -f "${APP_PATH}/scripts/maintenance-mode.sh" ] && command -v nginx >/dev/null 2>&1; then
+    sudo bash "${APP_PATH}/scripts/maintenance-mode.sh" "$1" || echo "WARN: maintenance ${1} failed (continuing)"
   fi
 }
 
 on_error() {
   echo ""
   echo "=== DEPLOY FAILED — diagnostics ==="
+  cd "${APP_PATH}" 2>/dev/null || true
   docker compose ps 2>/dev/null || true
   docker compose logs --tail=120 app 2>/dev/null || true
   echo ""
@@ -28,41 +28,55 @@ on_error() {
 }
 trap on_error ERR
 
-echo "Deploy target: USE_MAIN=${USE_MAIN} DEPLOY_REF=${DEPLOY_REF:-n/a}"
+echo "Deploy source: ${SOURCE_PATH}"
+echo "Deploy target: ${APP_PATH}"
 echo "Runner: $(whoami)@$(hostname)"
 
-git config --global --add safe.directory "${APP_PATH}" 2>/dev/null || true
-
-if [ ! -w .git/objects ]; then
-  echo "ERROR: cannot write to ${APP_PATH}/.git/objects"
-  echo "Fix as root: chown -R deploy:deploy ${APP_PATH}"
+if [ ! -d "${SOURCE_PATH}" ]; then
+  echo "ERROR: source path does not exist: ${SOURCE_PATH}"
   exit 1
 fi
 
-if [ "${USE_MAIN}" = "true" ]; then
-  git fetch origin main
-  git checkout -f origin/main
+mkdir -p "${APP_PATH}"
+
+# Sync fresh checkout into production path — keep server secrets and runtime data.
+if [ "$(realpath "${SOURCE_PATH}")" != "$(realpath "${APP_PATH}")" ]; then
+  echo "Syncing checkout → ${APP_PATH} (preserving .env, uploads, node_modules)..."
+  ENV_BACKUP=""
+  if [ -f "${APP_PATH}/.env" ]; then
+    ENV_BACKUP="$(mktemp)"
+    cp "${APP_PATH}/.env" "${ENV_BACKUP}"
+  fi
+
+  rsync -a --delete \
+    --exclude '.git' \
+    --exclude '.env' \
+    --exclude '.env.*' \
+    --exclude 'node_modules' \
+    --exclude 'frontend/node_modules' \
+    --exclude 'backend/node_modules' \
+    --exclude 'backend/uploads' \
+    --exclude 'backend/screenshots' \
+    --exclude 'backend/logs' \
+    --exclude 'backend/coverage' \
+    --exclude 'tmp-runs.json' \
+    "${SOURCE_PATH}/" "${APP_PATH}/"
+
+  if [ -n "${ENV_BACKUP}" ]; then
+    cp "${ENV_BACKUP}" "${APP_PATH}/.env"
+    rm -f "${ENV_BACKUP}"
+  fi
 else
-  if [ -z "${DEPLOY_REF}" ]; then
-    echo "ERROR: DEPLOY_REF is required when USE_MAIN is not true"
-    exit 1
-  fi
-  checked_out=false
-  for attempt in 1 2 3 4 5 6 8 10; do
-    if git fetch --tags origin && git checkout -f "${DEPLOY_REF}"; then
-      checked_out=true
-      break
-    fi
-    echo "Tag ${DEPLOY_REF} not ready (attempt ${attempt}), retrying..."
-    sleep "${attempt}"
-  done
-  if [ "${checked_out}" != "true" ]; then
-    echo "ERROR: could not checkout ${DEPLOY_REF} after retries"
-    exit 1
-  fi
+  echo "SOURCE_PATH equals APP_PATH — skipping rsync"
 fi
 
-echo "Deployed revision: $(git rev-parse HEAD) ($(git log -1 --format=%s))"
+cd "${APP_PATH}"
+
+if [ -d "${SOURCE_PATH}/.git" ]; then
+  echo "Deployed revision: $(git -C "${SOURCE_PATH}" rev-parse HEAD) ($(git -C "${SOURCE_PATH}" log -1 --format=%s))"
+elif [ -n "${GITHUB_SHA:-}" ]; then
+  echo "Deployed revision: ${GITHUB_SHA}"
+fi
 
 if [ ! -f .env ]; then
   echo "ERROR: missing ${APP_PATH}/.env"

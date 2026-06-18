@@ -78,15 +78,13 @@ jobs:
 
       - uses: actions/checkout@v4
         with:
-          ref: main
+          ref: ${{ steps.tag.outputs.tag }}
           fetch-depth: 1
 
       - name: Deploy application
         id: deploy_check
         env:
           APP_PATH: ${{ secrets.PROD_APP_PATH }}
-          DEPLOY_REF: ${{ steps.tag.outputs.tag }}
-          USE_MAIN: ${{ github.event.inputs.use_main }}
           FORCE_NO_CACHE: ${{ github.event.inputs.force_no_cache }}
         run: bash scripts/deploy-production.sh
 
