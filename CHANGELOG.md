@@ -1,3 +1,10 @@
+# [1.13.0](https://github.com/andri5/testingndrih/compare/v1.12.1...v1.13.0) (2026-06-18)
+
+
+### Features
+
+* landing feedback, menu assignment, and web analytics ([cd599b7](https://github.com/andri5/testingndrih/commit/cd599b7a200c284a2b0d6b88990ecbe8e4c66b47))
+
 ## [1.12.1](https://github.com/andri5/testingndrih/compare/v1.12.0...v1.12.1) (2026-06-18)
 
 
