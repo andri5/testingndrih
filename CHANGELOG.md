@@ -1,3 +1,10 @@
+## [1.11.3](https://github.com/andri5/testingndrih/compare/v1.11.2...v1.11.3) (2026-06-18)
+
+
+### Bug Fixes
+
+* **deploy:** build Docker from Actions checkout, skip rsync ([6cf057e](https://github.com/andri5/testingndrih/commit/6cf057e59ebd971ada1c8b1cb9fe2070f4d8fe74))
+
 ## [1.11.2](https://github.com/andri5/testingndrih/compare/v1.11.1...v1.11.2) (2026-06-18)
 
 
