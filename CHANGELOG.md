@@ -1,3 +1,10 @@
+# [1.12.0](https://github.com/andri5/testingndrih/compare/v1.11.3...v1.12.0) (2026-06-18)
+
+
+### Features
+
+* **landing:** add About page and public 404 ([7539c75](https://github.com/andri5/testingndrih/commit/7539c75c429a5e1326abc4ac1ff45785c6a785c3))
+
 ## [1.11.3](https://github.com/andri5/testingndrih/compare/v1.11.2...v1.11.3) (2026-06-18)
 
 
