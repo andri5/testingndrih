@@ -9,6 +9,9 @@ export const useScenarioStore = create((set, get) => ({
   error: null,
   searchQuery: '',
   filterType: 'all',
+  favoritesOnly: false,
+  filterTag: '',
+  availableTags: [],
   pagination: {
     total: 0,
     skip: 0,
@@ -17,13 +20,21 @@ export const useScenarioStore = create((set, get) => ({
   },
 
   // Actions
-  fetchScenarios: async (skip = 0, take = 10, search = '', filter = 'all') => {
+  fetchScenarios: async (skip = 0, take = 10, search = '', filters = {}) => {
     set({ isLoading: true, error: null })
     try {
-      const params = { skip, take }
+      const { favoritesOnly, tag } = {
+        favoritesOnly: filters.favoritesOnly ?? get().favoritesOnly,
+        tag: filters.tag ?? get().filterTag,
+      }
+      const filterParams = {}
+      if (favoritesOnly) filterParams.favoritesOnly = 'true'
+      if (tag) filterParams.tag = tag
+
+      const params = { skip, take, ...filterParams }
       
       if (search) {
-        const response = await apiClient.get('/search', { params: { query: search, skip, take } })
+        const response = await apiClient.get('/search', { params: { query: search, skip, take, ...filterParams } })
         const { scenarios, total, hasMore } = response.data
         set({ 
           scenarios: scenarios || [], 
@@ -41,6 +52,48 @@ export const useScenarioStore = create((set, get) => ({
     } catch (error) {
       const errorMessage = error.response?.data?.message || 'Failed to fetch scenarios'
       set({ error: errorMessage, isLoading: false })
+    }
+  },
+
+  fetchTags: async () => {
+    try {
+      const response = await apiClient.get('/scenarios/tags')
+      set({ availableTags: response.data.tags || [] })
+    } catch {
+      set({ availableTags: [] })
+    }
+  },
+
+  toggleFavorite: async (scenarioId) => {
+    try {
+      const response = await apiClient.patch(`/scenarios/${scenarioId}/favorite`)
+      const updated = response.data.scenario
+      const { scenarios } = get()
+      set({
+        scenarios: scenarios.map((s) => (s.id === scenarioId ? { ...s, ...updated } : s)),
+      })
+      return updated
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || 'Failed to update favorite'
+      set({ error: errorMessage })
+      throw new Error(errorMessage)
+    }
+  },
+
+  updateScenarioTags: async (scenarioId, tags) => {
+    try {
+      const response = await apiClient.patch(`/scenarios/${scenarioId}/tags`, { tags })
+      const updated = response.data.scenario
+      const { scenarios } = get()
+      set({
+        scenarios: scenarios.map((s) => (s.id === scenarioId ? { ...s, ...updated } : s)),
+      })
+      await get().fetchTags()
+      return updated
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || 'Failed to update tags'
+      set({ error: errorMessage })
+      throw new Error(errorMessage)
     }
   },
 
@@ -144,6 +197,14 @@ export const useScenarioStore = create((set, get) => ({
 
   setFilterType: (filter) => {
     set({ filterType: filter })
+  },
+
+  setFavoritesOnly: (favoritesOnly) => {
+    set({ favoritesOnly })
+  },
+
+  setFilterTag: (filterTag) => {
+    set({ filterTag })
   },
 
   clearError: () => {

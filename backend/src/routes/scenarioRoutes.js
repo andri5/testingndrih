@@ -6,7 +6,10 @@ import {
   updateScenarioHandler,
   deleteScenarioHandler,
   duplicateScenarioHandler,
-  getScenarioStatsHandler
+  getScenarioStatsHandler,
+  listScenarioTagsHandler,
+  toggleFavoriteHandler,
+  updateTagsHandler,
 } from '../controllers/scenarioController.js'
 import { authenticateToken } from '../middleware/auth.js'
 import testStepRoutes from './testStepRoutes.js'
@@ -29,6 +32,12 @@ router.post('/', createScenarioHandler)
 router.get('/', getScenarioListHandler)
 
 /**
+ * GET /api/scenarios/tags
+ * List unique tags for authenticated user
+ */
+router.get('/tags', listScenarioTagsHandler)
+
+/**
  * GET /api/scenarios/:id
  * Get a specific scenario
  */
@@ -39,6 +48,9 @@ router.get('/:id', getScenarioHandler)
  * Update a scenario
  */
 router.put('/:id', updateScenarioHandler)
+
+router.patch('/:id/favorite', toggleFavoriteHandler)
+router.patch('/:id/tags', updateTagsHandler)
 
 /**
  * DELETE /api/scenarios/:id

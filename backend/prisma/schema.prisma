@@ -168,6 +168,8 @@ model Scenario {
   isSmoke     Boolean  @default(false) // Mark scenario as smoke test
   isStress    Boolean  @default(false) // Mark scenario as stress test
   isSecurity  Boolean  @default(false) // Mark scenario as security test
+  isFavorite  Boolean  @default(false)
+  tags        String[] @default([])
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   userId      String

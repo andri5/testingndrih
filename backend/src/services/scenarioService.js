@@ -42,31 +42,43 @@ export async function createScenario(userId, data) {
  * Get all scenarios for a user
  */
 export async function getUserScenarios(userId, options = {}) {
-  const { skip = 0, take = 20, orderBy = 'createdAt', orderDirection = 'desc' } = options
+  const {
+    skip = 0,
+    take = 20,
+    orderBy = 'createdAt',
+    orderDirection = 'desc',
+    favoritesOnly = false,
+    tag = null,
+  } = options
 
   try {
+    const where = { userId }
+    if (favoritesOnly) where.isFavorite = true
+    if (tag) where.tags = { has: tag }
+
     const scenarios = await prisma.scenario.findMany({
-      where: { userId },
+      where,
       skip,
       take,
-      orderBy: {
-        [orderBy]: orderDirection
-      },
+      orderBy: [
+        { isFavorite: 'desc' },
+        { [orderBy]: orderDirection },
+      ],
       select: {
         id: true,
         name: true,
         description: true,
         url: true,
         steps: true,
+        isFavorite: true,
+        tags: true,
         createdAt: true,
         updatedAt: true,
         _count: { select: { testSteps: true } },
       },
     })
 
-    const total = await prisma.scenario.count({
-      where: { userId },
-    })
+    const total = await prisma.scenario.count({ where })
 
     return { scenarios: scenarios.map(withLiveStepCount), total }
   } catch (error) {
@@ -107,7 +119,7 @@ export async function getScenarioById(scenarioId, userId) {
  * Update a scenario
  */
 export async function updateScenario(scenarioId, userId, data) {
-  const { name, description, url } = data
+  const { name, description, url, tags } = data
 
   try {
     // Verify ownership first
@@ -133,7 +145,8 @@ export async function updateScenario(scenarioId, userId, data) {
       data: {
         ...(name && { name }),
         ...(description !== undefined && { description }),
-        ...(url && { url })
+        ...(url && { url }),
+        ...(tags !== undefined && { tags: normalizeTags(tags) }),
       }
     })
 
@@ -141,6 +154,45 @@ export async function updateScenario(scenarioId, userId, data) {
   } catch (error) {
     throw new Error(`Failed to update scenario: ${error.message}`)
   }
+}
+
+function normalizeTags(tags) {
+  if (!Array.isArray(tags)) return []
+  return [...new Set(tags.map((t) => String(t).trim().toLowerCase()).filter(Boolean))].slice(0, 20)
+}
+
+export async function toggleScenarioFavorite(scenarioId, userId) {
+  const scenario = await prisma.scenario.findUnique({ where: { id: scenarioId } })
+  if (!scenario) throw new Error('Scenario not found')
+  if (scenario.userId !== userId) throw new Error('Unauthorized: Cannot update this scenario')
+
+  return prisma.scenario.update({
+    where: { id: scenarioId },
+    data: { isFavorite: !scenario.isFavorite },
+  })
+}
+
+export async function updateScenarioTags(scenarioId, userId, tags) {
+  const scenario = await prisma.scenario.findUnique({ where: { id: scenarioId } })
+  if (!scenario) throw new Error('Scenario not found')
+  if (scenario.userId !== userId) throw new Error('Unauthorized: Cannot update this scenario')
+
+  return prisma.scenario.update({
+    where: { id: scenarioId },
+    data: { tags: normalizeTags(tags) },
+  })
+}
+
+export async function listScenarioTags(userId) {
+  const rows = await prisma.scenario.findMany({
+    where: { userId },
+    select: { tags: true },
+  })
+  const tagSet = new Set()
+  for (const row of rows) {
+    for (const tag of row.tags || []) tagSet.add(tag)
+  }
+  return [...tagSet].sort()
 }
 
 /**
@@ -205,7 +257,9 @@ export async function duplicateScenario(scenarioId, userId) {
         description: original.description,
         url: original.url,
         userId,
-        steps: original.steps
+        steps: original.steps,
+        tags: original.tags || [],
+        isFavorite: false,
       }
     })
 

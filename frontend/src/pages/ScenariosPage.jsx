@@ -70,7 +70,15 @@ export default function ScenariosPage() {
     deleteScenario,
     duplicateScenario,
     setSelectedScenario,
-    clearError
+    clearError,
+    favoritesOnly,
+    filterTag,
+    availableTags,
+    fetchTags,
+    toggleFavorite,
+    updateScenarioTags,
+    setFavoritesOnly,
+    setFilterTag,
   } = useScenarioStore()
   const isAdmin = useAuthStore((state) => state.user)?.role === 'ADMIN'
   const t = i18n
@@ -89,6 +97,7 @@ export default function ScenariosPage() {
   // Load scenarios on mount
   useEffect(() => {
     fetchScenarios()
+    fetchTags()
   }, [])
 
   const handleSearch = (query) => {
@@ -101,6 +110,38 @@ export default function ScenariosPage() {
       }
     }, 300)
     setSearchTimeout(timeout)
+  }
+
+  const handleFavoritesChange = (value) => {
+    setFavoritesOnly(value)
+    fetchScenarios(0, pagination.take || 10, '', { favoritesOnly: value, tag: filterTag })
+  }
+
+  const handleTagFilterChange = (tag) => {
+    setFilterTag(tag)
+    fetchScenarios(0, pagination.take || 10, '', { favoritesOnly, tag })
+  }
+
+  const handleToggleFavorite = async (scenarioId) => {
+    try {
+      await toggleFavorite(scenarioId)
+    } catch {
+      // error shown via store
+    }
+  }
+
+  const handleEditTags = async (scenario) => {
+    const input = window.prompt(
+      'Enter tags (comma-separated, max 20):',
+      (scenario.tags || []).join(', ')
+    )
+    if (input === null) return
+    const tags = input.split(',').map((t) => t.trim()).filter(Boolean)
+    try {
+      await updateScenarioTags(scenario.id, tags)
+    } catch (err) {
+      alert(err.message)
+    }
   }
 
   const handleFilterChange = async (filter) => {
@@ -627,6 +668,11 @@ export default function ScenariosPage() {
               onSearch={handleSearch}
               onFilterChange={handleFilterChange}
               isLoading={isLoading}
+              availableTags={availableTags}
+              favoritesOnly={favoritesOnly}
+              filterTag={filterTag}
+              onFavoritesChange={handleFavoritesChange}
+              onTagChange={handleTagFilterChange}
             />
           </Card>
         )}
@@ -642,6 +688,8 @@ export default function ScenariosPage() {
             onMarkSmoke={isAdmin ? handleMarkSmoke : undefined}
             onMarkStress={isAdmin ? handleMarkStress : undefined}
             onMarkSecurity={isAdmin ? handleMarkSecurity : undefined}
+            onToggleFavorite={handleToggleFavorite}
+            onEditTags={handleEditTags}
             isLoading={isLoading}
             hasMore={pagination.hasMore}
             onLoadMore={handleLoadMore}

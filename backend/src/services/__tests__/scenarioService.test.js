@@ -128,11 +128,13 @@ describe('ScenarioService - Comprehensive Business Logic Testing', () => {
         where: { userId: 'user-123' },
         skip: 0,
         take: 20,
-        orderBy: { createdAt: 'desc' },
+        orderBy: [{ isFavorite: 'desc' }, { createdAt: 'desc' }],
         select: expect.objectContaining({
           id: true,
           name: true,
-          url: true
+          url: true,
+          isFavorite: true,
+          tags: true,
         })
       })
     })
@@ -159,7 +161,7 @@ describe('ScenarioService - Comprehensive Business Logic Testing', () => {
 
       expect(prisma.scenario.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          orderBy: { name: 'asc' }
+          orderBy: [{ isFavorite: 'desc' }, { name: 'asc' }]
         })
       )
     })

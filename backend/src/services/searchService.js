@@ -12,7 +12,9 @@ export async function searchScenarios(userId, options = {}) {
     orderBy = 'createdAt',
     orderDirection = 'desc',
     startDate = null,
-    endDate = null
+    endDate = null,
+    favoritesOnly = false,
+    tag = null,
   } = options
 
   try {
@@ -26,6 +28,9 @@ export async function searchScenarios(userId, options = {}) {
           ]
         : undefined
     }
+
+    if (favoritesOnly) where.isFavorite = true
+    if (tag) where.tags = { has: tag }
 
     // Add date filtering if provided
     if (startDate || endDate) {
@@ -43,15 +48,18 @@ export async function searchScenarios(userId, options = {}) {
       where,
       skip,
       take,
-      orderBy: {
-        [orderBy]: orderDirection
-      },
+      orderBy: [
+        { isFavorite: 'desc' },
+        { [orderBy]: orderDirection },
+      ],
       select: {
         id: true,
         name: true,
         description: true,
         url: true,
         steps: true,
+        isFavorite: true,
+        tags: true,
         createdAt: true,
         updatedAt: true,
         _count: {

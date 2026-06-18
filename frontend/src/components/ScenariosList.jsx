@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Eye, Copy, Trash2 } from 'lucide-react'
+import { Eye, Copy, Trash2, Star, Tag } from 'lucide-react'
 import { Button, Badge, Spinner, Card, Tooltip } from './ui'
 import ExportFormatButton from './ExportFormatButton'
 
@@ -26,6 +26,8 @@ export function ScenariosList({
   onMarkSmoke,
   onMarkStress,
   onMarkSecurity,
+  onToggleFavorite = null,
+  onEditTags = null,
   isLoading = false,
   hasMore = false,
   onLoadMore = null,
@@ -139,6 +141,20 @@ export function ScenariosList({
               {/* Info */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-3 flex-wrap">
+                  {onToggleFavorite && (
+                    <button
+                      type="button"
+                      onClick={() => onToggleFavorite(scenario.id)}
+                      className={`shrink-0 p-1 rounded transition ${
+                        scenario.isFavorite
+                          ? 'text-amber-400 hover:text-amber-300'
+                          : 'text-[#555] hover:text-amber-400'
+                      }`}
+                      title={scenario.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+                    >
+                      <Star size={18} className={scenario.isFavorite ? 'fill-current' : ''} />
+                    </button>
+                  )}
                   <h3 className="text-lg font-semibold text-[#E0E0E2]">{scenario.name}</h3>
                   {scenario.stepCount > 0 && (
                     <Badge variant="primary">{scenario.stepCount} steps</Badge>
@@ -147,6 +163,29 @@ export function ScenariosList({
                 
                 {scenario.description && (
                   <p className="text-[#A0A0A4] mt-1 text-sm">{scenario.description}</p>
+                )}
+
+                {(scenario.tags?.length > 0 || onEditTags) && (
+                  <div className="flex items-center gap-2 mt-2 flex-wrap">
+                    {(scenario.tags || []).map((tag) => (
+                      <span
+                        key={tag}
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#5E6AD2]/15 text-[#9BA3F0] text-xs font-medium"
+                      >
+                        <Tag size={10} />
+                        {tag}
+                      </span>
+                    ))}
+                    {onEditTags && (
+                      <button
+                        type="button"
+                        onClick={() => onEditTags(scenario)}
+                        className="text-xs text-[#8A8A8F] hover:text-[#E0E0E2] underline"
+                      >
+                        {scenario.tags?.length ? 'Edit tags' : '+ Add tags'}
+                      </button>
+                    )}
+                  </div>
                 )}
                 
                 <div className="flex items-center gap-4 mt-2 text-xs text-[#666] flex-wrap">

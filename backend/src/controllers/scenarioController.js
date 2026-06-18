@@ -5,7 +5,10 @@ import {
   updateScenario,
   deleteScenario,
   duplicateScenario,
-  getScenarioStats
+  getScenarioStats,
+  toggleScenarioFavorite,
+  updateScenarioTags,
+  listScenarioTags,
 } from '../services/scenarioService.js'
 
 /**
@@ -40,6 +43,8 @@ export async function getScenarioListHandler(req, res, next) {
     const take = parseInt(req.query.take) || 20
     const orderBy = req.query.orderBy || 'createdAt'
     const orderDirection = req.query.orderDirection || 'desc'
+    const favoritesOnly = req.query.favoritesOnly === 'true' || req.query.favoritesOnly === '1'
+    const tag = req.query.tag || null
 
     // Validate pagination
     if (skip < 0 || take < 1 || take > 100) {
@@ -53,7 +58,9 @@ export async function getScenarioListHandler(req, res, next) {
       skip,
       take,
       orderBy,
-      orderDirection
+      orderDirection,
+      favoritesOnly,
+      tag,
     })
 
     res.json({
@@ -99,9 +106,9 @@ export async function updateScenarioHandler(req, res, next) {
   try {
     const { id } = req.params
     const userId = req.user.id
-    const { name, description, url } = req.body
+    const { name, description, url, tags } = req.body
 
-    const scenario = await updateScenario(id, userId, { name, description, url })
+    const scenario = await updateScenario(id, userId, { name, description, url, tags })
 
     res.json({
       success: true,
@@ -169,6 +176,36 @@ export async function getScenarioStatsHandler(req, res, next) {
       success: true,
       stats
     })
+  } catch (error) {
+    next(error)
+  }
+}
+
+export async function listScenarioTagsHandler(req, res, next) {
+  try {
+    const tags = await listScenarioTags(req.user.id)
+    res.json({ success: true, tags })
+  } catch (error) {
+    next(error)
+  }
+}
+
+export async function toggleFavoriteHandler(req, res, next) {
+  try {
+    const { id } = req.params
+    const scenario = await toggleScenarioFavorite(id, req.user.id)
+    res.json({ success: true, scenario })
+  } catch (error) {
+    next(error)
+  }
+}
+
+export async function updateTagsHandler(req, res, next) {
+  try {
+    const { id } = req.params
+    const { tags } = req.body
+    const scenario = await updateScenarioTags(id, req.user.id, tags)
+    res.json({ success: true, scenario })
   } catch (error) {
     next(error)
   }

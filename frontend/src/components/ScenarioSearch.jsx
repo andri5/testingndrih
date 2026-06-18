@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { Input } from './ui'
 import SoftSelect from './SoftSelect'
+import ExportFormatButton from './ExportFormatButton'
+import { Star } from 'lucide-react'
 
 const FILTER_OPTIONS = [
   { value: 'all', label: 'All Scenarios' },
@@ -8,7 +10,16 @@ const FILTER_OPTIONS = [
   { value: 'active', label: 'Most Executed' },
 ]
 
-export function ScenarioSearch({ onSearch, onFilterChange, isLoading = false }) {
+export function ScenarioSearch({
+  onSearch,
+  onFilterChange,
+  isLoading = false,
+  availableTags = [],
+  favoritesOnly = false,
+  filterTag = '',
+  onFavoritesChange = null,
+  onTagChange = null,
+}) {
   const [searchText, setSearchText] = useState('')
   const [filterType, setFilterType] = useState('all')
 
@@ -27,9 +38,13 @@ export function ScenarioSearch({ onSearch, onFilterChange, isLoading = false }) 
     onSearch('')
   }
 
+  const tagOptions = [
+    { value: '', label: 'All tags' },
+    ...availableTags.map((tag) => ({ value: tag, label: tag })),
+  ]
+
   return (
     <div className="space-y-4">
-      {/* Search Bar */}
       <div className="flex gap-4">
         <div className="flex-1">
           <Input
@@ -50,14 +65,35 @@ export function ScenarioSearch({ onSearch, onFilterChange, isLoading = false }) 
         )}
       </div>
 
-      {/* Filters */}
-      <div className="flex gap-4 flex-wrap">
+      <div className="flex gap-3 flex-wrap items-center">
         <SoftSelect
           value={filterType}
           onChange={handleFilterChange}
           options={FILTER_OPTIONS}
           disabled={isLoading}
         />
+
+        {onFavoritesChange && (
+          <ExportFormatButton
+            format={favoritesOnly ? 'primary' : 'json'}
+            icon={Star}
+            onClick={() => onFavoritesChange(!favoritesOnly)}
+            disabled={isLoading}
+            className={favoritesOnly ? '[&_svg]:fill-current' : ''}
+          >
+            Favorites
+          </ExportFormatButton>
+        )}
+
+        {onTagChange && availableTags.length > 0 && (
+          <SoftSelect
+            value={filterTag}
+            onChange={onTagChange}
+            options={tagOptions}
+            disabled={isLoading}
+            placeholder="Filter by tag"
+          />
+        )}
       </div>
     </div>
   )

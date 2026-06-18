@@ -59,7 +59,7 @@ export const QUICK_ACTIONS = [
   },
   {
     id: 'environments',
-    roles: ['ADMIN'],
+    roles: ['ADMIN', 'USER'],
     titleKey: 'environments',
     descKey: 'environmentsDesc',
     path: '/environments',

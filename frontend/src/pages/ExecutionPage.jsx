@@ -9,7 +9,8 @@ import ExportFormatButton from '../components/ExportFormatButton'
 import StepResultCard, { StepResultsSummary } from '../components/StepResultCard'
 import { ExecuteScenarioButton } from '../components/ExecuteScenarioButton'
 import SoftSelect from '../components/SoftSelect'
-import { PlayCircle, CheckCircle2, XCircle, TrendingUp, ClipboardList, Clock, Eye, ListTree } from 'lucide-react'
+import ExecutionRunDiff from '../components/ExecutionRunDiff'
+import { PlayCircle, CheckCircle2, XCircle, TrendingUp, ClipboardList, Clock, Eye, ListTree, GitCompare } from 'lucide-react'
 
 const i18n = {
     title: 'Test Execution',
@@ -33,6 +34,9 @@ const i18n = {
     view: 'View',
     exportHTML: 'Export HTML',
     exportPDF: 'Export PDF',
+    compareRuns: 'Compare Runs',
+    compareSelected: 'Compare Selected',
+    selectTwoRuns: 'Select 2 runs to compare',
   
 }
 
@@ -42,6 +46,8 @@ export default function ExecutionPage() {
   const [selectedScenarioId, setSelectedScenarioId] = useState(null)
   const [selectedScenarioName, setSelectedScenarioName] = useState('')
   const [screenshotModal, setScreenshotModal] = useState(null)
+  const [compareIds, setCompareIds] = useState([])
+  const [diffPair, setDiffPair] = useState(null)
   
   const {
     executions,
@@ -155,6 +161,25 @@ export default function ExecutionPage() {
     const scenario = scenarios.find((s) => s.id === scenarioId)
     setSelectedScenarioId(scenarioId)
     setSelectedScenarioName(scenario?.name || '')
+  }
+
+  const toggleCompareSelection = (executionId) => {
+    setCompareIds((prev) => {
+      if (prev.includes(executionId)) {
+        return prev.filter((id) => id !== executionId)
+      }
+      if (prev.length >= 2) {
+        return [prev[1], executionId]
+      }
+      return [...prev, executionId]
+    })
+  }
+
+  const handleCompareSelected = () => {
+    if (compareIds.length !== 2) return
+    const a = executions.find((e) => e.id === compareIds[0])
+    const b = executions.find((e) => e.id === compareIds[1])
+    if (a && b) setDiffPair([a, b])
   }
 
   return (
@@ -420,7 +445,22 @@ export default function ExecutionPage() {
 
         {/* Execution History */}
         <Card>
-          <h2 className="text-xl font-bold text-[#E0E0E2] mb-4\">{t.executionHistory}</h2>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+            <h2 className="text-xl font-bold text-[#E0E0E2]">{t.executionHistory}</h2>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-[#8A8A8F]">
+                {compareIds.length === 0 ? t.selectTwoRuns : `${compareIds.length}/2 selected`}
+              </span>
+              <ExportFormatButton
+                format="html"
+                icon={GitCompare}
+                onClick={handleCompareSelected}
+                disabled={compareIds.length !== 2}
+              >
+                {t.compareSelected}
+              </ExportFormatButton>
+            </div>
+          </div>
 
           {isLoading && executions.length === 0 ? (
             <div className="flex justify-center py-12">
@@ -435,6 +475,9 @@ export default function ExecutionPage() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-[#2D2D2F]">
+                    <th className="text-center py-3 px-2 font-semibold text-[#A0A0A4] w-10">
+                      <GitCompare size={14} className="inline" />
+                    </th>
                     <th className="text-left py-3 px-4 font-semibold text-[#A0A0A4]">
                       {t.scenario}
                     </th>
@@ -459,8 +502,19 @@ export default function ExecutionPage() {
                   {executions.map((execution) => (
                     <tr
                       key={execution.id}
-                      className="border-b border-[#2D2D2F] hover:bg-[#1A1A1C] transition"
+                      className={`border-b border-[#2D2D2F] hover:bg-[#1A1A1C] transition ${
+                        compareIds.includes(execution.id) ? 'bg-[#5E6AD2]/5' : ''
+                      }`}
                     >
+                      <td className="py-3 px-2 text-center">
+                        <input
+                          type="checkbox"
+                          checked={compareIds.includes(execution.id)}
+                          onChange={() => toggleCompareSelection(execution.id)}
+                          className="w-4 h-4 rounded border-[rgba(255,255,255,0.2)] bg-[#141316] accent-[#5E6AD2] cursor-pointer"
+                          title="Select for comparison"
+                        />
+                      </td>
                       <td className="py-3 px-4 text-[#E0E0E2]">
                         {execution.scenario?.name}
                       </td>
@@ -533,6 +587,14 @@ export default function ExecutionPage() {
             </div>
           )}
         </Card>
+
+        {diffPair && (
+          <ExecutionRunDiff
+            executionA={diffPair[0]}
+            executionB={diffPair[1]}
+            onClose={() => setDiffPair(null)}
+          />
+        )}
 
         {/* Screenshot Modal */}
         {screenshotModal && (

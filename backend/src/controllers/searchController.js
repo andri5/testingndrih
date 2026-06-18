@@ -13,7 +13,7 @@ import {
 export async function searchScenariosHandler(req, res, next) {
   try {
     const userId = req.user.id
-    const { query, orderBy = 'createdAt', orderDirection = 'desc', skip = '0', take = '20', startDate, endDate } = req.query
+    const { query, orderBy = 'createdAt', orderDirection = 'desc', skip = '0', take = '20', startDate, endDate, favoritesOnly, tag } = req.query
 
     const options = {
       query: query || '',
@@ -22,7 +22,9 @@ export async function searchScenariosHandler(req, res, next) {
       orderBy: ['createdAt', 'name', 'updatedAt'].includes(orderBy) ? orderBy : 'createdAt',
       orderDirection: ['asc', 'desc'].includes(orderDirection) ? orderDirection : 'desc',
       startDate,
-      endDate
+      endDate,
+      favoritesOnly: favoritesOnly === 'true' || favoritesOnly === '1',
+      tag: tag || null,
     }
 
     const result = await searchScenarios(userId, options)

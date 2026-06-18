@@ -2,15 +2,14 @@ import { useState, useEffect } from 'react'
 import { Play, Loader2 } from 'lucide-react'
 import { Alert } from './ui'
 import ExportFormatButton from './ExportFormatButton'
+import SoftSelect from './SoftSelect'
 import { useExecutionStore } from '../store/executionStore'
 import { useSettingsStore } from '../store/settingsStore'
 import { environmentAPI } from '../services/api'
-import { useAuthStore } from '../store/authStore'
 
 export function ExecuteScenarioButton({ scenarioId, scenarioName, onExecutionStart = null }) {
   const { isRunning, executeScenario, clearError, error } = useExecutionStore()
   const { selectedEnvironmentId, setSelectedEnvironmentId } = useSettingsStore()
-  const isAdmin = useAuthStore((state) => state.user)?.role === 'ADMIN'
   const [showConfirm, setShowConfirm] = useState(false)
   const [browser, setBrowser] = useState('chromium')
   const [headless, setHeadless] = useState(false)
@@ -18,7 +17,7 @@ export function ExecuteScenarioButton({ scenarioId, scenarioName, onExecutionSta
   const [environmentId, setEnvironmentId] = useState(selectedEnvironmentId || '')
 
   useEffect(() => {
-    if (!showConfirm || !isAdmin) return
+    if (!showConfirm) return
     environmentAPI.list().then((res) => {
       const list = res.data.environments || []
       setEnvironments(list)
@@ -27,7 +26,7 @@ export function ExecuteScenarioButton({ scenarioId, scenarioName, onExecutionSta
         setEnvironmentId(def.id)
       }
     }).catch(() => {})
-  }, [showConfirm, isAdmin])
+  }, [showConfirm])
 
   const envLabel = 'Environment'
 
@@ -81,23 +80,23 @@ export function ExecuteScenarioButton({ scenarioId, scenarioName, onExecutionSta
                 <option value="webkit">WebKit</option>
               </select>
             </div>
-            {isAdmin && (
+            {environments.length > 0 && (
               <div>
                 <label className={`text-xs font-semibold block mb-1 ${
                   'text-gray-600'
                 }`}>{envLabel}</label>
-                <select
+                <SoftSelect
                   value={environmentId}
-                  onChange={(e) => setEnvironmentId(e.target.value)}
-                  className={`text-sm rounded px-2 py-1 focus:outline-none focus:ring-1 ${
-                    'border border-gray-300 text-gray-900 focus:ring-indigo-500'
-                  }`}
-                >
-                  <option value="">—</option>
-                  {environments.map((env) => (
-                    <option key={env.id} value={env.id}>{env.name}{env.isDefault ? ' ★' : ''}</option>
-                  ))}
-                </select>
+                  onChange={setEnvironmentId}
+                  options={[
+                    { value: '', label: '— Default —' },
+                    ...environments.map((env) => ({
+                      value: env.id,
+                      label: `${env.name}${env.isDefault ? ' ★' : ''}`,
+                    })),
+                  ]}
+                  className="min-w-[140px]"
+                />
               </div>
             )}
             <div className="flex items-end gap-2">

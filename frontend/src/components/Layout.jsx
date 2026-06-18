@@ -134,6 +134,7 @@ export default function Layout({ children }) {
     { name: t.dashboard,    path: '/dashboard',  icon: <LayoutDashboard size={16} /> },
     { name: t.scenarios,    path: '/scenarios',  icon: <ClipboardList size={16} /> },
     { name: t.execution,    path: '/execution',  icon: <PlayCircle size={16} /> },
+    { name: t.environments, path: '/environments', icon: <Layers size={16} /> },
     { name: t.reports,      path: '/reports',    icon: <BarChart2 size={16} /> },
     { name: t.analytics,    path: '/analytics',  icon: <BarChart2 size={16} /> },
   ]
@@ -142,7 +143,6 @@ export default function Layout({ children }) {
     { name: t.visualRegression, path: '/visual-regression', icon: <Image size={16} /> },
     { name: t.chains,       path: '/chains',          icon: <Link2 size={16} /> },
     { name: t.apiTesting,   path: '/api-testing',     icon: <Globe size={16} /> },
-    { name: t.environments, path: '/environments',    icon: <Layers size={16} /> },
     { name: t.scheduler,    path: '/scheduler',       icon: <Clock size={16} /> },
     { name: t.parallel,     path: '/parallel',        icon: <GitBranch size={16} /> },
     { name: t.smokeTest,    path: '/smoke-test',      icon: <Activity size={16} /> },

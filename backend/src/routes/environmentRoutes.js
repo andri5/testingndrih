@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { adminAuth } from '../middleware/adminAuth.js'
+import { authenticateToken } from '../middleware/auth.js'
 import {
   listHandler,
   createHandler,
@@ -12,7 +12,7 @@ import {
 } from '../controllers/environmentController.js'
 
 const router = Router()
-router.use(...adminAuth)
+router.use(authenticateToken)
 
 router.get('/', listHandler)
 router.post('/', createHandler)

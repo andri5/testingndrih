@@ -151,7 +151,7 @@ export default function App() {
         <Route path="/security-test" element={<AdminRoute><SecurityTestPage /></AdminRoute>} />
         <Route path="/api-testing" element={<AdminRoute><ApiTestingPage /></AdminRoute>} />
         <Route path="/issues" element={<Navigate to="/dashboard" replace />} />
-        <Route path="/environments" element={<AdminRoute><EnvironmentsPage /></AdminRoute>} />
+        <Route path="/environments" element={<ProtectedRoute><EnvironmentsPage /></ProtectedRoute>} />
         <Route path="/visual-regression" element={<AdminRoute><VisualRegressionPage /></AdminRoute>} />
 
         {/* Help Pages */}

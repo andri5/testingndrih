@@ -2,7 +2,6 @@
 export const ADMIN_ROUTE_PATHS = [
   '/chains',
   '/api-testing',
-  '/environments',
   '/scheduler',
   '/parallel',
   '/smoke-test',

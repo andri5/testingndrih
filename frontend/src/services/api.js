@@ -120,6 +120,12 @@ export const scenarioAPI = {
   getStats: () =>
     apiClient.get('/scenarios/stats'),
 
+  listTags: () => apiClient.get('/scenarios/tags'),
+
+  toggleFavorite: (id) => apiClient.patch(`/scenarios/${id}/favorite`),
+
+  updateTags: (id, tags) => apiClient.patch(`/scenarios/${id}/tags`, { tags }),
+
   // Search
   search: (query, skip = 0, take = 10) =>
     apiClient.get('/search', { params: { q: query, skip, take } }),
