@@ -1,18 +1,29 @@
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { ShieldCheck } from 'lucide-react'
+import {
+  getPublicLang,
+  publicAboutPath,
+  publicHomePath,
+  isAboutPublicPath,
+  toPublicPath,
+} from '../utils/landingRoutes'
 
 export function LangSwitch({ lang }) {
+  const { pathname } = useLocation()
+  const idPath = toPublicPath(pathname, 'id')
+  const enPath = toPublicPath(pathname, 'en')
+
   return (
     <div className="flex items-center rounded-lg border border-slate-200 overflow-hidden text-xs font-semibold shrink-0">
       <Link
-        to="/"
+        to={idPath}
         className={`px-2 sm:px-2.5 py-1.5 transition ${lang === 'id' ? 'bg-indigo-600 text-white' : 'lp-muted hover:bg-slate-50'}`}
         hrefLang="id"
       >
         ID
       </Link>
       <Link
-        to="/en"
+        to={enPath}
         className={`px-2 sm:px-2.5 py-1.5 transition ${lang === 'en' ? 'bg-indigo-600 text-white' : 'lp-muted hover:bg-slate-50'}`}
         hrefLang="en"
       >
@@ -23,8 +34,10 @@ export function LangSwitch({ lang }) {
 }
 
 export default function LandingNav({ lang, t }) {
-  const home = lang === 'en' ? '/en' : '/'
-  const about = lang === 'en' ? '/en/about' : '/about'
+  const { pathname } = useLocation()
+  const home = publicHomePath(lang)
+  const about = publicAboutPath(lang)
+  const onAbout = isAboutPublicPath(pathname)
 
   return (
     <header className="lp-nav fixed top-0 inset-x-0 z-50">
@@ -43,7 +56,16 @@ export default function LandingNav({ lang, t }) {
           <a href={`${home}#cara-kerja`} className="hidden md:inline text-sm lp-muted hover:text-[#5E6AD2] transition px-2">
             {t.navHow}
           </a>
-          <Link to={about} className="hidden sm:inline text-sm lp-muted hover:text-[#5E6AD2] transition px-2">
+          {!onAbout && (
+            <a href={`${home}#saran`} className="hidden md:inline text-sm lp-muted hover:text-[#5E6AD2] transition px-2">
+              {t.navFeedback}
+            </a>
+          )}
+          <Link
+            to={about}
+            className={`hidden sm:inline text-sm transition px-2 ${onAbout ? 'text-[#5E6AD2] font-medium' : 'lp-muted hover:text-[#5E6AD2]'}`}
+            aria-current={onAbout ? 'page' : undefined}
+          >
             {t.navAbout}
           </Link>
           <LangSwitch lang={lang} />
@@ -64,7 +86,7 @@ export default function LandingNav({ lang, t }) {
 }
 
 export function LandingFooter({ lang, t }) {
-  const about = lang === 'en' ? '/en/about' : '/about'
+  const about = publicAboutPath(lang)
 
   return (
     <footer className="lp-footer">

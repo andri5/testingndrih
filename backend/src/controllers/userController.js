@@ -88,6 +88,16 @@ export async function setUserActive(req, res, next) {
   }
 }
 
+export async function updateUserMenus(req, res, next) {
+  try {
+    const { menus } = req.body
+    const user = await userService.updateUserMenus(req.user, req.params.userId, menus)
+    res.json({ success: true, user })
+  } catch (error) {
+    return handleServiceError(error, res, next)
+  }
+}
+
 export async function deleteUser(req, res, next) {
   try {
     const deleted = await userService.deleteUser(req.user, req.params.userId)

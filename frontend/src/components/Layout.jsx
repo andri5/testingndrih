@@ -1,6 +1,11 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import { useNavigate, Link, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
+import {
+  resolveUserMenuKeys,
+  pathToMenuKey,
+  menuKeyToPath,
+} from '../constants/menuPermissions'
 import { GlobalLoading } from './Loading'
 import HelpModal from './HelpModal'
 import {
@@ -42,6 +47,19 @@ export default function Layout({ children }) {
   const [toolsCollapsed, setToolsCollapsed] = useState(true)
   const userMenuRef = useRef(null)
   const isAdmin = user?.role === 'ADMIN'
+  const allowedMenuKeys = useMemo(() => new Set(resolveUserMenuKeys(user)), [user])
+
+  useEffect(() => {
+    if (!user || user.role === 'ADMIN') return
+    const pathname = location.pathname
+    if (pathname.startsWith('/settings')) return
+    const menuKey = pathToMenuKey(pathname)
+    if (!menuKey) return
+    if (!allowedMenuKeys.has(menuKey)) {
+      const fallbackKey = resolveUserMenuKeys(user)[0]
+      navigate(menuKeyToPath(fallbackKey) || '/dashboard', { replace: true })
+    }
+  }, [location.pathname, user, allowedMenuKeys, navigate])
 
   const labels = {
     main: 'Main',
@@ -131,27 +149,28 @@ export default function Layout({ children }) {
   }
 
   const mainItems = [
-    { name: t.dashboard,    path: '/dashboard',  icon: <LayoutDashboard size={16} /> },
-    { name: t.scenarios,    path: '/scenarios',  icon: <ClipboardList size={16} /> },
-    { name: t.execution,    path: '/execution',  icon: <PlayCircle size={16} /> },
-    { name: t.environments, path: '/environments', icon: <Layers size={16} /> },
-    { name: t.reports,      path: '/reports',    icon: <BarChart2 size={16} /> },
-    { name: t.analytics,    path: '/analytics',  icon: <BarChart2 size={16} /> },
-  ]
+    { key: 'dashboard', name: t.dashboard, path: '/dashboard', icon: <LayoutDashboard size={16} /> },
+    { key: 'scenarios', name: t.scenarios, path: '/scenarios', icon: <ClipboardList size={16} /> },
+    { key: 'execution', name: t.execution, path: '/execution', icon: <PlayCircle size={16} /> },
+    { key: 'environments', name: t.environments, path: '/environments', icon: <Layers size={16} /> },
+    { key: 'reports', name: t.reports, path: '/reports', icon: <BarChart2 size={16} /> },
+    { key: 'analytics', name: t.analytics, path: '/analytics', icon: <BarChart2 size={16} /> },
+  ].filter((item) => allowedMenuKeys.has(item.key))
 
   const workspaceItems = [
-    { name: t.visualRegression, path: '/visual-regression', icon: <Image size={16} /> },
-    { name: t.chains,       path: '/chains',          icon: <Link2 size={16} /> },
-    { name: t.apiTesting,   path: '/api-testing',     icon: <Globe size={16} /> },
-    { name: t.scheduler,    path: '/scheduler',       icon: <Clock size={16} /> },
-    { name: t.parallel,     path: '/parallel',        icon: <GitBranch size={16} /> },
-    { name: t.smokeTest,    path: '/smoke-test',      icon: <Activity size={16} /> },
-    { name: t.stressTest,   path: '/stress-test',     icon: <Gauge size={16} /> },
-    { name: t.securityTest, path: '/security-test',   icon: <Shield size={16} /> },
-    { name: t.browserTest,  path: '/browser-matrix',  icon: <Globe size={16} /> },
-  ]
+    { key: 'visual-regression', name: t.visualRegression, path: '/visual-regression', icon: <Image size={16} /> },
+    { key: 'chains', name: t.chains, path: '/chains', icon: <Link2 size={16} /> },
+    { key: 'api-testing', name: t.apiTesting, path: '/api-testing', icon: <Globe size={16} /> },
+    { key: 'scheduler', name: t.scheduler, path: '/scheduler', icon: <Clock size={16} /> },
+    { key: 'parallel', name: t.parallel, path: '/parallel', icon: <GitBranch size={16} /> },
+    { key: 'smoke-test', name: t.smokeTest, path: '/smoke-test', icon: <Activity size={16} /> },
+    { key: 'stress-test', name: t.stressTest, path: '/stress-test', icon: <Gauge size={16} /> },
+    { key: 'security-test', name: t.securityTest, path: '/security-test', icon: <Shield size={16} /> },
+    { key: 'browser-matrix', name: t.browserTest, path: '/browser-matrix', icon: <Globe size={16} /> },
+  ].filter((item) => allowedMenuKeys.has(item.key))
 
-  const visibleWorkspaceItems = isAdmin ? workspaceItems : []
+  const visibleWorkspaceItems = workspaceItems
+  const showToolsSection = visibleWorkspaceItems.length > 0
   const allItems = [...mainItems, ...visibleWorkspaceItems]
 
   const NavItem = ({ item, showLabel }) => {
@@ -233,7 +252,7 @@ export default function Layout({ children }) {
             {mainItems.map(item => <NavItem key={item.path} item={item} showLabel={showLabels} />)}
           </div>
 
-          {isAdmin && (
+          {showToolsSection && (
             <div className="space-y-0.5">
               {showLabels && (
                 <button

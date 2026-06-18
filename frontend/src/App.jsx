@@ -40,15 +40,28 @@ import ServerErrorPage from './pages/ServerErrorPage'
 import ErrorBoundary from './components/ErrorBoundary'
 import OfflineBanner from './components/OfflineBanner'
 import ServerHealthMonitor from './components/ServerHealthMonitor'
+import SiteTracker from './components/SiteTracker'
 import { useAuthStore } from './store/authStore'
 import { useSettingsStore } from './store/settingsStore'
+import { getPublicLang } from './utils/landingRoutes'
+
+function PublicLandingPage() {
+  const { pathname } = useLocation()
+  const lang = getPublicLang(pathname)
+  return <LandingPage lang={lang} />
+}
+
+function PublicAboutPage() {
+  const { pathname } = useLocation()
+  const lang = getPublicLang(pathname)
+  return <AboutPage lang={lang} />
+}
 
 function NotFoundRoute() {
   const token = useAuthStore((state) => state.token)
   const { pathname } = useLocation()
   if (token) return <NotFoundPage />
-  const lang = pathname === '/en' || pathname.startsWith('/en/') ? 'en' : 'id'
-  return <LandingNotFoundPage lang={lang} />
+  return <LandingNotFoundPage lang={getPublicLang(pathname)} />
 }
 
 export default function App() {
@@ -75,23 +88,24 @@ export default function App() {
       <OfflineBanner />
       <Router>
       <ServerHealthMonitor />
+      <SiteTracker />
       <Routes>
         {/* Public home */}
         <Route
           path="/"
-          element={token ? <Navigate to="/dashboard" replace /> : <LandingPage lang="id" />}
+          element={token ? <Navigate to="/dashboard" replace /> : <PublicLandingPage />}
         />
         <Route
           path="/en"
-          element={token ? <Navigate to="/dashboard" replace /> : <LandingPage lang="en" />}
+          element={token ? <Navigate to="/dashboard" replace /> : <PublicLandingPage />}
         />
         <Route
           path="/about"
-          element={token ? <Navigate to="/dashboard" replace /> : <AboutPage lang="id" />}
+          element={token ? <Navigate to="/dashboard" replace /> : <PublicAboutPage />}
         />
         <Route
           path="/en/about"
-          element={token ? <Navigate to="/dashboard" replace /> : <AboutPage lang="en" />}
+          element={token ? <Navigate to="/dashboard" replace /> : <PublicAboutPage />}
         />
 
         {/* Auth */}

@@ -1,12 +1,15 @@
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { FileQuestion, ArrowLeft, Home, ArrowRight } from 'lucide-react'
 import LandingNav, { LandingFooter } from '../components/LandingNav'
 import { landingCopy } from '../i18n/landingI18n'
+import { getPublicLang, publicHomePath } from '../utils/landingRoutes'
 
-export default function LandingNotFoundPage({ lang = 'id' }) {
+export default function LandingNotFoundPage({ lang: langProp }) {
+  const { pathname } = useLocation()
+  const lang = langProp ?? getPublicLang(pathname)
   const t = landingCopy[lang] || landingCopy.id
   const navigate = useNavigate()
-  const homePath = lang === 'en' ? '/en' : '/'
+  const homePath = publicHomePath(lang)
 
   return (
     <div className="landing-page min-h-screen overflow-x-hidden flex flex-col">

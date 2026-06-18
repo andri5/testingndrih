@@ -6,6 +6,7 @@ import {
   validateRegistrationName,
 } from '../utils/registerValidation.js'
 import { isPrimaryAdmin } from '../utils/roles.js'
+import { validateMenuKeys } from '../constants/menuPermissions.js'
 
 const userSelect = {
   id: true,
@@ -13,6 +14,7 @@ const userSelect = {
   name: true,
   role: true,
   isActive: true,
+  menuPermissions: true,
   createdAt: true,
   updatedAt: true,
 }
@@ -224,6 +226,35 @@ export async function updateUser(actor, userId, payload) {
 
 export async function updateUserRole(actor, userId, role) {
   return updateUser(actor, userId, { role })
+}
+
+export async function updateUserMenus(actor, userId, menus) {
+  const validation = validateMenuKeys(menus)
+  if (!validation.valid) {
+    throw Object.assign(new Error(validation.message), { status: 400 })
+  }
+
+  const target = await prisma.user.findUnique({
+    where: { id: userId },
+    select: userSelect,
+  })
+
+  if (!target) {
+    throw Object.assign(new Error('User not found'), { status: 404 })
+  }
+
+  if (target.role === 'ADMIN') {
+    throw Object.assign(
+      new Error('Admin accounts always have access to all menus'),
+      { status: 400 }
+    )
+  }
+
+  return prisma.user.update({
+    where: { id: userId },
+    data: { menuPermissions: validation.keys },
+    select: userSelect,
+  })
 }
 
 export async function setUserActive(actor, userId, isActive) {

@@ -25,6 +25,7 @@ const userPublicSelect = {
   name: true,
   role: true,
   isActive: true,
+  menuPermissions: true,
   createdAt: true,
 }
 

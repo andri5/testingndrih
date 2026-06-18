@@ -3,6 +3,7 @@ import { Eye, Pencil, Plus, Trash2 } from 'lucide-react'
 import { Alert, Button, Input, Spinner } from './ui'
 import { userAPI } from '../services/api'
 import { useAuthStore } from '../store/authStore'
+import UserMenuAssignment, { MenuAssignButton } from './UserMenuAssignment'
 
 const emptyForm = {
   name: '',
@@ -54,6 +55,7 @@ export default function UserManagement() {
   const [editingUser, setEditingUser] = useState(null)
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [statusFilter, setStatusFilter] = useState('all')
+  const [menuAssignUser, setMenuAssignUser] = useState(null)
 
   const loadUsers = async () => {
     setLoading(true)
@@ -335,6 +337,11 @@ export default function UserManagement() {
                       >
                         <Pencil size={14} />
                       </button>
+                      <MenuAssignButton
+                        user={u}
+                        disabled={updatingId === u.id}
+                        onClick={() => setMenuAssignUser(u)}
+                      />
                       <button
                         type="button"
                         title="Delete"
@@ -509,6 +516,17 @@ export default function UserManagement() {
             </Button>
           </div>
         </Modal>
+      )}
+
+      {menuAssignUser && (
+        <UserMenuAssignment
+          user={menuAssignUser}
+          onClose={() => setMenuAssignUser(null)}
+          onSaved={(updated) => {
+            setUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)))
+            setSuccess(`Updated menus for ${updated.email}`)
+          }}
+        />
       )}
     </div>
   )

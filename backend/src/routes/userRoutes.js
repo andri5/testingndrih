@@ -8,6 +8,7 @@ import {
   updateUserRole,
   setUserActive,
   deleteUser,
+  updateUserMenus,
   getUserActivitySummary,
   getUserActivityLog,
 } from '../controllers/userController.js'
@@ -24,6 +25,7 @@ router.get('/:userId', getUser)
 router.patch('/:userId', updateUser)
 router.patch('/:userId/role', updateUserRole)
 router.patch('/:userId/active', setUserActive)
+router.patch('/:userId/menus', updateUserMenus)
 router.delete('/:userId', deleteUser)
 
 export default router

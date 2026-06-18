@@ -68,6 +68,7 @@ model User {
   name      String?
   role      UserRole @default(USER)
   isActive  Boolean  @default(true)
+  menuPermissions String[] @default([])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -91,6 +92,34 @@ model User {
   visualComparisons      VisualComparison[]
 
   @@map("users")
+}
+
+model LandingFeedback {
+  id        String   @id @default(cuid())
+  name      String?
+  email     String?
+  message   String
+  page      String?
+  lang      String?  @default("id")
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@map("landing_feedback")
+}
+
+model SitePageView {
+  id        String   @id @default(cuid())
+  path      String
+  lang      String?
+  visitorId String?
+  userAgent String?
+  referer   String?
+  createdAt DateTime @default(now())
+
+  @@index([path])
+  @@index([createdAt])
+  @@index([visitorId])
+  @@map("site_page_views")
 }
 
 model TestEnvironment {

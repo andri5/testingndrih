@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import {
   PlayCircle,
   ClipboardList,
@@ -22,8 +22,10 @@ import {
   Bot,
 } from 'lucide-react'
 import LandingNav, { LandingFooter } from '../components/LandingNav'
+import LandingFeedbackSection from '../components/LandingFeedbackSection'
 import { landingCopy, ADVANCED_LABELS } from '../i18n/landingI18n'
 import { useLandingSEO } from '../hooks/useLandingSEO'
+import { getPublicLang } from '../utils/landingRoutes'
 
 const FEATURE_ICONS = [Mic, ClipboardList, PlayCircle, Sparkles, Layers, BarChart2, GitCompare, Webhook]
 const FEATURE_ICON_CLASSES = [
@@ -78,7 +80,9 @@ function HeroMockup({ t }) {
   )
 }
 
-export default function LandingPage({ lang = 'id' }) {
+export default function LandingPage({ lang: langProp }) {
+  const { pathname } = useLocation()
+  const lang = langProp ?? getPublicLang(pathname)
   const t = landingCopy[lang] || landingCopy.id
   useLandingSEO(lang)
 
@@ -214,9 +218,11 @@ export default function LandingPage({ lang = 'id' }) {
         </div>
       </section>
 
+      <LandingFeedbackSection t={t} lang={lang} />
+
       <section className="py-16 sm:py-24 px-4 sm:px-6">
         <div className="max-w-3xl mx-auto text-center lp-animate-in">
-          <h2 className="text-2xl sm:text-3xl font-bold lp-hero-title">{t.ctaFinalTitle}</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold lp-hero-title break-words">{t.ctaFinalTitle}</h2>
           <p className="mt-4 lp-muted text-base">{t.ctaFinalSubtitle}</p>
           <Link
             to="/register"

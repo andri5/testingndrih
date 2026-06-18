@@ -7,6 +7,8 @@ import ExportFormatButton from '../components/ExportFormatButton'
 import IntegrationsSettings from '../components/IntegrationsSettings'
 import UserManagement from '../components/UserManagement'
 import UserActivityLog from '../components/UserActivityLog'
+import SiteAnalytics from '../components/SiteAnalytics'
+import LandingFeedbackAdmin from '../components/LandingFeedbackAdmin'
 import { useAuthStore } from '../store/authStore'
 import { useSettingsStore } from '../store/settingsStore'
 
@@ -46,6 +48,8 @@ const i18n = {
     userManagementDesc: 'View, add, edit, and delete registered users',
     userActivity: 'User Activity',
     userActivityDesc: 'Monitor what USER accounts are doing and their latest actions',
+    webAnalytics: 'Web Analytics',
+    webAnalyticsDesc: 'Public site visits and landing page feedback from visitors',
   },
 }
 
@@ -75,12 +79,13 @@ export default function SettingsPage() {
       { id: 'integrations', label: t.integrations },
       { id: 'users', label: t.users },
       { id: 'activity', label: t.userActivity },
+      { id: 'web', label: t.webAnalytics },
     ] : []),
     { id: 'about', label: t.about },
   ]
 
   useEffect(() => {
-    if (!isAdmin && ['integrations', 'users', 'activity'].includes(activeTab)) {
+    if (!isAdmin && ['integrations', 'users', 'activity', 'web'].includes(activeTab)) {
       setActiveTab('profile')
     }
   }, [isAdmin, activeTab])
@@ -304,6 +309,19 @@ export default function SettingsPage() {
                 <p className={sectionTitleCls}>{t.userActivity}</p>
                 <p className="text-sm text-[#666] mb-4">{t.userActivityDesc}</p>
                 <UserActivityLog />
+              </div>
+            )}
+
+            {activeTab === 'web' && isAdmin && (
+              <div className="space-y-4">
+                <div className={cardCls}>
+                  <p className={sectionTitleCls}>{t.webAnalytics}</p>
+                  <p className="text-sm text-[#666] mb-4">{t.webAnalyticsDesc}</p>
+                  <SiteAnalytics />
+                </div>
+                <div className={cardCls}>
+                  <LandingFeedbackAdmin />
+                </div>
               </div>
             )}
 

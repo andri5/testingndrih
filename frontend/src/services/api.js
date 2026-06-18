@@ -95,6 +95,8 @@ export const userAPI = {
   activitySummary: () => apiClient.get('/users/activity/summary'),
   activityLog: (userId, limit = 50) =>
     apiClient.get(`/users/${userId}/activity`, { params: { limit } }),
+  updateMenus: (userId, menus) =>
+    apiClient.patch(`/users/${userId}/menus`, { menus }),
 }
 
 export const scenarioAPI = {
@@ -394,6 +396,20 @@ export const aiAPI = {
 
   suggestLocator: (payload) =>
     aiClient.post('/ai/suggest-locator', payload),
+}
+
+export const siteAPI = {
+  track: (path, lang) =>
+    axios.post(`${API_BASE}/site/track`, { path, lang }, { withCredentials: true }),
+
+  submitFeedback: (payload) =>
+    axios.post(`${API_BASE}/site/feedback`, payload),
+
+  getAnalytics: (days = 30) =>
+    apiClient.get('/site/analytics', { params: { days } }),
+
+  listFeedback: (params) =>
+    apiClient.get('/site/feedback', { params }),
 }
 
 export default apiClient

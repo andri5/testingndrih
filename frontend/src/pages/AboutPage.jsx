@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import {
   Target,
   Users,
@@ -12,10 +12,13 @@ import {
 import LandingNav, { LandingFooter } from '../components/LandingNav'
 import { landingCopy, aboutCopy } from '../i18n/landingI18n'
 import { useAboutSEO } from '../hooks/useLandingSEO'
+import { getPublicLang } from '../utils/landingRoutes'
 
 const FOR_WHO_ICONS = [Users, Code2, Coffee]
 
-export default function AboutPage({ lang = 'id' }) {
+export default function AboutPage({ lang: langProp }) {
+  const { pathname } = useLocation()
+  const lang = langProp ?? getPublicLang(pathname)
   const nav = landingCopy[lang] || landingCopy.id
   const t = aboutCopy[lang] || aboutCopy.id
   useAboutSEO(lang)

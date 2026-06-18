@@ -31,6 +31,7 @@ import ciRoutes from './routes/ciRoutes.js'
 import environmentRoutes from './routes/environmentRoutes.js'
 import visualRegressionRoutes from './routes/visualRegressionRoutes.js'
 import userRoutes from './routes/userRoutes.js'
+import siteRoutes from './routes/siteRoutes.js'
 import aiRoutes from './routes/aiRoutes.js'
 import { errorHandler } from './middleware/auth.js'
 import { swaggerSpec } from './lib/swagger.js'
@@ -137,6 +138,7 @@ app.use('/api/ci', ciRoutes)
 app.use('/api/environments', environmentRoutes)
 app.use('/api/visual-regression', visualRegressionRoutes)
 app.use('/api/users', userRoutes)
+app.use('/api/site', siteRoutes)
 app.use('/api/ai', aiRoutes)
 
 // Swagger API docs — available at /api/docs
