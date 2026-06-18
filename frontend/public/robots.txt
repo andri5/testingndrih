@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Allow: /en
+Disallow: /api/
+Disallow: /dashboard
+Disallow: /scenarios
+Disallow: /execution
+Disallow: /settings
+
+Sitemap: https://testsambilngopi.com/sitemap.xml

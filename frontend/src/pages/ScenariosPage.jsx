@@ -1,15 +1,17 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ChevronDown, HelpCircle, Plus, PenLine, Zap, LayoutTemplate, FileSpreadsheet } from 'lucide-react'
+import { ChevronDown, HelpCircle, Plus, PenLine, Zap, LayoutTemplate, FileSpreadsheet, Sparkles } from 'lucide-react'
 import Layout from '../components/Layout'
 import { Card, Button, Alert, Spinner } from '../components/ui'
 import ExportFormatButton, { SoftIconBadge } from '../components/ExportFormatButton'
+import { useAiEnabled } from '../hooks/useAiEnabled'
 import { ScenarioForm } from '../components/ScenarioForm'
 import { ScenarioSearch } from '../components/ScenarioSearch'
 import { ScenariosList } from '../components/ScenariosList'
 import { TemplatePickerModal } from '../components/TemplatePickerModal'
 import { QuickRecordModal } from '../components/QuickRecordModal'
 import { ImportPreviewModal } from '../components/ImportPreviewModal'
+import AIGenerateScenarioModal from '../components/AIGenerateScenarioModal'
 import { Tooltip } from '../components/ui'
 import { useScenarioStore } from '../store/scenarioStore'
 import { executionAPI } from '../services/api'
@@ -38,6 +40,9 @@ const i18n = {
     importExcel: 'Import Excel',
     importExcelDesc: 'Bulk import',
     importExcelTooltip: 'Upload an Excel file with test scenarios. Use Ctrl+Click to view template.',
+    aiGenerate: 'AI Generate',
+    aiGenerateDesc: 'Describe test in plain language',
+    aiGenerateTooltip: 'Use AI to draft a scenario and steps from a short description.',
   
 }
 
@@ -53,6 +58,7 @@ export default function ScenariosPage() {
   const [showTemplatePicker, setShowTemplatePicker] = useState(false)
   const [showQuickRecord, setShowQuickRecord] = useState(false)
   const [showImportModal, setShowImportModal] = useState(false)
+  const [showAIGenerate, setShowAIGenerate] = useState(false)
   const [importPreviewData, setImportPreviewData] = useState(null)
   const [importIsLoading, setImportIsLoading] = useState(false)
   const [selectedIds, setSelectedIds] = useState(new Set())
@@ -81,6 +87,7 @@ export default function ScenariosPage() {
     setFilterTag,
   } = useScenarioStore()
   const isAdmin = useAuthStore((state) => state.user)?.role === 'ADMIN'
+  const { configured: aiConfigured } = useAiEnabled()
   const t = i18n
 
   // Close menu when clicking outside
@@ -288,7 +295,14 @@ export default function ScenariosPage() {
   // ── Template Library ────────────────────────────────────────────────────────
   const handleTemplateCreated = (scenario) => {
     setShowTemplatePicker(false)
-    fetchScenarios() // refresh list
+    fetchScenarios()
+    navigate(`/scenarios/${scenario.id}`)
+  }
+
+  const handleAIGenerated = (scenario) => {
+    setShowAIGenerate(false)
+    fetchScenarios()
+    fetchTags()
     navigate(`/scenarios/${scenario.id}`)
   }
 
@@ -550,6 +564,27 @@ export default function ScenariosPage() {
 
                     <button
                       type="button"
+                      onClick={() => {
+                        setShowAIGenerate(true)
+                        setShowCreateMenu(false)
+                      }}
+                      title={t.aiGenerateTooltip}
+                      className="w-full px-2.5 py-2 text-left rounded-lg text-[#1A1A1C] dark:text-[#E0E0E2] hover:bg-[#F5F5F7] dark:hover:bg-[#2A2A2D] html.theme-light:hover:bg-[#F5F5F7] transition-colors flex items-center gap-2.5 group mt-0.5"
+                    >
+                      <SoftIconBadge variant="primary" icon={Sparkles} />
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium flex items-center gap-1">
+                          {t.aiGenerate}
+                          <Tooltip text={t.aiGenerateTooltip} position="right">
+                            <HelpCircle size={13} className="text-[#999] opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </Tooltip>
+                        </div>
+                        <div className="text-xs text-[#666] dark:text-[#A0A0A4]">{t.aiGenerateDesc}</div>
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
                       onClick={(e) => {
                         if (e.ctrlKey || e.metaKey) {
                           handleDownloadTemplate()
@@ -587,15 +622,36 @@ export default function ScenariosPage() {
         {/* Create/Edit Form */}
         {(showCreateForm || editingScenario) && (
           <Card>
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
               <h2 className="text-xl font-bold text-[#E0E0E2]">
                 {editingScenario ? 'Edit Scenario' : 'Create New Scenario'}
               </h2>
-              <button
-                onClick={() => { setShowCreateForm(false); setEditingScenario(null) }}
-                className="text-[#666] hover:text-[#E0E0E2] text-2xl"
-              >✕</button>
+              <div className="flex items-center gap-2">
+                {!editingScenario && (
+                  <ExportFormatButton
+                    format="primary"
+                    icon={Sparkles}
+                    onClick={() => {
+                      setShowCreateForm(false)
+                      setShowAIGenerate(true)
+                    }}
+                    className="text-sm"
+                  >
+                    {aiConfigured ? 'Generate with AI' : 'AI Generate (setup required)'}
+                  </ExportFormatButton>
+                )}
+                <button
+                  onClick={() => { setShowCreateForm(false); setEditingScenario(null) }}
+                  className="text-[#666] hover:text-[#E0E0E2] text-2xl leading-none px-1"
+                  type="button"
+                >✕</button>
+              </div>
             </div>
+            {!editingScenario && (
+              <p className="text-sm text-[#8A8A8F] mb-4 -mt-2">
+                Manual form below — or use <strong className="text-[#9BA3F0]">Generate with AI</strong> to draft steps from a short description.
+              </p>
+            )}
             <ScenarioForm
               onSubmit={editingScenario ? handleUpdateScenario : handleCreateScenario}
               initialScenario={editingScenario}
@@ -755,6 +811,12 @@ export default function ScenariosPage() {
         <QuickRecordModal
           onClose={() => setShowQuickRecord(false)}
           onCreated={handleQuickRecordCreated}
+        />
+      )}
+      {showAIGenerate && (
+        <AIGenerateScenarioModal
+          onClose={() => setShowAIGenerate(false)}
+          onCreated={handleAIGenerated}
         />
       )}
       {showImportModal && importPreviewData && (

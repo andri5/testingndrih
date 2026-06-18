@@ -1,6 +1,9 @@
 import { useState } from 'react'
 import { Button } from './ui'
-import { executionAPI } from '../services/api'
+import { executionAPI, aiAPI } from '../services/api'
+import ExportFormatButton from './ExportFormatButton'
+import { Sparkles, Loader2 } from 'lucide-react'
+import { useAiEnabled, formatAiQuotaMessage, invalidateAiStatusCache } from '../hooks/useAiEnabled'
 
 /**
  * SmartSuggestionPanel — DOM-based locator suggestions when a step fails.
@@ -12,7 +15,14 @@ export default function SmartSuggestionPanel({
   onAutoRetry,
   isAutoRetrying = false,
   executionId = null,
+  errorDetail = null,
 }) {
+  const { configured, canUse, refresh } = useAiEnabled()
+  const [aiSuggestions, setAiSuggestions] = useState([])
+  const [aiLoading, setAiLoading] = useState(false)
+  const [aiError, setAiError] = useState(null)
+
+  const allSuggestions = [...suggestions, ...aiSuggestions]
   const [expanded, setExpanded] = useState(false)
   const [selectedIdx, setSelectedIdx] = useState(null)
   const [showAltSelectors, setShowAltSelectors] = useState(null)
@@ -21,7 +31,50 @@ export default function SmartSuggestionPanel({
   const [testError, setTestError] = useState(null)
   const [isTesting, setIsTesting] = useState(false)
 
-  if (!suggestions || suggestions.length === 0) return null
+  if (!allSuggestions || allSuggestions.length === 0) {
+    if (!configured || !errorDetail) return null
+  }
+
+  const handleAskAi = async () => {
+    setAiLoading(true)
+    setAiError(null)
+    try {
+      const res = await aiAPI.suggestLocator({
+        step: errorDetail?.step,
+        page: errorDetail?.page,
+        failedSelector: currentSelector || errorDetail?.step?.selector,
+        locatorSuggestions: suggestions,
+        message: errorDetail?.message,
+      })
+      setAiSuggestions(res.data.selectors || [])
+      invalidateAiStatusCache()
+      refresh()
+    } catch (err) {
+      setAiError(err.response?.data?.message || err.message || 'AI request failed')
+    } finally {
+      setAiLoading(false)
+    }
+  }
+
+  if (allSuggestions.length === 0 && configured && errorDetail) {
+    return (
+      <div className="mt-4 p-4 bg-violet-50 border border-violet-200 rounded-lg">
+        <p className="text-sm text-gray-700 mb-2">No DOM-based suggestions found.</p>
+        <ExportFormatButton
+          format="primary"
+          icon={aiLoading ? Loader2 : Sparkles}
+          onClick={handleAskAi}
+          disabled={aiLoading || !canUse}
+          className={aiLoading ? '[&_svg]:animate-spin' : ''}
+        >
+          {aiLoading ? 'Asking AI...' : 'Ask AI for locators'}
+        </ExportFormatButton>
+        {aiError && <p className="text-xs text-red-600 mt-2">{aiError}</p>}
+      </div>
+    )
+  }
+
+  if (allSuggestions.length === 0) return null
 
   const strategyColors = {
     ID: 'bg-green-100 text-green-800 border-green-300',
@@ -96,8 +149,19 @@ export default function SmartSuggestionPanel({
           <span className="text-lg">🔧</span>
           <h4 className="font-semibold text-gray-900 text-sm">Smart Locator Suggestions</h4>
           <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full border border-emerald-300">
-            {suggestions.length} found
+            {allSuggestions.length} found
           </span>
+          {configured && errorDetail && (
+            <ExportFormatButton
+              format="html"
+              icon={aiLoading ? Loader2 : Sparkles}
+              onClick={handleAskAi}
+              disabled={aiLoading || !canUse}
+              className={`!text-[10px] !px-2 !py-1 ${aiLoading ? '[&_svg]:animate-spin' : ''}`}
+            >
+              {aiLoading ? 'AI...' : 'Ask AI'}
+            </ExportFormatButton>
+          )}
         </div>
         <button
           type="button"
@@ -220,7 +284,7 @@ export default function SmartSuggestionPanel({
       )}
 
       <div className="space-y-2">
-        {suggestions.map((s, idx) => {
+        {allSuggestions.map((s, idx) => {
           const conf = getConfidenceLabel(s.confidence)
           const colorClass = strategyColors[s.strategy] || 'bg-gray-100 text-gray-700 border-gray-300'
           const isSelected = selectedIdx === idx
@@ -321,13 +385,13 @@ export default function SmartSuggestionPanel({
         })}
       </div>
 
-      {!expanded && suggestions.length > 0 && onApply && (
+      {!expanded && allSuggestions.length > 0 && onApply && (
         <div className="mt-3 flex gap-2 flex-wrap">
           {onAutoRetry && (
             <Button
               size="sm"
               variant="success"
-              onClick={() => onAutoRetry(suggestions[0].selector)}
+              onClick={() => onAutoRetry(allSuggestions[0].selector)}
               disabled={isAutoRetrying}
               className="flex-1"
             >
@@ -337,7 +401,7 @@ export default function SmartSuggestionPanel({
           <Button
             size="sm"
             variant="primary"
-            onClick={() => onApply(suggestions[0].selector)}
+            onClick={() => onApply(allSuggestions[0].selector)}
             className="flex-1"
           >
             Apply Best Match

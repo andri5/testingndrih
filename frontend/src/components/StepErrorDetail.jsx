@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { ChevronDown, Lightbulb, RotateCcw, Globe, Code2, Terminal } from 'lucide-react'
 import SmartSuggestionPanel from './SmartSuggestionPanel'
+import AIInsightPanel from './AIInsightPanel'
 import ExportFormatButton from './ExportFormatButton'
 import { analyzeErrorSuggestions, CONFIDENCE_LABELS } from '../utils/errorSuggestionAnalyzer'
 
@@ -166,6 +167,8 @@ export default function StepErrorDetail({
             </div>
           </section>
 
+          <AIInsightPanel errorDetail={detail} />
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <section className="rounded-xl border border-[#5E6AD2]/25 bg-[#EEF0FF]/70 p-4 shadow-sm">
               <div className="flex items-center gap-2 mb-3">
@@ -262,7 +265,7 @@ export default function StepErrorDetail({
         </div>
       )}
 
-      {detail.locatorSuggestions && detail.locatorSuggestions.length > 0 && (
+      {(detail.locatorSuggestions?.length > 0 || detail.step?.selector) && (
         <div className="mt-3">
           <SmartSuggestionPanel
             suggestions={detail.locatorSuggestions}
@@ -271,6 +274,7 @@ export default function StepErrorDetail({
             onAutoRetry={onAutoRetry}
             isAutoRetrying={isAutoRetrying}
             executionId={executionId}
+            errorDetail={detail}
           />
         </div>
       )}

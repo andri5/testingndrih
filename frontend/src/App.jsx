@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { useEffect } from 'react'
 import { Toaster } from 'react-hot-toast'
 import LoginPage from './pages/LoginPage'
+import LandingPage from './pages/LandingPage'
 import RegisterPage from './pages/RegisterPage'
 import ForgotPasswordPage from './pages/ForgotPasswordPage'
 import ResetPasswordPage from './pages/ResetPasswordPage'
@@ -65,7 +66,17 @@ export default function App() {
       <Router>
       <ServerHealthMonitor />
       <Routes>
-        {/* Public Routes */}
+        {/* Public home */}
+        <Route
+          path="/"
+          element={token ? <Navigate to="/dashboard" replace /> : <LandingPage lang="id" />}
+        />
+        <Route
+          path="/en"
+          element={token ? <Navigate to="/dashboard" replace /> : <LandingPage lang="en" />}
+        />
+
+        {/* Auth */}
         <Route
           path="/login"
           element={token ? <Navigate to="/dashboard" /> : <LoginPage />}
@@ -171,8 +182,6 @@ export default function App() {
         {/* Server error */}
         <Route path="/server-error" element={<ServerErrorPage />} />
 
-        {/* Catch-all */}
-        <Route path="/" element={<Navigate to="/dashboard" />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </Router>

@@ -7,7 +7,7 @@ import { useTurnstileSiteKey } from '../hooks/useTurnstileSiteKey'
 import { validateEmail } from '../utils/validation'
 import AuthPageHeader from '../components/AuthPageHeader'
 
-const translations = {
+const translations = {
     title: 'Sign in to your workspace',
     emailLabel: 'Email',
     emailPlaceholder: 'your@email.com',
@@ -231,6 +231,9 @@ export default function LoginPage() {
         </div>
 
         <p className="text-center text-xs text-[#4A4A52] mt-5">
+          <Link to="/" className="text-[#8A8A8F] hover:text-[#9BA3F0] transition mr-3">
+            ← Home
+          </Link>
           {t.copyright} &copy; {new Date().getFullYear()}
         </p>
       </div>

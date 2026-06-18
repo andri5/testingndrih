@@ -371,4 +371,29 @@ export const chainAPI = {
     apiClient.get(`/chains/execution/${executionId}`)
 }
 
+const aiClient = axios.create({
+  baseURL: API_BASE,
+  timeout: 90000,
+  headers: { 'Content-Type': 'application/json' },
+})
+
+aiClient.interceptors.request.use((config) => {
+  const token = localStorage.getItem('authToken')
+  if (token) config.headers.Authorization = `Bearer ${token}`
+  return config
+})
+
+export const aiAPI = {
+  getStatus: () => apiClient.get('/ai/status'),
+
+  explainFailure: (errorDetail) =>
+    aiClient.post('/ai/explain-failure', { errorDetail }),
+
+  generateScenario: (prompt, url) =>
+    aiClient.post('/ai/generate-scenario', { prompt, url }),
+
+  suggestLocator: (payload) =>
+    aiClient.post('/ai/suggest-locator', payload),
+}
+
 export default apiClient
