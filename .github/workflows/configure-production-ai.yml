@@ -1,0 +1,24 @@
+name: Configure Production AI
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  configure:
+    name: Set Groq API key on VPS
+    runs-on: [self-hosted, production]
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Apply AI env and restart app
+        env:
+          APP_PATH: ${{ secrets.PROD_APP_PATH }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          AI_ENABLED: true
+          OPENAI_BASE_URL: https://api.groq.com/openai/v1
+          OPENAI_MODEL: llama-3.3-70b-versatile
+        run: bash scripts/configure-production-ai.sh
