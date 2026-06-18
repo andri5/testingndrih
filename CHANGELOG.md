@@ -1,3 +1,10 @@
+## [1.11.1](https://github.com/andri5/testingndrih/compare/v1.11.0...v1.11.1) (2026-06-18)
+
+
+### Bug Fixes
+
+* **deploy:** harden production deploy pipeline for VPS ([de4f071](https://github.com/andri5/testingndrih/commit/de4f071aa213fe71ed8e198ef1ddcb9d44f5fd46))
+
 # [1.11.0](https://github.com/andri5/testingndrih/compare/v1.10.4...v1.11.0) (2026-06-18)
 
 
