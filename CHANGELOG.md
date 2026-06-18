@@ -1,3 +1,10 @@
+## [1.13.1](https://github.com/andri5/testingndrih/compare/v1.13.0...v1.13.1) (2026-06-18)
+
+
+### Bug Fixes
+
+* **ui:** coffee brand logo, carousel, steps animation, user admin ([d9b3e1e](https://github.com/andri5/testingndrih/commit/d9b3e1e2ac9f0c79b5b9b7aeb9b3ff489839284a))
+
 # [1.13.0](https://github.com/andri5/testingndrih/compare/v1.12.1...v1.13.0) (2026-06-18)
 
 
