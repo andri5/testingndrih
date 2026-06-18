@@ -1,3 +1,10 @@
+## [1.11.2](https://github.com/andri5/testingndrih/compare/v1.11.1...v1.11.2) (2026-06-18)
+
+
+### Bug Fixes
+
+* **deploy:** sync from Actions checkout instead of git fetch on VPS ([278f689](https://github.com/andri5/testingndrih/commit/278f6899778ed77e6e25d3d5bdf114a31307c1f5))
+
 ## [1.11.1](https://github.com/andri5/testingndrih/compare/v1.11.0...v1.11.1) (2026-06-18)
 
 
