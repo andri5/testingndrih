@@ -137,7 +137,9 @@ describe('ScenarioController', () => {
           skip: 10,
           take: 50,
           orderBy: 'name',
-          orderDirection: 'asc'
+          orderDirection: 'asc',
+          favoritesOnly: false,
+          tag: null,
         }
       )
     })
