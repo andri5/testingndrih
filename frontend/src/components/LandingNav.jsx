@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Menu, X } from 'lucide-react'
+import { LogIn } from 'lucide-react'
 import BrandLogo from './BrandLogo'
 import useNavScrollSpy from '../hooks/useNavScrollSpy'
 import {
@@ -16,17 +16,17 @@ export function LangSwitch({ lang }) {
   const enPath = toPublicPath(pathname, 'en')
 
   return (
-    <div className="flex items-center rounded-lg border border-slate-200 overflow-hidden text-xs font-semibold shrink-0">
+    <div className="lp-lang-switch" role="group" aria-label="Language">
       <Link
         to={idPath}
-        className={`px-2 sm:px-2.5 py-1.5 transition ${lang === 'id' ? 'bg-indigo-600 text-white' : 'lp-muted hover:bg-slate-50'}`}
+        className={`lp-lang-switch__btn ${lang === 'id' ? 'lp-lang-switch__btn--active' : ''}`}
         hrefLang="id"
       >
         ID
       </Link>
       <Link
         to={enPath}
-        className={`px-2 sm:px-2.5 py-1.5 transition ${lang === 'en' ? 'bg-indigo-600 text-white' : 'lp-muted hover:bg-slate-50'}`}
+        className={`lp-lang-switch__btn ${lang === 'en' ? 'lp-lang-switch__btn--active' : ''}`}
         hrefLang="en"
       >
         EN
@@ -35,10 +35,19 @@ export function LangSwitch({ lang }) {
   )
 }
 
-function navLinkClass(isActive) {
-  return `text-sm transition px-2 ${
-    isActive ? 'text-[#5E6AD2] font-medium' : 'lp-muted hover:text-[#5E6AD2]'
-  }`
+function NavLink({ href, active, children }) {
+  if (href.includes('#')) {
+    return (
+      <a href={href} className={`lp-nav-link ${active ? 'lp-nav-link--active' : ''}`}>
+        {children}
+      </a>
+    )
+  }
+  return (
+    <Link to={href} className={`lp-nav-link ${active ? 'lp-nav-link--active' : ''}`}>
+      {children}
+    </Link>
+  )
 }
 
 export default function LandingNav({ lang, t }) {
@@ -48,135 +57,54 @@ export default function LandingNav({ lang, t }) {
   const onAbout = isAboutPublicPath(pathname)
   const onHome = !onAbout
   const activeSection = useNavScrollSpy()
-  const [mobileOpen, setMobileOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
 
   useEffect(() => {
-    setMobileOpen(false)
-  }, [pathname])
+    const onScroll = () => setScrolled(window.scrollY > 12)
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
 
-  useEffect(() => {
-    document.body.style.overflow = mobileOpen ? 'hidden' : ''
-    return () => {
-      document.body.style.overflow = ''
-    }
-  }, [mobileOpen])
-
-  const mobileLinks = [
-    { type: 'anchor', href: `${home}#fitur`, label: t.navFeatures, sectionId: 'fitur' },
-    { type: 'anchor', href: `${home}#cara-kerja`, label: t.navHow, sectionId: 'cara-kerja' },
-    ...(!onAbout ? [{ type: 'anchor', href: `${home}#saran`, label: t.navFeedback, sectionId: 'saran' }] : []),
-    { type: 'route', to: about, label: t.navAbout, active: onAbout },
-    { type: 'route', to: '/login', label: t.navLogin },
+  const centerLinks = [
+    ...(onHome
+      ? [
+          { href: `${home}#fitur`, label: t.navFeatures, active: activeSection === 'fitur' },
+          { href: `${home}#cara-kerja`, label: t.navHow, active: activeSection === 'cara-kerja' },
+          { href: `${home}#saran`, label: t.navFeedback, active: activeSection === 'saran' },
+        ]
+      : []),
+    { href: about, label: t.navAbout, active: onAbout },
   ]
 
   return (
-    <header className="lp-nav fixed top-0 inset-x-0 z-50">
-      <div className="lp-nav-inner">
-        <Link to={home} className="lp-nav-brand flex items-center gap-2 sm:gap-2.5 shrink min-w-0">
-          <BrandLogo size="sm" className="shrink-0 shadow-md shadow-indigo-200" title="Test Sambil Ngopi" />
-          <span className="font-semibold lp-hero-title hidden min-[400px]:inline">Test Sambil Ngopi</span>
-          <span className="font-semibold lp-hero-title min-[400px]:hidden">TSN</span>
+    <header className={`lp-nav ${scrolled ? 'lp-nav--scrolled' : ''}`}>
+      <div className="lp-nav-shell">
+        <Link to={home} className="lp-nav-brand">
+          <BrandLogo size="sm" className="lp-nav-brand__logo" title="Test Sambil Ngopi" />
+          <span className="lp-nav-brand__text">
+            <span className="lp-nav-brand__name hidden min-[420px]:block">Test Sambil Ngopi</span>
+            <span className="lp-nav-brand__name min-[420px]:hidden">TSN</span>
+            <span className="lp-nav-brand__tagline hidden xl:block">{t.badge}</span>
+          </span>
         </Link>
 
-        <nav className="lp-nav-links" aria-label="Main navigation">
-          {onHome && (
-            <>
-              <a
-                href={`${home}#fitur`}
-                className={`hidden md:inline ${navLinkClass(activeSection === 'fitur')}`}
-              >
-                {t.navFeatures}
-              </a>
-              <a
-                href={`${home}#cara-kerja`}
-                className={`hidden md:inline ${navLinkClass(activeSection === 'cara-kerja')}`}
-              >
-                {t.navHow}
-              </a>
-              <a
-                href={`${home}#saran`}
-                className={`hidden md:inline ${navLinkClass(activeSection === 'saran')}`}
-              >
-                {t.navFeedback}
-              </a>
-            </>
-          )}
-          <Link
-            to={about}
-            className={`hidden md:inline ${navLinkClass(onAbout)}`}
-            aria-current={onAbout ? 'page' : undefined}
-          >
-            {t.navAbout}
-          </Link>
-          <LangSwitch lang={lang} />
-          <Link to="/login" className="hidden md:inline text-sm lp-muted hover:text-[#5E6AD2] transition px-2 py-1.5">
-            {t.navLogin}
-          </Link>
-          <Link
-            to="/register"
-            className="hidden md:inline text-xs sm:text-sm font-medium lp-btn-primary px-2.5 sm:px-4 py-2 rounded-lg whitespace-nowrap"
-          >
-            {t.navCta}
-          </Link>
-
-          <button
-            type="button"
-            className="lp-nav-menu-btn md:hidden"
-            onClick={() => setMobileOpen((v) => !v)}
-            aria-expanded={mobileOpen}
-            aria-controls="lp-mobile-menu"
-            aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
-          >
-            {mobileOpen ? <X size={20} /> : <Menu size={20} />}
-          </button>
+        <nav className="lp-nav-center" aria-label="Main navigation">
+          {centerLinks.map((item) => (
+            <NavLink key={item.href} href={item.href} active={item.active}>
+              {item.label}
+            </NavLink>
+          ))}
         </nav>
-      </div>
 
-      {mobileOpen && (
-        <>
-          <button
-            type="button"
-            className="lp-nav-mobile-backdrop md:hidden"
-            onClick={() => setMobileOpen(false)}
-            aria-label="Close menu"
-          />
-          <nav
-            id="lp-mobile-menu"
-            className="lp-nav-mobile md:hidden"
-            aria-label="Mobile navigation"
-          >
-            {mobileLinks.map((item) =>
-              item.type === 'anchor' ? (
-                <a
-                  key={item.href}
-                  href={item.href}
-                  className={`lp-nav-mobile-link ${activeSection === item.sectionId ? 'lp-nav-mobile-link--active' : ''}`}
-                  onClick={() => setMobileOpen(false)}
-                >
-                  {item.label}
-                </a>
-              ) : (
-                <Link
-                  key={item.to}
-                  to={item.to}
-                  className={`lp-nav-mobile-link ${item.active ? 'lp-nav-mobile-link--active' : ''}`}
-                  onClick={() => setMobileOpen(false)}
-                  aria-current={item.active ? 'page' : undefined}
-                >
-                  {item.label}
-                </Link>
-              )
-            )}
-            <Link
-              to="/register"
-              className="lp-btn-primary lp-nav-mobile-cta"
-              onClick={() => setMobileOpen(false)}
-            >
-              {t.navCta}
-            </Link>
-          </nav>
-        </>
-      )}
+        <div className="lp-nav-actions">
+          <LangSwitch lang={lang} />
+          <Link to="/login" className="lp-nav-login">
+            <LogIn size={15} />
+            <span className="hidden sm:inline">{t.navLogin}</span>
+          </Link>
+        </div>
+      </div>
     </header>
   )
 }
@@ -185,22 +113,45 @@ export function LandingFooter({ lang, t }) {
   const home = publicHomePath(lang)
   const about = publicAboutPath(lang)
 
+  const productLinks = [
+    { href: `${home}#fitur`, label: t.navFeatures },
+    { href: `${home}#cara-kerja`, label: t.navHow },
+    { href: `${home}#saran`, label: t.navFeedback },
+    { href: about, label: t.navAbout, isRoute: true },
+  ]
+
   return (
     <footer className="lp-footer">
-      <div className="lp-footer-inner">
-        <div className="flex items-center gap-2 font-medium shrink-0">
-          <BrandLogo variant="mark" size={18} className="text-indigo-500 shrink-0" />
-          <span>Test Sambil Ngopi</span>
+      <div className="lp-footer-glow" aria-hidden />
+      <div className="lp-footer-main">
+        <div className="lp-footer-grid">
+          <div className="lp-footer-brand">
+            <Link to={home} className="lp-footer-brand__head">
+              <BrandLogo size={36} className="lp-footer-brand__logo" title="Test Sambil Ngopi" />
+              <span className="lp-footer-brand__name">Test Sambil Ngopi</span>
+            </Link>
+            <p className="lp-footer-brand__tagline">{t.footerTagline}</p>
+          </div>
+
+          <div className="lp-footer-col">
+            <h3 className="lp-footer-col__title">{t.footerProduct}</h3>
+            <ul className="lp-footer-col__list">
+              {productLinks.map((item) => (
+                <li key={item.label}>
+                  {item.isRoute ? (
+                    <Link to={item.href}>{item.label}</Link>
+                  ) : (
+                    <a href={item.href}>{item.label}</a>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
-        <div className="flex flex-wrap justify-center gap-x-4 gap-y-2 sm:gap-6 text-sm">
-          <a href={`${home}#fitur`} className="hover:text-indigo-600 transition">{t.navFeatures}</a>
-          <a href={`${home}#cara-kerja`} className="hover:text-indigo-600 transition">{t.navHow}</a>
-          <a href={`${home}#saran`} className="hover:text-indigo-600 transition">{t.navFeedback}</a>
-          <Link to={about} className="hover:text-indigo-600 transition">{t.navAbout}</Link>
-          <Link to="/login" className="hover:text-indigo-600 transition">testsambilngopi.com</Link>
-          <Link to="/register" className="hover:text-indigo-600 transition">{t.navCta}</Link>
-        </div>
-        <p className="text-xs shrink-0">© {new Date().getFullYear()} Test Sambil Ngopi</p>
+      </div>
+
+      <div className="lp-footer-bottom">
+        <p className="lp-footer-copy">© {new Date().getFullYear()} Test Sambil Ngopi. All rights reserved.</p>
       </div>
     </footer>
   )

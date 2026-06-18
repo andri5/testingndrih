@@ -1,14 +1,12 @@
-import { Link, useLocation } from 'react-router-dom'
+import { useLocation } from 'react-router-dom'
 import {
   Target,
   Users,
   Code2,
   Coffee,
   CheckCircle2,
-  ArrowRight,
 } from 'lucide-react'
 import LandingNav, { LandingFooter } from '../components/LandingNav'
-import LandingStickyCta from '../components/LandingStickyCta'
 import { landingCopy, aboutCopy } from '../i18n/landingI18n'
 import { useAboutSEO } from '../hooks/useLandingSEO'
 import useScrollReveal from '../hooks/useScrollReveal'
@@ -32,7 +30,7 @@ export default function AboutPage({ lang: langProp }) {
 
       <LandingNav lang={lang} t={nav} />
 
-      <section className="lp-section pt-28 sm:pt-32 pb-8 sm:pb-12">
+      <section className="lp-section pt-36 sm:pt-40 pb-8 sm:pb-12">
         <div className="lp-container-narrow text-center lp-animate-in px-0">
           <p className="inline-flex items-center gap-2 text-xs font-semibold lp-badge rounded-full px-3 py-1.5 mb-5 sm:mb-6">
             <Target size={14} />
@@ -120,22 +118,7 @@ export default function AboutPage({ lang: langProp }) {
         </div>
       </section>
 
-      <section className="lp-section lp-section-alt">
-        <div className="lp-container-narrow text-center lp-animate-in">
-          <h2 className="text-xl sm:text-2xl font-bold lp-hero-title">{t.ctaTitle}</h2>
-          <p className="mt-3 lp-lead lp-muted">{t.ctaText}</p>
-          <Link
-            to="/register"
-            className="lp-btn-primary inline-flex items-center gap-2 mt-6 sm:mt-8 font-medium px-6 sm:px-8 py-3 sm:py-3.5 rounded-xl text-sm sm:text-base"
-          >
-            {t.ctaButton}
-            <ArrowRight size={18} />
-          </Link>
-        </div>
-      </section>
-
       <LandingFooter lang={lang} t={nav} />
-      <LandingStickyCta label={nav.navCta} />
     </div>
   )
 }

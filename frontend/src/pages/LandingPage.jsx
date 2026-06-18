@@ -22,7 +22,6 @@ import {
 } from 'lucide-react'
 import LandingNav, { LandingFooter } from '../components/LandingNav'
 import LandingFeedbackSection from '../components/LandingFeedbackSection'
-import LandingStickyCta from '../components/LandingStickyCta'
 import FeaturesCarousel from '../components/FeaturesCarousel'
 import useScrollReveal from '../hooks/useScrollReveal'
 import { landingCopy, ADVANCED_LABELS } from '../i18n/landingI18n'
@@ -97,7 +96,7 @@ export default function LandingPage({ lang: langProp }) {
 
       <LandingNav t={t} lang={lang} />
 
-      <section className="relative pt-28 pb-16 sm:pt-32 sm:pb-24 px-4 sm:px-6">
+      <section className="relative pt-36 pb-16 sm:pt-40 sm:pb-24 px-4 sm:px-6">
         <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
           <div className="lp-animate-in max-w-xl">
             <p className="inline-flex items-center gap-2 text-xs font-semibold lp-badge rounded-full px-3 py-1.5 mb-6">
@@ -220,22 +219,7 @@ export default function LandingPage({ lang: langProp }) {
 
       <LandingFeedbackSection t={t} lang={lang} />
 
-      <section className="py-16 sm:py-24 px-4 sm:px-6">
-        <div className="max-w-3xl mx-auto text-center lp-animate-in">
-          <h2 className="text-2xl sm:text-3xl font-bold lp-hero-title break-words">{t.ctaFinalTitle}</h2>
-          <p className="mt-4 lp-muted text-base">{t.ctaFinalSubtitle}</p>
-          <Link
-            to="/register"
-            className="lp-btn-primary inline-flex items-center gap-2 mt-8 font-medium px-8 py-3.5 rounded-xl"
-          >
-            {t.ctaFinalButton}
-            <ArrowRight size={18} />
-          </Link>
-        </div>
-      </section>
-
       <LandingFooter lang={lang} t={t} />
-      <LandingStickyCta label={t.navCta} />
     </div>
   )
 }
