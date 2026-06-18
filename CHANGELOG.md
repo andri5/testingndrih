@@ -1,3 +1,10 @@
+# [1.14.0](https://github.com/andri5/testingndrih/compare/v1.13.1...v1.14.0) (2026-06-18)
+
+
+### Features
+
+* **landing:** english default, quick wins, about animations ([63f2ede](https://github.com/andri5/testingndrih/commit/63f2edebeb28ae2330b877057d2e4dba88795739))
+
 ## [1.13.1](https://github.com/andri5/testingndrih/compare/v1.13.0...v1.13.1) (2026-06-18)
 
 
