@@ -1,3 +1,10 @@
+## [1.12.1](https://github.com/andri5/testingndrih/compare/v1.12.0...v1.12.1) (2026-06-18)
+
+
+### Bug Fixes
+
+* **landing:** improve responsive layout on About and public pages ([c08b1e9](https://github.com/andri5/testingndrih/commit/c08b1e9fead1dfa38316774a269d2c597709678a))
+
 # [1.12.0](https://github.com/andri5/testingndrih/compare/v1.11.3...v1.12.0) (2026-06-18)
 
 
