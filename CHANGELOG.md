@@ -1,3 +1,10 @@
+## [1.14.1](https://github.com/andri5/testingndrih/compare/v1.14.0...v1.14.1) (2026-06-18)
+
+
+### Bug Fixes
+
+* **landing:** refine header footer and remove hamburger ([2a6ae88](https://github.com/andri5/testingndrih/commit/2a6ae880f6f229091d048c64e321d159d49441f8))
+
 # [1.14.0](https://github.com/andri5/testingndrih/compare/v1.13.1...v1.14.0) (2026-06-18)
 
 
