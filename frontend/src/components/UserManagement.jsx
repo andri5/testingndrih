@@ -232,8 +232,8 @@ export default function UserManagement() {
             <span className="text-xs text-[#F87171]">{inactiveCount} inactive</span>
           )}
         </div>
-        <Button size="sm" onClick={openCreate}>
-          <Plus size={14} />
+        <Button size="md" onClick={openCreate} className="w-full sm:w-auto shrink-0">
+          <Plus size={16} />
           Add user
         </Button>
       </div>
@@ -384,7 +384,7 @@ export default function UserManagement() {
               type="email"
               value={formData.email}
               onChange={(e) => setFormData((p) => ({ ...p, email: e.target.value }))}
-              disabled={editingUser && editingUser.email?.toLowerCase() === PRIMARY_ADMIN_EMAIL.toLowerCase()}
+              disabled={editingUser?.isPrimaryAdmin === true}
               required
             />
             <Input
@@ -395,10 +395,7 @@ export default function UserManagement() {
               required={formMode === 'create'}
               placeholder={formMode === 'edit' ? 'Leave blank to keep current password' : ''}
             />
-            {!(
-              editingUser &&
-              editingUser.email?.toLowerCase() === PRIMARY_ADMIN_EMAIL.toLowerCase()
-            ) && (
+            {!(editingUser?.isPrimaryAdmin === true) && (
               <div>
                 <label className="block text-xs font-medium text-[#8A8A8F] mb-1.5 uppercase tracking-wider">
                   Role
@@ -414,9 +411,8 @@ export default function UserManagement() {
               </div>
             )}
             {!(
-              editingUser &&
-              (editingUser.email?.toLowerCase() === PRIMARY_ADMIN_EMAIL.toLowerCase() ||
-                editingUser.id === currentUser?.id)
+              editingUser?.isPrimaryAdmin === true ||
+              editingUser?.id === currentUser?.id
             ) && (
               <label className="flex items-center gap-2 text-sm text-[#A0A0A4] cursor-pointer">
                 <input

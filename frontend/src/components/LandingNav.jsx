@@ -1,5 +1,7 @@
+import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { ShieldCheck } from 'lucide-react'
+import { Menu, X } from 'lucide-react'
+import BrandLogo from './BrandLogo'
 import {
   getPublicLang,
   publicAboutPath,
@@ -38,18 +40,38 @@ export default function LandingNav({ lang, t }) {
   const home = publicHomePath(lang)
   const about = publicAboutPath(lang)
   const onAbout = isAboutPublicPath(pathname)
+  const [mobileOpen, setMobileOpen] = useState(false)
+
+  useEffect(() => {
+    setMobileOpen(false)
+  }, [pathname])
+
+  useEffect(() => {
+    document.body.style.overflow = mobileOpen ? 'hidden' : ''
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [mobileOpen])
+
+  const mobileLinks = [
+    { type: 'anchor', href: `${home}#fitur`, label: t.navFeatures },
+    { type: 'anchor', href: `${home}#cara-kerja`, label: t.navHow },
+    ...(!onAbout ? [{ type: 'anchor', href: `${home}#saran`, label: t.navFeedback }] : []),
+    { type: 'route', to: about, label: t.navAbout, active: onAbout },
+    { type: 'route', to: '/login', label: t.navLogin },
+  ]
 
   return (
     <header className="lp-nav fixed top-0 inset-x-0 z-50">
       <div className="lp-nav-inner">
         <Link to={home} className="lp-nav-brand flex items-center gap-2 sm:gap-2.5 shrink min-w-0">
-          <div className="w-8 h-8 rounded-lg bg-[#5E6AD2] flex items-center justify-center shadow-md shadow-indigo-200 shrink-0">
-            <ShieldCheck size={18} className="text-white" />
-          </div>
+          <BrandLogo size="sm" className="shrink-0 shadow-md shadow-indigo-200" title="Test Sambil Ngopi" />
           <span className="font-semibold lp-hero-title hidden min-[400px]:inline">Test Sambil Ngopi</span>
           <span className="font-semibold lp-hero-title min-[400px]:hidden">TSN</span>
         </Link>
-        <nav className="lp-nav-links">
+
+        <nav className="lp-nav-links" aria-label="Main navigation">
+          {/* Desktop links */}
           <a href={`${home}#fitur`} className="hidden md:inline text-sm lp-muted hover:text-[#5E6AD2] transition px-2">
             {t.navFeatures}
           </a>
@@ -63,13 +85,13 @@ export default function LandingNav({ lang, t }) {
           )}
           <Link
             to={about}
-            className={`hidden sm:inline text-sm transition px-2 ${onAbout ? 'text-[#5E6AD2] font-medium' : 'lp-muted hover:text-[#5E6AD2]'}`}
+            className={`hidden md:inline text-sm transition px-2 ${onAbout ? 'text-[#5E6AD2] font-medium' : 'lp-muted hover:text-[#5E6AD2]'}`}
             aria-current={onAbout ? 'page' : undefined}
           >
             {t.navAbout}
           </Link>
           <LangSwitch lang={lang} />
-          <Link to="/login" className="hidden min-[480px]:inline text-sm lp-muted hover:text-[#5E6AD2] transition px-2 py-1.5">
+          <Link to="/login" className="hidden md:inline text-sm lp-muted hover:text-[#5E6AD2] transition px-2 py-1.5">
             {t.navLogin}
           </Link>
           <Link
@@ -79,8 +101,65 @@ export default function LandingNav({ lang, t }) {
             <span className="lp-nav-cta-full">{t.navCta}</span>
             <span className="lp-nav-cta-short">{lang === 'en' ? 'Free' : 'Gratis'}</span>
           </Link>
+
+          <button
+            type="button"
+            className="lp-nav-menu-btn md:hidden"
+            onClick={() => setMobileOpen((v) => !v)}
+            aria-expanded={mobileOpen}
+            aria-controls="lp-mobile-menu"
+            aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+          >
+            {mobileOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
         </nav>
       </div>
+
+      {mobileOpen && (
+        <>
+          <button
+            type="button"
+            className="lp-nav-mobile-backdrop md:hidden"
+            onClick={() => setMobileOpen(false)}
+            aria-label="Close menu"
+          />
+          <nav
+            id="lp-mobile-menu"
+            className="lp-nav-mobile md:hidden"
+            aria-label="Mobile navigation"
+          >
+            {mobileLinks.map((item) =>
+              item.type === 'anchor' ? (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  className="lp-nav-mobile-link"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  {item.label}
+                </a>
+              ) : (
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  className={`lp-nav-mobile-link ${item.active ? 'lp-nav-mobile-link--active' : ''}`}
+                  onClick={() => setMobileOpen(false)}
+                  aria-current={item.active ? 'page' : undefined}
+                >
+                  {item.label}
+                </Link>
+              )
+            )}
+            <Link
+              to="/register"
+              className="lp-btn-primary lp-nav-mobile-cta"
+              onClick={() => setMobileOpen(false)}
+            >
+              {t.navCta}
+            </Link>
+          </nav>
+        </>
+      )}
     </header>
   )
 }
@@ -92,7 +171,7 @@ export function LandingFooter({ lang, t }) {
     <footer className="lp-footer">
       <div className="lp-footer-inner">
         <div className="flex items-center gap-2 font-medium shrink-0">
-          <ShieldCheck size={16} className="text-indigo-500" />
+          <BrandLogo variant="mark" size={18} className="text-indigo-500 shrink-0" />
           <span>Test Sambil Ngopi</span>
         </div>
         <div className="flex flex-wrap justify-center gap-x-4 gap-y-2 sm:gap-6">

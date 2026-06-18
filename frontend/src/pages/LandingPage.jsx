@@ -23,6 +23,8 @@ import {
 } from 'lucide-react'
 import LandingNav, { LandingFooter } from '../components/LandingNav'
 import LandingFeedbackSection from '../components/LandingFeedbackSection'
+import FeaturesCarousel from '../components/FeaturesCarousel'
+import useScrollReveal from '../hooks/useScrollReveal'
 import { landingCopy, ADVANCED_LABELS } from '../i18n/landingI18n'
 import { useLandingSEO } from '../hooks/useLandingSEO'
 import { getPublicLang } from '../utils/landingRoutes'
@@ -33,7 +35,6 @@ const FEATURE_ICON_CLASSES = [
   'lp-icon-indigo', 'lp-icon-amber', 'lp-icon-rose', 'lp-icon-sky',
 ]
 const ADVANCED_ICONS = [Link2, Clock, Globe, Activity, Gauge, Shield, Image, Zap]
-const STAGGER = ['lp-delay-1', 'lp-delay-2', 'lp-delay-3', 'lp-delay-4']
 const STEP_NUMS = ['01', '02', '03', '04']
 
 function HeroMockup({ t }) {
@@ -85,6 +86,7 @@ export default function LandingPage({ lang: langProp }) {
   const lang = langProp ?? getPublicLang(pathname)
   const t = landingCopy[lang] || landingCopy.id
   useLandingSEO(lang)
+  const [stepsRef, stepsVisible] = useScrollReveal(0.1)
 
   return (
     <div className="landing-page min-h-screen overflow-x-hidden">
@@ -137,31 +139,26 @@ export default function LandingPage({ lang: langProp }) {
             <h2 className="text-2xl sm:text-3xl font-bold lp-hero-title">{t.featuresTitle}</h2>
             <p className="mt-3 lp-muted text-base">{t.featuresSubtitle}</p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {t.features.map((f, i) => {
-              const Icon = FEATURE_ICONS[i]
-              return (
-                <div key={f.title} className={`lp-card rounded-2xl p-5 lp-animate-in ${STAGGER[i % 4]}`}>
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-4 ${FEATURE_ICON_CLASSES[i]}`}>
-                    <Icon size={20} />
-                  </div>
-                  <h3 className="font-semibold lp-hero-title mb-2">{f.title}</h3>
-                  <p className="text-sm lp-muted leading-relaxed">{f.desc}</p>
-                </div>
-              )
-            })}
-          </div>
+          <FeaturesCarousel
+            features={t.features}
+            icons={FEATURE_ICONS}
+            iconClasses={FEATURE_ICON_CLASSES}
+          />
         </div>
       </section>
 
       <section id="cara-kerja" className="py-16 sm:py-24 px-4 sm:px-6">
-        <div className="max-w-6xl mx-auto">
+        <div className="max-w-6xl mx-auto" ref={stepsRef}>
           <h2 className="text-2xl sm:text-3xl font-bold text-center lp-hero-title mb-12 lp-animate-in">
             {t.howTitle}
           </h2>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <div className={`lp-steps-track ${stepsVisible ? 'lp-steps-track--visible' : ''}`}>
             {t.steps.map((s, i) => (
-              <div key={s.title} className={`lp-step-card lp-animate-in ${STAGGER[i]}`}>
+              <div
+                key={s.title}
+                className={`lp-step-card lp-step-card--animated ${stepsVisible ? 'lp-step-card--visible' : ''}`}
+                style={{ '--step-index': i }}
+              >
                 <span className="lp-step-num">{STEP_NUMS[i]}</span>
                 <h3 className="text-lg font-semibold lp-hero-title mt-2 mb-2">{s.title}</h3>
                 <p className="text-sm lp-muted leading-relaxed">{s.text}</p>

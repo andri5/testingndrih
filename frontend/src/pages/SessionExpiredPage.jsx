@@ -1,7 +1,8 @@
-import { useNavigate } from 'react-router-dom'
-import { ShieldCheck, Clock, LogIn } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Clock, LogIn } from 'lucide-react'
+import BrandLogo from '../components/BrandLogo'
 
-const i18n = {
+const i18n = {
     title: 'Session Expired',
     description: 'Your session has timed out due to inactivity. Please sign in again to continue.',
     signInAgain: 'Sign in again',
@@ -9,7 +10,8 @@ const i18n = {
 }
 
 export default function SessionExpiredPage() {
-  const navigate = useNavigate()  const t = i18n
+  const navigate = useNavigate()
+  const t = i18n
 
   return (
     <div className="auth-page-bg min-h-screen bg-[#0F0E11] flex items-center justify-center px-4">
@@ -18,8 +20,8 @@ export default function SessionExpiredPage() {
         {/* Icon */}
         <div className="flex justify-center mb-6">
           <div className="relative">
-            <div className="w-16 h-16 rounded-2xl bg-[#161618] border border-[#2A2A2D] flex items-center justify-center">
-              <ShieldCheck size={32} className="text-[#8B8B8E]" />
+            <div className="w-16 h-16 rounded-2xl bg-[#161618] border border-[#2A2A2D] flex items-center justify-center p-3">
+              <BrandLogo size={40} title="Test Sambil Ngopi" />
             </div>
             <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-[#0F0E11] border border-[#2A2A2D] flex items-center justify-center">
               <Clock size={13} className="text-yellow-400" />
