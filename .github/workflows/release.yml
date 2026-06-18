@@ -58,5 +58,6 @@ jobs:
           gh workflow run deploy-production.yml \
             --repo "${{ github.repository }}" \
             --ref main \
+            -f use_main=true \
             -f notify_telegram=true
-          echo "Deploy Production workflow dispatched."
+          echo "Deploy Production workflow dispatched (use_main=true)."
