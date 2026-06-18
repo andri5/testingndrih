@@ -14,8 +14,8 @@ export default function LandingNotFoundPage({ lang = 'id' }) {
 
       <LandingNav lang={lang} t={t} />
 
-      <main className="flex-1 flex items-center justify-center px-4 pt-24 pb-16">
-        <div className="max-w-md w-full text-center lp-animate-in">
+      <main className="flex-1 flex items-center justify-center px-4 sm:px-6 pt-24 pb-16">
+        <div className="lp-container-prose w-full text-center lp-animate-in">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl lp-card mb-6">
             <FileQuestion size={32} className="text-[#5E6AD2]" />
           </div>

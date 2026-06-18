@@ -89,17 +89,17 @@ export default function LandingPage({ lang = 'id' }) {
       <LandingNav t={t} lang={lang} />
 
       <section className="relative pt-28 pb-16 sm:pt-32 sm:pb-24 px-4 sm:px-6">
-        <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-          <div className="lp-animate-in">
+        <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+          <div className="lp-animate-in max-w-xl">
             <p className="inline-flex items-center gap-2 text-xs font-semibold lp-badge rounded-full px-3 py-1.5 mb-6">
               <Bot size={14} />
               {t.badge}
             </p>
-            <h1 className="lp-hero-title text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight">
+            <h1 className="lp-hero-title text-2xl sm:text-4xl lg:text-5xl font-bold leading-tight">
               {t.heroTitle}{' '}
               <span className="lp-gradient-text">{t.heroHighlight}</span>
             </h1>
-            <p className="mt-5 text-base sm:text-lg lp-muted leading-relaxed max-w-xl">{t.heroSubtitle}</p>
+            <p className="mt-4 sm:mt-5 lp-lead lp-muted max-w-xl">{t.heroSubtitle}</p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link to="/register" className="lp-btn-primary inline-flex items-center gap-2 font-medium px-5 py-3 rounded-xl">
                 {t.ctaPrimary}
@@ -133,7 +133,7 @@ export default function LandingPage({ lang = 'id' }) {
             <h2 className="text-2xl sm:text-3xl font-bold lp-hero-title">{t.featuresTitle}</h2>
             <p className="mt-3 lp-muted text-base">{t.featuresSubtitle}</p>
           </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {t.features.map((f, i) => {
               const Icon = FEATURE_ICONS[i]
               return (
