@@ -1,3 +1,17 @@
+# [1.11.0](https://github.com/andri5/testingndrih/compare/v1.10.4...v1.11.0) (2026-06-18)
+
+
+### Bug Fixes
+
+* **deploy:** pass AI env vars to Docker and add prod AI configure workflow ([65d8464](https://github.com/andri5/testingndrih/commit/65d8464d3c0426963e95ec2b289009eb3a004dee))
+* **test:** update scenario list handler test for tag and favorites ([a1d526a](https://github.com/andri5/testingndrih/commit/a1d526abdc14b2c6545b4ff38f2a19fea6537dbd))
+
+
+### Features
+
+* add AI assistant, bilingual landing page, and SEO ([a1a3816](https://github.com/andri5/testingndrih/commit/a1a3816d509b6c50870c16c0b860cab399020063))
+* add user environments, scenario tags, and run diff ([bb78575](https://github.com/andri5/testingndrih/commit/bb785752df46c0be0305a8f1ed12ae44686934e1))
+
 ## [1.10.4](https://github.com/andri5/testingndrih/compare/v1.10.3...v1.10.4) (2026-06-17)
 
 
