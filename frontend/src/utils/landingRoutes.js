@@ -1,42 +1,82 @@
-/** Bilingual public routes: / (id) and /en (en) prefixes */
+/** Bilingual public routes: / (en default) and /id (Indonesian) */
 
-const EN_PREFIX = '/en'
+const ID_PREFIX = '/id'
+const LEGACY_EN_PREFIX = '/en'
+
+export function isIndonesianPublicPath(pathname) {
+  return pathname === ID_PREFIX || pathname.startsWith(`${ID_PREFIX}/`)
+}
 
 export function isEnglishPublicPath(pathname) {
-  return pathname === EN_PREFIX || pathname.startsWith(`${EN_PREFIX}/`)
+  if (isIndonesianPublicPath(pathname)) return false
+  if (pathname === LEGACY_EN_PREFIX || pathname.startsWith(`${LEGACY_EN_PREFIX}/`)) return true
+  return true
 }
 
 export function getPublicLang(pathname) {
-  return isEnglishPublicPath(pathname) ? 'en' : 'id'
+  return isIndonesianPublicPath(pathname) ? 'id' : 'en'
 }
 
-/** Strip /en prefix; /en → /, /en/about → /about */
+function stripLegacyEnglishPrefix(pathname) {
+  if (pathname === LEGACY_EN_PREFIX) return '/'
+  if (pathname.startsWith(`${LEGACY_EN_PREFIX}/`)) {
+    return pathname.slice(LEGACY_EN_PREFIX.length) || '/'
+  }
+  return pathname
+}
+
+function stripIndonesianPrefix(pathname) {
+  if (pathname === ID_PREFIX) return '/'
+  if (pathname.startsWith(`${ID_PREFIX}/`)) {
+    return pathname.slice(ID_PREFIX.length) || '/'
+  }
+  return pathname
+}
+
+/** Normalize to English base path: /, /about, /foo */
+export function toEnglishBasePath(pathname) {
+  if (isIndonesianPublicPath(pathname)) {
+    return stripIndonesianPrefix(pathname)
+  }
+  return stripLegacyEnglishPrefix(pathname)
+}
+
+/** @deprecated use toEnglishBasePath */
 export function toIndonesianPublicPath(pathname) {
-  if (!isEnglishPublicPath(pathname)) return pathname
-  if (pathname === EN_PREFIX) return '/'
-  return pathname.slice(EN_PREFIX.length) || '/'
+  return toPublicPath(pathname, 'id')
 }
 
-/** Add /en prefix; / → /en, /about → /en/about */
+/** @deprecated use toEnglishBasePath */
 export function toEnglishPublicPath(pathname) {
-  const base = toIndonesianPublicPath(pathname)
-  if (base === '/') return EN_PREFIX
-  return `${EN_PREFIX}${base}`
+  return toPublicPath(pathname, 'en')
 }
 
 export function toPublicPath(pathname, lang) {
-  return lang === 'en' ? toEnglishPublicPath(pathname) : toIndonesianPublicPath(pathname)
+  const base = toEnglishBasePath(pathname)
+  if (lang === 'id') {
+    if (base === '/') return ID_PREFIX
+    return `${ID_PREFIX}${base}`
+  }
+  return base
 }
 
 export function publicHomePath(lang) {
-  return lang === 'en' ? EN_PREFIX : '/'
+  return lang === 'id' ? ID_PREFIX : '/'
 }
 
 export function publicAboutPath(lang) {
-  return lang === 'en' ? `${EN_PREFIX}/about` : '/about'
+  return lang === 'id' ? `${ID_PREFIX}/about` : '/about'
 }
 
 export function isAboutPublicPath(pathname) {
-  const normalized = toIndonesianPublicPath(pathname)
-  return normalized === '/about'
+  const base = toEnglishBasePath(pathname)
+  return base === '/about'
+}
+
+export function isLegacyEnglishRedirect(pathname) {
+  return pathname === LEGACY_EN_PREFIX || pathname.startsWith(`${LEGACY_EN_PREFIX}/`)
+}
+
+export function legacyEnglishRedirectTarget(pathname) {
+  return toEnglishBasePath(pathname)
 }

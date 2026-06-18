@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Menu, X } from 'lucide-react'
 import BrandLogo from './BrandLogo'
+import useNavScrollSpy from '../hooks/useNavScrollSpy'
 import {
-  getPublicLang,
   publicAboutPath,
   publicHomePath,
   isAboutPublicPath,
@@ -35,11 +35,19 @@ export function LangSwitch({ lang }) {
   )
 }
 
+function navLinkClass(isActive) {
+  return `text-sm transition px-2 ${
+    isActive ? 'text-[#5E6AD2] font-medium' : 'lp-muted hover:text-[#5E6AD2]'
+  }`
+}
+
 export default function LandingNav({ lang, t }) {
   const { pathname } = useLocation()
   const home = publicHomePath(lang)
   const about = publicAboutPath(lang)
   const onAbout = isAboutPublicPath(pathname)
+  const onHome = !onAbout
+  const activeSection = useNavScrollSpy()
   const [mobileOpen, setMobileOpen] = useState(false)
 
   useEffect(() => {
@@ -54,9 +62,9 @@ export default function LandingNav({ lang, t }) {
   }, [mobileOpen])
 
   const mobileLinks = [
-    { type: 'anchor', href: `${home}#fitur`, label: t.navFeatures },
-    { type: 'anchor', href: `${home}#cara-kerja`, label: t.navHow },
-    ...(!onAbout ? [{ type: 'anchor', href: `${home}#saran`, label: t.navFeedback }] : []),
+    { type: 'anchor', href: `${home}#fitur`, label: t.navFeatures, sectionId: 'fitur' },
+    { type: 'anchor', href: `${home}#cara-kerja`, label: t.navHow, sectionId: 'cara-kerja' },
+    ...(!onAbout ? [{ type: 'anchor', href: `${home}#saran`, label: t.navFeedback, sectionId: 'saran' }] : []),
     { type: 'route', to: about, label: t.navAbout, active: onAbout },
     { type: 'route', to: '/login', label: t.navLogin },
   ]
@@ -71,21 +79,31 @@ export default function LandingNav({ lang, t }) {
         </Link>
 
         <nav className="lp-nav-links" aria-label="Main navigation">
-          {/* Desktop links */}
-          <a href={`${home}#fitur`} className="hidden md:inline text-sm lp-muted hover:text-[#5E6AD2] transition px-2">
-            {t.navFeatures}
-          </a>
-          <a href={`${home}#cara-kerja`} className="hidden md:inline text-sm lp-muted hover:text-[#5E6AD2] transition px-2">
-            {t.navHow}
-          </a>
-          {!onAbout && (
-            <a href={`${home}#saran`} className="hidden md:inline text-sm lp-muted hover:text-[#5E6AD2] transition px-2">
-              {t.navFeedback}
-            </a>
+          {onHome && (
+            <>
+              <a
+                href={`${home}#fitur`}
+                className={`hidden md:inline ${navLinkClass(activeSection === 'fitur')}`}
+              >
+                {t.navFeatures}
+              </a>
+              <a
+                href={`${home}#cara-kerja`}
+                className={`hidden md:inline ${navLinkClass(activeSection === 'cara-kerja')}`}
+              >
+                {t.navHow}
+              </a>
+              <a
+                href={`${home}#saran`}
+                className={`hidden md:inline ${navLinkClass(activeSection === 'saran')}`}
+              >
+                {t.navFeedback}
+              </a>
+            </>
           )}
           <Link
             to={about}
-            className={`hidden md:inline text-sm transition px-2 ${onAbout ? 'text-[#5E6AD2] font-medium' : 'lp-muted hover:text-[#5E6AD2]'}`}
+            className={`hidden md:inline ${navLinkClass(onAbout)}`}
             aria-current={onAbout ? 'page' : undefined}
           >
             {t.navAbout}
@@ -96,10 +114,9 @@ export default function LandingNav({ lang, t }) {
           </Link>
           <Link
             to="/register"
-            className="text-xs sm:text-sm font-medium lp-btn-primary px-2.5 sm:px-4 py-2 rounded-lg whitespace-nowrap"
+            className="hidden md:inline text-xs sm:text-sm font-medium lp-btn-primary px-2.5 sm:px-4 py-2 rounded-lg whitespace-nowrap"
           >
-            <span className="lp-nav-cta-full">{t.navCta}</span>
-            <span className="lp-nav-cta-short">{lang === 'en' ? 'Free' : 'Gratis'}</span>
+            {t.navCta}
           </Link>
 
           <button
@@ -133,7 +150,7 @@ export default function LandingNav({ lang, t }) {
                 <a
                   key={item.href}
                   href={item.href}
-                  className="lp-nav-mobile-link"
+                  className={`lp-nav-mobile-link ${activeSection === item.sectionId ? 'lp-nav-mobile-link--active' : ''}`}
                   onClick={() => setMobileOpen(false)}
                 >
                   {item.label}
@@ -165,6 +182,7 @@ export default function LandingNav({ lang, t }) {
 }
 
 export function LandingFooter({ lang, t }) {
+  const home = publicHomePath(lang)
   const about = publicAboutPath(lang)
 
   return (
@@ -174,18 +192,13 @@ export function LandingFooter({ lang, t }) {
           <BrandLogo variant="mark" size={18} className="text-indigo-500 shrink-0" />
           <span>Test Sambil Ngopi</span>
         </div>
-        <div className="flex flex-wrap justify-center gap-x-4 gap-y-2 sm:gap-6">
+        <div className="flex flex-wrap justify-center gap-x-4 gap-y-2 sm:gap-6 text-sm">
+          <a href={`${home}#fitur`} className="hover:text-indigo-600 transition">{t.navFeatures}</a>
+          <a href={`${home}#cara-kerja`} className="hover:text-indigo-600 transition">{t.navHow}</a>
+          <a href={`${home}#saran`} className="hover:text-indigo-600 transition">{t.navFeedback}</a>
           <Link to={about} className="hover:text-indigo-600 transition">{t.navAbout}</Link>
-          <Link to="/login" className="hover:text-indigo-600 transition">{t.navLogin}</Link>
+          <Link to="/login" className="hover:text-indigo-600 transition">testsambilngopi.com</Link>
           <Link to="/register" className="hover:text-indigo-600 transition">{t.navCta}</Link>
-          <a
-            href="https://testsambilngopi.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-indigo-600 transition"
-          >
-            {t.footerProduction}
-          </a>
         </div>
         <p className="text-xs shrink-0">© {new Date().getFullYear()} Test Sambil Ngopi</p>
       </div>

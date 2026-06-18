@@ -8,7 +8,7 @@ export const LANDING_SEO = {
     keywords:
       'platform testing otomatis, test automation indonesia, playwright testing, QA automation, rekam test browser, end to end testing, automated testing, smoke test, visual regression, test sambil ngopi',
     locale: 'id_ID',
-    path: '/',
+    path: '/id',
   },
   en: {
     title: 'Test Sambil Ngopi — Playwright Test Automation & AI Platform',
@@ -17,7 +17,7 @@ export const LANDING_SEO = {
     keywords:
       'automated testing platform, playwright test automation, record and playback testing, end to end testing, QA automation tool, browser testing, smoke test, visual regression, CI test automation',
     locale: 'en_US',
-    path: '/en',
+    path: '/',
   },
 }
 
@@ -29,7 +29,7 @@ export const ABOUT_SEO = {
     keywords:
       'tentang test sambil ngopi, platform QA indonesia, test automation, playwright, about us',
     locale: 'id_ID',
-    path: '/about',
+    path: '/id/about',
   },
   en: {
     title: 'About — Test Sambil Ngopi',
@@ -38,7 +38,7 @@ export const ABOUT_SEO = {
     keywords:
       'about test sambil ngopi, QA platform, test automation, playwright, about us',
     locale: 'en_US',
-    path: '/en/about',
+    path: '/about',
   },
 }
 

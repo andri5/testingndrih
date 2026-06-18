@@ -1,54 +1,61 @@
 import {
   getPublicLang,
+  isIndonesianPublicPath,
   isEnglishPublicPath,
-  toIndonesianPublicPath,
-  toEnglishPublicPath,
   toPublicPath,
   publicHomePath,
   publicAboutPath,
   isAboutPublicPath,
-} from '../utils/landingRoutes.js'
+  toEnglishBasePath,
+  legacyEnglishRedirectTarget,
+} from '../landingRoutes.js'
 
 describe('landingRoutes', () => {
-  it('detects english paths', () => {
+  it('detects language paths', () => {
+    expect(isIndonesianPublicPath('/id')).toBe(true)
+    expect(isIndonesianPublicPath('/id/about')).toBe(true)
+    expect(isEnglishPublicPath('/')).toBe(true)
+    expect(isEnglishPublicPath('/about')).toBe(true)
     expect(isEnglishPublicPath('/en')).toBe(true)
-    expect(isEnglishPublicPath('/en/about')).toBe(true)
-    expect(isEnglishPublicPath('/about')).toBe(false)
+    expect(isIndonesianPublicPath('/en')).toBe(false)
+  })
+
+  it('defaults to english for root paths', () => {
+    expect(getPublicLang('/')).toBe('en')
+    expect(getPublicLang('/about')).toBe('en')
+    expect(getPublicLang('/id')).toBe('id')
+    expect(getPublicLang('/id/about')).toBe('id')
   })
 
   it('switches about paths between languages', () => {
-    expect(toPublicPath('/about', 'en')).toBe('/en/about')
-    expect(toPublicPath('/en/about', 'id')).toBe('/about')
+    expect(toPublicPath('/about', 'id')).toBe('/id/about')
+    expect(toPublicPath('/id/about', 'en')).toBe('/about')
   })
 
   it('switches home paths between languages', () => {
-    expect(toPublicPath('/', 'en')).toBe('/en')
-    expect(toPublicPath('/en', 'id')).toBe('/')
+    expect(toPublicPath('/', 'id')).toBe('/id')
+    expect(toPublicPath('/id', 'en')).toBe('/')
   })
 
   it('preserves unknown public paths for 404', () => {
-    expect(toPublicPath('/foo', 'en')).toBe('/en/foo')
-    expect(toPublicPath('/en/foo', 'id')).toBe('/foo')
-  })
-
-  it('getPublicLang from pathname', () => {
-    expect(getPublicLang('/en/about')).toBe('en')
-    expect(getPublicLang('/about')).toBe('id')
+    expect(toPublicPath('/foo', 'id')).toBe('/id/foo')
+    expect(toPublicPath('/id/foo', 'en')).toBe('/foo')
   })
 
   it('publicAboutPath', () => {
-    expect(publicAboutPath('id')).toBe('/about')
-    expect(publicAboutPath('en')).toBe('/en/about')
+    expect(publicAboutPath('id')).toBe('/id/about')
+    expect(publicAboutPath('en')).toBe('/about')
   })
 
   it('isAboutPublicPath', () => {
     expect(isAboutPublicPath('/about')).toBe(true)
-    expect(isAboutPublicPath('/en/about')).toBe(true)
-    expect(isAboutPublicPath('/en')).toBe(false)
+    expect(isAboutPublicPath('/id/about')).toBe(true)
+    expect(isAboutPublicPath('/')).toBe(false)
   })
 
-  it('toIndonesianPublicPath and toEnglishPublicPath', () => {
-    expect(toIndonesianPublicPath('/en/about')).toBe('/about')
-    expect(toEnglishPublicPath('/about')).toBe('/en/about')
+  it('legacy english redirects', () => {
+    expect(legacyEnglishRedirectTarget('/en')).toBe('/')
+    expect(legacyEnglishRedirectTarget('/en/about')).toBe('/about')
+    expect(toEnglishBasePath('/en/about')).toBe('/about')
   })
 })

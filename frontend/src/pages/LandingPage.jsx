@@ -6,7 +6,6 @@ import {
   Layers,
   Sparkles,
   GitCompare,
-  Star,
   Zap,
   Globe,
   Clock,
@@ -23,6 +22,7 @@ import {
 } from 'lucide-react'
 import LandingNav, { LandingFooter } from '../components/LandingNav'
 import LandingFeedbackSection from '../components/LandingFeedbackSection'
+import LandingStickyCta from '../components/LandingStickyCta'
 import FeaturesCarousel from '../components/FeaturesCarousel'
 import useScrollReveal from '../hooks/useScrollReveal'
 import { landingCopy, ADVANCED_LABELS } from '../i18n/landingI18n'
@@ -39,42 +39,45 @@ const STEP_NUMS = ['01', '02', '03', '04']
 
 function HeroMockup({ t }) {
   return (
-    <div className="lp-mockup relative rounded-2xl overflow-hidden lp-float">
-      <div className="lp-mockup-bar flex items-center gap-2 px-4 py-3">
+    <div className="lp-hero-preview relative rounded-2xl overflow-hidden lp-float shadow-xl shadow-indigo-100/80 border border-indigo-100">
+      <div className="lp-hero-preview__chrome flex items-center gap-2 px-4 py-2.5 bg-slate-100 border-b border-slate-200">
         <span className="w-2.5 h-2.5 rounded-full bg-red-400" />
         <span className="w-2.5 h-2.5 rounded-full bg-amber-400" />
         <span className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
-        <span className="ml-3 text-xs lp-subtle font-mono">execution — scenario run</span>
+        <span className="ml-2 text-[10px] sm:text-xs lp-subtle font-mono truncate">testsambilngopi.com/dashboard</span>
       </div>
-      <div className="p-4 sm:p-5 space-y-3">
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-semibold lp-hero-title">{t.mockupTitle}</span>
-          <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">
-            PASSED
-          </span>
+      <div className="lp-hero-preview__body grid grid-cols-[4.5rem_1fr] sm:grid-cols-[5.5rem_1fr] min-h-[220px] sm:min-h-[260px]">
+        <div className="bg-slate-50 border-r border-slate-200 p-2 space-y-1.5 hidden xs:block sm:block">
+          {['Dashboard', 'Scenarios', 'Runs'].map((item, i) => (
+            <div
+              key={item}
+              className={`text-[9px] sm:text-[10px] px-2 py-1.5 rounded-md truncate ${
+                i === 1 ? 'bg-indigo-100 text-indigo-700 font-semibold' : 'text-slate-500'
+              }`}
+            >
+              {item}
+            </div>
+          ))}
         </div>
-        {[
-          { step: 'NAVIGATE', time: '1.2s' },
-          { step: 'FILL email', time: '0.4s' },
-          { step: 'CLICK Submit', time: '0.8s' },
-          { step: 'ASSERTION dashboard', time: '0.3s' },
-        ].map((row) => (
-          <div key={row.step} className="lp-mockup-row flex items-center gap-3 px-3 py-2.5 rounded-lg">
-            <CheckCircle2 size={14} className="text-emerald-500 shrink-0" />
-            <span className="text-xs lp-muted flex-1 font-mono">{row.step}</span>
-            <span className="text-[10px] lp-subtle">{row.time}</span>
+        <div className="p-3 sm:p-4 space-y-2.5 bg-white">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-xs sm:text-sm font-semibold lp-hero-title truncate">{t.mockupTitle}</span>
+            <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200 shrink-0">
+              PASSED
+            </span>
           </div>
-        ))}
-        <div className="flex gap-2 pt-1">
-          <span className="text-[10px] font-medium px-2 py-1 rounded-md bg-indigo-50 text-indigo-600 border border-indigo-100 flex items-center gap-1">
-            <Star size={10} /> Favorite
-          </span>
-          <span className="text-[10px] font-medium px-2 py-1 rounded-md bg-violet-50 text-violet-600 border border-violet-100 flex items-center gap-1">
-            <Sparkles size={10} /> AI
-          </span>
-          <span className="text-[10px] font-medium px-2 py-1 rounded-md bg-amber-50 text-amber-700 border border-amber-100 flex items-center gap-1">
-            <GitCompare size={10} /> Diff
-          </span>
+          {[
+            { step: 'NAVIGATE', time: '1.2s' },
+            { step: 'FILL email', time: '0.4s' },
+            { step: 'CLICK Submit', time: '0.8s' },
+            { step: 'ASSERTION dashboard', time: '0.3s' },
+          ].map((row) => (
+            <div key={row.step} className="lp-mockup-row flex items-center gap-2 sm:gap-3 px-2.5 sm:px-3 py-2 rounded-lg">
+              <CheckCircle2 size={14} className="text-emerald-500 shrink-0" />
+              <span className="text-[10px] sm:text-xs lp-muted flex-1 font-mono truncate">{row.step}</span>
+              <span className="text-[10px] lp-subtle shrink-0">{row.time}</span>
+            </div>
+          ))}
         </div>
       </div>
     </div>
@@ -84,7 +87,7 @@ function HeroMockup({ t }) {
 export default function LandingPage({ lang: langProp }) {
   const { pathname } = useLocation()
   const lang = langProp ?? getPublicLang(pathname)
-  const t = landingCopy[lang] || landingCopy.id
+  const t = landingCopy[lang] || landingCopy.en
   useLandingSEO(lang)
   const [stepsRef, stepsVisible] = useScrollReveal(0.1)
 
@@ -232,6 +235,7 @@ export default function LandingPage({ lang: langProp }) {
       </section>
 
       <LandingFooter lang={lang} t={t} />
+      <LandingStickyCta label={t.navCta} />
     </div>
   )
 }

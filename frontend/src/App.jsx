@@ -43,7 +43,12 @@ import ServerHealthMonitor from './components/ServerHealthMonitor'
 import SiteTracker from './components/SiteTracker'
 import { useAuthStore } from './store/authStore'
 import { useSettingsStore } from './store/settingsStore'
-import { getPublicLang } from './utils/landingRoutes'
+import { getPublicLang, legacyEnglishRedirectTarget } from './utils/landingRoutes'
+
+function LegacyEnglishRedirect() {
+  const { pathname } = useLocation()
+  return <Navigate to={legacyEnglishRedirectTarget(pathname)} replace />
+}
 
 function PublicLandingPage() {
   const { pathname } = useLocation()
@@ -90,13 +95,13 @@ export default function App() {
       <ServerHealthMonitor />
       <SiteTracker />
       <Routes>
-        {/* Public home */}
+        {/* Public home — English default at / */}
         <Route
           path="/"
           element={token ? <Navigate to="/dashboard" replace /> : <PublicLandingPage />}
         />
         <Route
-          path="/en"
+          path="/id"
           element={token ? <Navigate to="/dashboard" replace /> : <PublicLandingPage />}
         />
         <Route
@@ -104,9 +109,12 @@ export default function App() {
           element={token ? <Navigate to="/dashboard" replace /> : <PublicAboutPage />}
         />
         <Route
-          path="/en/about"
+          path="/id/about"
           element={token ? <Navigate to="/dashboard" replace /> : <PublicAboutPage />}
         />
+        <Route path="/en" element={<Navigate to="/" replace />} />
+        <Route path="/en/about" element={<Navigate to="/about" replace />} />
+        <Route path="/en/*" element={<LegacyEnglishRedirect />} />
 
         {/* Auth */}
         <Route

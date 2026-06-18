@@ -7,7 +7,7 @@ import { getPublicLang, publicHomePath } from '../utils/landingRoutes'
 export default function LandingNotFoundPage({ lang: langProp }) {
   const { pathname } = useLocation()
   const lang = langProp ?? getPublicLang(pathname)
-  const t = landingCopy[lang] || landingCopy.id
+  const t = landingCopy[lang] || landingCopy.en
   const navigate = useNavigate()
   const homePath = publicHomePath(lang)
 

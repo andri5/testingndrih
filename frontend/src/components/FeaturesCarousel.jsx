@@ -22,6 +22,7 @@ export default function FeaturesCarousel({ features, icons, iconClasses }) {
   const perView = useSlidesPerView()
   const maxIndex = Math.max(0, Math.ceil(features.length / perView) - 1)
   const [index, setIndex] = useState(0)
+  const [paused, setPaused] = useState(false)
 
   useEffect(() => {
     setIndex((i) => Math.min(i, maxIndex))
@@ -38,14 +39,21 @@ export default function FeaturesCarousel({ features, icons, iconClasses }) {
   )
 
   useEffect(() => {
+    if (paused) return undefined
     const timer = setInterval(() => go(1), 6000)
     return () => clearInterval(timer)
-  }, [go])
+  }, [go, paused])
 
   const slideCount = maxIndex + 1
 
   return (
-    <div className="lp-features-carousel">
+    <div
+      className="lp-features-carousel"
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      onFocus={() => setPaused(true)}
+      onBlur={() => setPaused(false)}
+    >
       <div className="relative">
         <button
           type="button"

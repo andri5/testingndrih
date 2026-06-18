@@ -52,7 +52,7 @@ export function usePublicSEO(lang, seoMap, alternatePaths) {
     upsertLink('canonical', url)
     upsertLink('alternate', `${SITE_URL}${altId}`, 'id')
     upsertLink('alternate', `${SITE_URL}${altEn}`, 'en')
-    upsertLink('alternate', `${SITE_URL}${altId}`, 'x-default')
+    upsertLink('alternate', `${SITE_URL}${altEn}`, 'x-default')
 
     const jsonLd = {
       '@context': 'https://schema.org',
