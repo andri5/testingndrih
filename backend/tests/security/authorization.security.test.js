@@ -4,10 +4,7 @@
  */
 
 import fetch from 'node-fetch'
-
-const BASE_URL = 'http://localhost:5001/api'
-const TEST_USER_EMAIL = 'admin@testingndrih.local'
-const TEST_USER_PASSWORD = 'AdminPass123!'
+import { BASE_URL, loginForSecurityTests } from './helpers.js'
 
 let authToken = null
 let userId = null
@@ -16,23 +13,9 @@ let otherUserId = null
 
 describe('Authorization and Access Control Tests', () => {
   beforeAll(async () => {
-    try {
-      // Login primary user
-      const response = await fetch(`${BASE_URL}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: TEST_USER_EMAIL,
-          password: TEST_USER_PASSWORD
-        })
-      })
-
-      const data = await response.json()
-      authToken = data.token
-      userId = data.userId
-    } catch (err) {
-      console.error('Setup failed:', err.message)
-    }
+    const auth = await loginForSecurityTests()
+    authToken = auth.token
+    userId = auth.userId
   }, 30000)
 
   describe('Access Control - User Isolation', () => {
@@ -47,7 +30,7 @@ describe('Authorization and Access Control Tests', () => {
         body: JSON.stringify({
           name: `Private Scenario ${Date.now()}`,
           description: 'Should not be accessible to others',
-          steps: [{ type: 'NAVIGATE', target: 'https://example.com' }]
+          url: 'https://example.com'
         })
       })
 
@@ -72,7 +55,7 @@ describe('Authorization and Access Control Tests', () => {
         body: JSON.stringify({
           name: `Test ${Date.now()}`,
           description: 'Should not be modifiable by others',
-          steps: [{ type: 'NAVIGATE', target: 'https://example.com' }]
+          url: 'https://example.com'
         })
       })
 
@@ -102,7 +85,7 @@ describe('Authorization and Access Control Tests', () => {
         body: JSON.stringify({
           name: `Test ${Date.now()}`,
           description: 'Should not be deletable by others',
-          steps: [{ type: 'NAVIGATE', target: 'https://example.com' }]
+          url: 'https://example.com'
         })
       })
 
@@ -145,7 +128,7 @@ describe('Authorization and Access Control Tests', () => {
         body: JSON.stringify({
           name: `Test ${Date.now()}`,
           description: 'Test',
-          steps: [{ type: 'NAVIGATE', target: 'https://example.com' }]
+          url: 'https://example.com'
         })
       })
 
@@ -171,7 +154,7 @@ describe('Authorization and Access Control Tests', () => {
         body: JSON.stringify({
           name: `Test ${Date.now()}`,
           description: 'Test',
-          steps: [{ type: 'NAVIGATE', target: 'https://example.com' }]
+          url: 'https://example.com'
         })
       })
 
@@ -204,7 +187,7 @@ describe('Authorization and Access Control Tests', () => {
         body: JSON.stringify({
           name: `Test ${Date.now()}`,
           description: 'Test',
-          steps: [{ type: 'NAVIGATE', target: 'https://example.com' }]
+          url: 'https://example.com'
         })
       })
 
@@ -269,7 +252,7 @@ describe('Authorization and Access Control Tests', () => {
         body: JSON.stringify({
           name: `Test ${Date.now()}`,
           description: 'Test',
-          steps: [],
+          url: 'https://example.com',
           role: 'admin', // Try to escalate privileges
           isAdmin: true,
           permissions: ['admin', 'delete_all']
@@ -361,7 +344,7 @@ describe('Authorization and Access Control Tests', () => {
         body: JSON.stringify({
           name: `Test ${Date.now()}`,
           description: 'Test',
-          steps: [{ type: 'NAVIGATE', target: 'https://example.com' }]
+          url: 'https://example.com'
         })
       })
 
@@ -394,7 +377,7 @@ describe('Authorization and Access Control Tests', () => {
         body: JSON.stringify({
           name: `Test ${Date.now()}`,
           description: 'Test',
-          steps: [{ type: 'NAVIGATE', target: 'https://example.com' }]
+          url: 'https://example.com'
         })
       })
 

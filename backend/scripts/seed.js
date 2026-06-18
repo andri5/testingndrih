@@ -172,12 +172,20 @@ async function main() {
       })
       console.log('✅ Seed user created:', user.email, `(${seedRole})`)
     } else {
-      if (user.role !== seedRole) {
+      const updates = {}
+      if (user.role !== seedRole) updates.role = seedRole
+      if (process.env.SEED_PASSWORD) {
+        updates.password = await hashPassword(seedPassword)
+      }
+      if (Object.keys(updates).length > 0) {
         user = await prisma.user.update({
           where: { id: user.id },
-          data: { role: seedRole },
+          data: updates,
         })
-        console.log('✅ Seed user role updated:', user.email, `→ ${seedRole}`)
+        const parts = []
+        if (updates.role) parts.push(`role → ${seedRole}`)
+        if (updates.password) parts.push('password updated')
+        console.log(`✅ Seed user updated: ${user.email} (${parts.join(', ')})`)
       } else {
         console.log('✅ Seed user already exists:', user.email, `(${user.role})`)
       }

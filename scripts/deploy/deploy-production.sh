@@ -18,7 +18,7 @@ compose() {
 }
 
 maintenance() {
-  local script="${SOURCE_PATH}/scripts/maintenance-mode.sh"
+  local script="${SOURCE_PATH}/scripts/deploy/maintenance-mode.sh"
   if [ -f "${script}" ] && command -v nginx >/dev/null 2>&1; then
     sudo bash "${script}" "$1" || echo "WARN: maintenance ${1} failed (continuing)"
   fi

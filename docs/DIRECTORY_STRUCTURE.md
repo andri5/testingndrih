@@ -19,10 +19,19 @@ testingndrih/
 ├── commitlint.config.js            # Conventional commits
 │
 ├── scripts/
-│   ├── health-check.js             # Backend/frontend/DB health
-│   ├── telegram-deploy-notify.sh   # Release deploy Telegram notify
-│   ├── production-recover.sh       # VPS recovery helper
-│   └── maintenance-mode.sh         # Toggle maintenance on server
+│   ├── README.md                   # Script index
+│   ├── deploy/
+│   │   ├── deploy-production.sh    # VPS deploy (GitHub Actions)
+│   │   ├── maintenance-mode.sh     # Toggle maintenance page
+│   │   └── production-recover.sh   # Manual recovery
+│   ├── notify/
+│   │   └── telegram-deploy-notify.sh
+│   └── ops/
+│       ├── health-check.js         # npm run health-check
+│       ├── generate-production-secrets.js
+│       ├── git-push-safe.js
+│       ├── setup-github-runner.sh
+│       └── configure-production-ai.sh
 │
 ├── deploy/nginx/                   # Example reverse-proxy config
 │
@@ -30,9 +39,10 @@ testingndrih/
 │   ├── ci.yml                      # Lint + test + platform E2E
 │   ├── release.yml                 # Semantic release
 │   ├── deploy-production.yml       # VPS deploy
+│   ├── configure-production-ai.yml # AI keys on prod
 │   ├── prod-monitor.yml            # Live production smoke
 │   ├── post-maintenance-deploy.yml
-│   └── ci-run-scenario.example.yml # CI with API token example
+│   └── (ci-run-scenario.example.yml → docs/examples/)
 │
 ├── backend/                        # Node.js Express API
 ├── frontend/                       # React SPA
@@ -211,16 +221,10 @@ frontend/
 │   │   ├── *HelpPage.jsx / error pages
 │   │   └── ...
 │   │
-│   ├── components/                 # 30+ komponen reusable
-│   │   ├── Layout.jsx
-│   │   ├── ProtectedRoute.jsx
-│   │   ├── HelpModal.jsx
-│   │   ├── IntegrationsSettings.jsx
-│   │   ├── ExecuteScenarioButton.jsx
-│   │   ├── ScenariosList.jsx
-│   │   ├── TestStepList.jsx
-│   │   ├── BrowserSelector.jsx
-│   │   ├── SmokeTest* / StressTest* / Security*
+│   ├── components/
+│   │   ├── landing/                # LandingNav, FeaturesCarousel, feedback
+│   │   ├── security/               # SecurityScanRunner, Findings, History
+│   │   ├── Layout.jsx, BrandLogo.jsx
 │   │   └── ui/index.jsx
 │   │
 │   ├── services/                   # API clients
@@ -265,8 +269,11 @@ docs/
 ├── DIRECTORY_STRUCTURE.md  # This file
 ├── SETUP.md                # Install & troubleshooting
 ├── TESTING.md              # Test strategy & commands
+├── SECURITY_TESTING.md     # Pentest & OWASP guide
 ├── API_ENDPOINTS.md        # REST API reference
-└── DEPLOYMENT.md           # Production deploy guide
+├── DEPLOYMENT.md           # Production deploy guide
+└── examples/
+    └── ci-run-scenario.example.yml
 ```
 
 ---
@@ -281,7 +288,7 @@ docs/
 | Frontend components | 30+ |
 | Database migrations | 17 |
 | E2E spec files | 17 |
-| GitHub workflows | 6 |
+| GitHub workflows | 7 |
 
 ---
 
@@ -306,7 +313,10 @@ File berikut tidak lagi digunakan dan telah dihapus:
 - `backend/create-user-simple.js`, `create-test-user.js` (diganti `backend/scripts/seed.js`)
 - `frontend/src/data/helpContent.js` (konten inline di `HelpModal.jsx`)
 - `frontend/src/hooks/useLoading.js` (menggunakan `loadingStore` langsung)
-- `health-check.js` (root) → `scripts/health-check.js`
+- `health-check.js` (root) → `scripts/ops/health-check.js`
+- `scripts/telegram-notify.sh` (diganti `scripts/notify/telegram-deploy-notify.sh`)
+- `frontend/src/components/LandingStickyCta.jsx` (CTA dihapus dari landing)
+- `Loading.jsx` — export tidak terpakai (`PageLoading`, `RequestLoading`, `LoadingOverlay`)
 
 ## Kode yang Dibersihkan (Juni 2026)
 

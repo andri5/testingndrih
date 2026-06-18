@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
-import apiClient from '../services/api'
-import { AlertCircle, Shield, AlertTriangle, AlertOctagon, AlertCircle as AlertMedium } from 'lucide-react'
+import apiClient from '../../services/api'
+import { AlertCircle, Shield, AlertTriangle, AlertOctagon, AlertCircle as AlertMedium } from 'lucide-react'
 
 const i18n = { 
     totalScans: 'Total Scans', 

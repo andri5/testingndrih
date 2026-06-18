@@ -4,30 +4,14 @@
  */
 
 import fetch from 'node-fetch'
-
-const BASE_URL = 'http://localhost:5001/api'
-const TEST_USER_EMAIL = 'admin@testingndrih.local'
-const TEST_USER_PASSWORD = 'AdminPass123!'
+import { BASE_URL, loginForSecurityTests } from './helpers.js'
 
 let authToken = null
 
 describe('XSS (Cross-Site Scripting) Security Tests', () => {
   beforeAll(async () => {
-    try {
-      const response = await fetch(`${BASE_URL}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: TEST_USER_EMAIL,
-          password: TEST_USER_PASSWORD
-        })
-      })
-
-      const data = await response.json()
-      authToken = data.token
-    } catch (err) {
-      console.error('Setup failed:', err.message)
-    }
+    const auth = await loginForSecurityTests()
+    authToken = auth.token
   }, 30000)
 
   describe('Reflected XSS', () => {
@@ -41,7 +25,7 @@ describe('XSS (Cross-Site Scripting) Security Tests', () => {
         body: JSON.stringify({
           name: '<script>alert("XSS")</script>',
           description: 'XSS Test',
-          steps: [{ type: 'NAVIGATE', target: 'https://example.com' }]
+          url: 'https://example.com'
         })
       })
 
@@ -64,7 +48,7 @@ describe('XSS (Cross-Site Scripting) Security Tests', () => {
         body: JSON.stringify({
           name: `Test ${Date.now()}`,
           description: '<img src=x onerror="alert(\'XSS\')">',
-          steps: [{ type: 'NAVIGATE', target: 'https://example.com' }]
+          url: 'https://example.com'
         })
       })
 
@@ -86,7 +70,7 @@ describe('XSS (Cross-Site Scripting) Security Tests', () => {
         body: JSON.stringify({
           name: `Test ${Date.now()}`,
           description: '&lt;script&gt;alert("XSS")&lt;/script&gt;',
-          steps: [{ type: 'NAVIGATE', target: 'https://example.com' }]
+          url: 'https://example.com'
         })
       })
 
@@ -107,7 +91,7 @@ describe('XSS (Cross-Site Scripting) Security Tests', () => {
         body: JSON.stringify({
           name: `Test ${Date.now()}`,
           description: scriptPayload,
-          steps: [{ type: 'NAVIGATE', target: 'https://example.com' }]
+          url: 'https://example.com'
         })
       })
 
@@ -146,7 +130,7 @@ describe('XSS (Cross-Site Scripting) Security Tests', () => {
           body: JSON.stringify({
             name: `Test ${Date.now()}`,
             description: handler,
-            steps: [{ type: 'NAVIGATE', target: 'https://example.com' }]
+            url: 'https://example.com'
           })
         })
 
@@ -177,12 +161,7 @@ describe('XSS (Cross-Site Scripting) Security Tests', () => {
         body: JSON.stringify({
           name: `Test ${Date.now()}`,
           description: 'Test',
-          steps: [
-            {
-              type: 'NAVIGATE',
-              target: 'data:text/html,<script>alert("XSS")</script>'
-            }
-          ]
+          url: 'data:text/html,<script>alert("XSS")</script>',
         })
       })
 
@@ -200,12 +179,7 @@ describe('XSS (Cross-Site Scripting) Security Tests', () => {
         body: JSON.stringify({
           name: `Test ${Date.now()}`,
           description: 'Test',
-          steps: [
-            {
-              type: 'NAVIGATE',
-              target: 'javascript:alert("XSS")'
-            }
-          ]
+          url: 'javascript:alert("XSS")',
         })
       })
 
@@ -238,7 +212,7 @@ describe('XSS (Cross-Site Scripting) Security Tests', () => {
         body: JSON.stringify({
           name: `Test ${Date.now()}`,
           description: '\\u003Cscript\\u003Ealert(1)\\u003C/script\\u003E',
-          steps: [{ type: 'NAVIGATE', target: 'https://example.com' }]
+          url: 'https://example.com'
         })
       })
 
@@ -255,7 +229,7 @@ describe('XSS (Cross-Site Scripting) Security Tests', () => {
         body: JSON.stringify({
           name: `Test ${Date.now()}`,
           description: '&#60;script&#62;alert(1)&#60;/script&#62;',
-          steps: [{ type: 'NAVIGATE', target: 'https://example.com' }]
+          url: 'https://example.com'
         })
       })
 
@@ -272,7 +246,7 @@ describe('XSS (Cross-Site Scripting) Security Tests', () => {
         body: JSON.stringify({
           name: `Test ${Date.now()}`,
           description: 'String.fromCharCode(60,115,99,114,105,112,116,62)',
-          steps: [{ type: 'NAVIGATE', target: 'https://example.com' }]
+          url: 'https://example.com'
         })
       })
 
@@ -299,7 +273,7 @@ describe('XSS (Cross-Site Scripting) Security Tests', () => {
           body: JSON.stringify({
             name: `Test ${Date.now()}`,
             description: payload,
-            steps: [{ type: 'NAVIGATE', target: 'https://example.com' }]
+            url: 'https://example.com'
           })
         })
 
@@ -317,7 +291,7 @@ describe('XSS (Cross-Site Scripting) Security Tests', () => {
         body: JSON.stringify({
           name: `Test ${Date.now()}`,
           description: '<iframe src="javascript:alert(\'XSS\')"></iframe>',
-          steps: [{ type: 'NAVIGATE', target: 'https://example.com' }]
+          url: 'https://example.com'
         })
       })
 
@@ -341,7 +315,7 @@ describe('XSS (Cross-Site Scripting) Security Tests', () => {
           body: JSON.stringify({
             name: `Test ${Date.now()}`,
             description: payload,
-            steps: [{ type: 'NAVIGATE', target: 'https://example.com' }]
+            url: 'https://example.com'
           })
         })
 
@@ -368,7 +342,7 @@ describe('XSS (Cross-Site Scripting) Security Tests', () => {
           body: JSON.stringify({
             name: `Test ${Date.now()}`,
             description: payload,
-            steps: [{ type: 'NAVIGATE', target: 'https://example.com' }]
+            url: 'https://example.com'
           })
         })
 
@@ -386,7 +360,7 @@ describe('XSS (Cross-Site Scripting) Security Tests', () => {
         body: JSON.stringify({
           name: `Test ${Date.now()}`,
           description: '<div style="width:expression(alert(1))"></div>',
-          steps: [{ type: 'NAVIGATE', target: 'https://example.com' }]
+          url: 'https://example.com'
         })
       })
 
@@ -424,7 +398,7 @@ describe('XSS (Cross-Site Scripting) Security Tests', () => {
         body: JSON.stringify({
           name: `Test<>&\\"'${Date.now()}`,
           description: '<Test>&"\'',
-          steps: [{ type: 'NAVIGATE', target: 'https://example.com' }]
+          url: 'https://example.com'
         })
       })
 

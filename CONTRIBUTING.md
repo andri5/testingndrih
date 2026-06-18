@@ -72,6 +72,7 @@ Validasi lokal (Husky) + CI pada PR.
 
 ```bash
 cd backend && npm test
+cd backend && npm run test:security   # butuh API jalan — lihat docs/SECURITY_TESTING.md
 cd frontend && npm run lint
 cd frontend && npx playwright test e2e/platform-features-e2e.spec.js --project=chromium
 npm run health-check   # opsional, butuh dev server
@@ -82,9 +83,10 @@ npm run health-check   # opsional, butuh dev server
 | Backend unit | `cd backend && npm test` |
 | Backend coverage | `cd backend && npm run test:coverage` |
 | Frontend E2E | `cd frontend && npm run e2e` |
+| Security (OWASP) | `npm run test:security` |
 | Health check | `npm run health-check` |
 
-Lihat [`docs/TESTING.md`](docs/TESTING.md) untuk panduan lengkap.
+Lihat [`docs/TESTING.md`](docs/TESTING.md) dan [`docs/SECURITY_TESTING.md`](docs/SECURITY_TESTING.md).
 
 ## Code Style
 
@@ -99,7 +101,7 @@ Update docs jika menambah endpoint, halaman, atau fitur:
 - `docs/API_ENDPOINTS.md` — referensi API
 - `docs/DEPLOYMENT.md` — rilis & deploy production
 - `docs/DIRECTORY_STRUCTURE.md` — struktur folder
-- `docs/TESTING.md` — panduan testing
+- `docs/SECURITY_TESTING.md` — pentest & OWASP
 
 ## Pertanyaan
 

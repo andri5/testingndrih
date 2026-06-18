@@ -4,7 +4,7 @@
 
 **Live:** [testsambilngopi.com](https://testsambilngopi.com)  
 **Docs:** [`docs/README.md`](./docs/README.md)  
-**Version:** 1.9.x (semantic release)
+**Version:** 1.14.x (semantic release)
 
 ![Node](https://img.shields.io/badge/node-20.x-brightgreen.svg)
 ![React](https://img.shields.io/badge/React-18.2-blue.svg)
@@ -257,8 +257,9 @@ docker compose down -v      # stop + remove volumes
 | [`docs/SETUP.md`](./docs/SETUP.md) | Detailed setup & troubleshooting |
 | [`docs/TESTING.md`](./docs/TESTING.md) | Test strategy & commands |
 | [`docs/API_ENDPOINTS.md`](./docs/API_ENDPOINTS.md) | REST API reference |
+| [`docs/SECURITY_TESTING.md`](./docs/SECURITY_TESTING.md) | Pentest & OWASP security testing |
 | [`docs/DEPLOYMENT.md`](./docs/DEPLOYMENT.md) | Production deploy guide |
-| [`PROJECT_STRUCTURE.md`](./PROJECT_STRUCTURE.md) | High-level repo map |
+| [`scripts/README.md`](./scripts/README.md) | Deploy & ops scripts |
 
 ---
 
@@ -279,9 +280,12 @@ cd frontend && npm run e2e
 
 # Health check script
 npm run health-check
+
+# Security tests (backend API must be running — see docs/SECURITY_TESTING.md)
+npm run test:security
 ```
 
-See [`docs/TESTING.md`](./docs/TESTING.md) for coverage targets and CI details.
+See [`docs/TESTING.md`](./docs/TESTING.md) for coverage targets and [`docs/SECURITY_TESTING.md`](./docs/SECURITY_TESTING.md) for penetration testing.
 
 ---
 
@@ -292,6 +296,7 @@ See [`docs/TESTING.md`](./docs/TESTING.md) for coverage targets and CI details.
 | **CI** | Push / PR to `main` | Lint, backend tests, platform E2E |
 | **Release** | CI success on `main` | Semantic version tag |
 | **Deploy Production** | New release / manual | Deploy to VPS |
+| **Configure Production AI** | Manual dispatch | AI keys on VPS |
 | **Production Monitor** | Every 6h / manual | Live smoke tests |
 | **Post-Maintenance** | Every 15 min | Deploy once when prod recovers |
 
@@ -307,6 +312,7 @@ Manual deploy with latest `main`: GitHub Actions → Deploy Production → check
 - Set `ADMIN_EMAIL`, `JWT_SECRET`, `SEED_PASSWORD` only on your machine / VPS
 - GitHub secrets: Settings → Secrets and variables → Actions → environment `production`
 - Rotate credentials if they were ever exposed in git history
+- Run security tests: [`docs/SECURITY_TESTING.md`](./docs/SECURITY_TESTING.md)
 
 ---
 
@@ -321,11 +327,17 @@ testingndrih/
 │   ├── prisma/              # Schema & migrations
 │   └── scripts/               # Seed, maintenance
 ├── frontend/                # React SPA
-│   ├── src/pages/           # 32 page components
-│   ├── src/components/      # Shared UI
-│   └── e2e/                 # Playwright E2E (17 specs)
+│   ├── src/pages/           # Landing, app, admin pages
+│   ├── src/components/
+│   │   ├── landing/         # Public site components
+│   │   ├── security/        # Security scan UI
+│   │   └── ui/              # Shared primitives
+│   └── e2e/                 # Playwright E2E specs
 ├── docs/                    # Central documentation
-├── scripts/                 # health-check, deploy notify, recovery
+├── scripts/
+│   ├── deploy/              # Production deploy
+│   ├── notify/              # Telegram
+│   └── ops/                 # health-check, secrets
 ├── deploy/                  # nginx example config
 ├── .github/workflows/       # CI, release, deploy
 ├── docker-compose.yml

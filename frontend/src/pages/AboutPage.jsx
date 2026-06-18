@@ -6,7 +6,7 @@ import {
   Coffee,
   CheckCircle2,
 } from 'lucide-react'
-import LandingNav, { LandingFooter } from '../components/LandingNav'
+import LandingNav, { LandingFooter } from '../components/landing/LandingNav'
 import { landingCopy, aboutCopy } from '../i18n/landingI18n'
 import { useAboutSEO } from '../hooks/useLandingSEO'
 import useScrollReveal from '../hooks/useScrollReveal'

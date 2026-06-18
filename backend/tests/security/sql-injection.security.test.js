@@ -4,30 +4,14 @@
  */
 
 import fetch from 'node-fetch'
-
-const BASE_URL = 'http://localhost:5001/api'
-const TEST_USER_EMAIL = 'admin@testingndrih.local'
-const TEST_USER_PASSWORD = 'AdminPass123!'
+import { BASE_URL, loginForSecurityTests } from './helpers.js'
 
 let authToken = null
 
 describe('SQL Injection Security Tests', () => {
   beforeAll(async () => {
-    try {
-      const response = await fetch(`${BASE_URL}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: TEST_USER_EMAIL,
-          password: TEST_USER_PASSWORD
-        })
-      })
-
-      const data = await response.json()
-      authToken = data.token
-    } catch (err) {
-      console.error('Setup failed:', err.message)
-    }
+    const auth = await loginForSecurityTests()
+    authToken = auth.token
   }, 30000)
 
   describe('SQL Injection - Query Parameters', () => {
@@ -51,7 +35,7 @@ describe('SQL Injection Security Tests', () => {
           body: JSON.stringify({
             name: payload,
             description: 'SQLi Test',
-            steps: [{ type: 'NAVIGATE', target: 'https://example.com' }]
+            url: 'https://example.com'
           })
         })
 
@@ -72,7 +56,7 @@ describe('SQL Injection Security Tests', () => {
         body: JSON.stringify({
           name: `Test ${Date.now()}`,
           description: payload,
-          steps: [{ type: 'NAVIGATE', target: 'https://example.com' }]
+          url: 'https://example.com'
         })
       })
 
@@ -121,7 +105,7 @@ describe('SQL Injection Security Tests', () => {
         body: JSON.stringify({
           name: `Test ${Date.now()}`,
           description: 'Test',
-          steps: [{ type: 'NAVIGATE', target: 'https://example.com' }],
+          url: 'https://example.com',
           filter: "' OR '1'='1"
         })
       })
@@ -141,7 +125,7 @@ describe('SQL Injection Security Tests', () => {
         body: JSON.stringify({
           name: timingPayload,
           description: 'Test',
-          steps: [{ type: 'NAVIGATE', target: 'https://example.com' }]
+          url: 'https://example.com'
         })
       })
 
@@ -161,7 +145,7 @@ describe('SQL Injection Security Tests', () => {
         body: JSON.stringify({
           name: `Test ${Date.now()}`,
           description: errorPayload,
-          steps: [{ type: 'NAVIGATE', target: 'https://example.com' }]
+          url: 'https://example.com'
         })
       })
 
@@ -181,7 +165,7 @@ describe('SQL Injection Security Tests', () => {
         body: JSON.stringify({
           name: `Test ${Date.now()}`,
           description: 'Test',
-          steps: [{ type: 'NAVIGATE', target: 'https://example.com' }]
+          url: 'https://example.com'
         })
       })
 
@@ -223,7 +207,7 @@ describe('SQL Injection Security Tests', () => {
         body: JSON.stringify({
           name: `Test's Scenario ${Date.now()}`,
           description: "It's a test",
-          steps: [{ type: 'NAVIGATE', target: 'https://example.com' }]
+          url: 'https://example.com'
         })
       })
 
@@ -240,7 +224,7 @@ describe('SQL Injection Security Tests', () => {
         body: JSON.stringify({
           name: `Test "quoted" Scenario ${Date.now()}`,
           description: 'Description "with" quotes',
-          steps: [{ type: 'NAVIGATE', target: 'https://example.com' }]
+          url: 'https://example.com'
         })
       })
 
@@ -257,7 +241,7 @@ describe('SQL Injection Security Tests', () => {
         body: JSON.stringify({
           name: `Test\\Scenario ${Date.now()}`,
           description: 'Test with \\ backslash',
-          steps: [{ type: 'NAVIGATE', target: 'https://example.com' }]
+          url: 'https://example.com'
         })
       })
 
@@ -274,7 +258,7 @@ describe('SQL Injection Security Tests', () => {
         body: JSON.stringify({
           name: `Test\x00Scenario ${Date.now()}`,
           description: 'Test',
-          steps: [{ type: 'NAVIGATE', target: 'https://example.com' }]
+          url: 'https://example.com'
         })
       })
 
@@ -295,7 +279,7 @@ describe('SQL Injection Security Tests', () => {
         body: JSON.stringify({
           name: `Test ${Date.now()}`,
           description: unionPayload,
-          steps: [{ type: 'NAVIGATE', target: 'https://example.com' }]
+          url: 'https://example.com'
         })
       })
 
@@ -319,7 +303,7 @@ describe('SQL Injection Security Tests', () => {
           body: JSON.stringify({
             name: `Test ${Date.now()}`,
             description: payload,
-            steps: [{ type: 'NAVIGATE', target: 'https://example.com' }]
+            url: 'https://example.com'
           })
         })
 
@@ -341,7 +325,7 @@ describe('SQL Injection Security Tests', () => {
         body: JSON.stringify({
           name: `Test ${Date.now()}`,
           description: stackedPayload,
-          steps: [{ type: 'NAVIGATE', target: 'https://example.com' }]
+          url: 'https://example.com'
         })
       })
 
@@ -369,7 +353,7 @@ describe('SQL Injection Security Tests', () => {
           body: JSON.stringify({
             name: `Test ${Date.now()}`,
             description: payload,
-            steps: [{ type: 'NAVIGATE', target: 'https://example.com' }]
+            url: 'https://example.com'
           })
         })
 
@@ -396,7 +380,7 @@ describe('SQL Injection Security Tests', () => {
           body: JSON.stringify({
             name: `Test ${Date.now()}`,
             description: payload,
-            steps: [{ type: 'NAVIGATE', target: 'https://example.com' }]
+            url: 'https://example.com'
           })
         })
 
@@ -417,7 +401,7 @@ describe('SQL Injection Security Tests', () => {
         body: JSON.stringify({
           name: "Test' OR '1'='1 ${Date.now()}",
           description: 'SQLi Prevention Test',
-          steps: [{ type: 'NAVIGATE', target: 'https://example.com' }]
+          url: 'https://example.com'
         })
       })
 

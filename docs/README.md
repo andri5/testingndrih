@@ -3,7 +3,7 @@
 Welcome to **Test Sambil Ngopi** documentation — guides for setup, development, testing, and production deployment.
 
 **Live:** [testsambilngopi.com](https://testsambilngopi.com)  
-**Last updated:** June 2026 · **Project version:** 1.9.x
+**Last updated:** June 2026 · **Project version:** 1.14.x
 
 ---
 
@@ -15,6 +15,7 @@ Welcome to **Test Sambil Ngopi** documentation — guides for setup, development
 | [DIRECTORY_STRUCTURE.md](./DIRECTORY_STRUCTURE.md) | Full folder layout & naming conventions |
 | [SETUP.md](./SETUP.md) | Local install, Docker, env vars, troubleshooting |
 | [TESTING.md](./TESTING.md) | Jest, Vitest, Playwright E2E, CI coverage |
+| [SECURITY_TESTING.md](./SECURITY_TESTING.md) | Pentest checklist, OWASP Jest suite, in-app scanner |
 | [API_ENDPOINTS.md](./API_ENDPOINTS.md) | REST API reference |
 | [DEPLOYMENT.md](./DEPLOYMENT.md) | Release, VPS deploy, GitHub Actions |
 | [../PROJECT_STRUCTURE.md](../PROJECT_STRUCTURE.md) | High-level repo map |
@@ -38,8 +39,9 @@ Welcome to **Test Sambil Ngopi** documentation — guides for setup, development
 ### Deployment & ops
 - Production deploy: [DEPLOYMENT.md](./DEPLOYMENT.md)
 - Docker: [SETUP.md](./SETUP.md) — Docker section
-- Maintenance mode: `scripts/maintenance-mode.sh`, `frontend/public/maintenance.html`
+- Maintenance mode: `scripts/deploy/maintenance-mode.sh`, `frontend/public/maintenance.html`
 - Health check: `npm run health-check`
+- Ops scripts index: [`../scripts/README.md`](../scripts/README.md)
 
 ---
 
@@ -52,7 +54,7 @@ Welcome to **Test Sambil Ngopi** documentation — guides for setup, development
 | Frontend pages | 32 |
 | E2E spec files | 17 |
 | Database migrations | 17 |
-| GitHub workflows | 6 |
+| GitHub workflows | 7 |
 
 ---
 
@@ -117,6 +119,7 @@ Details: [ARCHITECTURE.md](./ARCHITECTURE.md#record--playback)
 | Scheduler, parallel, browser matrix | E2E |
 | Admin pages (smoke/stress/security) | E2E |
 | Platform E2E (from source) | CI on every push |
+| Security Jest (OWASP) | `npm run test:security` (local, API running) |
 | Production smoke (live URL) | `prod-monitor` workflow |
 
 See [TESTING.md](./TESTING.md) for commands and coverage targets.
@@ -168,7 +171,7 @@ See [DEPLOYMENT.md](./DEPLOYMENT.md) — release tag triggers deploy; manual opt
 |------|---------|---------|
 | May 2026 | 3.0 | Initial documentation structure |
 | June 4, 2026 | 3.1 | Cleanup, testing docs |
-| June 2026 | 4.0 | README/PROJECT_STRUCTURE refresh, roles, maintenance, CI workflows, v1.9.x stats |
+| June 2026 | 5.0 | Folder restructure (scripts/, components/), SECURITY_TESTING.md, v1.14.x |
 
 ---
 

@@ -1,8 +1,8 @@
 #!/bin/bash
 # Build & send playful Telegram deploy notifications (GitHub Actions).
 # Usage:
-#   MODE=success TAG=v1.6.0 ./scripts/telegram-deploy-notify.sh
-#   MODE=failure TAG=v1.6.0 ./scripts/telegram-deploy-notify.sh
+#   MODE=success TAG=v1.6.0 ./scripts/notify/telegram-deploy-notify.sh
+#   MODE=failure TAG=v1.6.0 ./scripts/notify/telegram-deploy-notify.sh
 set -euo pipefail
 
 MODE="${1:-${MODE:-success}}"

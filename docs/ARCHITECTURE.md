@@ -31,7 +31,7 @@ testingndrih/
 │       └── hooks/        # Custom React hooks
 │
 ├── docs/                 # Documentation
-├── scripts/              # Ops scripts (health, deploy notify)
+├── scripts/              # Ops: deploy/, notify/, ops/ (see scripts/README.md)
 └── .github/workflows/    # CI, release, deploy, monitor
 ```
 
@@ -155,7 +155,7 @@ sequenceDiagram
 | `MaintenancePage.jsx` | Auto-retry UI when API unavailable |
 | `maintenance.html` | Static fallback when nginx/Docker is down |
 | `MAINTENANCE_MODE=true` | Backend returns 503 on `/health` |
-| `scripts/maintenance-mode.sh` | Toggle maintenance on VPS |
+| `scripts/deploy/maintenance-mode.sh` | Toggle maintenance on VPS |
 
 ---
 

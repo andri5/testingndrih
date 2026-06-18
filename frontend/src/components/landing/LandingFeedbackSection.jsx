@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { MessageSquare, Send, CheckCircle2 } from 'lucide-react'
-import { siteAPI } from '../services/api'
-import { getPublicLang } from '../utils/landingRoutes'
+import { siteAPI } from '../../services/api'
+import { getPublicLang } from '../../utils/landingRoutes'
 
 export default function LandingFeedbackSection({ t, lang: langProp }) {
   const { pathname } = useLocation()

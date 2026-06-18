@@ -1,6 +1,6 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { FileQuestion, ArrowLeft, Home, ArrowRight } from 'lucide-react'
-import LandingNav, { LandingFooter } from '../components/LandingNav'
+import LandingNav, { LandingFooter } from '../components/landing/LandingNav'
 import { landingCopy } from '../i18n/landingI18n'
 import { getPublicLang, publicHomePath } from '../utils/landingRoutes'
 

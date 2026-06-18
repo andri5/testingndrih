@@ -20,9 +20,9 @@ import {
   Mic,
   Bot,
 } from 'lucide-react'
-import LandingNav, { LandingFooter } from '../components/LandingNav'
-import LandingFeedbackSection from '../components/LandingFeedbackSection'
-import FeaturesCarousel from '../components/FeaturesCarousel'
+import LandingNav, { LandingFooter } from '../components/landing/LandingNav'
+import LandingFeedbackSection from '../components/landing/LandingFeedbackSection'
+import FeaturesCarousel from '../components/landing/FeaturesCarousel'
 import useScrollReveal from '../hooks/useScrollReveal'
 import { landingCopy, ADVANCED_LABELS } from '../i18n/landingI18n'
 import { useLandingSEO } from '../hooks/useLandingSEO'

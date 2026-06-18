@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react'
 import apiClient from '../services/api'
-import SecurityScanRunner from '../components/SecurityScanRunner'
-import SecurityFindings from '../components/SecurityFindings'
-import SecuritySummary from '../components/SecuritySummary'
-import SecurityHistory from '../components/SecurityHistory'
+import SecurityScanRunner from '../components/security/SecurityScanRunner'
+import SecurityFindings from '../components/security/SecurityFindings'
+import SecuritySummary from '../components/security/SecuritySummary'
+import SecurityHistory from '../components/security/SecurityHistory'
 import ExportButtons from '../components/ExportButtons'
 import Layout from '../components/Layout'
-import { Shield, AlertCircle, Loader, Lock, Bug, Code, Zap, Key } from 'lucide-react'
+import { Shield, AlertCircle, Loader, Lock, Bug, Code, Zap, Key } from 'lucide-react'
 import { analyzeSecurityTestResults } from '../utils/testAnalysis'
 
-const i18n = {
+const i18n = {
     title: 'Security Testing',
     description: 'Identify vulnerabilities through comprehensive security scanning',
     selectScenario: 'Select Scenario',

@@ -1,8 +1,8 @@
 import React, { useState } from 'react'
-import apiClient from '../services/api'
-import { Play, Loader } from 'lucide-react'
+import apiClient from '../../services/api'
+import { Play, Loader } from 'lucide-react'
 
-const i18n = {
+const i18n = {
     startScan: 'Start Security Scan',
     scanType: 'Scan Type',
     fullScan: 'Full Scan',

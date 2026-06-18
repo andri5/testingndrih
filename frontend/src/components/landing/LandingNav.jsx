@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { LogIn } from 'lucide-react'
-import BrandLogo from './BrandLogo'
-import useNavScrollSpy from '../hooks/useNavScrollSpy'
+import BrandLogo from '../BrandLogo'
+import useNavScrollSpy from '../../hooks/useNavScrollSpy'
 import {
   publicAboutPath,
   publicHomePath,
   isAboutPublicPath,
   toPublicPath,
-} from '../utils/landingRoutes'
+} from '../../utils/landingRoutes'
 
 export function LangSwitch({ lang }) {
   const { pathname } = useLocation()

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { siteAPI } from '../services/api'
-import { Alert, Spinner } from './ui'
+import { siteAPI } from '../../services/api'
+import { Alert, Spinner } from '../ui'
 
 export default function LandingFeedbackAdmin() {
   const [items, setItems] = useState([])

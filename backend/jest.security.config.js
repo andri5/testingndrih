@@ -1,27 +1,29 @@
-module.exports = {
+/** Jest config for OWASP / security API tests (requires running backend on :5001). */
+export default {
+  displayName: 'security',
   testEnvironment: 'node',
-  testMatch: '**/tests/security/**/*.security.test.js',
+  maxWorkers: 1,
+  globalSetup: '<rootDir>/tests/security/globalSetup.cjs',
+  setupFilesAfterEnv: ['<rootDir>/tests/security/setupEnv.cjs'],
+  testMatch: ['**/tests/security/**/*.security.test.js'],
   testTimeout: 60000,
-  collectCoverage: true,
-  collectCoverageFrom: [
-    'src/**/*.js',
-    '!src/server.js'
-  ],
-  coveragePathIgnorePatterns: [
-    '/node_modules/',
-    '/coverage/'
-  ],
-  coverageThreshold: {
-    global: {
-      branches: 70,
-      functions: 70,
-      lines: 70,
-      statements: 70
-    }
+  moduleNameMapper: {
+    '^(\\.{1,2}/.*)\\.js$': '$1',
   },
-  coverageReporters: ['text', 'lcov', 'json'],
+  transform: {
+    '^.+\\.js$': [
+      'babel-jest',
+      {
+        presets: ['@babel/preset-env'],
+        plugins: [],
+      },
+    ],
+  },
+  transformIgnorePatterns: ['node_modules/(?!(uuid|pixelmatch)/)'],
+  setupFiles: ['<rootDir>/tests/jest-test-env.cjs'],
+  collectCoverage: false,
   verbose: true,
   forceExit: true,
   detectOpenHandles: true,
-  bail: 0
+  bail: 0,
 }

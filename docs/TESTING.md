@@ -102,6 +102,13 @@ cd backend && npm test -- --testPathPattern=integration
 
 ## Security & Database Tests
 
+Lihat juga **[SECURITY_TESTING.md](./SECURITY_TESTING.md)** untuk panduan pentest lengkap.
+
+```bash
+# Backend harus berjalan di :5001 (lihat SECURITY_TESTING.md)
+npm run test:security
+```
+
 ```
 backend/tests/security/
 ├── sql-injection.security.test.js
@@ -177,7 +184,7 @@ npm test -- --testPathPattern=variableSubstitution
 
 Workflow dev aktif: `.github/workflows/ci.yml` (backend test + lint pada PR)
 
-Contoh remote run: `.github/workflows/ci-run-scenario.example.yml`
+Contoh remote run: `docs/examples/ci-run-scenario.example.yml`
 
 1. Generate API token di Settings → Integrations
 2. Trigger `POST /api/ci/run` dengan token
@@ -238,6 +245,7 @@ cd frontend && npx playwright install chromium
 | `backend/jest.config.js` | Konfigurasi Jest |
 | `backend/jest-setup.js` | Setup & mock global |
 | `frontend/playwright.config.js` | Konfigurasi E2E |
-| `scripts/health-check.js` | Health check semua service |
+| `scripts/ops/health-check.js` | Health check semua service |
+| `docs/SECURITY_TESTING.md` | Pentest & OWASP checklist |
 
 **Status:** Backend 349/349 ✅ | Platform E2E 5/5 ✅ | CI workflow (backend + E2E) ✅ | Phase 2: naikkan coverage global.

@@ -1,7 +1,7 @@
 name: Deploy Production
 
 # Triggered by Release workflow (gh workflow run) or manual dispatch.
-# Runs on self-hosted runner on the VPS — see scripts/setup-github-runner.sh
+# Runs on self-hosted runner on the VPS — see scripts/ops/setup-github-runner.sh
 on:
   workflow_dispatch:
     inputs:
@@ -86,7 +86,7 @@ jobs:
         env:
           APP_PATH: ${{ secrets.PROD_APP_PATH }}
           FORCE_NO_CACHE: ${{ github.event.inputs.force_no_cache }}
-        run: bash scripts/deploy-production.sh
+        run: bash scripts/deploy/deploy-production.sh
 
       - name: Mark deploy complete
         id: complete
@@ -114,7 +114,7 @@ jobs:
           GITHUB_ACTOR: ${{ github.actor }}
           GITHUB_RUN_ID: ${{ github.run_id }}
           GITHUB_SERVER_URL: ${{ github.server_url }}
-        run: bash scripts/telegram-deploy-notify.sh success
+        run: bash scripts/notify/telegram-deploy-notify.sh success
 
   notify-telegram-failure:
     name: Telegram — deploy failed
@@ -137,4 +137,4 @@ jobs:
           GITHUB_ACTOR: ${{ github.actor }}
           GITHUB_RUN_ID: ${{ github.run_id }}
           GITHUB_SERVER_URL: ${{ github.server_url }}
-        run: bash scripts/telegram-deploy-notify.sh failure
+        run: bash scripts/notify/telegram-deploy-notify.sh failure

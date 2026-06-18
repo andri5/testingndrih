@@ -76,9 +76,10 @@ if (process.env.NODE_ENV === 'test') {
   // Disable rate limiting in test environment
   limiter = (req, res, next) => next()
 } else {
+  const maxRequests = process.env.NODE_ENV === 'development' ? 10000 : 1000
   limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 1000 // limit each IP to 1000 requests per windowMs
+    max: maxRequests,
   })
 }
 app.use('/api/', limiter)

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react'
-import apiClient from '../services/api'
-import { Clock } from 'lucide-react'
+import apiClient from '../../services/api'
+import { Clock } from 'lucide-react'
 
-const i18n = {
+const i18n = {
     scanHistory: 'Scan History',
     loadingHistory: 'Loading history...',
     noScans: 'No scans yet',

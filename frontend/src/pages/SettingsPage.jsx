@@ -8,7 +8,7 @@ import IntegrationsSettings from '../components/IntegrationsSettings'
 import UserManagement from '../components/UserManagement'
 import UserActivityLog from '../components/UserActivityLog'
 import SiteAnalytics from '../components/SiteAnalytics'
-import LandingFeedbackAdmin from '../components/LandingFeedbackAdmin'
+import LandingFeedbackAdmin from '../components/landing/LandingFeedbackAdmin'
 import { useAuthStore } from '../store/authStore'
 import { useSettingsStore } from '../store/settingsStore'
 

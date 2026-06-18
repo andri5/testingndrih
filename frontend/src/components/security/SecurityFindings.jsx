@@ -1,8 +1,8 @@
 import React, { useState } from 'react'
-import apiClient from '../services/api'
-import { ChevronDown, ChevronUp, AlertCircle, CheckCircle, XCircle } from 'lucide-react'
+import apiClient from '../../services/api'
+import { ChevronDown, ChevronUp, AlertCircle, CheckCircle, XCircle } from 'lucide-react'
 
-const i18n = {
+const i18n = {
     affectedUrl: 'Affected URL',
     affectedParameter: 'Affected Parameter',
     payload: 'Attack Payload',

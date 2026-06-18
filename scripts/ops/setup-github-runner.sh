@@ -10,7 +10,7 @@ REPO_URL="${REPO_URL:-https://github.com/andri5/testingndrih}"
 RUNNER_VERSION="${RUNNER_VERSION:-2.334.0}"
 
 if [ "$(id -u)" -ne 0 ]; then
-  echo "Run as root: sudo bash scripts/setup-github-runner.sh"
+  echo "Run as root: sudo bash scripts/ops/setup-github-runner.sh"
   exit 1
 fi
 
@@ -19,7 +19,7 @@ if [ -z "${RUNNER_TOKEN:-}" ]; then
   echo "  Settings → Actions → Runners → New self-hosted runner → copy token"
   echo ""
   echo "Example:"
-  echo "  RUNNER_TOKEN=XXXX sudo -E bash scripts/setup-github-runner.sh"
+  echo "  RUNNER_TOKEN=XXXX sudo -E bash scripts/ops/setup-github-runner.sh"
   exit 1
 fi
 

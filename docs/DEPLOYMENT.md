@@ -107,7 +107,7 @@ sudo usermod -aG docker deploy
 ### 2. Deploy runner (self-hosted)
 
 Deploy production memakai **self-hosted runner** di VPS (bukan SSH dari GitHub cloud).
-Setup sekali: `bash scripts/setup-github-runner.sh` di server.
+Setup sekali: `bash scripts/ops/setup-github-runner.sh` di server.
 
 <details>
 <summary>Legacy: SSH key (tidak dipakai workflow deploy saat ini)</summary>

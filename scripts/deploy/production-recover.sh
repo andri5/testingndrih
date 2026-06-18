@@ -1,5 +1,5 @@
 #!/bin/bash
-# Run on the VPS as deploy user after SSH: bash scripts/production-recover.sh
+# Run on the VPS as deploy user after SSH: bash scripts/deploy/production-recover.sh
 # Restarts Docker stack + Nginx and verifies local health before public URL works.
 set -euo pipefail
 

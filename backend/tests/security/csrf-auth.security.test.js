@@ -4,32 +4,16 @@
  */
 
 import fetch from 'node-fetch'
-
-const BASE_URL = 'http://localhost:5001/api'
-const TEST_USER_EMAIL = 'admin@testingndrih.local'
-const TEST_USER_PASSWORD = 'AdminPass123!'
+import { BASE_URL, loginForSecurityTests, TEST_USER_EMAIL, TEST_USER_PASSWORD } from './helpers.js'
 
 let authToken = null
 let userId = null
 
 describe('CSRF and Authentication Security Tests', () => {
   beforeAll(async () => {
-    try {
-      const response = await fetch(`${BASE_URL}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: TEST_USER_EMAIL,
-          password: TEST_USER_PASSWORD
-        })
-      })
-
-      const data = await response.json()
-      authToken = data.token
-      userId = data.userId
-    } catch (err) {
-      console.error('Setup failed:', err.message)
-    }
+    const auth = await loginForSecurityTests()
+    authToken = auth.token
+    userId = auth.userId
   }, 30000)
 
   describe('CSRF (Cross-Site Request Forgery)', () => {
@@ -42,7 +26,7 @@ describe('CSRF and Authentication Security Tests', () => {
         body: JSON.stringify({
           name: 'CSRF Test',
           description: 'Should fail without token',
-          steps: []
+          url: 'https://example.com'
         })
       })
 
@@ -78,7 +62,7 @@ describe('CSRF and Authentication Security Tests', () => {
         body: JSON.stringify({
           name: 'CSRF Test',
           description: 'Cross-origin request',
-          steps: []
+          url: 'https://example.com'
         })
       })
 
@@ -97,7 +81,7 @@ describe('CSRF and Authentication Security Tests', () => {
         body: JSON.stringify({
           name: `Test ${Date.now()}`,
           description: 'Test',
-          steps: []
+          url: 'https://example.com'
         })
       })
 

@@ -2,9 +2,9 @@
 # Copy to /etc/nginx/sites-available/ and include maintenance block.
 #
 # Before VPS maintenance:
-#   sudo bash scripts/maintenance-mode.sh on
+#   sudo bash scripts/deploy/maintenance-mode.sh on
 # After recovery:
-#   sudo bash scripts/maintenance-mode.sh off
+#   sudo bash scripts/deploy/maintenance-mode.sh off
 
 server {
     listen 443 ssl http2;

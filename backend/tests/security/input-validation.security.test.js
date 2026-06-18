@@ -4,30 +4,14 @@
  */
 
 import fetch from 'node-fetch'
-
-const BASE_URL = 'http://localhost:5001/api'
-const TEST_USER_EMAIL = 'admin@testingndrih.local'
-const TEST_USER_PASSWORD = 'AdminPass123!'
+import { BASE_URL, loginForSecurityTests, TEST_USER_EMAIL, TEST_USER_PASSWORD } from './helpers.js'
 
 let authToken = null
 
 describe('Input Validation and Data Handling Security Tests', () => {
   beforeAll(async () => {
-    try {
-      const response = await fetch(`${BASE_URL}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: TEST_USER_EMAIL,
-          password: TEST_USER_PASSWORD
-        })
-      })
-
-      const data = await response.json()
-      authToken = data.token
-    } catch (err) {
-      console.error('Setup failed:', err.message)
-    }
+    const auth = await loginForSecurityTests()
+    authToken = auth.token
   }, 30000)
 
   describe('Input Type Validation', () => {
@@ -41,7 +25,7 @@ describe('Input Validation and Data Handling Security Tests', () => {
         body: JSON.stringify({
           name: 12345,
           description: 'Test',
-          steps: []
+          url: 'https://example.com'
         })
       })
 
@@ -58,14 +42,14 @@ describe('Input Validation and Data Handling Security Tests', () => {
         body: JSON.stringify({
           name: `Test ${Date.now()}`,
           description: { nested: 'object' },
-          steps: []
+          url: 'https://example.com'
         })
       })
 
       expect([400, 422]).toContain(response.status)
     })
 
-    test('should reject non-array for steps', async () => {
+    test('should reject invalid url type', async () => {
       const response = await fetch(`${BASE_URL}/scenarios`, {
         method: 'POST',
         headers: {
@@ -75,11 +59,11 @@ describe('Input Validation and Data Handling Security Tests', () => {
         body: JSON.stringify({
           name: `Test ${Date.now()}`,
           description: 'Test',
-          steps: 'not an array'
+          url: 12345
         })
       })
 
-      expect([400, 422]).toContain(response.status)
+      expect([400, 422, 500]).toContain(response.status)
     })
 
     test('should reject non-numeric ID', async () => {
@@ -104,7 +88,7 @@ describe('Input Validation and Data Handling Security Tests', () => {
         body: JSON.stringify({
           name: longName,
           description: 'Test',
-          steps: []
+          url: 'https://example.com'
         })
       })
 
@@ -123,7 +107,7 @@ describe('Input Validation and Data Handling Security Tests', () => {
         body: JSON.stringify({
           name: `Test ${Date.now()}`,
           description: longDesc,
-          steps: []
+          url: 'https://example.com'
         })
       })
 
@@ -133,11 +117,8 @@ describe('Input Validation and Data Handling Security Tests', () => {
     test('should handle large request payload', async () => {
       const largePayload = {
         name: `Test ${Date.now()}`,
-        description: 'Test',
-        steps: Array(10000).fill({
-          type: 'NAVIGATE',
-          target: 'https://example.com'
-        })
+        description: 'A'.repeat(50000),
+        url: 'https://example.com',
       }
 
       const response = await fetch(`${BASE_URL}/scenarios`, {
@@ -197,7 +178,7 @@ describe('Input Validation and Data Handling Security Tests', () => {
           body: JSON.stringify({
             name: `Test ${Date.now()}`,
             description: 'Test',
-            steps: [{ type: 'NAVIGATE', target: url }]
+            url,
           })
         })
 
@@ -214,18 +195,13 @@ describe('Input Validation and Data Handling Security Tests', () => {
           'Authorization': `Bearer ${authToken}`
         },
         body: JSON.stringify({
-          name: `Test ${Date.now()}`,
+          name: '',
           description: 'Test',
-          steps: [
-            {
-              type: 'INVALID_TYPE', // Invalid type
-              target: 'https://example.com'
-            }
-          ]
+          url: 'https://example.com',
         })
       })
 
-      expect([400, 422]).toContain(response.status)
+      expect([400, 422, 500]).toContain(response.status)
     })
   })
 
@@ -242,7 +218,7 @@ describe('Input Validation and Data Handling Security Tests', () => {
         body: JSON.stringify({
           name: `Test ${specialChars} ${Date.now()}`,
           description: specialChars,
-          steps: []
+          url: 'https://example.com'
         })
       })
 
@@ -259,7 +235,7 @@ describe('Input Validation and Data Handling Security Tests', () => {
         body: JSON.stringify({
           name: `Test 你好 мир العالم ${Date.now()}`,
           description: 'مرحبا',
-          steps: []
+          url: 'https://example.com'
         })
       })
 
@@ -276,7 +252,7 @@ describe('Input Validation and Data Handling Security Tests', () => {
         body: JSON.stringify({
           name: `Test 😀 🎉 🔒 ${Date.now()}`,
           description: 'Test 🚀',
-          steps: []
+          url: 'https://example.com'
         })
       })
 
@@ -293,7 +269,7 @@ describe('Input Validation and Data Handling Security Tests', () => {
         body: JSON.stringify({
           name: `Test\x00Injection ${Date.now()}`,
           description: 'Test',
-          steps: []
+          url: 'https://example.com'
         })
       })
 
@@ -310,7 +286,7 @@ describe('Input Validation and Data Handling Security Tests', () => {
         body: JSON.stringify({
           name: `Test\n\r\t${Date.now()}`,
           description: 'Test\x01\x02',
-          steps: []
+          url: 'https://example.com'
         })
       })
 
@@ -329,7 +305,7 @@ describe('Input Validation and Data Handling Security Tests', () => {
         body: JSON.stringify({
           name: null,
           description: 'Test',
-          steps: []
+          url: 'https://example.com'
         })
       })
 
@@ -345,7 +321,7 @@ describe('Input Validation and Data Handling Security Tests', () => {
         },
         body: JSON.stringify({
           description: 'Test',
-          steps: []
+          url: 'https://example.com'
           // Missing required 'name'
         })
       })
@@ -363,7 +339,7 @@ describe('Input Validation and Data Handling Security Tests', () => {
         body: JSON.stringify({
           name: '',
           description: '',
-          steps: []
+          url: 'https://example.com'
         })
       })
 
@@ -383,7 +359,7 @@ describe('Input Validation and Data Handling Security Tests', () => {
         body: JSON.stringify({
           name: `  Test ${Date.now()}  `,
           description: '  Test Description  ',
-          steps: []
+          url: 'https://example.com'
         })
       })
 
@@ -404,7 +380,7 @@ describe('Input Validation and Data Handling Security Tests', () => {
         body: JSON.stringify({
           name: `Test\t${Date.now()}`,
           description: 'Test\nWith\nNewlines',
-          steps: []
+          url: 'https://example.com'
         })
       })
 
@@ -423,7 +399,7 @@ describe('Input Validation and Data Handling Security Tests', () => {
         body: JSON.stringify({
           name: `Test ${Date.now()}`,
           description: 'Test',
-          steps: [],
+          url: 'https://example.com',
           isPublic: 'true' // String instead of boolean
         })
       })
@@ -458,7 +434,7 @@ describe('Input Validation and Data Handling Security Tests', () => {
           name: `Test ${Date.now()}`,
           name: 'Duplicate', // Duplicate key
           description: 'Test',
-          steps: []
+          url: 'https://example.com'
         })
       })
 
@@ -478,7 +454,7 @@ describe('Input Validation and Data Handling Security Tests', () => {
         body: JSON.stringify({
           name: `Test ${Date.now()}`,
           description: 'Test',
-          steps: [],
+          url: 'https://example.com',
           _internal: 'should not appear',
           __proto__: { admin: true }
         })

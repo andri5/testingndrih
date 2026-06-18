@@ -17,9 +17,10 @@
     "test:frontend": "npm run test --workspace=frontend",
     "lint": "npm run lint --workspace=backend && npm run lint --workspace=frontend",
     "format": "npm run format:write --workspace=backend && npm run format:write --workspace=frontend",
-    "health-check": "node scripts/health-check.js",
-    "generate-secrets": "node scripts/generate-production-secrets.js",
-    "push": "node scripts/git-push-safe.js",
+    "health-check": "node scripts/ops/health-check.js",
+    "generate-secrets": "node scripts/ops/generate-production-secrets.js",
+    "push": "node scripts/ops/git-push-safe.js",
+    "test:security": "npm run test:security --workspace=backend",
     "prepare": "husky install"
   },
   "workspaces": [

@@ -1,8 +1,8 @@
 #!/bin/bash
 # Toggle nginx maintenance page on the VPS (works even when Docker app is down).
 # Usage:
-#   sudo bash scripts/maintenance-mode.sh on   # show maintenance page
-#   sudo bash scripts/maintenance-mode.sh off  # restore normal proxy
+#   sudo bash scripts/deploy/maintenance-mode.sh on   # show maintenance page
+#   sudo bash scripts/deploy/maintenance-mode.sh off  # restore normal proxy
 set -euo pipefail
 
 ACTION="${1:-}"

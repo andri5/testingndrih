@@ -71,7 +71,7 @@ export function validateProductionSecurity() {
     for (const error of errors) {
       console.error(`[security] ERROR: ${error}`)
     }
-    console.error('[security] Generate values with: node scripts/generate-production-secrets.js')
+    console.error('[security] Generate values with: node scripts/ops/generate-production-secrets.js')
     process.exit(1)
   }
 }
