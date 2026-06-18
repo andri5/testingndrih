@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { LANDING_SEO, SITE_URL } from '../i18n/landingI18n'
+import { LANDING_SEO, ABOUT_SEO, SITE_URL } from '../i18n/landingI18n'
 
 function upsertMeta(attr, key, content) {
   if (!content) return
@@ -26,10 +26,12 @@ function upsertLink(rel, href, hreflang) {
   el.setAttribute('href', href)
 }
 
-export function useLandingSEO(lang) {
+export function usePublicSEO(lang, seoMap, alternatePaths) {
   useEffect(() => {
-    const seo = LANDING_SEO[lang] || LANDING_SEO.id
+    const seo = seoMap[lang] || seoMap.id
     const url = `${SITE_URL}${seo.path}`
+    const altId = alternatePaths?.id ?? LANDING_SEO.id.path
+    const altEn = alternatePaths?.en ?? LANDING_SEO.en.path
 
     document.documentElement.lang = lang === 'en' ? 'en' : 'id'
     document.title = seo.title
@@ -48,9 +50,9 @@ export function useLandingSEO(lang) {
     upsertMeta('name', 'twitter:description', seo.description)
 
     upsertLink('canonical', url)
-    upsertLink('alternate', `${SITE_URL}/`, 'id')
-    upsertLink('alternate', `${SITE_URL}/en`, 'en')
-    upsertLink('alternate', `${SITE_URL}/`, 'x-default')
+    upsertLink('alternate', `${SITE_URL}${altId}`, 'id')
+    upsertLink('alternate', `${SITE_URL}${altEn}`, 'en')
+    upsertLink('alternate', `${SITE_URL}${altId}`, 'x-default')
 
     const jsonLd = {
       '@context': 'https://schema.org',
@@ -83,5 +85,13 @@ export function useLandingSEO(lang) {
       const s = document.getElementById('landing-jsonld')
       if (s) s.remove()
     }
-  }, [lang])
+  }, [lang, seoMap, alternatePaths])
+}
+
+export function useLandingSEO(lang) {
+  usePublicSEO(lang, LANDING_SEO, { id: LANDING_SEO.id.path, en: LANDING_SEO.en.path })
+}
+
+export function useAboutSEO(lang) {
+  usePublicSEO(lang, ABOUT_SEO, { id: ABOUT_SEO.id.path, en: ABOUT_SEO.en.path })
 }

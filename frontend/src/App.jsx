@@ -1,8 +1,9 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { useEffect } from 'react'
 import { Toaster } from 'react-hot-toast'
 import LoginPage from './pages/LoginPage'
 import LandingPage from './pages/LandingPage'
+import AboutPage from './pages/AboutPage'
 import RegisterPage from './pages/RegisterPage'
 import ForgotPasswordPage from './pages/ForgotPasswordPage'
 import ResetPasswordPage from './pages/ResetPasswordPage'
@@ -31,6 +32,7 @@ import SecurityTestHelpPage from './pages/SecurityTestHelpPage'
 import ProtectedRoute from './components/ProtectedRoute'
 import AdminRoute from './components/AdminRoute'
 import NotFoundPage from './pages/NotFoundPage'
+import LandingNotFoundPage from './pages/LandingNotFoundPage'
 import MaintenancePage from './pages/MaintenancePage'
 import SessionExpiredPage from './pages/SessionExpiredPage'
 import ForbiddenPage from './pages/ForbiddenPage'
@@ -40,6 +42,14 @@ import OfflineBanner from './components/OfflineBanner'
 import ServerHealthMonitor from './components/ServerHealthMonitor'
 import { useAuthStore } from './store/authStore'
 import { useSettingsStore } from './store/settingsStore'
+
+function NotFoundRoute() {
+  const token = useAuthStore((state) => state.token)
+  const { pathname } = useLocation()
+  if (token) return <NotFoundPage />
+  const lang = pathname === '/en' || pathname.startsWith('/en/') ? 'en' : 'id'
+  return <LandingNotFoundPage lang={lang} />
+}
 
 export default function App() {
   const token = useAuthStore((state) => state.token)
@@ -74,6 +84,14 @@ export default function App() {
         <Route
           path="/en"
           element={token ? <Navigate to="/dashboard" replace /> : <LandingPage lang="en" />}
+        />
+        <Route
+          path="/about"
+          element={token ? <Navigate to="/dashboard" replace /> : <AboutPage lang="id" />}
+        />
+        <Route
+          path="/en/about"
+          element={token ? <Navigate to="/dashboard" replace /> : <AboutPage lang="en" />}
         />
 
         {/* Auth */}
@@ -182,7 +200,7 @@ export default function App() {
         {/* Server error */}
         <Route path="/server-error" element={<ServerErrorPage />} />
 
-        <Route path="*" element={<NotFoundPage />} />
+        <Route path="*" element={<NotFoundRoute />} />
       </Routes>
     </Router>
     </ErrorBoundary>

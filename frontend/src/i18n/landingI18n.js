@@ -21,10 +21,32 @@ export const LANDING_SEO = {
   },
 }
 
+export const ABOUT_SEO = {
+  id: {
+    title: 'Tentang Kami — Test Sambil Ngopi',
+    description:
+      'Kenali Test Sambil Ngopi: platform test automation berbasis Playwright & AI untuk tim QA dan developer Indonesia. Self-hosted, rekam & playback, CI-ready.',
+    keywords:
+      'tentang test sambil ngopi, platform QA indonesia, test automation, playwright, about us',
+    locale: 'id_ID',
+    path: '/about',
+  },
+  en: {
+    title: 'About — Test Sambil Ngopi',
+    description:
+      'Learn about Test Sambil Ngopi: a Playwright & AI test automation platform for QA teams and developers. Self-hosted, record & playback, CI-ready.',
+    keywords:
+      'about test sambil ngopi, QA platform, test automation, playwright, about us',
+    locale: 'en_US',
+    path: '/en/about',
+  },
+}
+
 export const landingCopy = {
   id: {
     navFeatures: 'Fitur',
     navHow: 'Cara Kerja',
+    navAbout: 'Tentang',
     navLogin: 'Login',
     navCta: 'Mulai Gratis',
     badge: 'Playwright · AI · CI-ready',
@@ -55,6 +77,12 @@ export const landingCopy = {
     ctaFinalButton: 'Buat Akun Gratis',
     footerProduction: 'Production',
     mockupTitle: 'Login Flow — Staging',
+    notFoundTitle: 'Halaman tidak ditemukan',
+    notFoundDesc: 'URL yang Anda buka tidak ada atau sudah dipindahkan. Cek kembali alamatnya atau kembali ke beranda.',
+    notFoundBack: 'Kembali ke Beranda',
+    notFoundGoBack: 'Halaman sebelumnya',
+    notFoundLogin: 'Login',
+    notFoundRegister: 'Mulai Gratis',
     features: [
       { title: 'Record & Playback', desc: 'Rekam interaksi browser dengan Playwright, otomatis jadi test steps yang bisa dijalankan ulang.' },
       { title: 'Scenario Management', desc: 'Buat, edit, clone, import Excel, template siap pakai, tag, dan favorit untuk organisasi test.' },
@@ -75,6 +103,7 @@ export const landingCopy = {
   en: {
     navFeatures: 'Features',
     navHow: 'How It Works',
+    navAbout: 'About',
     navLogin: 'Login',
     navCta: 'Start Free',
     badge: 'Playwright · AI · CI-ready',
@@ -105,6 +134,12 @@ export const landingCopy = {
     ctaFinalButton: 'Create Free Account',
     footerProduction: 'Live Site',
     mockupTitle: 'Login Flow — Staging',
+    notFoundTitle: 'Page not found',
+    notFoundDesc: "The page you're looking for doesn't exist or has been moved. Check the URL or head back home.",
+    notFoundBack: 'Back to Home',
+    notFoundGoBack: 'Previous page',
+    notFoundLogin: 'Login',
+    notFoundRegister: 'Start Free',
     features: [
       { title: 'Record & Playback', desc: 'Record browser interactions with Playwright and replay them as reusable test steps.' },
       { title: 'Scenario Management', desc: 'Create, edit, clone, Excel import, templates, tags, and favorites to organize tests.' },
@@ -134,3 +169,82 @@ export const ADVANCED_LABELS = [
   'Visual Regression',
   'API Testing',
 ]
+
+export const aboutCopy = {
+  id: {
+    badge: 'Tentang platform',
+    title: 'Test Sambil Ngopi',
+    subtitle:
+      'Platform test automation yang dirancang supaya tim QA dan developer bisa fokus ke kualitas produk — tanpa ribet setup alat yang terpisah-pisah.',
+    missionTitle: 'Misi kami',
+    missionText:
+      'Menyediakan workspace testing otomatis yang praktis, terjangkau, dan ramah untuk tim di Indonesia: rekam skenario browser, jalankan dengan Playwright, analisis hasil, dan integrasikan ke CI — semua dalam satu tempat.',
+    forWhoTitle: 'Untuk siapa?',
+    forWho: [
+      {
+        title: 'QA & Tester',
+        desc: 'Bangun regression suite, smoke test, dan visual check tanpa menulis kode panjang. Tag, favorit, dan compare runs memudahkan triase.',
+      },
+      {
+        title: 'Developer',
+        desc: 'Self-hosted ready, API token untuk pipeline, environments per stage, dan AI assistant saat locator atau step gagal.',
+      },
+      {
+        title: 'Tim kecil & indie',
+        desc: 'Gratis mulai, tanpa kartu kredit. Cocok untuk side project, startup, atau internal tool sebelum scale ke enterprise.',
+      },
+    ],
+    builtTitle: 'Dibangun dengan',
+    builtItems: ['Playwright', 'Node.js & Express', 'React', 'PostgreSQL', 'Docker', 'GitHub Actions CI/CD', 'AI (Groq/OpenAI-compatible)'],
+    valuesTitle: 'Prinsip kami',
+    values: [
+      'Playwright di core — bukan wrapper tipis, engine execution yang reliable.',
+      'AI sebagai asisten, bukan pengganti: generate skenario, explain failure, suggest locator.',
+      'Transparan & self-hosted: deploy di VPS sendiri, data test tetap milik Anda.',
+      'Bahasa Indonesia & English — landing dan docs ramah untuk tim lokal dan global.',
+    ],
+    liveTitle: 'Production',
+    liveText: 'Platform live di testsambilngopi.com — open source workflow dengan deploy otomatis via GitHub Actions.',
+    ctaTitle: 'Mau coba sendiri?',
+    ctaText: 'Buat akun gratis dan rekam skenario pertama hari ini.',
+    ctaButton: 'Mulai Gratis',
+  },
+  en: {
+    badge: 'About the platform',
+    title: 'Test Sambil Ngopi',
+    subtitle:
+      'A test automation platform built so QA teams and developers can focus on product quality — without juggling disconnected tools.',
+    missionTitle: 'Our mission',
+    missionText:
+      'Provide a practical, affordable testing workspace: record browser scenarios, run them with Playwright, analyze results, and plug into CI — all in one place.',
+    forWhoTitle: 'Who is it for?',
+    forWho: [
+      {
+        title: 'QA & Testers',
+        desc: 'Build regression suites, smoke tests, and visual checks without long scripts. Tags, favorites, and run diff simplify triage.',
+      },
+      {
+        title: 'Developers',
+        desc: 'Self-hosted ready, API tokens for pipelines, per-stage environments, and AI help when locators or steps fail.',
+      },
+      {
+        title: 'Small & indie teams',
+        desc: 'Free to start, no credit card. Great for side projects, startups, or internal tools before scaling up.',
+      },
+    ],
+    builtTitle: 'Built with',
+    builtItems: ['Playwright', 'Node.js & Express', 'React', 'PostgreSQL', 'Docker', 'GitHub Actions CI/CD', 'AI (Groq/OpenAI-compatible)'],
+    valuesTitle: 'What we believe',
+    values: [
+      'Playwright at the core — a reliable execution engine, not a thin wrapper.',
+      'AI as assistant, not replacement: generate scenarios, explain failures, suggest locators.',
+      'Transparent & self-hosted: deploy on your VPS, your test data stays yours.',
+      'Indonesian & English — landing and UX friendly for local and global teams.',
+    ],
+    liveTitle: 'Production',
+    liveText: 'Live at testsambilngopi.com — open-source workflow with automated deploy via GitHub Actions.',
+    ctaTitle: 'Want to try it?',
+    ctaText: 'Create a free account and record your first scenario today.',
+    ctaButton: 'Start Free',
+  },
+}
