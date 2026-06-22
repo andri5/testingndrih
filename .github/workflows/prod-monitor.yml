@@ -40,6 +40,12 @@ jobs:
               return 0
             fi
 
+            # nginx static maintenance (503 HTML) or upstream hang — retry
+            if [ "$code" = "503" ]; then
+              echo "Attempt: nginx 503 (deploy window), will retry..."
+              return 1
+            fi
+
             return 1
           }
 
