@@ -1,3 +1,10 @@
+## [1.14.2](https://github.com/andri5/testingndrih/compare/v1.14.1...v1.14.2) (2026-06-22)
+
+
+### Bug Fixes
+
+* **ci:** add retry to production smoke health probe ([74dcb30](https://github.com/andri5/testingndrih/commit/74dcb304e1814370c218097f1eda02759baa45a8))
+
 ## [1.14.1](https://github.com/andri5/testingndrih/compare/v1.14.0...v1.14.1) (2026-06-18)
 
 
