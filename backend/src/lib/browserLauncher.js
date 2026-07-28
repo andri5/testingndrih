@@ -1,15 +1,19 @@
 /**
  * Browser Launcher Helper
- * Handles headless/headed mode based on environment
- * Supports Xvfb virtual display for server environments
+ * Environment-aware Playwright launch options for Docker/Linux/desktop.
  */
 
 import { chromium, firefox, webkit } from 'playwright'
 import os from 'os'
 
-// Detect if running on Windows or Linux
 const isWindows = os.platform() === 'win32'
 const isLinux = os.platform() === 'linux'
+
+export const CHROMIUM_DOCKER_ARGS = [
+  '--no-sandbox',
+  '--disable-dev-shm-usage',
+  '--disable-gpu',
+]
 
 /**
  * Get appropriate launch options for the environment
@@ -17,16 +21,17 @@ const isLinux = os.platform() === 'linux'
 export const getBrowserLaunchOptions = (browserType, options = {}) => {
   const { headless = true, channel = undefined } = options
 
-  // Default launch options
   const launchOptions = {
     channel,
-    // Always use headless on server/Linux environments
-    headless: isLinux ? true : headless,
+    headless: headless === false ? false : true,
   }
 
-  // Add Xvfb support for Linux if available
-  if (isLinux && !headless) {
-    console.log('[BROWSER] ℹ️ Running on Linux. Using headless mode with Xvfb support.')
+  if (browserType === chromium || browserType === 'chromium') {
+    launchOptions.args = [...CHROMIUM_DOCKER_ARGS]
+  }
+
+  if (isLinux && headless === false && !process.env.DISPLAY) {
+    console.log('[BROWSER] ℹ️ No DISPLAY on Linux — forcing headless')
     launchOptions.headless = true
   }
 
@@ -37,34 +42,34 @@ export const getBrowserLaunchOptions = (browserType, options = {}) => {
  * Launch browser with environment-aware settings
  */
 export const launchBrowser = async (browserType, options = {}) => {
-  const launchOptions = getBrowserLaunchOptions(browserType, options)
-  
+  const engine = typeof browserType === 'string'
+    ? { chromium, firefox, webkit }[browserType] || chromium
+    : browserType
+
+  const launchOptions = getBrowserLaunchOptions(engine, options)
+
   console.log(`[BROWSER] 🚀 Launching browser with options:`, launchOptions)
-  
+
   try {
-    const browser = await browserType.launch(launchOptions)
-    return browser
+    return await engine.launch(launchOptions)
   } catch (error) {
     console.error(`[BROWSER] ❌ Failed to launch browser:`, error.message)
-    
-    // Provide helpful error messages
+
     if (error.message.includes('Failed to connect to Xvfb')) {
       console.error('[BROWSER] 💡 Tip: Xvfb not available. Install with: sudo apt-get install xvfb')
     } else if (error.message.includes('Unable to open X display')) {
       console.error('[BROWSER] 💡 Tip: No display server found. Use Xvfb or headless mode.')
     }
-    
+
     throw error
   }
 }
 
 /**
  * Wrap xvfb-run command (Linux only)
- * Usage: xvfb-run npm run test
  */
 export const getXvfbRunCommand = () => {
   if (!isLinux) return null
-  
   return 'xvfb-run -a --server-args="-screen 0 1920x1080x24"'
 }
 
@@ -72,6 +77,7 @@ export default {
   getBrowserLaunchOptions,
   launchBrowser,
   getXvfbRunCommand,
+  CHROMIUM_DOCKER_ARGS,
   isWindows,
   isLinux
 }

@@ -8,25 +8,30 @@ export const recorderController = {
   async startRecording(req, res, next) {
     try {
       const userId = req.user.id
-      const { scenarioId, url } = req.body
+      const { scenarioId, url, mode } = req.body
       if (!scenarioId) {
         return res.status(400).json({ error: 'scenarioId diperlukan' })
       }
-      const result = await recorderService.startRecording(userId, scenarioId, url)
-      
-      // Return result with Playwright status (no proxy URL needed)
+      const result = await recorderService.startRecording(userId, scenarioId, url, mode)
+
       res.status(202).json({
         success: true,
         status: result.status,
         scenarioId: result.scenarioId,
         message: result.message,
-        method: 'playwright', // ⭐ Indicate using Playwright
+        method: result.method || 'proxy',
+        proxyUrl: result.proxyUrl || null,
         browserPid: result.browserPid
       })
     } catch (err) {
       console.error(`[RECORDER] startRecording error: ${err.message}`)
-      if (err.message.includes('sudah berjalan') || err.message.includes('tidak ditemukan')) {
-        return res.status(400).json({ error: err.message })
+      if (
+        err.message.includes('sudah berjalan') ||
+        err.message.includes('tidak ditemukan') ||
+        err.message.includes('URL target') ||
+        err.message.includes('Failed to start recording')
+      ) {
+        return res.status(400).json({ error: err.message, message: err.message })
       }
       next(err)
     }
@@ -144,13 +149,48 @@ window.__targetBase=${JSON.stringify(url)};
   var _base=window.__targetBase;
   var _interacted=false;
   var _inProxyNav=false;
+
+  function _isFlightUrl(u){
+    try{
+      var s=String(u||'');
+      if(/[?&]_rsc=/.test(s)) return true;
+      if(/[?&]_next(?:OutputTree|Data|Scroll)=/.test(s)) return true;
+      var a=new URL(s,_base);
+      if(a.searchParams.has('_rsc')) return true;
+      return false;
+    }catch(e){ return /_rsc=/.test(String(u||'')); }
+  }
+
+  function _unwrapRecorderUrl(u){
+    try{
+      var a=new URL(String(u),_proxyOrigin);
+      if(a.origin===_proxyOrigin && a.pathname.indexOf('/api/recorder/asset')===0){
+        var inner=a.searchParams.get('url');
+        if(inner) return inner;
+      }
+      if(a.origin===_proxyOrigin && a.pathname.indexOf('/api/recorder/proxy')===0){
+        var inner2=a.searchParams.get('url');
+        if(inner2) return inner2;
+      }
+    }catch(e){}
+    return String(u);
+  }
+
+  function _normalizeDocUrl(u){
+    var raw=_unwrapRecorderUrl(u);
+    var a=new URL(String(raw),_base);
+    a.searchParams.delete('_rsc');
+    ['_nextOutputTree','_nextData','_nextScroll'].forEach(function(k){ a.searchParams.delete(k); });
+    return a.href;
+  }
+
   // ── Fetch/XHR intercept: forward same-origin requests to actual target ──
-  // Fixes Next.js /_next/data/... calls, API calls, etc. that would otherwise
-  // hit our proxy server (which returns 404) instead of the real target.
+  // Asset proxy is ONLY for subresource fetch — never for document navigation.
   var _nFetch=window.__nativeFetch;
   window.fetch=function(input,init){
     try{
       var _url=typeof input==='string'?input:(input&&input.url?input.url:String(input));
+      _url=_unwrapRecorderUrl(_url);
       var _u=new URL(_url,window.location.href);
       if(_u.origin===_proxyOrigin&&!_u.pathname.startsWith('/api/recorder/')){
         var _tp=new URL(_u.pathname+_u.search+_u.hash,_base).href;
@@ -168,6 +208,7 @@ window.__targetBase=${JSON.stringify(url)};
     var _xOpen=_xhr.open.bind(_xhr);
     _xhr.open=function(method,url,async,user,pass){
       try{
+        url=_unwrapRecorderUrl(url);
         var _u=new URL(String(url),window.location.href);
         if(_u.origin===_proxyOrigin&&!_u.pathname.startsWith('/api/recorder/')){
           var _tp=new URL(_u.pathname+_u.search+_u.hash,_base).href;
@@ -185,8 +226,12 @@ window.__targetBase=${JSON.stringify(url)};
   function _proxyNav(u){
     if(!_interacted)return;
     try{
-      var abs=new URL(String(u),_base).href;
+      if(_isFlightUrl(u)) return; // Next.js RSC soft updates must not reload the page
+      var abs=_normalizeDocUrl(u);
       if(abs.indexOf('/api/recorder/proxy')!==-1)return;
+      if(abs.indexOf('/api/recorder/asset')!==-1){
+        abs=_normalizeDocUrl(abs);
+      }
       var t=new URL(abs);
       if(t.origin===_proxyOrigin)return;
       if(t.protocol!=='http:'&&t.protocol!=='https:')return;
@@ -194,14 +239,51 @@ window.__targetBase=${JSON.stringify(url)};
       window.location.href=_proxyOrigin+'/api/recorder/proxy?url='+encodeURIComponent(abs)+'&sessionId='+encodeURIComponent(_sid);
     }catch(e){}
   }
+
+  // Prevent accidental top-level navigation to /api/recorder/asset?...
+  try{
+    var _loc=window.location;
+    var _assign=_loc.assign.bind(_loc);
+    var _replace=_loc.replace.bind(_loc);
+    function _guardNav(href, via){
+      try{
+        var abs=String(href);
+        if(abs.indexOf('/api/recorder/asset')!==-1 || _isFlightUrl(abs)){
+          var fixed=_normalizeDocUrl(abs);
+          var t=new URL(fixed,_base);
+          if(t.protocol==='http:'||t.protocol==='https:'){
+            _inProxyNav=true;
+            via.call(_loc,_proxyOrigin+'/api/recorder/proxy?url='+encodeURIComponent(t.href)+'&sessionId='+encodeURIComponent(_sid));
+            return;
+          }
+        }
+      }catch(e){}
+      via.call(_loc,href);
+    }
+    _loc.assign=function(h){ _guardNav(h,_assign); };
+    _loc.replace=function(h){ _guardNav(h,_replace); };
+  }catch(e){}
+
   var _op=history.pushState;
   var _or=history.replaceState;
   history.pushState=function(s,t,u){
-    if(u!=null){try{var a=new URL(String(u),_base);if(a.origin!==_proxyOrigin){_proxyNav(String(u));if(_interacted)return;}}catch(e){}}
+    if(u!=null){
+      try{
+        if(_isFlightUrl(u)) return _op.apply(history,arguments);
+        var a=new URL(String(u),_base);
+        if(a.origin!==_proxyOrigin){_proxyNav(String(u));if(_interacted)return;}
+      }catch(e){}
+    }
     return _op.apply(history,arguments);
   };
   history.replaceState=function(s,t,u){
-    if(u!=null){try{var a=new URL(String(u),_base);if(a.origin!==_proxyOrigin){_proxyNav(String(u));if(_interacted)return;}}catch(e){}}
+    if(u!=null){
+      try{
+        if(_isFlightUrl(u)) return _or.apply(history,arguments);
+        var a=new URL(String(u),_base);
+        if(a.origin!==_proxyOrigin){_proxyNav(String(u));if(_interacted)return;}
+      }catch(e){}
+    }
     return _or.apply(history,arguments);
   };
   if(window.navigation){
@@ -211,7 +293,14 @@ window.__targetBase=${JSON.stringify(url)};
       if(e.navigationType==='traverse'||e.navigationType==='reload')return;
       var dest=e.destination.url;
       if(dest.indexOf('/api/recorder/proxy')!==-1)return;
+      if(_isFlightUrl(dest)) return;
       try{
+        // If browser tries to open asset URL as a document, reroute to proxy page
+        if(dest.indexOf('/api/recorder/asset')!==-1){
+          e.preventDefault();
+          _proxyNav(dest);
+          return;
+        }
         var t=new URL(dest);
         if(t.protocol!=='http:'&&t.protocol!=='https:')return;
         var targetUrl;
@@ -224,7 +313,7 @@ window.__targetBase=${JSON.stringify(url)};
         }
         e.preventDefault();
         _inProxyNav=true;
-        window.location.href=_proxyOrigin+'/api/recorder/proxy?url='+encodeURIComponent(targetUrl)+'&sessionId='+encodeURIComponent(_sid);
+        window.location.href=_proxyOrigin+'/api/recorder/proxy?url='+encodeURIComponent(_normalizeDocUrl(targetUrl))+'&sessionId='+encodeURIComponent(_sid);
       }catch(_){}
     });
   }
@@ -336,12 +425,42 @@ window.__targetBase=${JSON.stringify(url)};
       return res.status(400).json({ error: 'Invalid URL' })
     }
 
+    // Top-level document navigations must never land on /asset (RSC/_rsc soft nav bug).
+    // Send the user back to the HTML proxy page instead.
+    const dest = String(req.get('sec-fetch-dest') || '').toLowerCase()
+    const mode = String(req.get('sec-fetch-mode') || '').toLowerCase()
+    const isDocumentNav = dest === 'document' || mode === 'navigate'
+    if (isDocumentNav) {
+      let sessionId = req.query.sessionId
+      if (!sessionId) {
+        try {
+          const referer = new URL(req.get('referer') || '', `http://${req.get('host') || 'localhost'}`)
+          sessionId = referer.searchParams.get('sessionId')
+        } catch { /* ignore */ }
+      }
+      targetUrl.searchParams.delete('_rsc')
+      ;['_nextOutputTree', '_nextData', '_nextScroll'].forEach((k) => targetUrl.searchParams.delete(k))
+      if (sessionId) {
+        return res.redirect(
+          302,
+          `/api/recorder/proxy?url=${encodeURIComponent(targetUrl.href)}&sessionId=${encodeURIComponent(String(sessionId))}`
+        )
+      }
+      return res.status(400).send(
+        '<p>Recorder asset URLs are for fetch/XHR only. Re-open recording from the app.</p>'
+      )
+    }
+
     try {
       const response = await fetch(url, {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-          'Accept': '*/*',
+          'Accept': req.get('accept') || '*/*',
           'Accept-Language': 'en-US,en;q=0.5',
+          ...(req.get('rsc') ? { RSC: req.get('rsc') } : {}),
+          ...(req.get('next-router-state-tree')
+            ? { 'Next-Router-State-Tree': req.get('next-router-state-tree') }
+            : {}),
         },
         redirect: 'follow',
         signal: AbortSignal.timeout(15000)

@@ -38,6 +38,80 @@ executionEvents.setMaxListeners(50)
  */
 const activePages = new Map()
 const debugSessionTimers = new Map()
+
+/**
+ * Capture screenshot without hanging on remote font loads (common in Docker).
+ */
+async function safePageScreenshot(page, options = {}) {
+  try {
+    await page.evaluate(() =>
+      Promise.race([
+        (document.fonts && document.fonts.ready) || Promise.resolve(),
+        new Promise((resolve) => setTimeout(resolve, 1500)),
+      ])
+    ).catch(() => {})
+  } catch { /* ignore */ }
+
+  return page.screenshot({
+    animations: 'disabled',
+    timeout: 8000,
+    ...options,
+  })
+}
+
+/**
+ * Stream live browser frames via CDP screencast → SSE (Browser Runner window).
+ */
+async function startExecutionScreencast(page, executionId) {
+  try {
+    const client = await page.context().newCDPSession(page)
+    let lastSent = 0
+
+    client.on('Page.screencastFrame', async (frame) => {
+      try {
+        await client.send('Page.screencastFrameAck', { sessionId: frame.sessionId })
+      } catch { /* session may be closed */ }
+
+      const now = Date.now()
+      if (now - lastSent < 120) return
+      if (executionEvents.listenerCount(`exec:${executionId}`) === 0) return
+      lastSent = now
+
+      let url = ''
+      try { url = page.url() } catch { /* closed */ }
+
+      executionEvents.emit(`exec:${executionId}`, {
+        event: 'browser-frame',
+        data: frame.data,
+        url,
+      })
+    })
+
+    await client.send('Page.startScreencast', {
+      format: 'jpeg',
+      quality: 55,
+      maxWidth: 1280,
+      maxHeight: 720,
+      everyNthFrame: 1,
+    })
+
+    console.log(`[EXECUTION] Browser screencast started for ${executionId}`)
+    return client
+  } catch (err) {
+    console.warn(`[EXECUTION] Screencast unavailable: ${err.message}`)
+    return null
+  }
+}
+
+async function stopExecutionScreencast(client) {
+  if (!client) return
+  try {
+    await client.send('Page.stopScreencast')
+  } catch { /* ignore */ }
+  try {
+    await client.detach()
+  } catch { /* ignore */ }
+}
 const DEBUG_SESSION_TTL_MS = 15 * 60 * 1000
 
 /**
@@ -268,6 +342,7 @@ export const executionService = {
       const data = activePages.get(executionId)
       if (!data?.debugMode) return
       activePages.delete(executionId)
+      await stopExecutionScreencast(data.screencastClient)
       await data.page?.close().catch(() => {})
       await data.context?.close().catch(() => {})
       await data.browser?.close().catch(() => {})
@@ -284,6 +359,7 @@ export const executionService = {
     const data = activePages.get(executionId)
     if (!data) return
     activePages.delete(executionId)
+    await stopExecutionScreencast(data.screencastClient)
     await data.page?.close().catch(() => {})
     await data.context?.close().catch(() => {})
     await data.browser?.close().catch(() => {})
@@ -417,16 +493,19 @@ export const executionService = {
     let browser = null
     let context = null
     let page = null
+    let screencastClient = null
     let passedSteps = 0
     let failedSteps = 0
 
     this._executionOptions = options
 
     try {
-      // Headed mode: we have Xvfb virtual display in Docker, so always run headed
-      // This produces better video recordings and more realistic test execution
-      const useHeadless = options.headless === true
-      const slowMo = options.slowMo ?? (useHeadless ? 0 : 300)
+      // headless:true → always headless
+      // headless:false → headed (Xvfb on Docker); if launch fails, retry headless once
+      // omitted → headless on Linux / missing DISPLAY (production-safe default)
+      const runHeadless = options.headless === true
+        || (options.headless !== false && (process.platform === 'linux' || !process.env.DISPLAY))
+      const slowMo = options.slowMo ?? (runHeadless ? 0 : 300)
 
       // Mobile device emulation: look up Playwright device descriptor if requested
       const { chromium: chromiumBrowser, firefox, webkit, devices: playwrightDevices } = await import('playwright')
@@ -446,11 +525,35 @@ export const executionService = {
       const selectedBrowserName = options.browser && browserEngines[options.browser] ? options.browser : 'chromium'
       const browserEngine = browserEngines[selectedBrowserName]
 
-      browser = await browserEngine.launch({
-        headless: useHeadless,
-        args: selectedBrowserName === 'chromium' ? ['--no-sandbox'] : [],
-        slowMo
-      })
+      const chromiumArgs = [
+        '--no-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-gpu',
+      ]
+
+      try {
+        browser = await browserEngine.launch({
+          headless: runHeadless,
+          args: selectedBrowserName === 'chromium' ? chromiumArgs : [],
+          slowMo
+        })
+      } catch (launchErr) {
+        if (!runHeadless && selectedBrowserName === 'chromium') {
+          console.warn(`[EXECUTION] Headed launch failed (${launchErr.message}); retrying headless`)
+          browser = await browserEngine.launch({
+            headless: true,
+            args: chromiumArgs,
+            slowMo: 0
+          })
+        } else {
+          throw new Error(
+            `Gagal membuka browser ${selectedBrowserName}: ${launchErr.message}. ` +
+            (selectedBrowserName !== 'chromium'
+              ? 'Image production hanya menyediakan Chromium.'
+              : 'Periksa DISPLAY/Xvfb atau jalankan headless.')
+          )
+        }
+      }
 
       // Video recording setup
       const videoDir = path.resolve('./uploads/videos')
@@ -460,13 +563,16 @@ export const executionService = {
 
       const contextOptions = deviceDescriptor
         ? { ...deviceDescriptor, recordVideo: { dir: videoDir, size: { width: 1280, height: 720 } } }
-        : { viewport: null, recordVideo: { dir: videoDir, size: { width: 1280, height: 720 } } }
+        : { viewport: { width: 1280, height: 720 }, recordVideo: { dir: videoDir, size: { width: 1280, height: 720 } } }
 
       context = await browser.newContext(contextOptions)
       page = await context.newPage()
 
-      // Store page for live selector testing
-      activePages.set(execution.id, { page, context, browser })
+      // Live browser stream for Browser Runner window (Pause/Stop controls)
+      screencastClient = await startExecutionScreencast(page, execution.id)
+
+      // Store page for live selector testing / runner controls
+      activePages.set(execution.id, { page, context, browser, screencastClient })
 
       // ═══ DIALOG HANDLING — auto-accept alert/confirm/prompt ═══
       page.on('dialog', async (dialog) => {
@@ -742,7 +848,7 @@ export const executionService = {
                 }, { stepNum: step.stepNumber, type: step.type, errMsg: errMsg, selector: step.selector || '' })
               } catch { /* ignore overlay injection errors */ }
 
-              await page.screenshot({ path: filepath, fullPage: true })
+              await safePageScreenshot(page, { path: filepath, fullPage: true })
 
               // Phase 2.2: Screenshot Comparison on Failure
               if (ENABLE_SCREENSHOT_COMPARISON) {
@@ -772,7 +878,7 @@ export const executionService = {
               // Hapus overlay setelah screenshot
               try { await page.evaluate(() => { const el = document.getElementById('__err_overlay'); if (el) el.remove() }) } catch {}
             } else {
-              await page.screenshot({ path: filepath, fullPage: false })
+              await safePageScreenshot(page, { path: filepath, fullPage: false })
 
               // Phase 2.2: Save successful screenshot for future comparison
               if (ENABLE_SCREENSHOT_COMPARISON) {
@@ -978,11 +1084,12 @@ export const executionService = {
       // Keep browser open after failures so users can test selectors (15 min TTL)
       const keepForDebug = failedSteps > 0 && page && context && browser
       if (keepForDebug) {
-        activePages.set(execution.id, { page, context, browser, debugMode: true })
+        activePages.set(execution.id, { page, context, browser, screencastClient, debugMode: true })
         this.scheduleDebugSessionCleanup(execution.id)
         logger.info('executionService', `Debug session kept open for execution ${execution.id} (${DEBUG_SESSION_TTL_MS / 60000} min)`)
       } else {
         activePages.delete(execution.id)
+        await stopExecutionScreencast(screencastClient)
         if (page) await page.close().catch(() => {})
         if (context) await context.close().catch(() => {})
         if (browser) await browser.close().catch(() => {})
@@ -1241,7 +1348,7 @@ export const executionService = {
     const filepath = `./uploads/screenshots/${filename}`
 
     // Take screenshot
-    const screenshot = await page.screenshot({ path: filepath })
+    const screenshot = await safePageScreenshot(page, { path: filepath })
 
     // Store screenshot metadata
     // (in real implementation, would save to database)

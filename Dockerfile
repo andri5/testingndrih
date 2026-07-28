@@ -48,7 +48,8 @@ RUN npx prisma generate
 
 EXPOSE 3000
 
-RUN chmod +x scripts/docker-entrypoint.sh
+# Strip Windows CRLF (common on Windows checkouts) then make executable
+RUN sed -i 's/\r$//' scripts/docker-entrypoint.sh && chmod +x scripts/docker-entrypoint.sh
 
 # Migrations always run; seed only when RUN_SEED=true (first deploy / dev)
 CMD ["scripts/docker-entrypoint.sh"]

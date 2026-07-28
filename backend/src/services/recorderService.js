@@ -1,37 +1,71 @@
+import fs from 'fs'
+import os from 'os'
 import { prisma } from '../lib/prisma.js'
-import { chromium, firefox, webkit } from 'playwright'
-import browserLauncher from '../lib/browserLauncher.js'
+import { chromium } from 'playwright'
 
 /**
- * PRIORITY: Playwright-Based Recorder Engine
- * 
- * Each recording session uses a Playwright browser instance to:
- * 1. Open the target URL with full network/cookie/storage access
- * 2. Inject recorder script to capture user interactions
- * 3. Record interactions in memory
- * 4. Close browser on stop recording
- * 
+ * Recording engine
+ *
+ * Default mode: **proxy** — user interacts in their own browser via
+ * `/api/recorder/proxy`. Works in Docker/production (no server Chromium window).
+ *
+ * Optional mode: **playwright** — server-side headed Chromium (local desktop only).
+ * Never silently falls back to headless for recording (useless without interaction).
+ *
  * Session store - keyed by `userId:scenarioId`
  */
 const sessions = new Map()
 
-// headless: false so user can see and interact with the browser during recording
-const BROWSER_OPTIONS = {
-  headless: false,
-  args: [
-    '--disable-blink-features=AutomationControlled',
-    '--disable-dev-shm-usage',
-    '--no-sandbox'
-  ]
+const PLAYWRIGHT_BROWSER_ARGS = [
+  '--disable-blink-features=AutomationControlled',
+  '--disable-dev-shm-usage',
+  '--no-sandbox'
+]
+
+/**
+ * Resolve recording mode.
+ * Prefer proxy unless RECORDING_MODE=playwright (local desktop workflows).
+ */
+export function resolveRecordingMode(requestedMode) {
+  const envMode = String(process.env.RECORDING_MODE || '').toLowerCase()
+  const mode = String(requestedMode || envMode || '').toLowerCase()
+  if (mode === 'playwright') return 'playwright'
+  if (mode === 'proxy') return 'proxy'
+
+  // Auto: Docker / Linux server → proxy (user cannot see server Chromium)
+  const inDocker = fs.existsSync('/.dockerenv')
+  if (inDocker || os.platform() === 'linux') return 'proxy'
+  return 'proxy' // default everywhere — reliable for remote + local Vite
 }
 
 function sessionKey(userId, scenarioId) {
   return `${userId}:${scenarioId}`
 }
 
+export function buildProxyRecordingUrl(scenarioId, targetUrl) {
+  return `/api/recorder/proxy?url=${encodeURIComponent(targetUrl)}&sessionId=${encodeURIComponent(scenarioId)}`
+}
+
 function appendRecordingStep(session, step) {
+  if (isNoiseRecordingStep(step)) {
+    console.log(`[RECORDER] Skipping noise step: ${step.type} ${step.selector || step.value || ''}`)
+    return
+  }
   session.steps.push({ ...step, stepNumber: session.steps.length + 1 })
 }
+
+/** Browser extensions / proxy artifacts that must not become test steps */
+function isNoiseRecordingStep(step) {
+  if (!step || typeof step !== 'object') return true
+  const sel = String(step.selector || '')
+  const val = String(step.value || '')
+  const desc = String(step.description || '')
+  if (/Language Translate Widget|goog-te|google[_ -]?translate|skiptranslate/i.test(sel + desc)) return true
+  if (step.type === 'NAVIGATE' && /\/api\/recorder\//i.test(val)) return true
+  if (step.type === 'FILL' && !val.trim() && /translate|Select ""/i.test(sel + desc)) return true
+  return false
+}
+
 
 /**
  * JavaScript injected into the target page to capture user interactions.
@@ -179,6 +213,41 @@ export function getRecorderScript(sessionId = null) {
   window.__recorderInjected = true;
 
 ` + sendStepFn + `
+
+  /* ── Noise filter: Google Translate / extensions / recorder chrome ── */
+  function isNoiseElement(el) {
+    if (!el) return true;
+    try {
+      if (el.id === '__rec_toolbar' || (el.closest && el.closest('#__rec_toolbar'))) return true;
+      var aria = (el.getAttribute && el.getAttribute('aria-label')) || '';
+      var id = el.id || '';
+      var cls = (typeof el.className === 'string' ? el.className : '') || '';
+      if (/translate|Language Translate Widget/i.test(aria + ' ' + id + ' ' + cls)) return true;
+      if (el.closest && el.closest('.goog-te-banner-frame, .goog-te-menu-frame, .goog-te-gadget, .goog-te-combo, #google_translate_element, .skiptranslate, [class*="goog-te"], [aria-label*="Translate"]')) return true;
+      if (el.tagName === 'SELECT' && /lang|translat/i.test(aria + id + cls) && !(el.name || el.form)) return true;
+    } catch (_) {}
+    return false;
+  }
+
+  function shouldSkipNoiseStep(step) {
+    if (!step) return true;
+    var sel = step.selector || '';
+    var val = step.value || '';
+    var desc = step.description || '';
+    if (/Language Translate Widget|goog-te|google[_ -]?translate|skiptranslate/i.test(sel + ' ' + desc)) return true;
+    if (step.type === 'NAVIGATE' && /\\/api\\/recorder\\//i.test(val)) return true;
+    if (step.type === 'FILL' && !String(val).trim() && /translate|Select ""/i.test(sel + ' ' + desc)) return true;
+    return false;
+  }
+
+  var __rawSendStep = sendStep;
+  sendStep = function(step) {
+    if (shouldSkipNoiseStep(step)) {
+      console.log('[REC] noise step skipped:', step && step.type, step && step.selector);
+      return;
+    }
+    return __rawSendStep(step);
+  };
 
   /* ══════════════════════════════════════════════════
    * DYNAMIC CLASS FILTER — strips framework-generated classes
@@ -379,7 +448,7 @@ export function getRecorderScript(sessionId = null) {
   var lastClickTime = 0;
 
   function emitFill(el) {
-    if (!el || !el.tagName) return;
+    if (!el || !el.tagName || isNoiseElement(el)) return;
     var selector = buildSelector(el);
     var tag = el.tagName.toLowerCase();
     var value, desc;
@@ -390,6 +459,7 @@ export function getRecorderScript(sessionId = null) {
       desc = (el.checked ? 'Check' : 'Uncheck') + ' "' + lbl.substring(0, 40) + '"';
     } else if (tag === 'select') {
       value = el.value;
+      if (!value) return; // ignore empty extension selects (e.g. Google Translate)
       var opt = el.options && el.options[el.selectedIndex];
       desc = 'Select "' + (opt ? opt.text : el.value).substring(0, 40) + '"';
     } else {
@@ -461,6 +531,8 @@ export function getRecorderScript(sessionId = null) {
       el = e.composedPath()[0];
     }
 
+    if (isNoiseElement(el)) return;
+
     flushAll();
 
     if (el.tagName === 'INPUT' && (el.type === 'checkbox' || el.type === 'radio')) {
@@ -497,7 +569,7 @@ export function getRecorderScript(sessionId = null) {
   document.addEventListener('input', function(e) {
     var el = e.target;
     if (e.composedPath && e.composedPath().length > 0) el = e.composedPath()[0];
-    if (!el) return;
+    if (!el || isNoiseElement(el)) return;
 
     // Contenteditable support
     if (isContentEditable(el)) {
@@ -537,7 +609,7 @@ export function getRecorderScript(sessionId = null) {
   /* ── Change (select, date, etc) ── */
   document.addEventListener('change', function(e) {
     var el = e.target;
-    if (!el) return;
+    if (!el || isNoiseElement(el)) return;
     if (el.type === 'checkbox' || el.type === 'radio' || el.type === 'file') return;
     if (el.tagName === 'INPUT' && /^(text|search|email|password|tel|url|number)$/.test(el.type)) return;
     if (el.tagName === 'TEXTAREA') return;
@@ -784,10 +856,10 @@ export function getRecorderScript(sessionId = null) {
 
 export const recorderService = {
   /**
-   * Start recording with Playwright browser
-   * Opens headless browser, navigates to target URL, injects recorder script
+   * Start recording session.
+   * @param {string} modeHint - 'proxy' | 'playwright' | undefined (auto)
    */
-  async startRecording(userId, scenarioId, startUrl) {
+  async startRecording(userId, scenarioId, startUrl, modeHint) {
     const key = sessionKey(userId, scenarioId)
 
     // Clean up stale session
@@ -796,14 +868,12 @@ export const recorderService = {
       if (existing.status === 'recording') {
         throw new Error('Recording sudah berjalan untuk skenario ini')
       }
-      // Close browser if it exists
       if (existing.browser) {
         await existing.browser.close().catch(() => {})
       }
       sessions.delete(key)
     }
 
-    // Validate scenario belongs to user
     const scenario = await prisma.scenario.findFirst({
       where: { id: scenarioId, userId }
     })
@@ -812,48 +882,9 @@ export const recorderService = {
     const url = startUrl || scenario.url || ''
     if (!url) throw new Error('URL target diperlukan untuk recording')
 
-    try {
-      // ═══ Launch Playwright Browser ═══
-      console.log(`[RECORDER] 🚀 Launching Playwright browser for ${url}`)
-      
-      // Use environment-aware browser launcher
-      // For recorder, try headed mode but fallback to headless if display not available
-      let browser
-      try {
-        browser = await chromium.launch({
-          headless: false,
-          args: [
-            '--disable-blink-features=AutomationControlled',
-            '--disable-dev-shm-usage',
-            '--no-sandbox'
-          ]
-        })
-      } catch (headedError) {
-        console.log(`[RECORDER] ⚠️ Headed mode failed: ${headedError.message}`)
-        console.log(`[RECORDER] 💡 Fallback: Using headless mode (recommended for server)`)
-        
-        // Fallback to headless mode if display server not available
-        browser = await chromium.launch({
-          headless: true,
-          args: [
-            '--disable-blink-features=AutomationControlled',
-            '--disable-dev-shm-usage',
-            '--no-sandbox'
-          ]
-        })
-        console.log(`[RECORDER] ✅ Browser launched in headless mode`)
-      }
-      
-      // ═══ Create Context & Page ═══
-      const context = await browser.newContext({
-        viewport: { width: 1280, height: 720 },
-        ignoreHTTPSErrors: true,
-        recordVideo: undefined // Optional: can add video recording here later
-      })
-      
-      const page = await context.newPage()
+    const mode = resolveRecordingMode(modeHint)
 
-      // Register session before navigation so early interactions are not dropped
+    if (mode === 'proxy') {
       const session = {
         steps: [],
         status: 'recording',
@@ -861,6 +892,57 @@ export const recorderService = {
         scenarioId,
         userId,
         startUrl: url,
+        method: 'proxy',
+        recordStartTime: Date.now(),
+      }
+      sessions.set(key, session)
+
+      const proxyUrl = buildProxyRecordingUrl(scenarioId, url)
+      console.log(`[RECORDER] ✅ Proxy recording started for ${key} → ${url}`)
+
+      return {
+        status: 'recording',
+        method: 'proxy',
+        proxyUrl,
+        startUrl: url,
+        scenarioId,
+        message: 'Recording started — interact di jendela browser yang terbuka, lalu klik Stop di aplikasi'
+      }
+    }
+
+    try {
+      console.log(`[RECORDER] 🚀 Launching Playwright browser for ${url}`)
+
+      let browser
+      try {
+        browser = await chromium.launch({
+          headless: false,
+          args: PLAYWRIGHT_BROWSER_ARGS
+        })
+      } catch (headedError) {
+        // Do NOT fall back to headless — user cannot interact. Prefer proxy instead.
+        console.error(`[RECORDER] ❌ Headed Playwright failed: ${headedError.message}`)
+        throw new Error(
+          `Tidak bisa membuka browser headed di server (${headedError.message}). ` +
+          `Gunakan mode proxy (default) atau jalankan backend di desktop lokal.`
+        )
+      }
+
+      const context = await browser.newContext({
+        viewport: { width: 1280, height: 720 },
+        ignoreHTTPSErrors: true,
+      })
+
+      const page = await context.newPage()
+
+      const session = {
+        steps: [],
+        status: 'recording',
+        startedAt: new Date(),
+        scenarioId,
+        userId,
+        startUrl: url,
+        method: 'playwright',
         browser,
         context,
         page,
@@ -868,8 +950,6 @@ export const recorderService = {
       }
       sessions.set(key, session)
 
-      // ═══ Expose step callback — steps sent from page JS → Node.js directly ═══
-      // This bypasses HTTP/auth entirely, no need for authToken in the Playwright browser
       await page.exposeFunction('__playwrightAddStep', (step) => {
         const sess = sessions.get(key)
         if (!sess || sess.status !== 'recording') return
@@ -877,34 +957,21 @@ export const recorderService = {
         console.log(`[RECORDER] ✓ Step ${sess.steps.length}: ${step.type} "${(step.description || '').substring(0, 60)}"`)
       })
 
-      // ═══ Inject Recorder Script ═══
-      // This adds the recorder functionality to capture interactions
       await page.addInitScript(() => {
-        // Recorder state
         window.__recorderSteps = []
         window.__recorderConnected = false
-        
-        // Send step to parent (backend will receive via postMessage or CDP)
-        window.__sendRecorderStep = function(step) {
-          window.__recorderSteps.push({
-            ...step,
-            timestamp: Date.now()
-          })
-          console.log('[REC] Step recorded:', step.type, step.description)
+        window.__sendRecorderStep = function (step) {
+          window.__recorderSteps.push({ ...step, timestamp: Date.now() })
         }
-
-        // Expose recorder API
         window.__recorderAPI = {
           getSteps: () => window.__recorderSteps,
           clearSteps: () => { window.__recorderSteps = [] }
         }
       })
 
-      // ═══ Attach Recorder Script ═══
       const recorderScript = getRecorderScript(scenarioId)
       await page.addInitScript(recorderScript)
 
-      // ═══ Handle page events ═══
       page.on('console', msg => {
         if (msg.text().includes('[REC]')) {
           console.log(`[PAGE-CONSOLE] ${msg.text()}`)
@@ -915,7 +982,6 @@ export const recorderService = {
         console.error(`[PAGE-ERROR] ${err.message}`)
       })
 
-      // ═══ Navigate to target URL ═══
       console.log(`[RECORDER] 🌐 Navigating to ${url}`)
       try {
         await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 }).catch(() => {
@@ -925,7 +991,6 @@ export const recorderService = {
         console.warn(`[RECORDER] Navigation error: ${err.message}`)
       }
 
-      // ═══ Add initial NAVIGATE step ═══
       appendRecordingStep(session, {
         type: 'NAVIGATE',
         selector: '',
@@ -935,16 +1000,22 @@ export const recorderService = {
         timestamp: Date.now(),
       })
 
-      console.log(`[RECORDER] ✅ Recording started for ${key}`)
+      console.log(`[RECORDER] ✅ Playwright recording started for ${key}`)
 
       return {
         status: 'recording',
+        method: 'playwright',
+        proxyUrl: null,
         startUrl: url,
         scenarioId,
         message: 'Recording started dengan Playwright browser 🎥',
         browserPid: browser.process?.()?.pid || 'unknown'
       }
     } catch (err) {
+      // Cleanup partial session on failure
+      const partial = sessions.get(key)
+      if (partial?.browser) await partial.browser.close().catch(() => {})
+      sessions.delete(key)
       console.error(`[RECORDER] startRecording error: ${err.message}`)
       throw new Error(`Failed to start recording: ${err.message}`)
     }
@@ -966,7 +1037,13 @@ export const recorderService = {
       console.warn(`[RECORDER] Session ${key} has status=${session.status}, cannot add step`)
       return false
     }
+    if (isNoiseRecordingStep(step)) {
+      console.log(`[RECORDER] Skipping noise step: ${step.type} ${step.selector || step.value || ''}`)
+      return true // acknowledged but not stored
+    }
+    const before = session.steps.length
     appendRecordingStep(session, step)
+    if (session.steps.length === before) return true
     console.log(`[RECORDER] Step added to ${key}: ${step.type} (total: ${session.steps.length})`)
     return true
   },

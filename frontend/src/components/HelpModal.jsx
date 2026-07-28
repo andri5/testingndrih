@@ -26,11 +26,10 @@ const content = {
         label: 'Execution',
         icon: <PlayCircle size={14} />,
         steps: [
-          { num: 1, title: 'Run a Scenario', desc: 'Open a scenario → click "Run". Choose browser (Chrome/Firefox/Safari) and headless mode.' },
-          { num: 2, title: 'Live Viewer', desc: 'During execution, a live viewer shows each step result in real-time with screenshots.' },
-          { num: 3, title: 'Pause / Stop', desc: 'Use Pause or Stop buttons in the live viewer to control the running execution.' },
-          { num: 4, title: 'View History', desc: 'Go to Execution page to see all past runs, filter by status, and download reports.' },
-          { num: 5, title: 'Bulk Execute', desc: 'On the Scenarios page, select multiple scenarios → click "Run Selected" to execute in batch.' },
+          { num: 1, title: 'Run a Scenario', desc: 'Open a scenario → click "Run". A Browser Runner window opens and shows the live Playwright page.' },
+          { num: 2, title: 'Watch & Control', desc: 'In Browser Runner use Pause / Resume / Stop while the test runs. Step list updates on the side.' },
+          { num: 3, title: 'View History', desc: 'Go to Execution page to see all past runs, filter by status, and download reports.' },
+          { num: 4, title: 'Bulk Execute', desc: 'On the Scenarios page, select multiple scenarios → click "Run Selected" to execute in batch.' },
         ],
       },
       {

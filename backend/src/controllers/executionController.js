@@ -37,9 +37,15 @@ export const executionController = {
 
       // Return execution ID immediately so the live viewer can connect
       // Execution runs in the background
+      // Preserve explicit true/false; omit → service picks production-safe default
+      let headlessOpt
+      if (headless === true || headless === 'true') headlessOpt = true
+      else if (headless === false || headless === 'false') headlessOpt = false
+      else headlessOpt = undefined
+
       const options = {
         browser: browser || 'chromium',
-        headless: headless === true || headless === 'true',
+        headless: headlessOpt,
         device: device || null,
         environmentId: environmentId || null
       }
@@ -78,7 +84,7 @@ export const executionController = {
 
       res.status(200).json({
         success: true,
-        message: 'Eksekusi dimulai — buka Live Viewer untuk melihat progress',
+        message: 'Eksekusi dimulai — jendela Browser Runner menampilkan proses secara live',
         execution: {
           id: latestExec.id,
           status: 'RUNNING',
@@ -405,87 +411,82 @@ export const executionController = {
   },
 
   /**
-   * Live execution viewer HTML page
+   * Browser Runner — live Playwright page stream + Pause/Stop
    * GET /api/executions/:executionId/live-view
    */
   liveView(req, res) {
     const { executionId } = req.params
-    const token = req.query.token || ''
 
     const html = `<!DOCTYPE html>
 <html lang="id"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Live Execution — testingndrih</title>
+<title>Browser Runner — Test Sambil Ngopi</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:system-ui,-apple-system,sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh}
-.header{background:#1e293b;padding:12px 20px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #334155}
-.header h1{font-size:16px;font-weight:600}
-.badge{padding:3px 10px;border-radius:12px;font-size:12px;font-weight:600}
-.badge-running{background:#3b82f6;color:white;animation:pulse 1.5s infinite}
-.badge-passed{background:#22c55e;color:white}
-.badge-failed{background:#ef4444;color:white}
-.badge-paused{background:#f59e0b;color:white}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
-.main{display:flex;height:calc(100vh - 49px)}
-.viewer{flex:1;display:flex;align-items:center;justify-content:center;padding:16px;background:#0f172a}
-.viewer img{max-width:100%;max-height:100%;border-radius:8px;box-shadow:0 4px 24px rgba(0,0,0,.5);transition:opacity .3s}
-.sidebar{width:320px;background:#1e293b;border-left:1px solid #334155;overflow-y:auto;padding:12px}
-.step-card{padding:10px 12px;border-radius:8px;margin-bottom:8px;border:1px solid #334155;transition:all .2s}
-.step-card.active{border-color:#3b82f6;background:#1e3a5f}
-.step-card.passed{border-color:#22c55e;background:rgba(34,197,94,.08)}
-.step-card.failed{border-color:#ef4444;background:rgba(239,68,68,.08)}
-.step-num{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;font-size:11px;font-weight:700;margin-right:8px}
-.step-num.active{background:#3b82f6;color:white}
-.step-num.passed{background:#22c55e;color:white}
-.step-num.failed{background:#ef4444;color:white}
-.step-num.pending{background:#475569;color:#94a3b8}
-.step-type{font-weight:600;font-size:13px}
-.step-desc{font-size:12px;color:#94a3b8;margin-top:2px}
-.step-dur{font-size:11px;color:#64748b;margin-top:2px}
-.step-err{font-size:11px;color:#fca5a5;margin-top:4px;padding:6px 8px;background:rgba(239,68,68,.1);border-radius:4px;word-break:break-word}
-.progress{height:4px;background:#334155;border-radius:2px;margin:8px 0}
-.progress-bar{height:100%;border-radius:2px;transition:width .3s}
-.summary{padding:12px;background:#0f172a;border-radius:8px;margin-bottom:12px;text-align:center}
-.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
-.summary-item{padding:8px;border-radius:6px;font-size:20px;font-weight:700}
-.no-screenshot{color:#64748b;font-size:14px}
-.done-banner{padding:16px;text-align:center;border-radius:8px;margin:12px 0}
-.done-banner.passed{background:rgba(34,197,94,.15);color:#4ade80}
-.done-banner.failed{background:rgba(239,68,68,.15);color:#fca5a5}
-.video-link{display:inline-block;margin-top:8px;padding:6px 16px;background:#3b82f6;color:white;border-radius:6px;text-decoration:none;font-size:13px}
-.ctrl-btn{padding:4px 12px;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;color:white;transition:opacity .15s}.ctrl-btn:hover{opacity:.8}
+body{font-family:Segoe UI,system-ui,sans-serif;background:#111827;color:#e5e7eb;height:100vh;overflow:hidden}
+.shell{display:flex;flex-direction:column;height:100vh}
+.chrome{background:#1f2937;border-bottom:1px solid #374151;padding:10px 14px;display:flex;align-items:center;gap:10px}
+.dots{display:flex;gap:6px}
+.dot{width:10px;height:10px;border-radius:50%}
+.dot.r{background:#ef4444}.dot.y{background:#f59e0b}.dot.g{background:#22c55e}
+.title{font-size:13px;font-weight:600;white-space:nowrap}
+.badge{padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700}
+.badge-running{background:#2563eb;color:#fff;animation:pulse 1.4s infinite}
+.badge-paused{background:#d97706;color:#fff}
+.badge-passed{background:#16a34a;color:#fff}
+.badge-failed{background:#dc2626;color:#fff}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.55}}
+.urlbar{flex:1;min-width:0;background:#111827;border:1px solid #374151;border-radius:8px;padding:7px 12px;font-size:12px;color:#9ca3af;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.controls{display:flex;gap:8px}
+.btn{border:0;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:700;color:#fff;cursor:pointer}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-pause{background:#d97706}.btn-resume{background:#16a34a;display:none}.btn-stop{background:#dc2626}
+.main{flex:1;display:flex;min-height:0}
+.stage{flex:1;display:flex;align-items:center;justify-content:center;background:#0b1220;padding:16px;position:relative}
+.browser-frame{width:min(100%,1280px);height:100%;max-height:100%;background:#000;border-radius:12px;overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,.45);border:1px solid #1f2937;display:flex;align-items:center;justify-content:center}
+.browser-frame img{width:100%;height:100%;object-fit:contain;background:#000}
+.waiting{color:#6b7280;font-size:14px;text-align:center;padding:24px}
+.sidebar{width:300px;background:#1f2937;border-left:1px solid #374151;overflow:auto;padding:12px}
+.meta{font-size:12px;color:#9ca3af;margin-bottom:10px}
+.progress{height:4px;background:#374151;border-radius:999px;margin:8px 0 12px}
+.bar{height:100%;width:0;border-radius:999px;background:#2563eb;transition:width .25s}
+.step{padding:8px 10px;border:1px solid #374151;border-radius:8px;margin-bottom:8px;font-size:12px}
+.step.active{border-color:#2563eb;background:#172554}
+.step.passed{border-color:#16a34a;background:rgba(22,163,74,.08)}
+.step.failed{border-color:#dc2626;background:rgba(220,38,38,.08)}
+.step .t{font-weight:700}.step .d{color:#9ca3af;margin-top:2px}
+.done{margin-top:12px;padding:12px;border-radius:8px;text-align:center;display:none}
+.done.ok{background:rgba(22,163,74,.15);color:#4ade80;display:block}
+.done.bad{background:rgba(220,38,38,.15);color:#fca5a5;display:block}
 </style>
 </head>
 <body>
-<div class="header">
-  <span style="font-size:20px">🔴</span>
-  <h1>Live Execution Viewer</h1>
-  <span id="statusBadge" class="badge badge-running">RUNNING</span>
-  <span style="flex:1"></span>
-  <div id="controlBtns" style="display:flex;gap:8px;margin-right:12px">
-    <button id="btnPause" class="ctrl-btn" style="background:#f59e0b">⏸ Pause</button>
-    <button id="btnResume" class="ctrl-btn" style="background:#22c55e;display:none">▶ Resume</button>
-    <button id="btnStop" class="ctrl-btn" style="background:#ef4444">⏹ Stop</button>
+<div class="shell">
+  <div class="chrome">
+    <div class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></div>
+    <div class="title">Browser Runner</div>
+    <span id="statusBadge" class="badge badge-running">RUNNING</span>
+    <div id="urlBar" class="urlbar">Menunggu browser Playwright...</div>
+    <div id="controlBtns" class="controls">
+      <button id="btnPause" class="btn btn-pause">Pause</button>
+      <button id="btnResume" class="btn btn-resume">Resume</button>
+      <button id="btnStop" class="btn btn-stop">Stop</button>
+    </div>
   </div>
-  <span id="stepInfo" style="font-size:13px;color:#94a3b8">Menunggu...</span>
-</div>
-<div class="main">
-  <div class="viewer">
-    <img id="liveImg" src="" alt="Screenshot" style="display:none">
-    <p id="noImg" class="no-screenshot">Menunggu eksekusi dimulai...</p>
-  </div>
-  <div class="sidebar">
-    <div class="summary">
-      <div id="progressText" style="font-size:13px;color:#94a3b8">0 / ? steps</div>
-      <div class="progress"><div id="progressBar" class="progress-bar" style="width:0;background:#3b82f6"></div></div>
-      <div class="summary-grid">
-        <div class="summary-item" style="background:rgba(34,197,94,.1);color:#4ade80"><span id="passCount">0</span><div style="font-size:11px;font-weight:400;color:#94a3b8">Passed</div></div>
-        <div class="summary-item" style="background:rgba(239,68,68,.1);color:#fca5a5"><span id="failCount">0</span><div style="font-size:11px;font-weight:400;color:#94a3b8">Failed</div></div>
+  <div class="main">
+    <div class="stage">
+      <div class="browser-frame">
+        <img id="liveImg" alt="Browser" style="display:none">
+        <p id="noImg" class="waiting">Menunggu proses testing dimulai...<br><span style="font-size:12px">Halaman target akan tampil di sini secara live</span></p>
       </div>
     </div>
-    <div id="stepsList"></div>
-    <div id="doneBanner"></div>
+    <aside class="sidebar">
+      <div class="meta" id="stepInfo">Step: menunggu...</div>
+      <div class="meta" id="progressText">0 / ? steps</div>
+      <div class="progress"><div id="progressBar" class="bar"></div></div>
+      <div id="stepsList"></div>
+      <div id="doneBanner" class="done"></div>
+    </aside>
   </div>
 </div>
 <script>
@@ -495,28 +496,46 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#0f172a;color:#e2
   var totalSteps = 0;
   var es = new EventSource('/api/executions/' + execId + '/live-stream');
 
+  function setBadge(text, cls) {
+    var b = document.getElementById('statusBadge');
+    b.textContent = text;
+    b.className = 'badge ' + cls;
+  }
+
+  function showFrame(dataUrl) {
+    var img = document.getElementById('liveImg');
+    img.src = dataUrl;
+    img.style.display = 'block';
+    document.getElementById('noImg').style.display = 'none';
+  }
+
   es.onmessage = function(e) {
-    var d;
-    try { d = JSON.parse(e.data); } catch(_){ return; }
+    var d; try { d = JSON.parse(e.data); } catch(_){ return; }
+
+    if (d.event === 'browser-frame' && d.data) {
+      showFrame('data:image/jpeg;base64,' + d.data);
+      if (d.url) document.getElementById('urlBar').textContent = d.url;
+      return;
+    }
 
     if (d.event === 'execution-paused') {
       document.getElementById('btnPause').style.display = 'none';
       document.getElementById('btnResume').style.display = 'inline-block';
-      document.getElementById('statusBadge').textContent = 'PAUSED';
-      document.getElementById('statusBadge').className = 'badge' + ' badge-paused';
-      document.getElementById('stepInfo').textContent = '⏸ Paused after step ' + d.stepNumber;
+      setBadge('PAUSED', 'badge-paused');
+      document.getElementById('stepInfo').textContent = 'Paused after step ' + d.stepNumber;
     }
 
     if (d.event === 'execution-resumed') {
       document.getElementById('btnPause').style.display = 'inline-block';
       document.getElementById('btnResume').style.display = 'none';
-      document.getElementById('statusBadge').textContent = 'RUNNING';
-      document.getElementById('statusBadge').className = 'badge badge-running';
+      document.getElementById('btnPause').disabled = false;
+      document.getElementById('btnPause').textContent = 'Pause';
+      setBadge('RUNNING', 'badge-running');
     }
 
     if (d.event === 'step-start') {
       totalSteps = d.totalSteps || totalSteps;
-      steps[d.stepNumber] = { status: 'active', type: d.type, description: d.description, selector: d.selector };
+      steps[d.stepNumber] = { status: 'active', type: d.type, description: d.description };
       document.getElementById('stepInfo').textContent = 'Step ' + d.stepNumber + '/' + totalSteps + ': ' + d.type;
       renderSteps();
     }
@@ -528,105 +547,66 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#0f172a;color:#e2
         status: d.status === 'PASSED' ? 'passed' : 'failed',
         type: d.type,
         description: d.description,
-        duration: d.duration,
-        screenshotUrl: d.screenshotUrl,
         errorMessage: d.errorMessage
       });
-
-      // Update screenshot
-      if (d.screenshotUrl) {
-        var img = document.getElementById('liveImg');
-        img.src = d.screenshotUrl + '?t=' + Date.now();
-        img.style.display = 'block';
-        document.getElementById('noImg').style.display = 'none';
+      if (d.screenshotUrl && !document.getElementById('liveImg').src.startsWith('data:')) {
+        showFrame(d.screenshotUrl + '?t=' + Date.now());
       }
-
-      // Counters
-      document.getElementById('passCount').textContent = d.passedSteps || 0;
-      document.getElementById('failCount').textContent = d.failedSteps || 0;
-
       var done = Object.keys(steps).filter(function(k){ return steps[k].status !== 'active'; }).length;
       document.getElementById('progressText').textContent = done + ' / ' + totalSteps + ' steps';
-      var pct = totalSteps > 0 ? Math.round(done / totalSteps * 100) : 0;
-      var bar = document.getElementById('progressBar');
-      bar.style.width = pct + '%';
-      bar.style.background = d.status === 'FAILED' ? '#ef4444' : '#22c55e';
+      document.getElementById('progressBar').style.width = (totalSteps ? Math.round(done / totalSteps * 100) : 0) + '%';
       document.getElementById('stepInfo').textContent = 'Step ' + d.stepNumber + '/' + totalSteps + ': ' + d.status;
-
       renderSteps();
     }
 
     if (d.event === 'execution-done') {
-      es.close();
+      try { es.close(); } catch(_){}
       document.getElementById('controlBtns').style.display = 'none';
-      var badge = document.getElementById('statusBadge');
-      badge.textContent = d.status;
-      badge.className = 'badge badge-' + d.status.toLowerCase();
-      document.getElementById('stepInfo').textContent = 'Selesai — ' + (d.duration ? (d.duration/1000).toFixed(1) + 's' : '');
-
-      var banner = document.getElementById('doneBanner');
-      var cls = d.status === 'PASSED' ? 'passed' : 'failed';
-      banner.innerHTML = '<div class="done-banner ' + cls + '">'
-        + '<div style="font-size:24px;margin-bottom:4px">' + (d.status === 'PASSED' ? '✅' : '❌') + '</div>'
-        + '<div style="font-size:16px;font-weight:600">' + d.status + '</div>'
-        + '<div style="font-size:12px;margin-top:4px">' + (d.passedSteps||0) + ' passed, ' + (d.failedSteps||0) + ' failed</div>'
-        + (d.videoPath ? '<a class="video-link" href="' + d.videoPath + '" target="_blank">🎥 Lihat Video</a>' : '')
-        + '</div>';
-
-      // Final progress
-      var done = d.passedSteps + d.failedSteps;
-      document.getElementById('progressText').textContent = done + ' / ' + (d.totalSteps||totalSteps) + ' steps — DONE';
+      setBadge(d.status, d.status === 'PASSED' ? 'badge-passed' : 'badge-failed');
+      document.getElementById('stepInfo').textContent = 'Selesai';
       document.getElementById('progressBar').style.width = '100%';
-      document.getElementById('passCount').textContent = d.passedSteps || 0;
-      document.getElementById('failCount').textContent = d.failedSteps || 0;
+      var banner = document.getElementById('doneBanner');
+      banner.className = 'done ' + (d.status === 'PASSED' ? 'ok' : 'bad');
+      banner.textContent = d.status + ' — ' + (d.passedSteps||0) + ' passed, ' + (d.failedSteps||0) + ' failed';
     }
   };
 
   es.onerror = function() {
-    document.getElementById('stepInfo').textContent = 'Koneksi terputus';
+    document.getElementById('stepInfo').textContent = 'Koneksi stream terputus — mencoba menyambung ulang...';
   };
 
-  document.getElementById('btnPause').addEventListener('click', function() { sendCtrl('pause'); });
-  document.getElementById('btnResume').addEventListener('click', function() { sendCtrl('resume'); });
-  document.getElementById('btnStop').addEventListener('click', function() { sendCtrl('stop'); });
+  document.getElementById('btnPause').onclick = function(){ sendCtrl('pause'); };
+  document.getElementById('btnResume').onclick = function(){ sendCtrl('resume'); };
+  document.getElementById('btnStop').onclick = function(){ sendCtrl('stop'); };
 
   function sendCtrl(action) {
-    fetch('/api/executions/' + execId + '/viewer-' + action, { method: 'POST' })
-      .catch(function() {});
+    fetch('/api/executions/' + execId + '/viewer-' + action, { method: 'POST' }).catch(function(){});
     if (action === 'pause') {
       document.getElementById('btnPause').disabled = true;
-      document.getElementById('btnPause').textContent = '⏸ Pausing...';
+      document.getElementById('btnPause').textContent = 'Pausing...';
     } else if (action === 'stop') {
       document.getElementById('btnStop').disabled = true;
-      document.getElementById('btnStop').textContent = '⏹ Stopping...';
+      document.getElementById('btnStop').textContent = 'Stopping...';
+    } else if (action === 'resume') {
+      document.getElementById('btnResume').style.display = 'none';
+      document.getElementById('btnPause').style.display = 'inline-block';
     }
   }
 
   function renderSteps() {
     var el = document.getElementById('stepsList');
     var html = '';
-    for (var i = 1; i <= Math.max(totalSteps, Object.keys(steps).length); i++) {
+    var max = Math.max(totalSteps, Object.keys(steps).length);
+    for (var i = 1; i <= max; i++) {
       var s = steps[i];
       if (!s) {
-        html += '<div class="step-card"><span class="step-num pending">' + i + '</span><span class="step-type" style="color:#64748b">Menunggu...</span></div>';
+        html += '<div class="step"><div class="t">#' + i + ' Menunggu...</div></div>';
         continue;
       }
-      html += '<div class="step-card ' + s.status + '">'
-        + '<span class="step-num ' + s.status + '">' + i + '</span>'
-        + '<span class="step-type">' + (s.type || '') + '</span>'
-        + '<div class="step-desc">' + (s.description || '') + '</div>';
-      if (s.duration) html += '<div class="step-dur">' + s.duration + 'ms</div>';
-      if (s.errorMessage) {
-        var errMsg = s.errorMessage;
-        try { errMsg = JSON.parse(s.errorMessage).message; } catch(_){}
-        html += '<div class="step-err">❌ ' + errMsg.substring(0, 200) + '</div>';
-      }
-      html += '</div>';
+      html += '<div class="step ' + s.status + '"><div class="t">#' + i + ' ' + (s.type||'') + '</div>'
+        + '<div class="d">' + (s.description||'') + '</div></div>';
     }
     el.innerHTML = html;
-    // Auto-scroll ke step terbaru
-    var cards = el.querySelectorAll('.step-card');
-    if (cards.length > 0) cards[cards.length-1].scrollIntoView({block:'nearest'});
   }
 })();
 </script>
@@ -634,8 +614,7 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#0f172a;color:#e2
 
     res.set({
       'Content-Type': 'text/html; charset=utf-8',
-      // Override Helmet CSP: allow inline scripts (required for the live viewer page)
-      'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'"
+      'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'"
     })
     res.send(html)
   },

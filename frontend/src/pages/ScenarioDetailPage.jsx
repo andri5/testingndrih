@@ -41,7 +41,10 @@ const i18n = {
     batchFixError: 'Batch fix failed',
     noFixableSteps: 'No steps can be automatically fixed',
     enterUrlForRecording: 'Enter target URL for recording',
-    recordingStarted: (msg) => `Recording started with Playwright 🎥\nBackend: ${msg}`,
+    recordingStarted: (msg) => `Recording started\n${msg}`,
+    recordingPopupBlocked: 'Popup diblokir browser. Izinkan popup untuk situs ini, lalu mulai recording lagi.',
+    browserRunnerPopupBlocked: 'Popup Browser Runner diblokir. Izinkan popup untuk situs ini, lalu Run lagi.',
+    startingBrowserRunner: 'Opening Browser Runner...',
     startRecordingError: 'Failed to start recording',
     stepsSavedRecording: (c) => `${c} steps recorded and saved`,
     recordingAutoSaveError: (c, e) => `Recording completed (${c} steps), but failed to auto-save: ${e}. Click "Save" to try again.`,
@@ -58,13 +61,13 @@ const i18n = {
     stopRecording: 'Stop',
     recordingActive: 'Recording Active...',
     recordingMode: 'Recording Mode',
-    startRecordingHint: 'Start recording to capture your browser interactions. Chromium will open automatically — every click, form fill, and navigation will be recorded as test steps.',
+    startRecordingHint: 'Start recording opens a new browser tab (proxy recorder). Interact there — every click, fill, and navigation is saved. Click Stop here when finished.',
     urlTarget: 'Target URL',
     openingBrowser: 'Opening Browser...',
     startRecording: '🔴 Start Recording',
     stepsRecorded: (c) => `${c} step${c !== 1 ? 's' : ''} recorded`,
-    interactionHint: '— interact with the browser...',
-    waitingForInteraction: 'Waiting for interactions... Click, fill forms, or navigate in the opened browser.',
+    interactionHint: '— interact in the recording tab...',
+    waitingForInteraction: 'Waiting for interactions... Click, fill forms, or navigate in the recording tab.',
     saving: 'Saving...',
     saveSteps: (c) => `💾 Save ${c} Steps`,
     discard: 'Discard',
@@ -157,7 +160,8 @@ export default function ScenarioDetailPage() {
   // Browser selection state
   const [selectedBrowser, setSelectedBrowser] = useState('chromium')
   const [selectedDevice, setSelectedDevice] = useState(null)
-  const [headlessMode, setHeadlessMode] = useState(false)
+  // Default headless — safer in Docker/production
+  const [headlessMode, setHeadlessMode] = useState(true)
   const [showBrowserSelector, setShowBrowserSelector] = useState(false)
 
   // Screenshot modal state
@@ -462,10 +466,13 @@ export default function ScenarioDetailPage() {
 
     if (!window.confirm(t.confirmExecute(scenario.name))) return
 
-    // Open live viewer window BEFORE await to avoid popup blocker
-    const liveWindow = window.open('', '_blank', 'width=1280,height=800,menubar=no,toolbar=no,scrollbars=yes,resizable=yes')
-    if (liveWindow) {
-      liveWindow.document.write(`<html><body style="font-family:sans-serif;padding:40px;background:#0f172a;color:#e2e8f0"><p>${t.startingExecution}</p></body></html>`)
+    // Open Browser Runner before await (user gesture) so popup blockers don't block it
+    const runnerWindow = window.open('', '_blank', 'width=1400,height=900,menubar=no,toolbar=no,scrollbars=yes,resizable=yes')
+    if (runnerWindow) {
+      runnerWindow.document.write(`<html><body style="font-family:Segoe UI,sans-serif;padding:40px;background:#111827;color:#e5e7eb"><p>${t.startingBrowserRunner || 'Opening Browser Runner...'}</p></body></html>`)
+    } else {
+      setError(t.browserRunnerPopupBlocked)
+      return
     }
 
     setIsExecuting(true)
@@ -482,71 +489,57 @@ export default function ScenarioDetailPage() {
       })
       const execution = res.data.execution
 
-      // Redirect live viewer ke halaman live-view
-      if (res.data.liveViewUrl && liveWindow && !liveWindow.closed) {
-        liveWindow.location.href = res.data.liveViewUrl
+      if (res.data.liveViewUrl && runnerWindow && !runnerWindow.closed) {
+        runnerWindow.location.href = res.data.liveViewUrl
       }
 
-      // Poll execution details to track progress in main page
       const pollExecution = async () => {
         try {
           const detailRes = await executionAPI.getDetails(execution.id)
           const result = detailRes.data.execution || detailRes.data
           setExecutionResult(result)
 
-          // Track current step index based on completed steps
           if (result.stepResults && Array.isArray(result.stepResults)) {
             const completedCount = result.stepResults.filter(sr => sr && sr.status).length
             const currentIndex = Math.min(completedCount, steps.length - 1)
-            
-            // Only update if there are completed steps
             if (completedCount > 0) {
               setCurrentStepIndex(currentIndex)
             }
           }
 
-          // If execution is still running, continue polling
           if (result.status === 'RUNNING' || result.status === 'PENDING') {
             setTimeout(pollExecution, 500)
           } else {
-            // Execution finished
             setCurrentStepIndex(null)
-            
+
             if (result.status === 'FAILED') {
               setError(t.executionFailed(result.failedSteps))
             } else {
               showSuccess(t.executionSuccess(result.status))
             }
 
-            // Auto-scroll to results
             setTimeout(() => {
               executionResultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
             }, 100)
           }
         } catch (pollErr) {
-          // Ignore transient polling errors, keep retrying
           console.debug('Polling error (execution may still be running):', pollErr.message)
           setTimeout(pollExecution, 1000)
         }
       }
 
-      // Start polling
       pollExecution()
     } catch (err) {
+      if (runnerWindow && !runnerWindow.closed) runnerWindow.close()
       const errData = err.response?.data
       let errMsg = errData?.message || t.executionError
 
-      // Detect timeout
       if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
         errMsg = t.executionTimeout
       }
 
       setError(errMsg)
 
-      // Tutup live window jika ada error
-      if (liveWindow && !liveWindow.closed) liveWindow.close()
-
-      // If backend returned execution details on failure, show them
       if (errData?.execution) {
         setExecutionResult(errData.execution)
         setTimeout(() => {
@@ -736,23 +729,40 @@ export default function ScenarioDetailPage() {
       return
     }
 
+    // Open window early to avoid popup blockers (user gesture)
+    const recWindow = window.open('', '_blank', 'width=1280,height=800,menubar=no,toolbar=no,scrollbars=yes,resizable=yes')
+    if (recWindow) {
+      recWindow.document.write(`<html><body style="font-family:sans-serif;padding:40px;background:#0f172a;color:#e2e8f0"><p>${t.openingBrowser}</p></body></html>`)
+    }
+
     setIsStartingRecording(true)
     setError(null)
     try {
-      // ═══ Start Playwright-based Recording ═══
       const res = await recorderAPI.start(id, url)
-      
+      const proxyUrl = res.data.proxyUrl
+
+      if (proxyUrl) {
+        if (recWindow && !recWindow.closed) {
+          recWindow.location.href = proxyUrl
+        } else {
+          // Session already started — stop it so user can retry after allowing popups
+          try { await recorderAPI.stop(id) } catch (_) { /* ignore */ }
+          setError(t.recordingPopupBlocked)
+          setIsRecording(false)
+          return
+        }
+      } else if (recWindow && !recWindow.closed) {
+        recWindow.close()
+      }
+
       setIsRecording(true)
       setRecordingSteps([])
       setShowRecordingPanel(true)
-
-      // ═══ Show Status ═══
       showSuccess(t.recordingStarted(res.data.message))
-      
-      // Start polling for recorded steps with immediate first fetch
       startPollingSteps()
 
     } catch (err) {
+      if (recWindow && !recWindow.closed) recWindow.close()
       const errorMsg = err.response?.data?.message || err.response?.data?.error || t.startRecordingError
       setError(errorMsg)
       console.error('Recording start error:', err.response?.data || err.message)

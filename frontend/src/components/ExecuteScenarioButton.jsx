@@ -12,7 +12,7 @@ export function ExecuteScenarioButton({ scenarioId, scenarioName, onExecutionSta
   const { selectedEnvironmentId, setSelectedEnvironmentId } = useSettingsStore()
   const [showConfirm, setShowConfirm] = useState(false)
   const [browser, setBrowser] = useState('chromium')
-  const [headless, setHeadless] = useState(false)
+  const [headless, setHeadless] = useState(true)
   const [environments, setEnvironments] = useState([])
   const [environmentId, setEnvironmentId] = useState(selectedEnvironmentId || '')
 
