@@ -1,3 +1,10 @@
+## [1.14.3](https://github.com/andri5/testingndrih/compare/v1.14.2...v1.14.3) (2026-07-28)
+
+
+### Bug Fixes
+
+* **recorder:** harden proxy recording and browser runner ([750326f](https://github.com/andri5/testingndrih/commit/750326f296803abda84027b47b9d205559c6bd35))
+
 ## [1.14.2](https://github.com/andri5/testingndrih/compare/v1.14.1...v1.14.2) (2026-06-22)
 
 
