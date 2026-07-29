@@ -24,6 +24,37 @@ function setRecorderCors(req, res) {
   res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Record-Token')
 }
 
+/** Prefer https behind Caddy/nginx (X-Forwarded-Proto). */
+function resolveAppOrigin(req) {
+  const xfProto = String(req.get('x-forwarded-proto') || '').split(',')[0].trim()
+  const proto = xfProto || req.protocol || 'https'
+  const host = req.get('x-forwarded-host') || req.get('host')
+  return `${proto}://${host}`.replace(/\/$/, '')
+}
+
+/**
+ * Full recorder bootstrap as inline JS (no external <script src>).
+ * Needed when the target site CSP blocks third-party script-src.
+ */
+function buildClientInjectPayload(sessionId, recordToken, appOrigin) {
+  const bootstrap = `window.__recOrigin=${JSON.stringify(appOrigin)};window.__recRecordToken=${JSON.stringify(String(recordToken))};`
+  const script = getRecorderScript(String(sessionId), { recordToken: String(recordToken) })
+  const toolbar = `
+(function(){
+  if (document.getElementById('__rec_toolbar')) return;
+  var bar=document.createElement('div');
+  bar.id='__rec_toolbar';
+  bar.style.cssText='position:fixed;top:0;left:0;right:0;z-index:2147483647;background:#dc2626;color:#fff;font:13px/1 sans-serif;padding:8px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 8px rgba(0,0,0,.3)';
+  bar.innerHTML='<strong>RECORDING</strong><span id="__rec_count">0 steps</span><span id="__rec_status" style="opacity:.85">client-direct</span>';
+  (document.body||document.documentElement).appendChild(bar);
+  if (document.body) document.body.style.paddingTop='34px';
+  if (window.__recSendStep) {
+    window.__recSendStep({type:'NAVIGATE',selector:'',value:location.href,description:'Navigate to '+location.href,tagName:'',timestamp:Date.now()});
+  }
+})();`
+  return `${bootstrap}\n${script}\n${toolbar}`
+}
+
 function sanitizeIncomingStep(step) {
   return {
     type: step.type,
@@ -508,10 +539,12 @@ window.__targetBase=${JSON.stringify(url)};
       </body></html>`)
     }
 
-    const appOrigin = `${req.protocol}://${req.get('host')}`
+    const appOrigin = resolveAppOrigin(req)
     const injectUrl = `${appOrigin}/api/recorder/inject.js?sessionId=${encodeURIComponent(String(sessionId))}&rt=${encodeURIComponent(String(rt))}&origin=${encodeURIComponent(appOrigin)}`
-    const bookmarklet = `javascript:void((function(){var s=document.createElement('script');s.src=${JSON.stringify(injectUrl)}+'&_='+Date.now();s.async=true;document.documentElement.appendChild(s);})())`
-    const consoleSnippet = `(function(){var s=document.createElement('script');s.src=${JSON.stringify(injectUrl)}+'&_='+Date.now();document.documentElement.appendChild(s);})();`
+    // Full inline payload — avoids target CSP script-src blocking third-party hosts
+    const inlinePayload = buildClientInjectPayload(String(sessionId), String(rt), appOrigin)
+    // Fetch + inject as textContent (not src) so CSP 'unsafe-inline' allows it
+    const bookmarklet = `javascript:void((function(){fetch(${JSON.stringify(injectUrl)}+'&_='+Date.now()).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.text()}).then(function(code){var s=document.createElement('script');s.textContent=code;document.documentElement.appendChild(s);}).catch(function(e){alert('Gagal pasang recorder (CSP/network): '+e.message+'\\n\\nPakai tombol Salin script di halaman panduan, lalu paste di Console (F12).');})})())`
 
     res.set('content-type', 'text/html; charset=utf-8')
     res.set('cache-control', 'no-store')
@@ -533,10 +566,11 @@ window.__targetBase=${JSON.stringify(url)};
     .row { display:flex; flex-wrap:wrap; gap:10px; margin-top:16px; }
     a.btn, button.btn { appearance:none; border:0; border-radius:8px; padding:12px 16px; font-weight:600; cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; gap:8px; }
     .primary { background:#dc2626; color:#fff; }
-    .secondary { background:#334155; color:#e2e8f0; }
-    .bookmark { background:#0f766e; color:#fff; }
-    pre { background:#0f172a; border:1px solid #334155; border-radius:8px; padding:12px; overflow:auto; font-size:12px; white-space:pre-wrap; word-break:break-all; }
+    .secondary { background:#0f766e; color:#fff; }
+    .bookmark { background:#334155; color:#e2e8f0; }
+    pre { background:#0f172a; border:1px solid #334155; border-radius:8px; padding:12px; overflow:auto; font-size:11px; max-height:180px; white-space:pre-wrap; word-break:break-all; }
     .warn { color:#fbbf24; font-size:14px; }
+    .ok { color:#6ee7b7; font-size:14px; }
   </style>
 </head>
 <body>
@@ -544,6 +578,7 @@ window.__targetBase=${JSON.stringify(url)};
     <h1>Rekam di browser Anda</h1>
     <p class="muted">URL target mengarah ke jaringan internal / tidak terjangkau dari server production.
       Recording tetap bisa jalan dari laptop Anda yang sudah punya akses VPN/intranet.</p>
+    <p class="ok">Situs target punya CSP yang memblokir script eksternal — pakai <strong>Salin script inline</strong> lalu paste di Console (disarankan).</p>
     ${reason ? `<p class="warn">${escHTML(String(reason))}</p>` : ''}
 
     <div class="card">
@@ -551,36 +586,37 @@ window.__targetBase=${JSON.stringify(url)};
       <div class="url">${escHTML(String(url))}</div>
       <div class="row">
         <a class="btn primary" id="openTarget" href="${escAttr(String(url))}" target="_blank" rel="noopener">1. Buka halaman target</a>
-        <a class="btn bookmark" id="injectLink" href="${escAttr(bookmarklet)}">2. Pasang recorder (bookmarklet)</a>
-        <button type="button" class="btn secondary" id="copyConsole">Salin script console</button>
+        <button type="button" class="btn secondary" id="copyConsole">2. Salin script inline (CSP-safe)</button>
+        <a class="btn bookmark" id="injectLink" href="${escAttr(bookmarklet)}">Bookmarklet (fetch)</a>
       </div>
     </div>
 
     <div class="card">
-      <strong>Cara cepat</strong>
+      <strong>Cara yang benar untuk Garuda / CSP ketat</strong>
       <ol class="steps">
-        <li>Klik <strong>Buka halaman target</strong> (tab baru).</li>
-        <li>Seret tombol <strong>Pasang recorder</strong> ke bookmarks bar, lalu klik di tab target —
-          atau klik tombol itu saat fokus berada di tab target (address bar).</li>
-        <li>Alternatif: F12 → Console → tempel script yang disalin → Enter.</li>
-        <li>Berinteraksi seperti biasa. Toolbar merah <em>RECORDING</em> muncul jika inject berhasil.</li>
+        <li>Klik <strong>Buka halaman target</strong> (atau pakai tab yang sudah terbuka).</li>
+        <li>Klik <strong>Salin script inline</strong> di halaman ini.</li>
+        <li>Di tab target: tekan <strong>F12</strong> → tab <strong>Console</strong> → tempel (<kbd>Ctrl+V</kbd>) → <strong>Enter</strong>.</li>
+        <li>Toolbar merah <em>RECORDING</em> harus muncul. Lalu interaksi seperti biasa.</li>
         <li>Kembali ke aplikasi → <strong>Stop</strong> untuk menyimpan langkah.</li>
       </ol>
     </div>
 
-    <pre id="snippet">${escHTML(consoleSnippet)}</pre>
+    <p class="muted" style="font-size:12px">Pratinjau script (dipotong di UI; clipboard berisi penuh):</p>
+    <pre id="snippet"></pre>
   </div>
   <script>
     (function(){
-      var snippet = ${JSON.stringify(consoleSnippet)};
+      var snippet = ${JSON.stringify(inlinePayload)};
+      var preview = document.getElementById('snippet');
+      preview.textContent = snippet.slice(0, 800) + '\\n\\n/* … ' + snippet.length + ' chars total — salin via tombol di atas … */';
       document.getElementById('copyConsole').addEventListener('click', function(){
         navigator.clipboard.writeText(snippet).then(function(){
-          alert('Script disalin. Paste di Console tab target lalu Enter.');
+          alert('Script inline disalin (' + snippet.length + ' karakter).\\n\\nDi tab target: F12 → Console → Ctrl+V → Enter.');
         }).catch(function(){
-          prompt('Salin script ini:', snippet);
+          prompt('Salin script ini (Ctrl+A, Ctrl+C):', snippet);
         });
       });
-      // Open target automatically once (same gesture as Start Recording popup)
       try {
         var opened = window.open(${JSON.stringify(String(url))}, '_blank');
         if (!opened) console.warn('Popup blocked for target URL');
@@ -594,6 +630,7 @@ window.__targetBase=${JSON.stringify(url)};
   /**
    * GET /api/recorder/inject.js?sessionId=&rt=&origin=
    * Cross-origin injectable recorder bootstrap for client-direct mode.
+   * Prefer loading via fetch+textContent (not <script src>) under strict CSP.
    */
   injectScript(req, res) {
     setRecorderCors(req, res)
@@ -611,26 +648,13 @@ window.__targetBase=${JSON.stringify(url)};
       return res.send('console.error("[testingndrih] invalid or expired record token");')
     }
 
-    const appOrigin = String(origin || `${req.protocol}://${req.get('host')}`).replace(/\/$/, '')
-    const bootstrap = `window.__recOrigin=${JSON.stringify(appOrigin)};window.__recRecordToken=${JSON.stringify(String(rt))};`
-    const script = getRecorderScript(String(sessionId), { recordToken: String(rt) })
-    const toolbar = `
-(function(){
-  if (document.getElementById('__rec_toolbar')) return;
-  var bar=document.createElement('div');
-  bar.id='__rec_toolbar';
-  bar.style.cssText='position:fixed;top:0;left:0;right:0;z-index:2147483647;background:#dc2626;color:#fff;font:13px/1 sans-serif;padding:8px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 8px rgba(0,0,0,.3)';
-  bar.innerHTML='<strong>RECORDING</strong><span id="__rec_count">0 steps</span><span id="__rec_status" style="opacity:.85">client-direct</span>';
-  document.documentElement.appendChild(bar);
-  if (document.body) document.body.style.paddingTop='34px';
-  if (window.__recSendStep) {
-    window.__recSendStep({type:'NAVIGATE',selector:'',value:location.href,description:'Navigate to '+location.href,tagName:'',timestamp:Date.now()});
-  }
-})();`
+    const appOrigin = String(origin || resolveAppOrigin(req)).replace(/\/$/, '')
+    // Force https origin when request came as http behind TLS terminator
+    const safeOrigin = appOrigin.replace(/^http:\/\/testsambilngopi\.com/i, 'https://testsambilngopi.com')
 
     res.set('content-type', 'application/javascript; charset=utf-8')
     res.set('cache-control', 'no-store')
-    res.send(`${bootstrap}\n${script}\n${toolbar}`)
+    res.send(buildClientInjectPayload(String(sessionId), String(rt), safeOrigin))
   },
 
   /**
