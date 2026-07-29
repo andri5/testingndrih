@@ -63,10 +63,19 @@ app.use(
     contentSecurityPolicy: { directives: cspDirectives },
   })
 )
-app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
-  credentials: true
-}))
+app.use(
+  cors({
+    origin(origin, callback) {
+      const configured = process.env.CORS_ORIGIN || 'http://localhost:3000'
+      const allowed = configured.split(',').map((s) => s.trim()).filter(Boolean)
+      if (!origin) return callback(null, true)
+      if (allowed.includes('*') || allowed.includes(origin)) return callback(null, true)
+      // Client-direct recorder posts steps / loads inject from the target site origin
+      return callback(null, true)
+    },
+    credentials: true,
+  })
+)
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 

@@ -1,7 +1,9 @@
+import crypto from 'crypto'
 import fs from 'fs'
 import os from 'os'
 import { prisma } from '../lib/prisma.js'
 import { chromium } from 'playwright'
+import { analyzeTargetReachability } from '../utils/networkReachability.js'
 
 /**
  * Recording engine
@@ -46,6 +48,19 @@ export function buildProxyRecordingUrl(scenarioId, targetUrl) {
   return `/api/recorder/proxy?url=${encodeURIComponent(targetUrl)}&sessionId=${encodeURIComponent(scenarioId)}`
 }
 
+export function buildClientGateUrl(scenarioId, targetUrl, recordToken) {
+  const params = new URLSearchParams({
+    url: targetUrl,
+    sessionId: scenarioId,
+    rt: recordToken,
+  })
+  return `/api/recorder/client-gate?${params.toString()}`
+}
+
+function createRecordToken() {
+  return crypto.randomBytes(24).toString('hex')
+}
+
 function appendRecordingStep(session, step) {
   if (isNoiseRecordingStep(step)) {
     console.log(`[RECORDER] Skipping noise step: ${step.type} ${step.selector || step.value || ''}`)
@@ -75,9 +90,15 @@ function isNoiseRecordingStep(step) {
  * Supports: Shadow DOM, iframes, contenteditable, SPA navigation,
  *           dynamic class filtering, selector uniqueness validation.
  */
-export function getRecorderScript(sessionId = null) {
+/**
+ * @param {string|null} sessionId
+ * @param {{ recordToken?: string|null }} [options]
+ */
+export function getRecorderScript(sessionId = null, options = {}) {
+  const recordToken = options.recordToken || null
   const sendStepFn = sessionId !== null
     ? `  var __SESSION_ID = ${JSON.stringify(String(sessionId))};
+  var __RECORD_TOKEN = window.__recRecordToken || ${JSON.stringify(recordToken)};
   var __nativeFetch = window.__nativeFetch || window.fetch.bind(window);
   var __recOrigin = window.__recOrigin || window.location.origin;
   var __stepCount = 0;
@@ -106,6 +127,26 @@ export function getRecorderScript(sessionId = null) {
       el.textContent = __stepCount + ' step' + (__stepCount !== 1 ? 's' : '');
     }
   }
+
+  function __authHeaders() {
+    if (__RECORD_TOKEN) {
+      return {
+        'Content-Type': 'application/json',
+        'X-Record-Token': __RECORD_TOKEN
+      };
+    }
+    var token = window.__recAuthToken || localStorage.getItem('authToken');
+    if (!token) return null;
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + token
+    };
+  }
+
+  function __stepEndpoint() {
+    if (__RECORD_TOKEN) return __recOrigin + '/api/recorder/client-step/' + __SESSION_ID;
+    return __recOrigin + '/api/recorder/step/' + __SESSION_ID;
+  }
   
   function __processFailedQueue() {
     // Try to resend any failed steps
@@ -126,13 +167,13 @@ export function getRecorderScript(sessionId = null) {
   }
   
   function __sendStepDirect(step, isRetry) {
-    var token = localStorage.getItem('authToken');
-    if (!token) { __showRecErr('authToken tidak ditemukan'); return; }
+    var headers = __authHeaders();
+    if (!headers) { __showRecErr('authToken tidak ditemukan'); return; }
     var stepId = step.selector + '_' + step.timestamp;
     
-    __nativeFetch(__recOrigin + '/api/recorder/step/' + __SESSION_ID, {
+    __nativeFetch(__stepEndpoint(), {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      headers: headers,
       body: JSON.stringify(step),
       signal: AbortSignal.timeout(10000)
     }).then(function(r) {
@@ -183,8 +224,8 @@ export function getRecorderScript(sessionId = null) {
       return;
     }
 
-    var token = localStorage.getItem('authToken');
-    if (!token) { __showRecErr('authToken tidak ditemukan'); return; }
+    var headers = __authHeaders();
+    if (!headers) { __showRecErr('authToken tidak ditemukan'); return; }
     
     // ═══ METHOD 1: postMessage (PRIMARY - reliable) ═══
     // Send to parent window (ScenarioDetailPage) via postMessage
@@ -193,15 +234,15 @@ export function getRecorderScript(sessionId = null) {
         type: '__REC_STEP__',
         sessionId: __SESSION_ID,
         data: step,
-        token: token,
+        token: headers.Authorization ? headers.Authorization.replace(/^Bearer\\s+/i, '') : null,
+        recordToken: __RECORD_TOKEN || null,
         timestamp: Date.now()
       }, '*');
     } catch(e) {
       console.error('[REC] postMessage failed:', e);
     }
     
-    // ═══ METHOD 2: Direct fetch (FALLBACK - for direct iframe access) ═══
-    // Also send directly in case parent doesn't listen (e.g., cross-domain)
+    // ═══ METHOD 2: Direct fetch (FALLBACK - for direct iframe access / client-direct) ═══
     __sendStepDirect(step, false);
   }`
     : `  function sendStep(step) {
@@ -885,6 +926,10 @@ export const recorderService = {
     const mode = resolveRecordingMode(modeHint)
 
     if (mode === 'proxy') {
+      const reach = await analyzeTargetReachability(url)
+      const recordToken = createRecordToken()
+      const useClientDirect = Boolean(reach.privateNetwork)
+
       const session = {
         steps: [],
         status: 'recording',
@@ -892,10 +937,30 @@ export const recorderService = {
         scenarioId,
         userId,
         startUrl: url,
-        method: 'proxy',
+        method: useClientDirect ? 'client-direct' : 'proxy',
+        recordToken,
         recordStartTime: Date.now(),
       }
       sessions.set(key, session)
+
+      if (useClientDirect) {
+        const clientGateUrl = buildClientGateUrl(scenarioId, url, recordToken)
+        console.log(
+          `[RECORDER] ✅ Client-direct recording started for ${key} → ${url} ` +
+          `(private/unreachable from server: ${reach.addresses?.join(',') || reach.reason})`
+        )
+        return {
+          status: 'recording',
+          method: 'client-direct',
+          proxyUrl: null,
+          clientGateUrl,
+          startUrl: url,
+          scenarioId,
+          message:
+            'URL target hanya bisa diakses dari jaringan Anda. ' +
+            'Buka halaman di browser, lalu pasang recorder dari halaman panduan.',
+        }
+      }
 
       const proxyUrl = buildProxyRecordingUrl(scenarioId, url)
       console.log(`[RECORDER] ✅ Proxy recording started for ${key} → ${url}`)
@@ -1046,6 +1111,29 @@ export const recorderService = {
     if (session.steps.length === before) return true
     console.log(`[RECORDER] Step added to ${key}: ${step.type} (total: ${session.steps.length})`)
     return true
+  },
+
+  /**
+   * Find active recording session by scenarioId (proxy/client-gate have no userId in URL).
+   */
+  findActiveSessionByScenarioId(scenarioId) {
+    for (const session of sessions.values()) {
+      if (session.scenarioId === scenarioId && session.status === 'recording') {
+        return session
+      }
+    }
+    return null
+  },
+
+  /**
+   * Add step authenticated by short-lived record token (client-direct / cross-origin).
+   */
+  addStepByRecordToken(scenarioId, recordToken, step) {
+    const session = this.findActiveSessionByScenarioId(scenarioId)
+    if (!session || !session.recordToken || session.recordToken !== recordToken) {
+      return false
+    }
+    return this.addStep(session.userId, scenarioId, step)
   },
 
   /**

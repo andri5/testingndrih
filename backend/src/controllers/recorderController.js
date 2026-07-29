@@ -1,7 +1,64 @@
 import { recorderService, getRecorderScript } from '../services/recorderService.js'
+import {
+  analyzeTargetReachability,
+  formatFetchNetworkError,
+} from '../utils/networkReachability.js'
 
 function escHTML(str) {
   return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+}
+
+function escAttr(str) {
+  return escHTML(str).replace(/'/g, '&#39;')
+}
+
+function setRecorderCors(req, res) {
+  const origin = req.get('origin')
+  if (origin) {
+    res.set('Access-Control-Allow-Origin', origin)
+    res.set('Vary', 'Origin')
+  } else {
+    res.set('Access-Control-Allow-Origin', '*')
+  }
+  res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+  res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Record-Token')
+}
+
+function sanitizeIncomingStep(step) {
+  return {
+    type: step.type,
+    selector: step.selector || '',
+    value: step.value ? String(step.value).substring(0, 10000) : '',
+    description: step.description ? String(step.description).substring(0, 500) : '',
+    tagName: step.tagName ? String(step.tagName).substring(0, 50) : '',
+    timestamp: Number.isInteger(step.timestamp) ? step.timestamp : Date.now(),
+    contentEditable: Boolean(step.contentEditable),
+  }
+}
+
+function validateIncomingStep(step, scenarioId) {
+  if (!step || typeof step !== 'object') {
+    return 'Invalid step format'
+  }
+  if (!step.type || typeof step.type !== 'string') {
+    return 'Missing or invalid step.type'
+  }
+  if (!scenarioId) {
+    return 'Missing scenarioId parameter'
+  }
+  const validTypes = [
+    'CLICK', 'FILL', 'HOVER', 'SCROLL', 'DRAG', 'FILE_UPLOAD',
+    'SUBMIT', 'PASTE', 'CHANGE', 'NAVIGATE',
+  ]
+  if (!validTypes.includes(step.type)) {
+    return `Invalid step type: ${step.type}`
+  }
+  if (['CLICK', 'FILL', 'HOVER', 'DRAG', 'FILE_UPLOAD'].includes(step.type)) {
+    if (!step.selector || typeof step.selector !== 'string') {
+      return `step.selector required for ${step.type}`
+    }
+  }
+  return null
 }
 
 export const recorderController = {
@@ -21,6 +78,7 @@ export const recorderController = {
         message: result.message,
         method: result.method || 'proxy',
         proxyUrl: result.proxyUrl || null,
+        clientGateUrl: result.clientGateUrl || null,
         browserPid: result.browserPid
       })
     } catch (err) {
@@ -109,6 +167,29 @@ export const recorderController = {
       }
     } catch {
       return res.status(400).send(`<p>Invalid URL: ${escHTML(url)}</p>`)
+    }
+
+    const session = recorderService.findActiveSessionByScenarioId(String(sessionId))
+    const recordToken = session?.recordToken
+
+    const redirectToClientGate = (reason) => {
+      if (recordToken) {
+        const params = new URLSearchParams({
+          url: String(url),
+          sessionId: String(sessionId),
+          rt: recordToken,
+        })
+        if (reason) params.set('reason', reason)
+        return res.redirect(302, `/api/recorder/client-gate?${params.toString()}`)
+      }
+      return null
+    }
+
+    // Private / internal hosts cannot be fetched from a public VPS — use client-direct.
+    const reach = await analyzeTargetReachability(url)
+    if (reach.privateNetwork) {
+      const redirected = redirectToClientGate(reach.message || 'private_network')
+      if (redirected) return redirected
     }
 
     try {
@@ -391,20 +472,210 @@ window.__targetBase=${JSON.stringify(url)};
       res.send(html)
 
     } catch (err) {
-      res.status(500).send(`<html><body style="font-family:sans-serif;padding:20px;background:#f9fafb">
-        <div style="max-width:600px;margin:40px auto;background:white;padding:24px;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.1)">
-          <h2 style="color:#dc2626">Gagal Memuat Halaman</h2>
+      const detail = formatFetchNetworkError(err)
+      console.error(`[RECORDER] proxyPage fetch failed for ${url}: ${detail}`)
+      const redirected = redirectToClientGate(detail)
+      if (redirected) return redirected
+
+      res.status(500).send(`<html><body style="font-family:sans-serif;padding:20px;background:#0f172a">
+        <div style="max-width:640px;margin:40px auto;background:white;padding:24px;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.1)">
+          <h2 style="color:#dc2626;margin:0 0 12px">Gagal Memuat Halaman</h2>
           <p><strong>URL:</strong> ${escHTML(url)}</p>
-          <p><strong>Error:</strong> ${escHTML(err.message)}</p>
-          <p style="color:#6b7280;font-size:14px">Pastikan URL dapat diakses.</p>
+          <p><strong>Error:</strong> ${escHTML(detail)}</p>
+          <p style="color:#6b7280;font-size:14px">
+            Jika URL hanya bisa diakses dari jaringan/VPN internal, mulai ulang recording dari aplikasi
+            — sistem akan membuka mode rekam langsung di browser Anda.
+          </p>
         </div></body></html>`)
     }
   },
 
   /**
-   * POST /api/recorder/step/:scenarioId
-   * Receives a step from the client-side recorder running in the proxy page.
+   * GET /api/recorder/client-gate?url=&sessionId=&rt=
+   * Guide page for recording internal/private URLs that the VPS cannot fetch.
    */
+  clientGate(req, res) {
+    const { url, sessionId, rt, reason } = req.query
+    if (!url || !sessionId || !rt) {
+      return res.status(400).send('<p>Missing url, sessionId, or rt</p>')
+    }
+
+    const session = recorderService.findActiveSessionByScenarioId(String(sessionId))
+    if (!session || session.recordToken !== String(rt)) {
+      return res.status(409).send(`<html><body style="font-family:system-ui;padding:40px;background:#0f172a;color:#e2e8f0">
+        <h2>Sesi recording tidak aktif</h2>
+        <p>Kembali ke aplikasi dan klik Start Recording lagi.</p>
+      </body></html>`)
+    }
+
+    const appOrigin = `${req.protocol}://${req.get('host')}`
+    const injectUrl = `${appOrigin}/api/recorder/inject.js?sessionId=${encodeURIComponent(String(sessionId))}&rt=${encodeURIComponent(String(rt))}&origin=${encodeURIComponent(appOrigin)}`
+    const bookmarklet = `javascript:void((function(){var s=document.createElement('script');s.src=${JSON.stringify(injectUrl)}+'&_='+Date.now();s.async=true;document.documentElement.appendChild(s);})())`
+    const consoleSnippet = `(function(){var s=document.createElement('script');s.src=${JSON.stringify(injectUrl)}+'&_='+Date.now();document.documentElement.appendChild(s);})();`
+
+    res.set('content-type', 'text/html; charset=utf-8')
+    res.set('cache-control', 'no-store')
+    res.send(`<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Client Recording — Test Sambil Ngopi</title>
+  <style>
+    :root { color-scheme: dark; }
+    body { margin:0; font-family: "Segoe UI", system-ui, sans-serif; background: linear-gradient(160deg,#0f172a,#1e293b 50%,#0f766e22); color:#e2e8f0; min-height:100vh; }
+    .wrap { max-width:720px; margin:0 auto; padding:40px 24px 64px; }
+    h1 { font-size:1.5rem; margin:0 0 8px; }
+    .muted { color:#94a3b8; line-height:1.5; }
+    .card { background:#1e293b; border:1px solid #334155; border-radius:12px; padding:20px; margin:20px 0; }
+    .url { word-break:break-all; font-family:ui-monospace,monospace; font-size:13px; color:#67e8f9; }
+    .steps { margin:0; padding-left:1.2rem; line-height:1.7; }
+    .row { display:flex; flex-wrap:wrap; gap:10px; margin-top:16px; }
+    a.btn, button.btn { appearance:none; border:0; border-radius:8px; padding:12px 16px; font-weight:600; cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; gap:8px; }
+    .primary { background:#dc2626; color:#fff; }
+    .secondary { background:#334155; color:#e2e8f0; }
+    .bookmark { background:#0f766e; color:#fff; }
+    pre { background:#0f172a; border:1px solid #334155; border-radius:8px; padding:12px; overflow:auto; font-size:12px; white-space:pre-wrap; word-break:break-all; }
+    .warn { color:#fbbf24; font-size:14px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Rekam di browser Anda</h1>
+    <p class="muted">URL target mengarah ke jaringan internal / tidak terjangkau dari server production.
+      Recording tetap bisa jalan dari laptop Anda yang sudah punya akses VPN/intranet.</p>
+    ${reason ? `<p class="warn">${escHTML(String(reason))}</p>` : ''}
+
+    <div class="card">
+      <div class="muted" style="font-size:12px;margin-bottom:6px">TARGET</div>
+      <div class="url">${escHTML(String(url))}</div>
+      <div class="row">
+        <a class="btn primary" id="openTarget" href="${escAttr(String(url))}" target="_blank" rel="noopener">1. Buka halaman target</a>
+        <a class="btn bookmark" id="injectLink" href="${escAttr(bookmarklet)}">2. Pasang recorder (bookmarklet)</a>
+        <button type="button" class="btn secondary" id="copyConsole">Salin script console</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <strong>Cara cepat</strong>
+      <ol class="steps">
+        <li>Klik <strong>Buka halaman target</strong> (tab baru).</li>
+        <li>Seret tombol <strong>Pasang recorder</strong> ke bookmarks bar, lalu klik di tab target —
+          atau klik tombol itu saat fokus berada di tab target (address bar).</li>
+        <li>Alternatif: F12 → Console → tempel script yang disalin → Enter.</li>
+        <li>Berinteraksi seperti biasa. Toolbar merah <em>RECORDING</em> muncul jika inject berhasil.</li>
+        <li>Kembali ke aplikasi → <strong>Stop</strong> untuk menyimpan langkah.</li>
+      </ol>
+    </div>
+
+    <pre id="snippet">${escHTML(consoleSnippet)}</pre>
+  </div>
+  <script>
+    (function(){
+      var snippet = ${JSON.stringify(consoleSnippet)};
+      document.getElementById('copyConsole').addEventListener('click', function(){
+        navigator.clipboard.writeText(snippet).then(function(){
+          alert('Script disalin. Paste di Console tab target lalu Enter.');
+        }).catch(function(){
+          prompt('Salin script ini:', snippet);
+        });
+      });
+      // Open target automatically once (same gesture as Start Recording popup)
+      try {
+        var opened = window.open(${JSON.stringify(String(url))}, '_blank');
+        if (!opened) console.warn('Popup blocked for target URL');
+      } catch (e) {}
+    })();
+  </script>
+</body>
+</html>`)
+  },
+
+  /**
+   * GET /api/recorder/inject.js?sessionId=&rt=&origin=
+   * Cross-origin injectable recorder bootstrap for client-direct mode.
+   */
+  injectScript(req, res) {
+    setRecorderCors(req, res)
+    const { sessionId, rt, origin } = req.query
+    if (!sessionId || !rt) {
+      res.status(400)
+      res.type('application/javascript')
+      return res.send('console.error("[testingndrih] missing sessionId or rt");')
+    }
+
+    const session = recorderService.findActiveSessionByScenarioId(String(sessionId))
+    if (!session || session.recordToken !== String(rt)) {
+      res.status(403)
+      res.type('application/javascript')
+      return res.send('console.error("[testingndrih] invalid or expired record token");')
+    }
+
+    const appOrigin = String(origin || `${req.protocol}://${req.get('host')}`).replace(/\/$/, '')
+    const bootstrap = `window.__recOrigin=${JSON.stringify(appOrigin)};window.__recRecordToken=${JSON.stringify(String(rt))};`
+    const script = getRecorderScript(String(sessionId), { recordToken: String(rt) })
+    const toolbar = `
+(function(){
+  if (document.getElementById('__rec_toolbar')) return;
+  var bar=document.createElement('div');
+  bar.id='__rec_toolbar';
+  bar.style.cssText='position:fixed;top:0;left:0;right:0;z-index:2147483647;background:#dc2626;color:#fff;font:13px/1 sans-serif;padding:8px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 8px rgba(0,0,0,.3)';
+  bar.innerHTML='<strong>RECORDING</strong><span id="__rec_count">0 steps</span><span id="__rec_status" style="opacity:.85">client-direct</span>';
+  document.documentElement.appendChild(bar);
+  if (document.body) document.body.style.paddingTop='34px';
+  if (window.__recSendStep) {
+    window.__recSendStep({type:'NAVIGATE',selector:'',value:location.href,description:'Navigate to '+location.href,tagName:'',timestamp:Date.now()});
+  }
+})();`
+
+    res.set('content-type', 'application/javascript; charset=utf-8')
+    res.set('cache-control', 'no-store')
+    res.send(`${bootstrap}\n${script}\n${toolbar}`)
+  },
+
+  /**
+   * OPTIONS / POST /api/recorder/client-step/:scenarioId
+   * Cross-origin step ingest authenticated by X-Record-Token.
+   */
+  optionsClientStep(req, res) {
+    setRecorderCors(req, res)
+    res.status(204).end()
+  },
+
+  receiveClientStep(req, res) {
+    setRecorderCors(req, res)
+    try {
+      const { scenarioId } = req.params
+      const recordToken = req.get('x-record-token') || req.body?.recordToken
+      const step = req.body
+
+      if (!recordToken) {
+        return res.status(401).json({ ok: false, error: 'Missing X-Record-Token' })
+      }
+
+      const validationError = validateIncomingStep(step, scenarioId)
+      if (validationError) {
+        return res.status(400).json({ ok: false, error: validationError })
+      }
+
+      const sanitized = sanitizeIncomingStep(step)
+      console.log(
+        `[RECORDER] receiveClientStep scenario=${scenarioId} type=${sanitized.type} selector=${sanitized.selector.substring(0, 50)}`
+      )
+      const added = recorderService.addStepByRecordToken(scenarioId, String(recordToken), sanitized)
+      if (!added) {
+        return res.status(409).json({
+          ok: false,
+          error: 'Recording session not active. Please restart recording.',
+        })
+      }
+      return res.json({ ok: true })
+    } catch (err) {
+      console.error('[RECORDER] receiveClientStep error:', err)
+      return res.status(500).json({ ok: false, error: 'Internal server error' })
+    }
+  },
+
   /**
    * GET /api/recorder/asset?url=TARGET_URL
    * Proxies non-HTML resources (JSON, JS, CSS, images) from the target site.

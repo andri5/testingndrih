@@ -10,6 +10,12 @@ router.get('/proxy', recorderController.proxyPage)
 // Asset proxy — no auth (proxies static/data resources for the proxied page)
 router.get('/asset', recorderController.proxyAsset)
 
+// Client-direct recording (private/internal target URLs unreachable from VPS)
+router.get('/client-gate', recorderController.clientGate)
+router.get('/inject.js', recorderController.injectScript)
+router.options('/client-step/:scenarioId', recorderController.optionsClientStep)
+router.post('/client-step/:scenarioId', recorderController.receiveClientStep)
+
 router.use(authenticateToken)
 
 router.post('/start', recorderController.startRecording)

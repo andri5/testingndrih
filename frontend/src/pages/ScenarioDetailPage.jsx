@@ -739,11 +739,14 @@ export default function ScenarioDetailPage() {
     setError(null)
     try {
       const res = await recorderAPI.start(id, url)
-      const proxyUrl = res.data.proxyUrl
+      const method = res.data.method || 'proxy'
+      const openUrl = method === 'client-direct'
+        ? (res.data.clientGateUrl || res.data.proxyUrl)
+        : (res.data.proxyUrl || res.data.clientGateUrl)
 
-      if (proxyUrl) {
+      if (openUrl) {
         if (recWindow && !recWindow.closed) {
-          recWindow.location.href = proxyUrl
+          recWindow.location.href = openUrl
         } else {
           // Session already started — stop it so user can retry after allowing popups
           try { await recorderAPI.stop(id) } catch (_) { /* ignore */ }
@@ -758,7 +761,10 @@ export default function ScenarioDetailPage() {
       setIsRecording(true)
       setRecordingSteps([])
       setShowRecordingPanel(true)
-      showSuccess(t.recordingStarted(res.data.message))
+      const startedMsg = method === 'client-direct'
+        ? (res.data.message || 'Mode client-direct: pasang recorder di tab target, lalu Stop di aplikasi.')
+        : res.data.message
+      showSuccess(t.recordingStarted(startedMsg))
       startPollingSteps()
 
     } catch (err) {

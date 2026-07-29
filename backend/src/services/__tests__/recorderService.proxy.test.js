@@ -1,10 +1,20 @@
 jest.mock('../../lib/prisma.js')
+jest.mock('../../utils/networkReachability.js', () => ({
+  analyzeTargetReachability: jest.fn(async () => ({
+    ok: true,
+    reason: null,
+    privateNetwork: false,
+    addresses: ['93.184.216.34'],
+  })),
+}))
 
 import {
   resolveRecordingMode,
   buildProxyRecordingUrl,
+  buildClientGateUrl,
   recorderService,
 } from '../recorderService.js'
+import { analyzeTargetReachability } from '../../utils/networkReachability.js'
 import { prisma } from '../../lib/prisma.js'
 
 describe('recorderService recording mode helpers', () => {
@@ -44,12 +54,23 @@ describe('recorderService recording mode helpers', () => {
         encodeURIComponent('scen-1')
     )
   })
+
+  test('buildClientGateUrl includes record token', () => {
+    const url = buildClientGateUrl('scen-1', 'https://intranet.example/login', 'tok123')
+    expect(url).toContain('/api/recorder/client-gate?')
+    expect(url).toContain('sessionId=scen-1')
+    expect(url).toContain('rt=tok123')
+    expect(url).toContain(encodeURIComponent('https://intranet.example/login'))
+  })
 })
 
 describe('recorder noise filtering', () => {
   test('filters Google Translate widget steps', async () => {
-    const { resolveRecordingMode } = await import('../recorderService.js')
-    // Exercise through startRecording addStep path
+    analyzeTargetReachability.mockResolvedValueOnce({
+      ok: true,
+      privateNetwork: false,
+      addresses: ['1.1.1.1'],
+    })
     prisma.scenario = {
       findFirst: jest.fn().mockResolvedValue({
         id: 'scen-noise',
@@ -101,6 +122,11 @@ describe('recorder noise filtering', () => {
 describe('recorderService.startRecording proxy mode', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    analyzeTargetReachability.mockResolvedValue({
+      ok: true,
+      privateNetwork: false,
+      addresses: ['93.184.216.34'],
+    })
     prisma.scenario = {
       findFirst: jest.fn().mockResolvedValue({
         id: 'scen-1',
@@ -141,6 +167,39 @@ describe('recorderService.startRecording proxy mode', () => {
       description: 'Click login',
     })).toBe(true)
 
+    expect(recorderService.getStatus('user-1', 'scen-1').stepCount).toBe(1)
+  })
+
+  test('uses client-direct when target resolves to private IP', async () => {
+    analyzeTargetReachability.mockResolvedValueOnce({
+      ok: false,
+      reason: 'private_network',
+      privateNetwork: true,
+      addresses: ['10.216.218.150'],
+      message: 'private',
+    })
+
+    const result = await recorderService.startRecording(
+      'user-1',
+      'scen-1',
+      'https://test-garuda-fe.kemenkeu.go.id/login',
+      'proxy'
+    )
+
+    expect(result.method).toBe('client-direct')
+    expect(result.proxyUrl).toBeNull()
+    expect(result.clientGateUrl).toContain('/api/recorder/client-gate?')
+    expect(result.clientGateUrl).toContain('rt=')
+
+    const session = recorderService.findActiveSessionByScenarioId('scen-1')
+    expect(session.recordToken).toBeTruthy()
+    expect(
+      recorderService.addStepByRecordToken('scen-1', session.recordToken, {
+        type: 'CLICK',
+        selector: '#login',
+        description: 'Click login',
+      })
+    ).toBe(true)
     expect(recorderService.getStatus('user-1', 'scen-1').stepCount).toBe(1)
   })
 
