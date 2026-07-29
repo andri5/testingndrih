@@ -1,3 +1,10 @@
+## [1.14.5](https://github.com/andri5/testingndrih/compare/v1.14.4...v1.14.5) (2026-07-29)
+
+
+### Bug Fixes
+
+* **recorder:** csp-safe inline inject for client-direct ([3dde21b](https://github.com/andri5/testingndrih/commit/3dde21bd9e8137f24643be08e91e771aaab91020))
+
 ## [1.14.4](https://github.com/andri5/testingndrih/compare/v1.14.3...v1.14.4) (2026-07-29)
 
 
