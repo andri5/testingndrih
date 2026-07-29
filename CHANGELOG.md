@@ -1,3 +1,10 @@
+# [1.15.0](https://github.com/andri5/testingndrih/compare/v1.14.6...v1.15.0) (2026-07-29)
+
+
+### Features
+
+* **recorder:** dual overview for public vs internal targets ([1cac2f2](https://github.com/andri5/testingndrih/commit/1cac2f2c0a93219d7dd24392d624a08b5fc57e3c))
+
 ## [1.14.6](https://github.com/andri5/testingndrih/compare/v1.14.5...v1.14.6) (2026-07-29)
 
 
