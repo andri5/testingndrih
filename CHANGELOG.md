@@ -1,3 +1,10 @@
+## [1.14.6](https://github.com/andri5/testingndrih/compare/v1.14.5...v1.14.6) (2026-07-29)
+
+
+### Bug Fixes
+
+* **recorder:** default to client-direct for visual fidelity ([2549b73](https://github.com/andri5/testingndrih/commit/2549b73d2606fab3862fbcf775af7e19de38affc))
+
 ## [1.14.5](https://github.com/andri5/testingndrih/compare/v1.14.4...v1.14.5) (2026-07-29)
 
 
