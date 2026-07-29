@@ -1,3 +1,10 @@
+## [1.14.4](https://github.com/andri5/testingndrih/compare/v1.14.3...v1.14.4) (2026-07-29)
+
+
+### Bug Fixes
+
+* **recorder:** client-direct mode for private/intranet targets ([2067ade](https://github.com/andri5/testingndrih/commit/2067ade7d87329a6335b5435f90e3602fae01d67))
+
 ## [1.14.3](https://github.com/andri5/testingndrih/compare/v1.14.2...v1.14.3) (2026-07-28)
 
 
