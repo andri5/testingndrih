@@ -18,6 +18,7 @@ router.post('/client-step/:scenarioId', recorderController.receiveClientStep)
 
 router.use(authenticateToken)
 
+router.get('/target-info', recorderController.getTargetInfo)
 router.post('/start', recorderController.startRecording)
 router.post('/stop', recorderController.stopRecording)
 router.get('/status/:scenarioId', recorderController.getStatus)

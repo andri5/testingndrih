@@ -110,7 +110,11 @@ export const recorderController = {
         method: result.method || 'proxy',
         proxyUrl: result.proxyUrl || null,
         clientGateUrl: result.clientGateUrl || null,
-        browserPid: result.browserPid
+        browserPid: result.browserPid,
+        targetKind: result.targetKind || null,
+        reachability: result.reachability || null,
+        modeRequested: result.modeRequested || null,
+        modeForced: Boolean(result.modeForced),
       })
     } catch (err) {
       console.error(`[RECORDER] startRecording error: ${err.message}`)
@@ -121,6 +125,30 @@ export const recorderController = {
         err.message.includes('Failed to start recording')
       ) {
         return res.status(400).json({ error: err.message, message: err.message })
+      }
+      next(err)
+    }
+  },
+
+  /**
+   * GET /api/recorder/target-info?url=
+   * Classify target as public vs internal before recording starts.
+   */
+  async getTargetInfo(req, res, next) {
+    try {
+      const url = String(req.query.url || '').trim()
+      if (!url) {
+        return res.status(400).json({ error: 'url diperlukan' })
+      }
+      const info = await recorderService.probeTarget(url)
+      res.json({ success: true, url, ...info })
+    } catch (err) {
+      if (
+        err.message.includes('URL target') ||
+        err.message.includes('tidak valid') ||
+        err.message.includes('http/https')
+      ) {
+        return res.status(400).json({ error: err.message })
       }
       next(err)
     }

@@ -229,8 +229,11 @@ export const executionAPI = {
 }
 
 export const recorderAPI = {
-  start: (scenarioId, url) =>
-    apiClient.post('/recorder/start', { scenarioId, url }),
+  start: (scenarioId, url, mode) =>
+    apiClient.post('/recorder/start', { scenarioId, url, ...(mode ? { mode } : {}) }),
+
+  targetInfo: (url) =>
+    apiClient.get('/recorder/target-info', { params: { url }, skipGlobalErrorRedirect: true }),
 
   stop: (scenarioId) =>
     apiClient.post('/recorder/stop', { scenarioId }),

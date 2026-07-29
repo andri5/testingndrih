@@ -1,7 +1,7 @@
 import crypto from 'crypto'
 import { prisma } from '../lib/prisma.js'
 import { chromium } from 'playwright'
-import { analyzeTargetReachability } from '../utils/networkReachability.js'
+import { analyzeTargetReachability, summarizeTargetReachability } from '../utils/networkReachability.js'
 
 /**
  * Recording engine
@@ -894,6 +894,26 @@ export function getRecorderScript(sessionId = null, options = {}) {
 
 export const recorderService = {
   /**
+   * Probe URL target kind (public vs internal) without starting a session.
+   */
+  async probeTarget(rawUrl) {
+    if (!rawUrl || typeof rawUrl !== 'string') {
+      throw new Error('URL target diperlukan')
+    }
+    let parsed
+    try {
+      parsed = new URL(rawUrl)
+    } catch {
+      throw new Error('URL target tidak valid')
+    }
+    if (!['http:', 'https:'].includes(parsed.protocol)) {
+      throw new Error('Hanya URL http/https yang didukung')
+    }
+    const reach = await analyzeTargetReachability(parsed.href)
+    return summarizeTargetReachability(reach)
+  },
+
+  /**
    * Start recording session.
    * @param {string} modeHint - 'client-direct' | 'proxy' | 'playwright' | undefined (auto)
    */
@@ -924,10 +944,11 @@ export const recorderService = {
 
     if (mode !== 'playwright') {
       const reach = await analyzeTargetReachability(url)
+      const targetMeta = summarizeTargetReachability(reach)
       const recordToken = createRecordToken()
-      // Proxy cannot reach private nets; also default path is client-direct for fidelity
-      const useClientDirect =
-        mode === 'client-direct' || Boolean(reach.privateNetwork)
+      // Client-direct unless user asked for proxy AND target is public
+      const forcedFromProxy = mode === 'proxy' && Boolean(reach.privateNetwork)
+      const preferClientDirect = mode !== 'proxy' || forcedFromProxy
 
       const session = {
         steps: [],
@@ -936,18 +957,32 @@ export const recorderService = {
         scenarioId,
         userId,
         startUrl: url,
-        method: useClientDirect ? 'client-direct' : 'proxy',
+        method: preferClientDirect ? 'client-direct' : 'proxy',
         recordToken,
         recordStartTime: Date.now(),
       }
       sessions.set(key, session)
 
-      if (useClientDirect) {
+      if (preferClientDirect) {
         const clientGateUrl = buildClientGateUrl(scenarioId, url, recordToken)
         const why = reach.privateNetwork
           ? `private/unreachable from server: ${reach.addresses?.join(',') || reach.reason}`
-          : 'client-direct default (real-origin fidelity)'
+          : forcedFromProxy
+            ? 'proxy requested but target internal — forced client-direct'
+            : 'client-direct (real-origin fidelity)'
         console.log(`[RECORDER] ✅ Client-direct recording started for ${key} → ${url} (${why})`)
+
+        let message =
+          'Recording di situs asli (bukan proxy). Pasang recorder dari halaman panduan, lalu Stop di aplikasi.'
+        if (reach.privateNetwork) {
+          message =
+            'URL target hanya bisa diakses dari jaringan Anda. Buka halaman di browser, lalu pasang recorder dari halaman panduan.'
+        }
+        if (forcedFromProxy) {
+          message =
+            'Proxy tidak tersedia untuk jaringan internal/VPN. Dialihkan ke rekam di situs asli — pasang recorder dari halaman panduan.'
+        }
+
         return {
           status: 'recording',
           method: 'client-direct',
@@ -955,9 +990,10 @@ export const recorderService = {
           clientGateUrl,
           startUrl: url,
           scenarioId,
-          message: reach.privateNetwork
-            ? 'URL target hanya bisa diakses dari jaringan Anda. Buka halaman di browser, lalu pasang recorder dari halaman panduan.'
-            : 'Recording di situs asli (bukan proxy). Pasang recorder dari halaman panduan, lalu Stop di aplikasi.',
+          message,
+          modeRequested: mode,
+          modeForced: forcedFromProxy,
+          ...targetMeta,
         }
       }
 
@@ -970,7 +1006,10 @@ export const recorderService = {
         proxyUrl,
         startUrl: url,
         scenarioId,
-        message: 'Recording started — interact di jendela browser yang terbuka, lalu klik Stop di aplikasi'
+        message: 'Recording started — interact di jendela browser yang terbuka, lalu klik Stop di aplikasi',
+        modeRequested: mode,
+        modeForced: false,
+        ...targetMeta,
       }
     }
 

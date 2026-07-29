@@ -1,12 +1,28 @@
 jest.mock('../../lib/prisma.js')
-jest.mock('../../utils/networkReachability.js', () => ({
-  analyzeTargetReachability: jest.fn(async () => ({
-    ok: true,
-    reason: null,
-    privateNetwork: false,
-    addresses: ['93.184.216.34'],
-  })),
-}))
+jest.mock('../../utils/networkReachability.js', () => {
+  const actualSummarize = (reach) => {
+    const privateNetwork = Boolean(reach?.privateNetwork)
+    return {
+      targetKind: privateNetwork ? 'internal' : 'public',
+      reachability: {
+        privateNetwork,
+        ok: reach?.ok !== false && !privateNetwork,
+        reason: reach?.reason || null,
+        addresses: Array.isArray(reach?.addresses) ? reach.addresses : [],
+        message: reach?.message || null,
+      },
+    }
+  }
+  return {
+    analyzeTargetReachability: jest.fn(async () => ({
+      ok: true,
+      reason: null,
+      privateNetwork: false,
+      addresses: ['93.184.216.34'],
+    })),
+    summarizeTargetReachability: jest.fn(actualSummarize),
+  }
+})
 
 import {
   resolveRecordingMode,
@@ -159,6 +175,7 @@ describe('recorderService.startRecording proxy mode', () => {
 
     expect(result.status).toBe('recording')
     expect(result.method).toBe('proxy')
+    expect(result.targetKind).toBe('public')
     expect(result.proxyUrl).toContain('/api/recorder/proxy?')
     expect(result.proxyUrl).toContain(encodeURIComponent('https://the-internet.herokuapp.com/login'))
 
@@ -184,6 +201,7 @@ describe('recorderService.startRecording proxy mode', () => {
     )
 
     expect(result.method).toBe('client-direct')
+    expect(result.targetKind).toBe('public')
     expect(result.proxyUrl).toBeNull()
     expect(result.clientGateUrl).toContain('/api/recorder/client-gate?')
   })
@@ -205,6 +223,8 @@ describe('recorderService.startRecording proxy mode', () => {
     )
 
     expect(result.method).toBe('client-direct')
+    expect(result.targetKind).toBe('internal')
+    expect(result.modeForced).toBe(true)
     expect(result.proxyUrl).toBeNull()
     expect(result.clientGateUrl).toContain('/api/recorder/client-gate?')
     expect(result.clientGateUrl).toContain('rt=')
@@ -219,6 +239,27 @@ describe('recorderService.startRecording proxy mode', () => {
       })
     ).toBe(true)
     expect(recorderService.getStatus('user-1', 'scen-1').stepCount).toBe(1)
+  })
+
+  test('probeTarget returns public/internal kind', async () => {
+    analyzeTargetReachability.mockResolvedValueOnce({
+      ok: true,
+      privateNetwork: false,
+      addresses: ['8.8.8.8'],
+    })
+    await expect(recorderService.probeTarget('https://example.com')).resolves.toMatchObject({
+      targetKind: 'public',
+    })
+
+    analyzeTargetReachability.mockResolvedValueOnce({
+      ok: false,
+      privateNetwork: true,
+      addresses: ['10.0.0.1'],
+      reason: 'private_network',
+    })
+    await expect(recorderService.probeTarget('https://intranet.local/app')).resolves.toMatchObject({
+      targetKind: 'internal',
+    })
   })
 
   test('rejects second concurrent recording for same scenario', async () => {

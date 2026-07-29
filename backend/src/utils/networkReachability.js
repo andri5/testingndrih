@@ -88,3 +88,24 @@ export function formatFetchNetworkError(err) {
   }
   return detail
 }
+
+/**
+ * UI/API summary: public vs internal (private IP / localhost).
+ */
+export function summarizeTargetReachability(reach) {
+  const privateNetwork = Boolean(reach?.privateNetwork)
+  return {
+    targetKind: privateNetwork ? 'internal' : 'public',
+    reachability: {
+      privateNetwork,
+      ok: reach?.ok !== false && !privateNetwork,
+      reason: reach?.reason || null,
+      addresses: Array.isArray(reach?.addresses) ? reach.addresses : [],
+      message:
+        reach?.message ||
+        (privateNetwork
+          ? 'Target berada di jaringan internal/VPN — server production tidak bisa mem-proxy halaman ini.'
+          : 'Target tampak publik (DNS bukan IP privat).'),
+    },
+  }
+}

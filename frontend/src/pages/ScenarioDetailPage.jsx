@@ -61,10 +61,27 @@ const i18n = {
     stopRecording: 'Stop',
     recordingActive: 'Recording Active...',
     recordingMode: 'Recording Mode',
-    startRecordingHint: 'Start recording opens a new browser tab (proxy recorder). Interact there — every click, fill, and navigation is saved. Click Stop here when finished.',
+    startRecordingHint:
+      'Pilih mode rekam di bawah. “Situs asli” menampilkan halaman seperti browser biasa (disarankan). Proxy lebih cepat tanpa inject, tapi tampilan SPA sering rusak.',
     urlTarget: 'Target URL',
     openingBrowser: 'Opening Browser...',
     startRecording: '🔴 Start Recording',
+    recordingOverviewDirectTitle: 'Situs asli (disarankan)',
+    recordingOverviewDirectBody:
+      'Buka website real di tab baru, lalu pasang recorder (salin script inline → Console). Tampilan & selector mirip saat Play.',
+    recordingOverviewDirectCsp:
+      'Jika situs punya CSP ketat: F12 → Console → tempel script dari halaman panduan (jangan load script dari URL eksternal).',
+    recordingOverviewProxyTitle: 'Lewat proxy app',
+    recordingOverviewProxyBody:
+      'Satu tab di domain Test Sambil Ngopi. Tidak perlu inject manual, tetapi gambar/layout Next.js sering tidak lengkap.',
+    recordingOverviewProxyWarn:
+      'Peringatan: tampilan proxy bisa berbeda dari web asli → risiko selector rapuh saat Play.',
+    recordingOverviewInternalBadge: 'Jaringan internal / VPN',
+    recordingOverviewPublicBadge: 'Situs publik',
+    recordingOverviewInternalLock:
+      'Target terdeteksi internal/VPN. Proxy server tidak bisa dipakai — mode dikunci ke situs asli.',
+    recordingOverviewProbing: 'Mendeteksi jenis target…',
+    recordingOverviewSelectMode: 'Mode rekam',
     stepsRecorded: (c) => `${c} step${c !== 1 ? 's' : ''} recorded`,
     interactionHint: '— interact in the recording tab...',
     waitingForInteraction: 'Waiting for interactions... Click, fill forms, or navigate in the recording tab.',
@@ -178,6 +195,11 @@ export default function ScenarioDetailPage() {
   const [isStoppingRecording, setIsStoppingRecording] = useState(false)
   const [isSavingRecording, setIsSavingRecording] = useState(false)
   const [showRecordingPanel, setShowRecordingPanel] = useState(false)
+  const [recordingModeChoice, setRecordingModeChoice] = useState('client-direct')
+  const [targetKind, setTargetKind] = useState(null) // 'public' | 'internal' | null
+  const [targetInfoMessage, setTargetInfoMessage] = useState('')
+  const [isProbingTarget, setIsProbingTarget] = useState(false)
+  const targetProbeRef = useRef(0)
 
   // Auto-open recording panel if navigated via Quick Record (?autoRecord=1)
   useEffect(() => {
@@ -194,6 +216,39 @@ export default function ScenarioDetailPage() {
       window.history.replaceState(null, '', cleanUrl)
     }
   }, [routeLocation, scenario])
+
+  // Probe public vs internal when recording URL changes (for overview auto-select)
+  useEffect(() => {
+    if (!showRecordingPanel || isRecording) return
+    const url = (recordingUrl.trim() || scenario?.url || '').trim()
+    if (!url || !/^https?:\/\//i.test(url)) {
+      setTargetKind(null)
+      setTargetInfoMessage('')
+      return
+    }
+
+    const probeId = ++targetProbeRef.current
+    const timer = setTimeout(async () => {
+      setIsProbingTarget(true)
+      try {
+        const res = await recorderAPI.targetInfo(url)
+        if (probeId !== targetProbeRef.current) return
+        const kind = res.data.targetKind === 'internal' ? 'internal' : 'public'
+        setTargetKind(kind)
+        setTargetInfoMessage(res.data.reachability?.message || '')
+        // Always recommend client-direct; lock to it for internal
+        setRecordingModeChoice('client-direct')
+      } catch {
+        if (probeId !== targetProbeRef.current) return
+        setTargetKind(null)
+        setTargetInfoMessage('')
+      } finally {
+        if (probeId === targetProbeRef.current) setIsProbingTarget(false)
+      }
+    }, 400)
+
+    return () => clearTimeout(timer)
+  }, [recordingUrl, scenario?.url, showRecordingPanel, isRecording])
 
   // ── End of state declarations ──
 
@@ -729,6 +784,9 @@ export default function ScenarioDetailPage() {
       return
     }
 
+    const selectedMode =
+      targetKind === 'internal' ? 'client-direct' : (recordingModeChoice || 'client-direct')
+
     // Open window early to avoid popup blockers (user gesture)
     const recWindow = window.open('', '_blank', 'width=1280,height=800,menubar=no,toolbar=no,scrollbars=yes,resizable=yes')
     if (recWindow) {
@@ -738,8 +796,14 @@ export default function ScenarioDetailPage() {
     setIsStartingRecording(true)
     setError(null)
     try {
-      const res = await recorderAPI.start(id, url)
-      const method = res.data.method || 'proxy'
+      const res = await recorderAPI.start(id, url, selectedMode)
+      const method = res.data.method || selectedMode
+      if (res.data.targetKind === 'internal' || res.data.targetKind === 'public') {
+        setTargetKind(res.data.targetKind)
+      }
+      if (res.data.modeForced) {
+        setRecordingModeChoice('client-direct')
+      }
       const openUrl = method === 'client-direct'
         ? (res.data.clientGateUrl || res.data.proxyUrl)
         : (res.data.proxyUrl || res.data.clientGateUrl)
@@ -1007,6 +1071,79 @@ export default function ScenarioDetailPage() {
                   >
                     {isStartingRecording ? t.openingBrowser : 'Start Recording'}
                   </ExportFormatButton>
+                </div>
+
+                <div>
+                  <div className="flex flex-wrap items-center gap-2 mb-2">
+                    <span className="text-sm font-medium text-[#A0A0A4]">{t.recordingOverviewSelectMode}</span>
+                    {isProbingTarget && (
+                      <span className="text-xs text-[#888]">{t.recordingOverviewProbing}</span>
+                    )}
+                    {targetKind === 'internal' && (
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                        {t.recordingOverviewInternalBadge}
+                      </span>
+                    )}
+                    {targetKind === 'public' && (
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                        {t.recordingOverviewPublicBadge}
+                      </span>
+                    )}
+                  </div>
+                  {targetInfoMessage && (
+                    <p className="text-xs text-[#888] mb-2">{targetInfoMessage}</p>
+                  )}
+                  {targetKind === 'internal' && (
+                    <p className="text-xs text-amber-300/90 mb-3">{t.recordingOverviewInternalLock}</p>
+                  )}
+
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <button
+                      type="button"
+                      onClick={() => setRecordingModeChoice('client-direct')}
+                      className={`text-left rounded-lg border p-3 transition ${
+                        recordingModeChoice === 'client-direct'
+                          ? 'border-[#5E6AD2] bg-[#5E6AD2]/10'
+                          : 'border-[#2D2D2F] bg-[#161618] hover:border-[#3f3f46]'
+                      }`}
+                    >
+                      <div className="text-sm font-semibold text-[#E0E0E2] mb-1">
+                        {t.recordingOverviewDirectTitle}
+                      </div>
+                      <p className="text-xs text-[#A0A0A4] leading-relaxed">
+                        {t.recordingOverviewDirectBody}
+                      </p>
+                      <p className="text-xs text-[#67e8f9]/90 mt-2 leading-relaxed">
+                        {t.recordingOverviewDirectCsp}
+                      </p>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (targetKind === 'internal') return
+                        setRecordingModeChoice('proxy')
+                      }}
+                      disabled={targetKind === 'internal'}
+                      className={`text-left rounded-lg border p-3 transition ${
+                        targetKind === 'internal'
+                          ? 'border-[#2D2D2F] bg-[#121214] opacity-50 cursor-not-allowed'
+                          : recordingModeChoice === 'proxy'
+                            ? 'border-[#5E6AD2] bg-[#5E6AD2]/10'
+                            : 'border-[#2D2D2F] bg-[#161618] hover:border-[#3f3f46]'
+                      }`}
+                    >
+                      <div className="text-sm font-semibold text-[#E0E0E2] mb-1">
+                        {t.recordingOverviewProxyTitle}
+                      </div>
+                      <p className="text-xs text-[#A0A0A4] leading-relaxed">
+                        {t.recordingOverviewProxyBody}
+                      </p>
+                      <p className="text-xs text-amber-300/90 mt-2 leading-relaxed">
+                        {t.recordingOverviewProxyWarn}
+                      </p>
+                    </button>
+                  </div>
                 </div>
               </div>
             )}

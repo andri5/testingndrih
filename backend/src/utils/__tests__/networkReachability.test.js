@@ -21,3 +21,29 @@ describe('formatFetchNetworkError', () => {
     expect(formatFetchNetworkError({ message: 'fetch failed' })).toBe('fetch failed')
   })
 })
+
+describe('summarizeTargetReachability', () => {
+  test('marks private network as internal', async () => {
+    const { summarizeTargetReachability } = await import('../networkReachability.js')
+    const summary = summarizeTargetReachability({
+      privateNetwork: true,
+      ok: false,
+      reason: 'private_network',
+      addresses: ['10.1.2.3'],
+      message: 'internal',
+    })
+    expect(summary.targetKind).toBe('internal')
+    expect(summary.reachability.privateNetwork).toBe(true)
+  })
+
+  test('marks public DNS as public', async () => {
+    const { summarizeTargetReachability } = await import('../networkReachability.js')
+    const summary = summarizeTargetReachability({
+      privateNetwork: false,
+      ok: true,
+      addresses: ['1.1.1.1'],
+    })
+    expect(summary.targetKind).toBe('public')
+    expect(summary.reachability.privateNetwork).toBe(false)
+  })
+})
