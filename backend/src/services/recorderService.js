@@ -1,6 +1,4 @@
 import crypto from 'crypto'
-import fs from 'fs'
-import os from 'os'
 import { prisma } from '../lib/prisma.js'
 import { chromium } from 'playwright'
 import { analyzeTargetReachability } from '../utils/networkReachability.js'
@@ -8,11 +6,11 @@ import { analyzeTargetReachability } from '../utils/networkReachability.js'
 /**
  * Recording engine
  *
- * Default mode: **proxy** — user interacts in their own browser via
- * `/api/recorder/proxy`. Works in Docker/production (no server Chromium window).
+ * Default mode: **client-direct** — open the real target site in the user's browser
+ * and inject the recorder (best visual/selector fidelity for playback).
  *
- * Optional mode: **playwright** — server-side headed Chromium (local desktop only).
- * Never silently falls back to headless for recording (useless without interaction).
+ * Optional: **proxy** — rewrite page through `/api/recorder/proxy` (SPA/image quirks).
+ * Optional: **playwright** — server-side headed Chromium (local desktop only).
  *
  * Session store - keyed by `userId:scenarioId`
  */
@@ -26,18 +24,17 @@ const PLAYWRIGHT_BROWSER_ARGS = [
 
 /**
  * Resolve recording mode.
- * Prefer proxy unless RECORDING_MODE=playwright (local desktop workflows).
+ * Prefer client-direct (real origin) unless RECORDING_MODE / request says otherwise.
  */
 export function resolveRecordingMode(requestedMode) {
   const envMode = String(process.env.RECORDING_MODE || '').toLowerCase()
   const mode = String(requestedMode || envMode || '').toLowerCase()
   if (mode === 'playwright') return 'playwright'
   if (mode === 'proxy') return 'proxy'
+  if (mode === 'client-direct' || mode === 'client' || mode === 'direct') return 'client-direct'
 
-  // Auto: Docker / Linux server → proxy (user cannot see server Chromium)
-  const inDocker = fs.existsSync('/.dockerenv')
-  if (inDocker || os.platform() === 'linux') return 'proxy'
-  return 'proxy' // default everywhere — reliable for remote + local Vite
+  // Default: record on the real site so images/layout/selectors match playback
+  return 'client-direct'
 }
 
 function sessionKey(userId, scenarioId) {
@@ -898,7 +895,7 @@ export function getRecorderScript(sessionId = null, options = {}) {
 export const recorderService = {
   /**
    * Start recording session.
-   * @param {string} modeHint - 'proxy' | 'playwright' | undefined (auto)
+   * @param {string} modeHint - 'client-direct' | 'proxy' | 'playwright' | undefined (auto)
    */
   async startRecording(userId, scenarioId, startUrl, modeHint) {
     const key = sessionKey(userId, scenarioId)
@@ -925,10 +922,12 @@ export const recorderService = {
 
     const mode = resolveRecordingMode(modeHint)
 
-    if (mode === 'proxy') {
+    if (mode !== 'playwright') {
       const reach = await analyzeTargetReachability(url)
       const recordToken = createRecordToken()
-      const useClientDirect = Boolean(reach.privateNetwork)
+      // Proxy cannot reach private nets; also default path is client-direct for fidelity
+      const useClientDirect =
+        mode === 'client-direct' || Boolean(reach.privateNetwork)
 
       const session = {
         steps: [],
@@ -945,10 +944,10 @@ export const recorderService = {
 
       if (useClientDirect) {
         const clientGateUrl = buildClientGateUrl(scenarioId, url, recordToken)
-        console.log(
-          `[RECORDER] ✅ Client-direct recording started for ${key} → ${url} ` +
-          `(private/unreachable from server: ${reach.addresses?.join(',') || reach.reason})`
-        )
+        const why = reach.privateNetwork
+          ? `private/unreachable from server: ${reach.addresses?.join(',') || reach.reason}`
+          : 'client-direct default (real-origin fidelity)'
+        console.log(`[RECORDER] ✅ Client-direct recording started for ${key} → ${url} (${why})`)
         return {
           status: 'recording',
           method: 'client-direct',
@@ -956,9 +955,9 @@ export const recorderService = {
           clientGateUrl,
           startUrl: url,
           scenarioId,
-          message:
-            'URL target hanya bisa diakses dari jaringan Anda. ' +
-            'Buka halaman di browser, lalu pasang recorder dari halaman panduan.',
+          message: reach.privateNetwork
+            ? 'URL target hanya bisa diakses dari jaringan Anda. Buka halaman di browser, lalu pasang recorder dari halaman panduan.'
+            : 'Recording di situs asli (bukan proxy). Pasang recorder dari halaman panduan, lalu Stop di aplikasi.',
         }
       }
 
@@ -985,11 +984,11 @@ export const recorderService = {
           args: PLAYWRIGHT_BROWSER_ARGS
         })
       } catch (headedError) {
-        // Do NOT fall back to headless — user cannot interact. Prefer proxy instead.
+        // Do NOT fall back to headless — user cannot interact. Prefer client-direct instead.
         console.error(`[RECORDER] ❌ Headed Playwright failed: ${headedError.message}`)
         throw new Error(
           `Tidak bisa membuka browser headed di server (${headedError.message}). ` +
-          `Gunakan mode proxy (default) atau jalankan backend di desktop lokal.`
+          `Gunakan mode client-direct/proxy atau jalankan backend di desktop lokal.`
         )
       }
 

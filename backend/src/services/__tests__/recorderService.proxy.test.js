@@ -25,9 +25,9 @@ describe('recorderService recording mode helpers', () => {
     else process.env.RECORDING_MODE = originalEnv
   })
 
-  test('defaults to proxy', () => {
+  test('defaults to client-direct', () => {
     delete process.env.RECORDING_MODE
-    expect(resolveRecordingMode()).toBe('proxy')
+    expect(resolveRecordingMode()).toBe('client-direct')
   })
 
   test('respects RECORDING_MODE=playwright', () => {
@@ -43,6 +43,11 @@ describe('recorderService recording mode helpers', () => {
   test('explicit playwright wins over env proxy', () => {
     process.env.RECORDING_MODE = 'proxy'
     expect(resolveRecordingMode('playwright')).toBe('playwright')
+  })
+
+  test('respects RECORDING_MODE=proxy', () => {
+    process.env.RECORDING_MODE = 'proxy'
+    expect(resolveRecordingMode()).toBe('proxy')
   })
 
   test('buildProxyRecordingUrl encodes url and session', () => {
@@ -168,6 +173,19 @@ describe('recorderService.startRecording proxy mode', () => {
     })).toBe(true)
 
     expect(recorderService.getStatus('user-1', 'scen-1').stepCount).toBe(1)
+  })
+
+  test('defaults to client-direct for public sites', async () => {
+    const result = await recorderService.startRecording(
+      'user-1',
+      'scen-1',
+      'https://www.erafone.com/',
+      undefined
+    )
+
+    expect(result.method).toBe('client-direct')
+    expect(result.proxyUrl).toBeNull()
+    expect(result.clientGateUrl).toContain('/api/recorder/client-gate?')
   })
 
   test('uses client-direct when target resolves to private IP', async () => {
