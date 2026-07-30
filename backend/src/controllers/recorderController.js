@@ -570,9 +570,19 @@ window.__targetBase=${JSON.stringify(url)};
     const appOrigin = resolveAppOrigin(req).replace(/^http:\/\/testsambilngopi\.com/i, 'https://testsambilngopi.com')
     // Full inline payload — never fetch inject.js (target CSP connect-src blocks it)
     const inlinePayload = buildClientInjectPayload(String(sessionId), String(rt), appOrigin)
+    // Safe for embedding in HTML <script type="application/json"> (avoid </script> breakouts)
+    const payloadJson = JSON.stringify(inlinePayload).replace(/</g, '\\u003c')
+    const targetName = `tsn_rec_target_${String(sessionId).replace(/[^a-zA-Z0-9_-]/g, '_')}`
 
+    res.removeHeader('content-security-policy')
+    res.removeHeader('Content-Security-Policy')
     res.set('content-type', 'text/html; charset=utf-8')
     res.set('cache-control', 'no-store')
+    // Allow inline boot script + JSON payload on this guide page (Helmet default CSP blocks it)
+    res.set(
+      'Content-Security-Policy',
+      "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'self'; form-action 'self'"
+    )
     res.send(`<!DOCTYPE html>
 <html lang="id">
 <head>
@@ -582,16 +592,21 @@ window.__targetBase=${JSON.stringify(url)};
   <style>
     :root { color-scheme: dark; }
     body { margin:0; font-family: "Segoe UI", system-ui, sans-serif; background: linear-gradient(160deg,#0f172a,#1e293b 50%,#0f766e22); color:#e2e8f0; min-height:100vh; }
-    .wrap { max-width:720px; margin:0 auto; padding:40px 24px 64px; }
+    .wrap { max-width:720px; margin:0 auto; padding:40px 24px 64px; position:relative; z-index:1; }
     h1 { font-size:1.5rem; margin:0 0 8px; }
     .muted { color:#94a3b8; line-height:1.5; }
     .card { background:#1e293b; border:1px solid #334155; border-radius:12px; padding:20px; margin:20px 0; }
     .url { word-break:break-all; font-family:ui-monospace,monospace; font-size:13px; color:#67e8f9; }
     .steps { margin:0; padding-left:1.2rem; line-height:1.7; }
     .row { display:flex; flex-wrap:wrap; gap:10px; margin-top:16px; }
-    a.btn, button.btn { appearance:none; border:0; border-radius:8px; padding:12px 16px; font-weight:600; cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; gap:8px; }
+    a.btn, button.btn {
+      appearance:none; border:0; border-radius:8px; padding:12px 16px; font-weight:600; cursor:pointer;
+      text-decoration:none; display:inline-flex; align-items:center; gap:8px; pointer-events:auto; position:relative; z-index:2;
+    }
     .primary { background:#dc2626; color:#fff; }
+    .primary:hover { background:#b91c1c; }
     .secondary { background:#0f766e; color:#fff; }
+    .secondary:hover { background:#0d9488; }
     pre { background:#0f172a; border:1px solid #334155; border-radius:8px; padding:12px; overflow:auto; font-size:11px; max-height:180px; white-space:pre-wrap; word-break:break-all; }
     .warn { color:#fbbf24; font-size:14px; }
     .ok { color:#6ee7b7; font-size:14px; }
@@ -611,7 +626,10 @@ window.__targetBase=${JSON.stringify(url)};
       <div class="muted" style="font-size:12px;margin-bottom:6px">TARGET</div>
       <div class="url">${escHTML(String(url))}</div>
       <div class="row">
-        <button type="button" class="btn primary" id="openTarget">1. Buka halaman target</button>
+        <a class="btn primary" id="openTarget"
+           href="${escAttr(String(url))}"
+           target="${escAttr(targetName)}"
+           rel="opener">1. Buka halaman target</a>
         <button type="button" class="btn secondary" id="copyConsole">2. Salin script inline (CSP-safe)</button>
       </div>
       <p class="bridge" id="bridgeStatus" style="margin-top:14px">Bridge: menunggu step dari tab target…</p>
@@ -621,7 +639,7 @@ window.__targetBase=${JSON.stringify(url)};
       <strong>Langkah (Garuda / CSP ketat)</strong>
       <ol class="steps">
         <li>Biarkan tab <em>panduan ini</em> tetap terbuka.</li>
-        <li>Klik <strong>Buka halaman target</strong> (tab baru — harus dibuka dari tombol ini agar <code>window.opener</code> terhubung).</li>
+        <li>Klik <strong>Buka halaman target</strong> (tab baru — harus dibuka dari tautan ini agar <code>window.opener</code> terhubung).</li>
         <li>Klik <strong>Salin script inline</strong>.</li>
         <li>Di tab target: <strong>F12</strong> → <strong>Console</strong> → <kbd>Ctrl+V</kbd> → <strong>Enter</strong>.</li>
         <li>Toolbar merah muncul; angka bridge di halaman ini naik saat Anda berinteraksi.</li>
@@ -632,34 +650,66 @@ window.__targetBase=${JSON.stringify(url)};
     <p class="muted" style="font-size:12px">Pratinjau script (clipboard berisi penuh):</p>
     <pre id="snippet"></pre>
   </div>
+  <script type="application/json" id="rec-payload">${payloadJson}</script>
   <script>
     (function(){
-      var snippet = ${JSON.stringify(inlinePayload)};
+      var payloadEl = document.getElementById('rec-payload');
+      var snippet = '';
+      try { snippet = JSON.parse(payloadEl.textContent || '""'); } catch (e) { snippet = ''; }
       var sessionId = ${JSON.stringify(String(sessionId))};
       var recordToken = ${JSON.stringify(String(rt))};
       var targetUrl = ${JSON.stringify(String(url))};
       var appOrigin = ${JSON.stringify(appOrigin)};
+      var targetName = ${JSON.stringify(targetName)};
       var bridgeCount = 0;
-      var TARGET_NAME = 'tsn_rec_target_' + sessionId;
 
       var preview = document.getElementById('snippet');
-      preview.textContent = snippet.slice(0, 800) + '\\n\\n/* … ' + snippet.length + ' chars — salin via tombol … */';
-
-      function openTarget() {
-        // Do NOT use noopener — recorder needs window.opener → this gate
-        var w = window.open(targetUrl, TARGET_NAME);
-        if (!w) alert('Popup diblokir. Izinkan popup, lalu klik Buka halaman target lagi.');
-        return w;
+      if (preview) {
+        preview.textContent = String(snippet).slice(0, 800) + '\\n\\n/* … ' + String(snippet).length + ' chars — salin via tombol … */';
       }
 
-      document.getElementById('openTarget').addEventListener('click', openTarget);
-      document.getElementById('copyConsole').addEventListener('click', function(){
-        navigator.clipboard.writeText(snippet).then(function(){
-          alert('Script inline disalin (' + snippet.length + ' karakter).\\n\\nDi tab target: F12 → Console → Ctrl+V → Enter.\\n\\nJangan paste URL inject.js.');
-        }).catch(function(){
-          prompt('Salin script ini (Ctrl+A, Ctrl+C):', snippet);
+      function openTarget(ev) {
+        // Prefer named window.open so opener stays connected (bridge)
+        try {
+          var w = window.open(targetUrl, targetName);
+          if (w) {
+            if (ev) ev.preventDefault();
+            try { w.focus(); } catch (_) {}
+            return w;
+          }
+        } catch (e) {}
+        // Fall through to default <a target> navigation if popup blocked
+        return null;
+      }
+
+      var openBtn = document.getElementById('openTarget');
+      if (openBtn) {
+        openBtn.addEventListener('click', function(ev) {
+          var w = openTarget(ev);
+          if (!w && !ev.defaultPrevented) {
+            // let the <a> navigate
+            return;
+          }
+          if (!w) {
+            alert('Popup diblokir. Izinkan popup untuk testsambilngopi.com, lalu klik lagi.');
+          }
         });
-      });
+      }
+
+      var copyBtn = document.getElementById('copyConsole');
+      if (copyBtn) {
+        copyBtn.addEventListener('click', function(){
+          if (!snippet) {
+            alert('Script kosong — mulai ulang recording dari aplikasi.');
+            return;
+          }
+          navigator.clipboard.writeText(snippet).then(function(){
+            alert('Script inline disalin (' + snippet.length + ' karakter).\\n\\nDi tab target: F12 → Console → Ctrl+V → Enter.\\n\\nJangan paste URL inject.js.');
+          }).catch(function(){
+            prompt('Salin script ini (Ctrl+A, Ctrl+C):', snippet);
+          });
+        });
+      }
 
       window.addEventListener('message', function(ev) {
         var d = ev.data;
@@ -675,21 +725,19 @@ window.__targetBase=${JSON.stringify(url)};
           },
           body: JSON.stringify(step)
         }).then(function(r) {
+          var el = document.getElementById('bridgeStatus');
+          if (!el) return;
           if (r.ok) {
             bridgeCount++;
-            document.getElementById('bridgeStatus').textContent =
-              'Bridge OK: ' + bridgeCount + ' step diterima (jangan tutup tab ini)';
+            el.textContent = 'Bridge OK: ' + bridgeCount + ' step diterima (jangan tutup tab ini)';
           } else {
-            document.getElementById('bridgeStatus').textContent =
-              'Bridge gagal: HTTP ' + r.status + ' — cek sesi recording masih aktif';
+            el.textContent = 'Bridge gagal: HTTP ' + r.status + ' — cek sesi recording masih aktif';
           }
         }).catch(function(e) {
-          document.getElementById('bridgeStatus').textContent = 'Bridge error: ' + e.message;
+          var el = document.getElementById('bridgeStatus');
+          if (el) el.textContent = 'Bridge error: ' + e.message;
         });
       });
-
-      // Auto-open once (same gesture chain as Start Recording popup when possible)
-      try { openTarget(); } catch (e) {}
     })();
   </script>
 </body>
