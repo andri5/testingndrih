@@ -1,3 +1,10 @@
+## [1.15.2](https://github.com/andri5/testingndrih/compare/v1.15.1...v1.15.2) (2026-07-30)
+
+
+### Bug Fixes
+
+* **deploy:** include release notes in Telegram notify ([3e48326](https://github.com/andri5/testingndrih/commit/3e4832626f7a6e4a04f2c43a833a679750e8a516))
+
 ## [1.15.1](https://github.com/andri5/testingndrih/compare/v1.15.0...v1.15.1) (2026-07-30)
 
 
