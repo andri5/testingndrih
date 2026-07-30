@@ -3,6 +3,11 @@
 # Usage:
 #   MODE=success TAG=v1.6.0 ./scripts/notify/telegram-deploy-notify.sh
 #   MODE=failure TAG=v1.6.0 ./scripts/notify/telegram-deploy-notify.sh
+#
+# Env:
+#   DEPLOY_TAG          — release tag (v1.x.y) or main / main@<sha>
+#   RELEASE_NOTES_TAG   — optional explicit tag whose GitHub Release body to show
+#   TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, GITHUB_TOKEN, GITHUB_REPOSITORY, …
 set -euo pipefail
 
 MODE="${1:-${MODE:-success}}"
@@ -14,6 +19,12 @@ SITE_URL="${PROD_SITE_URL:-https://testsambilngopi.com}"
 TOKEN="${TELEGRAM_BOT_TOKEN:-}"
 CHAT_ID="${TELEGRAM_CHAT_ID:-}"
 GH_TOKEN="${GITHUB_TOKEN:-}"
+NOTES_TAG_HINT="${RELEASE_NOTES_TAG:-}"
+
+AUTHORS_CACHE=""
+RELEASE_URL_CACHE=""
+NOTES_TAG_CACHE=""
+HEAD_COMMIT_BLOCK=""
 
 if [ -z "${TOKEN}" ] || [ -z "${CHAT_ID}" ]; then
   echo "TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID not set — skipping notification"
@@ -42,7 +53,15 @@ html_escape() {
   sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g'
 }
 
-# Prefer git author name, then GitHub login, then committer name
+gh_api() {
+  local path="$1"
+  curl -fsSL \
+    -H "Authorization: Bearer ${GH_TOKEN}" \
+    -H "Accept: application/vnd.github+json" \
+    -H "X-GitHub-Api-Version: 2022-11-28" \
+    "https://api.github.com/repos/${REPO}${path}"
+}
+
 committer_label() {
   jq -r '
     if .commit.author.name != null and .commit.author.name != "" then .commit.author.name
@@ -53,19 +72,40 @@ committer_label() {
   '
 }
 
+# Resolve SHA when deploying main / main@sha / a release tag
+resolve_head_sha() {
+  local tag="$1"
+  if [[ "${tag}" == main@* ]]; then
+    echo "${tag#main@}"
+    return
+  fi
+  if [ "${tag}" = "main" ]; then
+    gh_api "/commits/main" | jq -r '.sha // empty'
+    return
+  fi
+  if [ -n "${tag}" ]; then
+    gh_api "/git/ref/tags/${tag}" 2>/dev/null | jq -r '
+      if .object.type == "tag" then .object.sha
+      elif .object.type == "commit" then .object.sha
+      else empty end
+    ' || gh_api "/commits/${tag}" 2>/dev/null | jq -r '.sha // empty' || true
+  fi
+}
+
+latest_release_tag() {
+  gh_api "/releases/latest" 2>/dev/null | jq -r '.tag_name // empty' || true
+}
+
 fetch_head_commit_block() {
   local tag="$1"
-  local sha="${tag#main@}"
-
-  if [ -z "${GH_TOKEN}" ] || [ -z "${REPO}" ] || [ -z "${sha}" ] || [ "${sha}" = "${tag}" ]; then
+  local sha
+  sha=$(resolve_head_sha "${tag}")
+  if [ -z "${GH_TOKEN}" ] || [ -z "${REPO}" ] || [ -z "${sha}" ]; then
     return
   fi
 
   local commit_json
-  commit_json=$(curl -fsSL \
-    -H "Authorization: Bearer ${GH_TOKEN}" \
-    -H "Accept: application/vnd.github+json" \
-    "https://api.github.com/repos/${REPO}/commits/${sha}")
+  commit_json=$(gh_api "/commits/${sha}") || return
 
   local subject author short_sha
   subject=$(echo "${commit_json}" | jq -r '.commit.message | split("\n")[0]')
@@ -80,80 +120,153 @@ fetch_head_commit_block() {
   )
 }
 
+# Convert markdown-ish release notes to Telegram-friendly plain/HTML lines
+format_release_notes_body() {
+  local body="$1"
+  if [ -z "${body}" ] || [ "${body}" = "null" ]; then
+    return
+  fi
+  printf '%s' "${body}" \
+    | sed 's/\r//g' \
+    | sed -E 's/^#{1,6}[[:space:]]*//g' \
+    | sed -E 's/\*\*([^*]+)\*\*/\1/g' \
+    | sed -E 's/`([^`]+)`/\1/g' \
+    | sed -E 's/^\*[[:space:]]+/• /g' \
+    | sed -E 's/^-[[:space:]]+/• /g' \
+    | sed '/^[[:space:]]*$/d' \
+    | head -n 25 \
+    | html_escape
+}
+
+fetch_release_notes_for_tag() {
+  local tag="$1"
+  [ -z "${tag}" ] && return
+  local json
+  json=$(gh_api "/releases/tags/${tag}" 2>/dev/null || true)
+  [ -z "${json}" ] && return
+
+  RELEASE_URL_CACHE=$(echo "${json}" | jq -r '.html_url // empty')
+  NOTES_TAG_CACHE="${tag}"
+  local body
+  body=$(echo "${json}" | jq -r '.body // empty')
+  format_release_notes_body "${body}"
+}
+
+fetch_commits_between() {
+  local base="$1"
+  local head="$2"
+  [ -z "${base}" ] || [ -z "${head}" ] && return
+
+  local compare_json
+  compare_json=$(gh_api "/compare/${base}...${head}" 2>/dev/null || true)
+  [ -z "${compare_json}" ] && return
+
+  AUTHORS_CACHE=$(echo "${compare_json}" | jq -r '
+    [.commits[]? |
+      (if .commit.author.name != null and .commit.author.name != "" then .commit.author.name
+       elif .author.login != null then .author.login
+       elif .commit.committer.name != null then .commit.committer.name
+       else "unknown" end)
+    ] | unique | .[:8] | join(", ")
+  ' 2>/dev/null || true)
+
+  echo "${compare_json}" | jq -r '
+    [.commits[]? |
+      "• " + (.commit.message | split("\n")[0]) + "\n  👤 " +
+      (if .commit.author.name != null and .commit.author.name != "" then .commit.author.name
+       elif .author.login != null then .author.login
+       elif .commit.committer.name != null then .commit.committer.name
+       else "unknown" end)
+    ] | .[:12][]
+  ' 2>/dev/null | html_escape || true
+}
+
+# Prefer CHANGELOG.md section for a version (checked-out workspace)
+fetch_changelog_md_section() {
+  local version="$1"
+  local file="CHANGELOG.md"
+  [ -f "${file}" ] || return
+  version="${version#v}"
+  [ -z "${version}" ] && return
+
+  # Capture from "## [x.y.z]" or "# [x.y.z]" until next heading
+  awk -v ver="${version}" '
+    BEGIN { show=0 }
+    $0 ~ "^#+ \\[" ver "\\]" { show=1; next }
+    show && $0 ~ "^#+ \\[" { exit }
+    show { print }
+  ' "${file}" \
+    | sed '/^[[:space:]]*$/d' \
+    | head -n 20 \
+    | sed -E 's/^#+[[:space:]]*//; s/^\*[[:space:]]+/• /; s/^-[[:space:]]+/• /' \
+    | html_escape || true
+}
+
 fetch_changelog_block() {
   local tag="$1"
-  local prev_tag=""
+  local notes=""
   local commits_block=""
-  local authors_block=""
-  local release_url=""
+  local notes_tag=""
+  local head_sha=""
 
-  if [ -z "${GH_TOKEN}" ] || [ -z "${REPO}" ] || [ -z "${tag}" ]; then
-    echo "• Detail changelog tidak tersedia (token/repo/tag kosong)"
+  if [ -z "${GH_TOKEN}" ] || [ -z "${REPO}" ]; then
+    echo "• Detail changelog tidak tersedia (token/repo kosong)"
     return
   fi
 
-  release_url=$(curl -fsSL \
-    -H "Authorization: Bearer ${GH_TOKEN}" \
-    -H "Accept: application/vnd.github+json" \
-    "https://api.github.com/repos/${REPO}/releases/tags/${tag}" \
-    | jq -r '.html_url // empty')
+  head_sha=$(resolve_head_sha "${tag}")
 
-  prev_tag=$(curl -fsSL \
-    -H "Authorization: Bearer ${GH_TOKEN}" \
-    -H "Accept: application/vnd.github+json" \
-    "https://api.github.com/repos/${REPO}/tags?per_page=30" \
-    | jq -r --arg t "${tag}" '
+  # Which release notes to show?
+  if [ -n "${NOTES_TAG_HINT}" ]; then
+    notes_tag="${NOTES_TAG_HINT}"
+  elif [[ "${tag}" == v* ]]; then
+    notes_tag="${tag}"
+  else
+    notes_tag=$(latest_release_tag)
+  fi
+
+  if [ -n "${notes_tag}" ]; then
+    notes=$(fetch_release_notes_for_tag "${notes_tag}")
+    if [ -z "${notes}" ]; then
+      notes=$(fetch_changelog_md_section "${notes_tag}")
+    fi
+  fi
+
+  # Commits since previous release (or notes_tag) → deploy head
+  local base_for_compare="${notes_tag}"
+  if [ -z "${base_for_compare}" ] && [[ "${tag}" == v* ]]; then
+    base_for_compare=$(gh_api "/tags?per_page=30" | jq -r --arg t "${tag}" '
       [.[] | .name] as $names
       | ($names | index($t)) as $i
       | if $i != null and $i > 0 then $names[$i - 1] else empty end')
-
-  if [ -n "${prev_tag}" ]; then
-    local compare_json
-    compare_json=$(curl -fsSL \
-      -H "Authorization: Bearer ${GH_TOKEN}" \
-      -H "Accept: application/vnd.github+json" \
-      "https://api.github.com/repos/${REPO}/compare/${prev_tag}...${tag}")
-
-    commits_block=$(echo "${compare_json}" | jq -r '
-      [.commits[]? |
-        "• " + (.commit.message | split("\n")[0]) + "\n  👤 " +
-        (if .commit.author.name != null and .commit.author.name != "" then .commit.author.name
-         elif .author.login != null then .author.login
-         elif .commit.committer.name != null then .commit.committer.name
-         else "unknown" end)
-      ] | .[:12][] 
-    ' 2>/dev/null | html_escape || true)
-
-    authors_block=$(echo "${compare_json}" | jq -r '
-      [.commits[]? |
-        (if .commit.author.name != null and .commit.author.name != "" then .commit.author.name
-         elif .author.login != null then .author.login
-         elif .commit.committer.name != null then .commit.committer.name
-         else "unknown" end)
-      ] | unique | .[:8] | join(", ")
-    ' 2>/dev/null || true)
   fi
 
-  if [ -z "${commits_block}" ]; then
-    commits_block=$(curl -fsSL \
-      -H "Authorization: Bearer ${GH_TOKEN}" \
-      -H "Accept: application/vnd.github+json" \
-      "https://api.github.com/repos/${REPO}/releases/tags/${tag}" \
-      | jq -r '.body // ""' \
-      | sed 's/\r//g' | head -n 12 | sed 's/^/* /' | html_escape || echo "• (belum ada catatan rilis)")
+  local compare_head="${head_sha:-${tag}}"
+  if [ -n "${base_for_compare}" ] && [ -n "${compare_head}" ] && [ "${base_for_compare}" != "${compare_head}" ]; then
+    commits_block=$(fetch_commits_between "${base_for_compare}" "${compare_head}")
   fi
 
-  AUTHORS_CACHE="${authors_block}"
-  RELEASE_URL_CACHE="${release_url}"
-  printf '%s' "${commits_block}"
+  {
+    if [ -n "${notes}" ]; then
+      echo "<b>📦 Catatan rilis${notes_tag:+ (${notes_tag})}:</b>"
+      echo "${notes}"
+      echo ""
+    fi
+    if [ -n "${commits_block}" ]; then
+      echo "<b>🔎 Commit terkait deploy:</b>"
+      echo "${commits_block}"
+    elif [ -z "${notes}" ]; then
+      echo "• (belum ada catatan rilis — cek GitHub Releases)"
+    fi
+  }
 }
 
 if [ "${MODE}" = "success" ]; then
-  HEAD_COMMIT_BLOCK=""
   CHANGELOG=$(fetch_changelog_block "${TAG}")
   fetch_head_commit_block "${TAG}"
   AUTHORS="${AUTHORS_CACHE:-${ACTOR}}"
   RELEASE_LINK="${RELEASE_URL_CACHE:-${RUN_URL}}"
+  NOTES_LABEL="${NOTES_TAG_CACHE:-${NOTES_TAG_HINT:-}}"
 
   DEPLOYED_AT=$(date -u '+%d %b %Y %H:%M UTC')
 
@@ -162,17 +275,22 @@ if [ "${MODE}" = "success" ]; then
     HEAD_SECTION="${HEAD_COMMIT_BLOCK}"$'\n\n'
   fi
 
+  DISPLAY_TAG="${TAG:-unknown}"
+  if [ -n "${NOTES_LABEL}" ] && [[ "${DISPLAY_TAG}" == main* ]]; then
+    DISPLAY_TAG="${DISPLAY_TAG} (rilis ${NOTES_LABEL})"
+  fi
+
   read -r -d '' MESSAGE <<EOF || true
 ☕🚀 <b>NGOPI DULU — DEPLOY SUKSES!</b>
 
 Production udah live. Bug? Mereka lagi ngantri di luar pintu.
 
 🌐 <a href="${SITE_URL}">testsambilngopi.com</a>
-🏷 Versi: <code>${TAG:-unknown}</code>
+🏷 Versi / target: <code>${DISPLAY_TAG}</code>
 👤 Deploy dipicu oleh: <b>${ACTOR}</b>
 🕐 Waktu: ${DEPLOYED_AT}
 
-${HEAD_SECTION}<b>📝 Perubahan di versi ini:</b>
+${HEAD_SECTION}<b>📝 Perubahan / catatan rilis:</b>
 ${CHANGELOG}
 
 <b>🧑‍💻 Nama-nama committer:</b>

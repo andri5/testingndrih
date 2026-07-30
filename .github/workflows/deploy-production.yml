@@ -36,6 +36,8 @@ jobs:
     outputs:
       deployed: ${{ steps.complete.outputs.deployed }}
       tag: ${{ steps.tag.outputs.tag }}
+      deploy_tag: ${{ steps.notify_meta.outputs.deploy_tag }}
+      release_notes_tag: ${{ steps.notify_meta.outputs.release_notes_tag }}
 
     steps:
       - name: Resolve deploy target
@@ -92,6 +94,29 @@ jobs:
         id: complete
         run: echo "deployed=true" >> "$GITHUB_OUTPUT"
 
+      # Enrich tag for Telegram: main → main@sha + latest release notes tag
+      - name: Resolve notify metadata
+        id: notify_meta
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ steps.tag.outputs.tag }}"
+          if [ "$TAG" = "main" ]; then
+            SHA="$(git rev-parse HEAD)"
+            echo "deploy_tag=main@${SHA}" >> "$GITHUB_OUTPUT"
+            LATEST=$(curl -fsSL \
+              -H "Authorization: Bearer ${GH_TOKEN}" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/${{ github.repository }}/releases/latest" \
+              | jq -r '.tag_name // empty')
+            echo "release_notes_tag=${LATEST}" >> "$GITHUB_OUTPUT"
+            echo "Notify target: main@${SHA} (notes from ${LATEST:-none})"
+          else
+            echo "deploy_tag=${TAG}" >> "$GITHUB_OUTPUT"
+            echo "release_notes_tag=${TAG}" >> "$GITHUB_OUTPUT"
+            echo "Notify target: ${TAG}"
+          fi
+
   notify-telegram-success:
     name: Telegram — deploy success
     needs: deploy
@@ -103,13 +128,16 @@ jobs:
     environment: production
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Notify deploy success
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          DEPLOY_TAG: ${{ needs.deploy.outputs.tag }}
+          DEPLOY_TAG: ${{ needs.deploy.outputs.deploy_tag || needs.deploy.outputs.tag }}
+          RELEASE_NOTES_TAG: ${{ needs.deploy.outputs.release_notes_tag }}
           GITHUB_REPOSITORY: ${{ github.repository }}
           GITHUB_ACTOR: ${{ github.actor }}
           GITHUB_RUN_ID: ${{ github.run_id }}
@@ -132,7 +160,8 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          DEPLOY_TAG: ${{ needs.deploy.outputs.tag }}
+          DEPLOY_TAG: ${{ needs.deploy.outputs.deploy_tag || needs.deploy.outputs.tag }}
+          RELEASE_NOTES_TAG: ${{ needs.deploy.outputs.release_notes_tag }}
           GITHUB_REPOSITORY: ${{ github.repository }}
           GITHUB_ACTOR: ${{ github.actor }}
           GITHUB_RUN_ID: ${{ github.run_id }}

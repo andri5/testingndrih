@@ -23,7 +23,7 @@ scripts/
 
 | Script | Purpose |
 |--------|---------|
-| `telegram-deploy-notify.sh` | Success/failure Telegram message after deploy (CI only) |
+| `telegram-deploy-notify.sh` | Success/failure Telegram after deploy — includes GitHub Release notes + related commits |
 
 ## Ops (`ops/`)
 
