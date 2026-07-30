@@ -1,3 +1,10 @@
+## [1.15.4](https://github.com/andri5/testingndrih/compare/v1.15.3...v1.15.4) (2026-07-30)
+
+
+### Bug Fixes
+
+* **recorder:** never fetch client-step under target CSP ([fe0e8ee](https://github.com/andri5/testingndrih/commit/fe0e8eec5f2bb83c3a2ade5342c101d1ddb89f63))
+
 ## [1.15.3](https://github.com/andri5/testingndrih/compare/v1.15.2...v1.15.3) (2026-07-30)
 
 
