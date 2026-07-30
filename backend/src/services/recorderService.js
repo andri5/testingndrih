@@ -177,6 +177,18 @@ export function getRecorderScript(sessionId = null, options = {}) {
     return delivered;
   }
 
+  window.__recFlushBridgeQueue = function() {
+    if (!__RECORD_TOKEN) return;
+    while (__failedQueue.length) {
+      var step = __failedQueue[0];
+      if (!__broadcastStep(step)) break;
+      __failedQueue.shift();
+      __updateCounter();
+      __connectionOk = true;
+      __showRecInfo('Connected (bridge)');
+    }
+  };
+
   function __processFailedQueue() {
     if (__failedQueue.length === 0) return;
     var step = __failedQueue[0];

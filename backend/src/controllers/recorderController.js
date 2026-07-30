@@ -45,30 +45,76 @@ function buildClientInjectPayload(sessionId, recordToken, appOrigin, bridgeUrl =
   if (document.getElementById('__rec_toolbar')) return;
   var bar=document.createElement('div');
   bar.id='__rec_toolbar';
-  bar.style.cssText='position:fixed;top:0;left:0;right:0;z-index:2147483647;background:#dc2626;color:#fff;font:13px/1 sans-serif;padding:8px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 8px rgba(0,0,0,.3)';
-  bar.innerHTML='<strong>RECORDING</strong><span id="__rec_count">0 steps</span><span id="__rec_status" style="opacity:.85">client-direct</span><button type="button" id="__rec_bridge_btn" style="margin-left:auto;background:#fff;color:#b91c1c;border:0;border-radius:6px;padding:6px 10px;font-weight:700;cursor:pointer">Hubungkan bridge</button>';
+  bar.style.cssText='position:fixed;top:0;left:0;right:0;z-index:2147483647;background:#dc2626;color:#fff;font:13px/1 sans-serif;padding:8px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;box-shadow:0 2px 8px rgba(0,0,0,.3)';
+  bar.innerHTML='<strong>RECORDING</strong><span id="__rec_count">0 steps</span><span id="__rec_status" style="opacity:.85">Menunggu bridge…</span><button type="button" id="__rec_bridge_btn" style="margin-left:auto;background:#fff;color:#b91c1c;border:0;border-radius:6px;padding:8px 12px;font-weight:700;cursor:pointer">Hubungkan bridge</button>';
   (document.body||document.documentElement).appendChild(bar);
-  if (document.body) document.body.style.paddingTop='34px';
-  var btn=document.getElementById('__rec_bridge_btn');
-  if (btn) {
-    btn.addEventListener('click', function(){
-      var url=window.__recBridgeUrl;
-      if (!url) { alert('Bridge URL kosong — mulai ulang recording dari aplikasi.'); return; }
-      try {
-        window.__recBridgeWin=window.open(url, 'tsn_rec_bridge');
-        if (!window.__recBridgeWin) alert('Popup diblokir. Izinkan popup, lalu klik Hubungkan bridge lagi.');
-        else {
-          var el=document.getElementById('__rec_status');
-          if (el) { el.textContent='Bridge dibuka — lanjut interaksi'; el.style.background='#10b981'; }
-        }
-      } catch (e) {
-        alert('Gagal buka bridge: ' + e.message);
-      }
-    });
+  if (document.body) document.body.style.paddingTop='40px';
+
+  function setStatus(msg, ok) {
+    var el=document.getElementById('__rec_status');
+    if (!el) return;
+    el.textContent=msg;
+    el.style.background= ok ? '#10b981' : '#b91c1c';
   }
-  if (window.__recSendStep) {
+
+  // about:blank first — modern Chrome often returns null from window.open(crossOrigin)
+  // when noopener is implied; keeping the WindowProxy lets postMessage work under COOP.
+  window.__recConnectBridge = function() {
+    var url=window.__recBridgeUrl;
+    if (!url) {
+      alert('Bridge URL kosong — Start Recording ulang dari aplikasi Test Sambil Ngopi.');
+      return false;
+    }
+    var w=null;
+    try { w=window.open('about:blank', 'tsn_rec_bridge'); } catch (e) {}
+    if (!w) {
+      try { w=window.open(url, 'tsn_rec_bridge'); } catch (e2) {}
+    }
+    if (!w) {
+      alert('Popup diblokir.\\n\\nIzinkan popup untuk situs ini, lalu klik Hubungkan bridge lagi.');
+      setStatus('Bridge putus — izinkan popup', false);
+      return false;
+    }
+    window.__recBridgeWin=w;
+    try { w.location.href=url; } catch (e3) {
+      try { w.location=url; } catch (e4) {}
+    }
+    setStatus('Bridge dibuka — menunggu ACK…', true);
+    setTimeout(function(){
+      if (window.__recFlushBridgeQueue) window.__recFlushBridgeQueue();
+    }, 800);
+    return true;
+  };
+
+  var btn=document.getElementById('__rec_bridge_btn');
+  if (btn) btn.addEventListener('click', function(ev){
+    ev.preventDefault();
+    ev.stopPropagation();
+    window.__recConnectBridge();
+  }, true);
+
+  window.addEventListener('message', function(ev){
+    var d=ev.data;
+    if (!d || d.type!=='__REC_BRIDGE_READY__') return;
+    setStatus('Connected (bridge)', true);
+    if (window.__recFlushBridgeQueue) window.__recFlushBridgeQueue();
+  });
+
+  // Don't send NAVIGATE until bridge exists — otherwise toolbar shows Bridge putus immediately
+  function tryInitialNavigate() {
+    if (!window.__recSendStep) return;
+    if (window.__recRecordToken) {
+      var hasBridge=false;
+      try { hasBridge=!!(window.opener && !window.opener.closed); } catch(e) {}
+      try { hasBridge=hasBridge||!!(window.__recBridgeWin && !window.__recBridgeWin.closed); } catch(e2) {}
+      if (!hasBridge) {
+        setStatus('Bridge putus — klik Hubungkan bridge', false);
+        return;
+      }
+    }
     window.__recSendStep({type:'NAVIGATE',selector:'',value:location.href,description:'Navigate to '+location.href,tagName:'',timestamp:Date.now()});
   }
+  setTimeout(tryInitialNavigate, 300);
 })();`
   return `${bootstrap}\n${script}\n${toolbar}`
 }
@@ -669,9 +715,13 @@ window.__targetBase=${JSON.stringify(url)};
         <li class="warn" style="list-style:none;margin:8px 0 8px -1.2rem;padding:10px 12px;border:1px solid #f59e0b55;border-radius:8px;background:#78350f33">
           Jika Chrome menulis <em>“type allow pasting”</em>: ketik tepat
           <kbd>allow pasting</kbd> lalu <strong>Enter</strong> (sekali per tab). Baru boleh paste script.
-          Ini proteksi bawaan Chrome, bukan error aplikasi.
         </li>
         <li>Paste script: <kbd>Ctrl+V</kbd> → <strong>Enter</strong>.</li>
+        <li class="warn" style="list-style:none;margin:8px 0 8px -1.2rem;padding:10px 12px;border:1px solid #f59e0b55;border-radius:8px;background:#78350f33">
+          Jika toolbar merah bilang <strong>Bridge putus</strong>: klik
+          <strong>Hubungkan bridge</strong> (izinkan popup). Status harus jadi
+          <em>Connected (bridge)</em>. Jangan tutup tab panduan.
+        </li>
         <li>Toolbar merah muncul; angka bridge di halaman ini naik saat Anda berinteraksi.</li>
         <li>Di aplikasi utama → <strong>Stop</strong>.</li>
       </ol>
@@ -760,6 +810,10 @@ window.__targetBase=${JSON.stringify(url)};
           if (r.ok) {
             bridgeCount++;
             el.textContent = 'Bridge OK: ' + bridgeCount + ' step diterima (jangan tutup tab ini)';
+            // ACK back so target toolbar turns green
+            try {
+              if (ev.source) ev.source.postMessage({ type: '__REC_BRIDGE_READY__', sessionId: sessionId }, '*');
+            } catch (_) {}
           } else {
             el.textContent = 'Bridge gagal: HTTP ' + r.status + ' — cek sesi recording masih aktif';
           }
@@ -768,6 +822,20 @@ window.__targetBase=${JSON.stringify(url)};
           if (el) el.textContent = 'Bridge error: ' + e.message;
         });
       });
+
+      // If this gate was opened via Hubungkan bridge from the target tab, tell opener we're ready
+      function announceReady() {
+        try {
+          if (window.opener && !window.opener.closed) {
+            window.opener.postMessage({ type: '__REC_BRIDGE_READY__', sessionId: sessionId }, '*');
+            var el = document.getElementById('bridgeStatus');
+            if (el) el.textContent = 'Bridge aktif — kembali ke tab target dan lanjut rekam';
+          }
+        } catch (_) {}
+      }
+      announceReady();
+      setTimeout(announceReady, 500);
+      setTimeout(announceReady, 1500);
     })();
   </script>
 </body>
