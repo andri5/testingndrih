@@ -35,9 +35,10 @@ function resolveAppOrigin(req) {
 /**
  * Full recorder bootstrap as inline JS (no external <script src>).
  * Needed when the target site CSP blocks third-party script-src.
+ * @param {string} [bridgeUrl] client-gate URL — opened via user gesture if opener is missing
  */
-function buildClientInjectPayload(sessionId, recordToken, appOrigin) {
-  const bootstrap = `window.__recOrigin=${JSON.stringify(appOrigin)};window.__recRecordToken=${JSON.stringify(String(recordToken))};`
+function buildClientInjectPayload(sessionId, recordToken, appOrigin, bridgeUrl = null) {
+  const bootstrap = `window.__recOrigin=${JSON.stringify(appOrigin)};window.__recRecordToken=${JSON.stringify(String(recordToken))};window.__recBridgeUrl=${JSON.stringify(bridgeUrl || '')};`
   const script = getRecorderScript(String(sessionId), { recordToken: String(recordToken) })
   const toolbar = `
 (function(){
@@ -45,9 +46,26 @@ function buildClientInjectPayload(sessionId, recordToken, appOrigin) {
   var bar=document.createElement('div');
   bar.id='__rec_toolbar';
   bar.style.cssText='position:fixed;top:0;left:0;right:0;z-index:2147483647;background:#dc2626;color:#fff;font:13px/1 sans-serif;padding:8px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 8px rgba(0,0,0,.3)';
-  bar.innerHTML='<strong>RECORDING</strong><span id="__rec_count">0 steps</span><span id="__rec_status" style="opacity:.85">client-direct</span>';
+  bar.innerHTML='<strong>RECORDING</strong><span id="__rec_count">0 steps</span><span id="__rec_status" style="opacity:.85">client-direct</span><button type="button" id="__rec_bridge_btn" style="margin-left:auto;background:#fff;color:#b91c1c;border:0;border-radius:6px;padding:6px 10px;font-weight:700;cursor:pointer">Hubungkan bridge</button>';
   (document.body||document.documentElement).appendChild(bar);
   if (document.body) document.body.style.paddingTop='34px';
+  var btn=document.getElementById('__rec_bridge_btn');
+  if (btn) {
+    btn.addEventListener('click', function(){
+      var url=window.__recBridgeUrl;
+      if (!url) { alert('Bridge URL kosong — mulai ulang recording dari aplikasi.'); return; }
+      try {
+        window.__recBridgeWin=window.open(url, 'tsn_rec_bridge');
+        if (!window.__recBridgeWin) alert('Popup diblokir. Izinkan popup, lalu klik Hubungkan bridge lagi.');
+        else {
+          var el=document.getElementById('__rec_status');
+          if (el) { el.textContent='Bridge dibuka — lanjut interaksi'; el.style.background='#10b981'; }
+        }
+      } catch (e) {
+        alert('Gagal buka bridge: ' + e.message);
+      }
+    });
+  }
   if (window.__recSendStep) {
     window.__recSendStep({type:'NAVIGATE',selector:'',value:location.href,description:'Navigate to '+location.href,tagName:'',timestamp:Date.now()});
   }
@@ -569,7 +587,13 @@ window.__targetBase=${JSON.stringify(url)};
 
     const appOrigin = resolveAppOrigin(req).replace(/^http:\/\/testsambilngopi\.com/i, 'https://testsambilngopi.com')
     // Full inline payload — never fetch inject.js (target CSP connect-src blocks it)
-    const inlinePayload = buildClientInjectPayload(String(sessionId), String(rt), appOrigin)
+    const gateParams = new URLSearchParams({
+      url: String(url),
+      sessionId: String(sessionId),
+      rt: String(rt),
+    })
+    const bridgeUrl = `${appOrigin}/api/recorder/client-gate?${gateParams.toString()}`
+    const inlinePayload = buildClientInjectPayload(String(sessionId), String(rt), appOrigin, bridgeUrl)
     // Safe for embedding in HTML <script type="application/json"> (avoid </script> breakouts)
     const payloadJson = JSON.stringify(inlinePayload).replace(/</g, '\\u003c')
     const targetName = `tsn_rec_target_${String(sessionId).replace(/[^a-zA-Z0-9_-]/g, '_')}`
@@ -774,10 +798,16 @@ window.__targetBase=${JSON.stringify(url)};
     const appOrigin = String(origin || resolveAppOrigin(req)).replace(/\/$/, '')
     // Force https origin when request came as http behind TLS terminator
     const safeOrigin = appOrigin.replace(/^http:\/\/testsambilngopi\.com/i, 'https://testsambilngopi.com')
+    const gateParams = new URLSearchParams({
+      url: String(session.startUrl || req.query.url || ''),
+      sessionId: String(sessionId),
+      rt: String(rt),
+    })
+    const bridgeUrl = `${safeOrigin}/api/recorder/client-gate?${gateParams.toString()}`
 
     res.set('content-type', 'application/javascript; charset=utf-8')
     res.set('cache-control', 'no-store')
-    res.send(buildClientInjectPayload(String(sessionId), String(rt), safeOrigin))
+    res.send(buildClientInjectPayload(String(sessionId), String(rt), safeOrigin, bridgeUrl))
   },
 
   /**

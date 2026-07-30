@@ -145,24 +145,16 @@ export function getRecorderScript(sessionId = null, options = {}) {
     return __recOrigin + '/api/recorder/step/' + __SESSION_ID;
   }
   
-  function __processFailedQueue() {
-    // Try to resend any failed steps
-    if (__failedQueue.length === 0) return;
-    var step = __failedQueue[0];
-    var attempts = __retryCount[step.id] || 0;
-    if (attempts >= __maxRetries) {
-      __failedQueue.shift();
-      __showRecErr('Step dropped after ' + __maxRetries + ' retries');
-      return;
-    }
-    
-    // Retry logic
-    var delay = __retryDelays[Math.min(attempts, __retryDelays.length - 1)];
-    setTimeout(function() {
-      __sendStepDirect(step, true);
-    }, delay);
+  function __getBridgeWindow() {
+    try {
+      if (window.__recBridgeWin && !window.__recBridgeWin.closed) return window.__recBridgeWin;
+    } catch (e) {}
+    try {
+      if (window.opener && !window.opener.closed) return window.opener;
+    } catch (e) {}
+    return null;
   }
-  
+
   function __broadcastStep(step) {
     var msg = {
       type: '__REC_STEP__',
@@ -172,12 +164,10 @@ export function getRecorderScript(sessionId = null, options = {}) {
       timestamp: Date.now()
     };
     var delivered = false;
-    try {
-      if (window.opener && !window.opener.closed) {
-        window.opener.postMessage(msg, '*');
-        delivered = true;
-      }
-    } catch (e) {}
+    var bridge = __getBridgeWindow();
+    if (bridge) {
+      try { bridge.postMessage(msg, '*'); delivered = true; } catch (e) {}
+    }
     try {
       if (window.parent && window.parent !== window) {
         window.parent.postMessage(msg, '*');
@@ -186,15 +176,45 @@ export function getRecorderScript(sessionId = null, options = {}) {
     } catch (e) {}
     return delivered;
   }
-  
+
+  function __processFailedQueue() {
+    if (__failedQueue.length === 0) return;
+    var step = __failedQueue[0];
+    var attempts = __retryCount[step.id] || 0;
+    if (attempts >= __maxRetries) {
+      __failedQueue.shift();
+      __showRecErr('Step dropped after ' + __maxRetries + ' retries');
+      return;
+    }
+    var delay = __retryDelays[Math.min(attempts, __retryDelays.length - 1)];
+    setTimeout(function() {
+      if (__RECORD_TOKEN) {
+        if (__broadcastStep(step)) {
+          __failedQueue.shift();
+          __updateCounter();
+          __connectionOk = true;
+          __showRecInfo('Connected (bridge)');
+          __processFailedQueue();
+        } else {
+          __retryCount[step.id] = attempts + 1;
+          __processFailedQueue();
+        }
+        return;
+      }
+      __sendStepDirect(step, true, false);
+    }, delay);
+  }
+
   function __sendStepDirect(step, isRetry, silent) {
+    // Never fetch from client-direct — target CSP connect-src blocks it and floods console
+    if (__RECORD_TOKEN) return;
     var headers = __authHeaders();
     if (!headers) {
       if (!silent) __showRecErr('authToken tidak ditemukan');
       return;
     }
     var stepId = step.selector + '_' + step.timestamp;
-    
+
     __nativeFetch(__stepEndpoint(), {
       method: 'POST',
       headers: headers,
@@ -233,9 +253,8 @@ export function getRecorderScript(sessionId = null, options = {}) {
       }
     });
   }
-  
+
   function sendStep(step) {
-    // ═══ METHOD 0: Playwright exposeFunction (PRIMARY when running in Playwright browser) ═══
     if (typeof window.__playwrightAddStep === 'function') {
       try {
         window.__playwrightAddStep(step);
@@ -247,14 +266,21 @@ export function getRecorderScript(sessionId = null, options = {}) {
       return;
     }
 
-    // ═══ METHOD 1: postMessage bridge (CSP-safe when connect-src blocks our API) ═══
-    // Client-direct: opener = client-gate page on testsambilngopi.com
-    if (__RECORD_TOKEN && __broadcastStep(step)) {
-      __updateCounter();
-      __connectionOk = true;
-      __showRecInfo('Connected (bridge)');
-      // Best-effort direct fetch; ignore CSP/network failures
-      __sendStepDirect(step, false, true);
+    // Client-direct: postMessage bridge ONLY (no fetch — CSP connect-src)
+    if (__RECORD_TOKEN) {
+      if (__broadcastStep(step)) {
+        __updateCounter();
+        __connectionOk = true;
+        __showRecInfo('Connected (bridge)');
+        return;
+      }
+      __showRecErr('Bridge putus — klik Hubungkan di toolbar');
+      var qid = (step.selector || '') + '_' + (step.timestamp || Date.now());
+      step.id = qid;
+      if (!__failedQueue.find(function(s) { return s.id === qid; })) {
+        __failedQueue.push(step);
+        __retryCount[qid] = 0;
+      }
       return;
     }
 
@@ -267,7 +293,7 @@ export function getRecorderScript(sessionId = null, options = {}) {
         sessionId: __SESSION_ID,
         data: step,
         token: headers.Authorization ? headers.Authorization.replace(/^Bearer\\s+/i, '') : null,
-        recordToken: __RECORD_TOKEN || null,
+        recordToken: null,
         timestamp: Date.now()
       }, '*');
     } catch(e) {
