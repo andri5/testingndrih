@@ -1,3 +1,10 @@
+## [1.15.3](https://github.com/andri5/testingndrih/compare/v1.15.2...v1.15.3) (2026-07-30)
+
+
+### Bug Fixes
+
+* **recorder:** make client-gate open-target clickable ([783b7d6](https://github.com/andri5/testingndrih/commit/783b7d6db3e9d21a68a5375f3d563081565af60e))
+
 ## [1.15.2](https://github.com/andri5/testingndrih/compare/v1.15.1...v1.15.2) (2026-07-30)
 
 
