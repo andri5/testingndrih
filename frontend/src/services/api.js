@@ -242,7 +242,11 @@ export const recorderAPI = {
     apiClient.get(`/recorder/status/${scenarioId}`),
 
   save: (scenarioId, steps) =>
-    apiClient.post(`/recorder/save/${scenarioId}`, { steps })
+    apiClient.post(`/recorder/save/${scenarioId}`, { steps }),
+
+  /** Forward a live step (JWT) — used when client-direct posts via window.opener/parent bridge */
+  receiveStep: (scenarioId, step) =>
+    apiClient.post(`/recorder/step/${scenarioId}`, step, { skipGlobalErrorRedirect: true }),
 }
 
 export const analyticsAPI = {

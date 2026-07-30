@@ -567,12 +567,9 @@ window.__targetBase=${JSON.stringify(url)};
       </body></html>`)
     }
 
-    const appOrigin = resolveAppOrigin(req)
-    const injectUrl = `${appOrigin}/api/recorder/inject.js?sessionId=${encodeURIComponent(String(sessionId))}&rt=${encodeURIComponent(String(rt))}&origin=${encodeURIComponent(appOrigin)}`
-    // Full inline payload — avoids target CSP script-src blocking third-party hosts
+    const appOrigin = resolveAppOrigin(req).replace(/^http:\/\/testsambilngopi\.com/i, 'https://testsambilngopi.com')
+    // Full inline payload — never fetch inject.js (target CSP connect-src blocks it)
     const inlinePayload = buildClientInjectPayload(String(sessionId), String(rt), appOrigin)
-    // Fetch + inject as textContent (not src) so CSP 'unsafe-inline' allows it
-    const bookmarklet = `javascript:void((function(){fetch(${JSON.stringify(injectUrl)}+'&_='+Date.now()).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.text()}).then(function(code){var s=document.createElement('script');s.textContent=code;document.documentElement.appendChild(s);}).catch(function(e){alert('Gagal pasang recorder (CSP/network): '+e.message+'\\n\\nPakai tombol Salin script di halaman panduan, lalu paste di Console (F12).');})})())`
 
     res.set('content-type', 'text/html; charset=utf-8')
     res.set('cache-control', 'no-store')
@@ -595,60 +592,104 @@ window.__targetBase=${JSON.stringify(url)};
     a.btn, button.btn { appearance:none; border:0; border-radius:8px; padding:12px 16px; font-weight:600; cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; gap:8px; }
     .primary { background:#dc2626; color:#fff; }
     .secondary { background:#0f766e; color:#fff; }
-    .bookmark { background:#334155; color:#e2e8f0; }
     pre { background:#0f172a; border:1px solid #334155; border-radius:8px; padding:12px; overflow:auto; font-size:11px; max-height:180px; white-space:pre-wrap; word-break:break-all; }
     .warn { color:#fbbf24; font-size:14px; }
     .ok { color:#6ee7b7; font-size:14px; }
+    .bridge { font-size:13px; color:#a5b4fc; }
   </style>
 </head>
 <body>
   <div class="wrap">
     <h1>Rekam di browser Anda</h1>
-    <p class="muted">URL target mengarah ke jaringan internal / tidak terjangkau dari server production.
-      Recording tetap bisa jalan dari laptop Anda yang sudah punya akses VPN/intranet.</p>
-    <p class="ok">Situs target punya CSP yang memblokir script eksternal — pakai <strong>Salin script inline</strong> lalu paste di Console (disarankan).</p>
+    <p class="muted">Mode client-direct: rekam di situs asli. Halaman ini menjadi <strong>jembatan</strong> step
+      (postMessage) karena CSP target sering memblokir koneksi ke testsambilngopi.com.</p>
+    <p class="warn"><strong>Jangan tutup tab panduan ini</strong> selama recording — biarkan tetap terbuka di belakang.</p>
+    <p class="ok">Jangan paste URL <code>inject.js</code> / jangan fetch script. Hanya paste <strong>script inline</strong> dari tombol di bawah.</p>
     ${reason ? `<p class="warn">${escHTML(String(reason))}</p>` : ''}
 
     <div class="card">
       <div class="muted" style="font-size:12px;margin-bottom:6px">TARGET</div>
       <div class="url">${escHTML(String(url))}</div>
       <div class="row">
-        <a class="btn primary" id="openTarget" href="${escAttr(String(url))}" target="_blank" rel="noopener">1. Buka halaman target</a>
+        <button type="button" class="btn primary" id="openTarget">1. Buka halaman target</button>
         <button type="button" class="btn secondary" id="copyConsole">2. Salin script inline (CSP-safe)</button>
-        <a class="btn bookmark" id="injectLink" href="${escAttr(bookmarklet)}">Bookmarklet (fetch)</a>
       </div>
+      <p class="bridge" id="bridgeStatus" style="margin-top:14px">Bridge: menunggu step dari tab target…</p>
     </div>
 
     <div class="card">
-      <strong>Cara yang benar untuk Garuda / CSP ketat</strong>
+      <strong>Langkah (Garuda / CSP ketat)</strong>
       <ol class="steps">
-        <li>Klik <strong>Buka halaman target</strong> (atau pakai tab yang sudah terbuka).</li>
-        <li>Klik <strong>Salin script inline</strong> di halaman ini.</li>
-        <li>Di tab target: tekan <strong>F12</strong> → tab <strong>Console</strong> → tempel (<kbd>Ctrl+V</kbd>) → <strong>Enter</strong>.</li>
-        <li>Toolbar merah <em>RECORDING</em> harus muncul. Lalu interaksi seperti biasa.</li>
-        <li>Kembali ke aplikasi → <strong>Stop</strong> untuk menyimpan langkah.</li>
+        <li>Biarkan tab <em>panduan ini</em> tetap terbuka.</li>
+        <li>Klik <strong>Buka halaman target</strong> (tab baru — harus dibuka dari tombol ini agar <code>window.opener</code> terhubung).</li>
+        <li>Klik <strong>Salin script inline</strong>.</li>
+        <li>Di tab target: <strong>F12</strong> → <strong>Console</strong> → <kbd>Ctrl+V</kbd> → <strong>Enter</strong>.</li>
+        <li>Toolbar merah muncul; angka bridge di halaman ini naik saat Anda berinteraksi.</li>
+        <li>Di aplikasi utama → <strong>Stop</strong>.</li>
       </ol>
     </div>
 
-    <p class="muted" style="font-size:12px">Pratinjau script (dipotong di UI; clipboard berisi penuh):</p>
+    <p class="muted" style="font-size:12px">Pratinjau script (clipboard berisi penuh):</p>
     <pre id="snippet"></pre>
   </div>
   <script>
     (function(){
       var snippet = ${JSON.stringify(inlinePayload)};
+      var sessionId = ${JSON.stringify(String(sessionId))};
+      var recordToken = ${JSON.stringify(String(rt))};
+      var targetUrl = ${JSON.stringify(String(url))};
+      var appOrigin = ${JSON.stringify(appOrigin)};
+      var bridgeCount = 0;
+      var TARGET_NAME = 'tsn_rec_target_' + sessionId;
+
       var preview = document.getElementById('snippet');
-      preview.textContent = snippet.slice(0, 800) + '\\n\\n/* … ' + snippet.length + ' chars total — salin via tombol di atas … */';
+      preview.textContent = snippet.slice(0, 800) + '\\n\\n/* … ' + snippet.length + ' chars — salin via tombol … */';
+
+      function openTarget() {
+        // Do NOT use noopener — recorder needs window.opener → this gate
+        var w = window.open(targetUrl, TARGET_NAME);
+        if (!w) alert('Popup diblokir. Izinkan popup, lalu klik Buka halaman target lagi.');
+        return w;
+      }
+
+      document.getElementById('openTarget').addEventListener('click', openTarget);
       document.getElementById('copyConsole').addEventListener('click', function(){
         navigator.clipboard.writeText(snippet).then(function(){
-          alert('Script inline disalin (' + snippet.length + ' karakter).\\n\\nDi tab target: F12 → Console → Ctrl+V → Enter.');
+          alert('Script inline disalin (' + snippet.length + ' karakter).\\n\\nDi tab target: F12 → Console → Ctrl+V → Enter.\\n\\nJangan paste URL inject.js.');
         }).catch(function(){
           prompt('Salin script ini (Ctrl+A, Ctrl+C):', snippet);
         });
       });
-      try {
-        var opened = window.open(${JSON.stringify(String(url))}, '_blank');
-        if (!opened) console.warn('Popup blocked for target URL');
-      } catch (e) {}
+
+      window.addEventListener('message', function(ev) {
+        var d = ev.data;
+        if (!d || d.type !== '__REC_STEP__') return;
+        if (String(d.sessionId) !== String(sessionId)) return;
+        var step = d.data;
+        if (!step || typeof step !== 'object') return;
+        fetch(appOrigin + '/api/recorder/client-step/' + encodeURIComponent(sessionId), {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Record-Token': recordToken
+          },
+          body: JSON.stringify(step)
+        }).then(function(r) {
+          if (r.ok) {
+            bridgeCount++;
+            document.getElementById('bridgeStatus').textContent =
+              'Bridge OK: ' + bridgeCount + ' step diterima (jangan tutup tab ini)';
+          } else {
+            document.getElementById('bridgeStatus').textContent =
+              'Bridge gagal: HTTP ' + r.status + ' — cek sesi recording masih aktif';
+          }
+        }).catch(function(e) {
+          document.getElementById('bridgeStatus').textContent = 'Bridge error: ' + e.message;
+        });
+      });
+
+      // Auto-open once (same gesture chain as Start Recording popup when possible)
+      try { openTarget(); } catch (e) {}
     })();
   </script>
 </body>

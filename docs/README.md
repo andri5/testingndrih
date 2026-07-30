@@ -72,7 +72,7 @@ Welcome to **Test Sambil Ngopi** documentation — guides for setup, development
 
 ## Key features
 
-- **Record & playback** — server-side Playwright recording, step editor, execution engine
+- **Record & playback** — client-direct / proxy recording, step editor, Playwright execution engine
 - **Test chains** — multi-scenario workflows
 - **Admin tools** — smoke, stress, security, API testing, visual regression
 - **Automation** — scheduler, parallel runs, browser matrix
@@ -85,13 +85,15 @@ Welcome to **Test Sambil Ngopi** documentation — guides for setup, development
 ## Record & playback (overview)
 
 ```
-Record  → POST /api/recorder/start → Playwright browser + injected script
-Poll    → GET  /api/recorder/status → step queue updates
-Stop    → POST /api/recorder/stop  → steps persisted to PostgreSQL
-Run     → POST /api/executions     → executionService replays steps
+Probe   → GET  /api/recorder/target-info?url=…     (public vs internal)
+Start   → POST /api/recorder/start { mode }        (client-direct | proxy | playwright)
+Record  → client-gate + inject  OR  /proxy HTML rewrite
+Poll    → GET  /api/recorder/status
+Stop    → POST /api/recorder/stop  → optional save to PostgreSQL
+Run     → POST /api/executions     → executionService replays on real URL
 ```
 
-Details: [ARCHITECTURE.md](./ARCHITECTURE.md#record--playback)
+Details: [ARCHITECTURE.md](./ARCHITECTURE.md#record--playback) · [PROJECT_STRUCTURE.md](../PROJECT_STRUCTURE.md)
 
 ---
 
@@ -100,7 +102,7 @@ Details: [ARCHITECTURE.md](./ARCHITECTURE.md#record--playback)
 | Area | Status |
 |------|--------|
 | Core testing (scenarios, steps, execution) | Production |
-| Recording (Playwright v2) | Production |
+| Recording (client-direct / proxy) | Production |
 | Admin tools & visual regression | Production |
 | User management & roles | Production |
 | CI/CD + semantic release | Production |

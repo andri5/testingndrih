@@ -70,9 +70,9 @@ PostgreSQL (Prisma)          Playwright (recorder / executor)
 Analytics, reports, issues, notifications
 ```
 
-1. **Record** — Playwright opens target URL, injected script captures interactions
+1. **Record** — client-direct (real origin + inject) or optional HTML proxy; optional local Playwright headed
 2. **Store** — Steps saved to PostgreSQL via Prisma
-3. **Execute** — `executionService` replays steps with waits, screenshots, retries
+3. **Execute** — `executionService` replays steps on the **real URL** with waits, screenshots, retries
 4. **Report** — Results feed analytics, issue tracker, PDF/HTML export
 
 ---
@@ -86,29 +86,39 @@ sequenceDiagram
     participant UI as Frontend
     participant API as Express API
     participant Rec as recorderService
-    participant PW as Playwright
+    participant Tab as UserBrowser
     participant DB as PostgreSQL
 
-    UI->>API: POST /api/recorder/start
-    API->>Rec: launch session (userId:scenarioId)
-    Rec->>PW: open browser, navigate, inject script
-    loop Poll ~1.5s
+    UI->>API: GET /api/recorder/target-info
+    API-->>UI: targetKind public or internal
+    UI->>API: POST /api/recorder/start mode
+    API->>Rec: session userId scenarioId recordToken
+    alt client-direct
+        Rec-->>UI: clientGateUrl
+        UI->>Tab: open real site plus gate inject
+        Tab->>API: POST client-step with X-Record-Token
+    else proxy public only
+        Rec-->>UI: proxyUrl
+        UI->>Tab: open proxied HTML with inject
+        Tab->>API: POST step with JWT
+    end
+    loop Poll
         UI->>API: GET /api/recorder/status
-        API->>Rec: pending steps
         Rec-->>UI: step queue
     end
     UI->>API: POST /api/recorder/stop
     Rec->>DB: persist TestStep rows
 ```
 
+**Modes:** `client-direct` (default; forced for internal/VPN) · `proxy` (optional) · `playwright` (local headed)  
 **Selector priority:** `data-testid` → `id` → CSS → XPath  
-**Key files:** `recorderService.js`, `recorderController.js`, `ScenarioDetailPage.jsx`
+**Key files:** `recorderService.js`, `networkReachability.js`, `recorderController.js`, `ScenarioDetailPage.jsx`
 
 ### Playback pipeline
 
 1. Client triggers execution (`POST /api/executions`)
 2. `executionService` loads scenario steps + environment variables
-3. Playwright runs each step (NAVIGATE, CLICK, FILL, ASSERTION, …)
+3. Playwright runs each step (NAVIGATE, CLICK, FILL, ASSERTION, …) against the real site
 4. On failure: screenshot, locator suggestions, optional retry via `retryEngineService`
 5. Execution record stored; webhooks / email on failure if configured
 
@@ -119,7 +129,7 @@ sequenceDiagram
 | Module | Backend | Frontend |
 |--------|---------|----------|
 | **Core** | scenario, testStep, execution, search | Scenarios, ScenarioDetail, Execution |
-| **Recording** | recorderService | Record controls on ScenarioDetail |
+| **Recording** | recorderService, networkReachability | Dual overviews on ScenarioDetail |
 | **Chains** | chainService | Chains, ChainBuilder, ChainExecutor |
 | **Scheduler** | schedulerService | SchedulerPage |
 | **Parallel** | parallelExecutionService | ParallelExecutionPage |

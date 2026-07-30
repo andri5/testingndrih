@@ -163,9 +163,36 @@ export function getRecorderScript(sessionId = null, options = {}) {
     }, delay);
   }
   
-  function __sendStepDirect(step, isRetry) {
+  function __broadcastStep(step) {
+    var msg = {
+      type: '__REC_STEP__',
+      sessionId: __SESSION_ID,
+      data: step,
+      recordToken: __RECORD_TOKEN || null,
+      timestamp: Date.now()
+    };
+    var delivered = false;
+    try {
+      if (window.opener && !window.opener.closed) {
+        window.opener.postMessage(msg, '*');
+        delivered = true;
+      }
+    } catch (e) {}
+    try {
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage(msg, '*');
+        delivered = true;
+      }
+    } catch (e) {}
+    return delivered;
+  }
+  
+  function __sendStepDirect(step, isRetry, silent) {
     var headers = __authHeaders();
-    if (!headers) { __showRecErr('authToken tidak ditemukan'); return; }
+    if (!headers) {
+      if (!silent) __showRecErr('authToken tidak ditemukan');
+      return;
+    }
     var stepId = step.selector + '_' + step.timestamp;
     
     __nativeFetch(__stepEndpoint(), {
@@ -175,18 +202,20 @@ export function getRecorderScript(sessionId = null, options = {}) {
       signal: AbortSignal.timeout(10000)
     }).then(function(r) {
       if (r.ok) {
-        __updateCounter();
-        __connectionOk = true;
-        __showRecInfo('Connected');
+        if (!silent) {
+          __updateCounter();
+          __connectionOk = true;
+          __showRecInfo('Connected');
+        }
         if (isRetry) {
           var idx = __failedQueue.findIndex(function(s) { return (s.selector + '_' + s.timestamp) === stepId; });
           if (idx >= 0) __failedQueue.splice(idx, 1);
         }
         __processFailedQueue();
       } else if (r.status === 409) {
-        __showRecErr('Recording session ended');
+        if (!silent) __showRecErr('Recording session ended');
       } else {
-        __showRecErr('Step failed: HTTP ' + r.status);
+        if (!silent) __showRecErr('Step failed: HTTP ' + r.status);
         if (!isRetry) {
           __failedQueue.push(step);
           __retryCount[stepId] = 1;
@@ -196,20 +225,17 @@ export function getRecorderScript(sessionId = null, options = {}) {
         __processFailedQueue();
       }
     }).catch(function(e) {
-      __showRecErr('Fetch error: ' + e.message);
-      if (!isRetry) {
+      if (!silent) __showRecErr('Fetch error: ' + e.message);
+      if (!isRetry && !silent) {
         __failedQueue.push(step);
         __retryCount[stepId] = 1;
-      } else {
-        __retryCount[stepId] = (__retryCount[stepId] || 0) + 1;
+        __processFailedQueue();
       }
-      __processFailedQueue();
     });
   }
   
   function sendStep(step) {
     // ═══ METHOD 0: Playwright exposeFunction (PRIMARY when running in Playwright browser) ═══
-    // This is called when recording via Playwright — no HTTP, no auth token needed
     if (typeof window.__playwrightAddStep === 'function') {
       try {
         window.__playwrightAddStep(step);
@@ -221,11 +247,20 @@ export function getRecorderScript(sessionId = null, options = {}) {
       return;
     }
 
+    // ═══ METHOD 1: postMessage bridge (CSP-safe when connect-src blocks our API) ═══
+    // Client-direct: opener = client-gate page on testsambilngopi.com
+    if (__RECORD_TOKEN && __broadcastStep(step)) {
+      __updateCounter();
+      __connectionOk = true;
+      __showRecInfo('Connected (bridge)');
+      // Best-effort direct fetch; ignore CSP/network failures
+      __sendStepDirect(step, false, true);
+      return;
+    }
+
     var headers = __authHeaders();
     if (!headers) { __showRecErr('authToken tidak ditemukan'); return; }
-    
-    // ═══ METHOD 1: postMessage (PRIMARY - reliable) ═══
-    // Send to parent window (ScenarioDetailPage) via postMessage
+
     try {
       window.parent.postMessage({
         type: '__REC_STEP__',
@@ -238,9 +273,8 @@ export function getRecorderScript(sessionId = null, options = {}) {
     } catch(e) {
       console.error('[REC] postMessage failed:', e);
     }
-    
-    // ═══ METHOD 2: Direct fetch (FALLBACK - for direct iframe access / client-direct) ═══
-    __sendStepDirect(step, false);
+
+    __sendStepDirect(step, false, false);
   }`
     : `  function sendStep(step) {
     try { console.log('__REC__' + JSON.stringify(step)); } catch(e) {}

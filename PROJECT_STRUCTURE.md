@@ -2,7 +2,7 @@
 
 High-level map of the **Test Sambil Ngopi** monorepo. For file-by-file detail see [`docs/DIRECTORY_STRUCTURE.md`](./docs/DIRECTORY_STRUCTURE.md).
 
-**Last updated:** June 2026 · **Version:** 1.14.x
+**Last updated:** July 2026 · **Version:** 1.14.x
 
 ---
 
@@ -13,13 +13,13 @@ testingndrih/
 │
 ├── backend/                      # Node.js API + Playwright automation
 │   ├── src/
-│   │   ├── controllers/          # HTTP handlers (auth, scenarios, execution, site, …)
+│   │   ├── controllers/          # HTTP handlers (auth, scenarios, execution, recorder, site, …)
 │   │   ├── services/             # Business logic (33+ services)
 │   │   ├── routes/               # Express routers mounted at /api/*
 │   │   ├── middleware/           # JWT auth, API token auth, admin auth
 │   │   ├── lib/                  # Prisma, browser launcher, logger, production security
 │   │   ├── constants/            # Menu permissions, shared constants
-│   │   └── utils/                # JWT, password, roles, image diff, Turnstile
+│   │   └── utils/                # JWT, password, roles, networkReachability, image diff, Turnstile
 │   ├── prisma/
 │   │   ├── schema.prisma         # Database models
 │   │   └── migrations/           # SQL migrations
@@ -59,7 +59,7 @@ testingndrih/
 │   └── ops/                      # health-check, secrets, runner setup
 │
 ├── deploy/
-│   └── nginx/                    # Example reverse-proxy config
+│   └── nginx/                    # Example reverse-proxy config (prod often uses Caddy)
 │
 ├── .github/workflows/
 │   ├── ci.yml                    # Lint + backend test + platform E2E
@@ -87,8 +87,9 @@ testingndrih/
 | **Site / landing** | `services/siteService.js` | Public feedback, page view analytics |
 | **Scenarios** | `services/scenarioService.js` | CRUD, duplicate, stats |
 | **Test steps** | `services/testStepService.js` | Step CRUD, reorder, batch |
-| **Recorder** | `services/recorderService.js` | Playwright recording sessions |
-| **Execution** | `services/executionService.js` | Playback, screenshots, cancel |
+| **Recorder** | `services/recorderService.js` | Client-direct / proxy / Playwright sessions, inject script |
+| **Reachability** | `utils/networkReachability.js` | Detect public vs internal (private IP) targets |
+| **Execution** | `services/executionService.js` | Playback, screencast/browser runner, screenshots, cancel |
 | **Retry engine** | `services/retryEngineService.js` | Flaky step retries |
 | **Chains** | `services/chainService.js` | Multi-scenario workflows |
 | **Scheduler** | `services/schedulerService.js` | Cron jobs |
@@ -101,6 +102,15 @@ testingndrih/
 | **AI** | `services/aiService.js` | Scenario suggestions (optional) |
 | **Notifications** | `notificationService.js` | Email / webhook settings |
 
+**Recorder HTTP surface** (`routes/recorderRoutes.js`):
+- `GET /api/recorder/target-info` — public vs internal (auth)
+- `POST /api/recorder/start|stop` — session lifecycle (auth)
+- `GET /api/recorder/status/:scenarioId` — live steps (auth)
+- `GET /api/recorder/proxy` · `GET /api/recorder/asset` — HTML/asset proxy (no auth)
+- `GET /api/recorder/client-gate` · `GET /api/recorder/inject.js` — client-direct gate + script
+- `POST /api/recorder/client-step/:scenarioId` — cross-origin steps (`X-Record-Token`)
+- `POST /api/recorder/step/:scenarioId` · `POST /api/recorder/save/:scenarioId` — JWT step ingest / persist
+
 **Entry point:** `backend/src/server.js` — mounts all `/api/*` routes and serves built frontend in Docker.
 
 ---
@@ -111,7 +121,7 @@ testingndrih/
 |------|-------|
 | **Public** | Landing (`/`, `/id`), About (`/about`, `/id/about`), LandingNotFound |
 | **Auth** | Login, Register, ForgotPassword, ResetPassword |
-| **Core** | Dashboard, Scenarios, ScenarioDetail, Execution, Reports, Analytics, Settings |
+| **Core** | Dashboard, Scenarios, ScenarioDetail (dual recording overviews), Execution, Reports, Analytics, Settings |
 | **Admin tools** | SmokeTest, StressTest, SecurityTest, ApiTesting, VisualRegression, Environments, Chains, ChainBuilder, ChainExecutor, Scheduler, Parallel, BrowserMatrix |
 | **System** | Maintenance, SessionExpired, Forbidden, ServerError, NotFound |
 | **Help** | SmokeTestHelp, StressTestHelp, SecurityTestHelp |
@@ -127,15 +137,21 @@ testingndrih/
 ```mermaid
 flowchart LR
   A[User UI] --> B[Express API]
-  B --> C[recorderService]
-  C --> D[Playwright Browser]
-  D --> E[Injected recorder script]
-  E --> B
-  B --> F[(PostgreSQL)]
+  B --> T[target-info / start]
+  T --> CD[client-direct gate]
+  T --> PX[HTML proxy]
+  CD --> Inj[Inline inject on real origin]
+  PX --> Inj2[Injected recorder in proxy tab]
+  Inj --> CS[client-step or step API]
+  Inj2 --> CS
+  CS --> C[recorderService session]
+  C --> F[(PostgreSQL)]
   A --> G[executionService]
-  G --> D
+  G --> D[Playwright on real URL]
   G --> F
 ```
+
+**Modes:** `client-direct` (default; required for internal/VPN) · `proxy` (optional, public only) · `playwright` (local headed, opt-in).
 
 ---
 
@@ -144,7 +160,7 @@ flowchart LR
 | File | Purpose |
 |------|---------|
 | `.env.example` | Docker / full-stack template |
-| `backend/.env.example` | Local API development |
+| `backend/.env.example` | Local API development (`RECORDING_MODE`, CORS, …) |
 | `backend/.env.test.example` | Test database |
 | `frontend/playwright.config.js` | E2E browser projects |
 | `backend/jest.config.js` | Unit test config |

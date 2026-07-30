@@ -60,6 +60,7 @@
 ### Core testing
 - **Scenario management** — create, edit, duplicate, search scenarios
 - **Step editor** — NAVIGATE, CLICK, FILL, WAIT, ASSERTION, SCREENSHOT, API_CALL, and more
+- **Browser recording** — client-direct (default) or proxy; public vs internal auto-detect; playback via Playwright
 - **Execution engine** — step-by-step runs with screenshots, retries, error suggestions
 - **Test chains** — multi-scenario workflows with stop-on-fail options
 - **Excel import** — bulk scenario import with preview
@@ -96,26 +97,39 @@
 
 ### How recording works
 
+Default mode is **client-direct**: the real target site opens in your browser and a recorder script is attached (best visual/selector fidelity for playback). **Proxy** mode is optional for public sites. **Playwright headed** remains available for local desktop only (`RECORDING_MODE=playwright`).
+
 ```
-User clicks "Record" → Backend launches Playwright browser (Chromium/Firefox/WebKit)
-                    → Opens target URL in headed mode
-                    → Injects recorder script into the page
-                    → Captures clicks, fills, navigation, etc.
-                    → Frontend polls status every ~1.5s
-                    → User clicks "Stop" → steps saved to PostgreSQL
+User opens Recording panel
+  → UI probes GET /api/recorder/target-info?url=…  (public vs internal/VPN)
+  → User picks overview: Situs asli (client-direct) or Lewat proxy
+  → POST /api/recorder/start { scenarioId, url, mode }
+
+Client-direct (default / always for internal targets):
+  → Opens /api/recorder/client-gate (panduan + inject inline CSP-safe)
+  → User records on the real origin; steps POST /api/recorder/client-step/:id
+  → Frontend polls GET /api/recorder/status → Stop → steps saved to PostgreSQL
+
+Proxy (public sites only, optional):
+  → Opens /api/recorder/proxy?url=…&sessionId=…
+  → Server fetches HTML, injects recorder; assets via /api/recorder/asset
+  → Same status/stop/save flow (SPA images/layout may differ from the live site)
 ```
 
 **Recorder highlights:**
-- Server-side Playwright session (no browser extension required)
+- Two UI overviews on Scenario Detail: **Situs asli** (recommended) vs **Lewat proxy**, with auto-detect public/internal
+- Internal/VPN targets (private DNS) cannot be server-proxied — forced client-direct
 - Intelligent selectors: `data-testid` → `id` → CSS path → XPath
-- Shadow DOM, iframes, contenteditable, SPA route detection
-- Step queue with retry on network blips
-- Session keyed by `userId:scenarioId`
+- Shadow DOM, iframes, contenteditable, SPA route detection; noise filters (e.g. Google Translate)
+- Step queue with retry; session keyed by `userId:scenarioId`
+- Playback always hits the **real URL** via Playwright (not the recording proxy)
 
 **Key files:**
-- `backend/src/services/recorderService.js` — browser session & injection
+- `backend/src/services/recorderService.js` — sessions, modes, inject script
+- `backend/src/utils/networkReachability.js` — public vs internal detection
+- `backend/src/controllers/recorderController.js` — proxy, client-gate, inject, steps
 - `backend/src/services/executionService.js` — playback engine
-- `frontend/src/pages/ScenarioDetailPage.jsx` — record UI
+- `frontend/src/pages/ScenarioDetailPage.jsx` — record UI & mode cards
 
 ### How playback works
 
@@ -133,7 +147,7 @@ User clicks "Record" → Backend launches Playwright browser (Chromium/Firefox/W
 
 | Area | Status |
 |------|--------|
-| Recording (Playwright v2) | Complete |
+| Recording (client-direct / proxy) | Complete |
 | Execution & retry engine | Complete |
 | Cross-browser & parallel | Complete |
 | Scheduling | Complete |
@@ -154,7 +168,7 @@ User clicks "Record" → Backend launches Playwright browser (Chromium/Firefox/W
 |---------|--------|-------|
 | User auth (login/register/reset) | Pass | Unit + E2E |
 | Scenario CRUD & search | Pass | E2E + API |
-| Playwright recording | Pass | Manual + integration |
+| Playwright recording | Pass | Client-direct (default) + proxy override; manual + unit |
 | Step execution | Pass | E2E execution specs |
 | Cross-browser matrix | Pass | E2E |
 | Scheduler | Pass | E2E |
@@ -321,13 +335,14 @@ Manual deploy with latest `main`: GitHub Actions → Deploy Production → check
 ```
 testingndrih/
 ├── backend/                 # Express API + Playwright engine
-│   ├── src/controllers/     # Route handlers (21)
-│   ├── src/services/        # Business logic (33)
+│   ├── src/controllers/     # Route handlers (incl. recorder)
+│   ├── src/services/        # Business logic (recorder, execution, …)
+│   ├── src/utils/           # networkReachability, JWT, …
 │   ├── src/routes/          # REST routes
 │   ├── prisma/              # Schema & migrations
-│   └── scripts/               # Seed, maintenance
+│   └── scripts/             # Seed, maintenance
 ├── frontend/                # React SPA
-│   ├── src/pages/           # Landing, app, admin pages
+│   ├── src/pages/           # Landing, app, admin (ScenarioDetail recording UI)
 │   ├── src/components/
 │   │   ├── landing/         # Public site components
 │   │   ├── security/        # Security scan UI
@@ -338,13 +353,14 @@ testingndrih/
 │   ├── deploy/              # Production deploy
 │   ├── notify/              # Telegram
 │   └── ops/                 # health-check, secrets
-├── deploy/                  # nginx example config
+├── deploy/                  # nginx/Caddy example config
 ├── .github/workflows/       # CI, release, deploy
 ├── docker-compose.yml
 ├── Dockerfile
 └── package.json             # Monorepo root
 ```
 
+Full map: [`PROJECT_STRUCTURE.md`](./PROJECT_STRUCTURE.md) · file-level: [`docs/DIRECTORY_STRUCTURE.md`](./docs/DIRECTORY_STRUCTURE.md)
 Full detail: [`PROJECT_STRUCTURE.md`](./PROJECT_STRUCTURE.md) and [`docs/DIRECTORY_STRUCTURE.md`](./docs/DIRECTORY_STRUCTURE.md).
 
 ---

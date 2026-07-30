@@ -70,7 +70,7 @@ const i18n = {
     recordingOverviewDirectBody:
       'Buka website real di tab baru, lalu pasang recorder (salin script inline → Console). Tampilan & selector mirip saat Play.',
     recordingOverviewDirectCsp:
-      'Jika situs punya CSP ketat: F12 → Console → tempel script dari halaman panduan (jangan load script dari URL eksternal).',
+      'CSP ketat: Salin script INLINE dari halaman panduan (bukan URL inject.js). Jangan tutup tab panduan — itu jembatan step.',
     recordingOverviewProxyTitle: 'Lewat proxy app',
     recordingOverviewProxyBody:
       'Satu tab di domain Test Sambil Ngopi. Tidak perlu inject manual, tetapi gambar/layout Next.js sering tidak lengkap.',
@@ -756,6 +756,20 @@ export default function ScenarioDetailPage() {
       pollingRef.current = null
     }
   }, [])
+
+  // CSP-safe bridge: client-direct tab may postMessage steps here if opener is the app
+  useEffect(() => {
+    if (!isRecording) return undefined
+    const onMessage = (event) => {
+      const data = event.data
+      if (!data || data.type !== '__REC_STEP__') return
+      if (String(data.sessionId) !== String(id)) return
+      if (!data.data || typeof data.data !== 'object') return
+      recorderAPI.receiveStep(id, data.data).catch(() => {})
+    }
+    window.addEventListener('message', onMessage)
+    return () => window.removeEventListener('message', onMessage)
+  }, [isRecording, id])
 
   // Cleanup polling on unmount
   useEffect(() => {
