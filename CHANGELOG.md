@@ -1,3 +1,10 @@
+## [1.15.5](https://github.com/andri5/testingndrih/compare/v1.15.4...v1.15.5) (2026-07-30)
+
+
+### Bug Fixes
+
+* **recorder:** reconnect bridge via about:blank under COOP ([528bc4c](https://github.com/andri5/testingndrih/commit/528bc4c689bfef04a277bae7d60e76910e4eb67c))
+
 ## [1.15.4](https://github.com/andri5/testingndrih/compare/v1.15.3...v1.15.4) (2026-07-30)
 
 
