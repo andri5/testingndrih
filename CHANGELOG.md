@@ -1,3 +1,10 @@
+## [1.15.1](https://github.com/andri5/testingndrih/compare/v1.15.0...v1.15.1) (2026-07-30)
+
+
+### Bug Fixes
+
+* **recorder:** bridge steps via postMessage under CSP connect-src ([d0567a7](https://github.com/andri5/testingndrih/commit/d0567a7ea92f2f51501e058ea7c7af2a1418a84a))
+
 # [1.15.0](https://github.com/andri5/testingndrih/compare/v1.14.6...v1.15.0) (2026-07-29)
 
 
