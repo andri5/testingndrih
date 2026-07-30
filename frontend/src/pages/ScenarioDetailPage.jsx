@@ -70,7 +70,7 @@ const i18n = {
     recordingOverviewDirectBody:
       'Buka website real di tab baru, lalu pasang recorder (salin script inline → Console). Tampilan & selector mirip saat Play.',
     recordingOverviewDirectCsp:
-      'CSP ketat: Salin script INLINE dari halaman panduan (bukan URL inject.js). Jangan tutup tab panduan — itu jembatan step.',
+      'CSP ketat: Salin script INLINE dari halaman panduan. Di Console Chrome, jika muncul “allow pasting”, ketik allow pasting dulu lalu Enter. Jangan tutup tab panduan (jembatan step).',
     recordingOverviewProxyTitle: 'Lewat proxy app',
     recordingOverviewProxyBody:
       'Satu tab di domain Test Sambil Ngopi. Tidak perlu inject manual, tetapi gambar/layout Next.js sering tidak lengkap.',

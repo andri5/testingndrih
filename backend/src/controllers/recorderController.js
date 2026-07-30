@@ -641,7 +641,13 @@ window.__targetBase=${JSON.stringify(url)};
         <li>Biarkan tab <em>panduan ini</em> tetap terbuka.</li>
         <li>Klik <strong>Buka halaman target</strong> (tab baru — harus dibuka dari tautan ini agar <code>window.opener</code> terhubung).</li>
         <li>Klik <strong>Salin script inline</strong>.</li>
-        <li>Di tab target: <strong>F12</strong> → <strong>Console</strong> → <kbd>Ctrl+V</kbd> → <strong>Enter</strong>.</li>
+        <li>Di tab target: <strong>F12</strong> → <strong>Console</strong>.</li>
+        <li class="warn" style="list-style:none;margin:8px 0 8px -1.2rem;padding:10px 12px;border:1px solid #f59e0b55;border-radius:8px;background:#78350f33">
+          Jika Chrome menulis <em>“type allow pasting”</em>: ketik tepat
+          <kbd>allow pasting</kbd> lalu <strong>Enter</strong> (sekali per tab). Baru boleh paste script.
+          Ini proteksi bawaan Chrome, bukan error aplikasi.
+        </li>
+        <li>Paste script: <kbd>Ctrl+V</kbd> → <strong>Enter</strong>.</li>
         <li>Toolbar merah muncul; angka bridge di halaman ini naik saat Anda berinteraksi.</li>
         <li>Di aplikasi utama → <strong>Stop</strong>.</li>
       </ol>
@@ -704,7 +710,7 @@ window.__targetBase=${JSON.stringify(url)};
             return;
           }
           navigator.clipboard.writeText(snippet).then(function(){
-            alert('Script inline disalin (' + snippet.length + ' karakter).\\n\\nDi tab target: F12 → Console → Ctrl+V → Enter.\\n\\nJangan paste URL inject.js.');
+            alert('Script inline disalin (' + snippet.length + ' karakter).\\n\\nDi tab target:\\n1) F12 → Console\\n2) Jika diminta: ketik allow pasting lalu Enter\\n3) Ctrl+V → Enter\\n\\nJangan paste URL inject.js.');
           }).catch(function(){
             prompt('Salin script ini (Ctrl+A, Ctrl+C):', snippet);
           });
