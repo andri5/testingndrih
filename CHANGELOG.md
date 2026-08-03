@@ -1,3 +1,10 @@
+## [1.15.9](https://github.com/andri5/testingndrih/compare/v1.15.8...v1.15.9) (2026-08-03)
+
+
+### Bug Fixes
+
+* **execution:** open scenario URL on run and restrict Quick Record to admin ([44d2c0f](https://github.com/andri5/testingndrih/commit/44d2c0f28d44c54b61a39fb05e56a735c0f80fad))
+
 ## [1.15.8](https://github.com/andri5/testingndrih/compare/v1.15.7...v1.15.8) (2026-08-03)
 
 
