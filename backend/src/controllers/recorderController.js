@@ -79,10 +79,8 @@ function buildClientInjectPayload(sessionId, recordToken, appOrigin, bridgeUrl =
     try { w.location.href=url; } catch (e3) {
       try { w.location=url; } catch (e4) {}
     }
-    setStatus('Bridge dibuka — menunggu ACK…', true);
-    setTimeout(function(){
-      if (window.__recFlushBridgeQueue) window.__recFlushBridgeQueue();
-    }, 800);
+    setStatus('Bridge dibuka — menunggu READY…', true);
+    // Flush only after __REC_BRIDGE_READY__ (see message listener below)
     return true;
   };
 
@@ -95,26 +93,38 @@ function buildClientInjectPayload(sessionId, recordToken, appOrigin, bridgeUrl =
 
   window.addEventListener('message', function(ev){
     var d=ev.data;
-    if (!d || d.type!=='__REC_BRIDGE_READY__') return;
-    setStatus('Connected (bridge)', true);
-    if (window.__recFlushBridgeQueue) window.__recFlushBridgeQueue();
+    if (!d) return;
+    if (d.type==='__REC_BRIDGE_READY__') {
+      setStatus('Connected (bridge)', true);
+      if (window.__recFlushBridgeQueue) window.__recFlushBridgeQueue();
+      return;
+    }
+    if (d.type==='__REC_STEP_ACK__') {
+      setStatus('Connected (bridge)', true);
+    }
   });
 
-  // Don't send NAVIGATE until bridge exists — otherwise toolbar shows Bridge putus immediately
+  // Queue NAVIGATE even without bridge; auto-connect so COOP sites still record
   function tryInitialNavigate() {
     if (!window.__recSendStep) return;
-    if (window.__recRecordToken) {
-      var hasBridge=false;
-      try { hasBridge=!!(window.opener && !window.opener.closed); } catch(e) {}
-      try { hasBridge=hasBridge||!!(window.__recBridgeWin && !window.__recBridgeWin.closed); } catch(e2) {}
-      if (!hasBridge) {
-        setStatus('Bridge putus — klik Hubungkan bridge', false);
-        return;
-      }
+    var hasBridge=false;
+    try { hasBridge=!!(window.opener && !window.opener.closed); } catch(e) {}
+    try { hasBridge=hasBridge||!!(window.__recBridgeWin && !window.__recBridgeWin.closed); } catch(e2) {}
+    if (window.__recRecordToken && !hasBridge) {
+      setStatus('Menghubungkan bridge…', false);
+      if (typeof window.__recConnectBridge === 'function') window.__recConnectBridge();
     }
     window.__recSendStep({type:'NAVIGATE',selector:'',value:location.href,description:'Navigate to '+location.href,tagName:'',timestamp:Date.now()});
   }
-  setTimeout(tryInitialNavigate, 300);
+  setTimeout(tryInitialNavigate, 400);
+  // Retry auto-bridge once if first popup was blocked
+  setTimeout(function(){
+    if (!window.__recRecordToken) return;
+    var ok=false;
+    try { ok=!!(window.opener && !window.opener.closed); } catch(e) {}
+    try { ok=ok||!!(window.__recBridgeWin && !window.__recBridgeWin.closed); } catch(e2) {}
+    if (!ok && typeof window.__recConnectBridge === 'function') window.__recConnectBridge();
+  }, 1200);
 })();`
   return `${bootstrap}\n${script}\n${toolbar}`
 }
@@ -166,14 +176,25 @@ export const recorderController = {
       }
       const result = await recorderService.startRecording(userId, scenarioId, url, mode)
 
+      const appOrigin = resolveAppOrigin(req).replace(/^http:\/\/testsambilngopi\.com/i, 'https://testsambilngopi.com')
+      let clientGateUrl = result.clientGateUrl || null
+      let proxyUrl = result.proxyUrl || null
+      if (clientGateUrl && clientGateUrl.startsWith('/')) {
+        clientGateUrl = `${appOrigin}${clientGateUrl}`
+      }
+      if (proxyUrl && proxyUrl.startsWith('/')) {
+        proxyUrl = `${appOrigin}${proxyUrl}`
+      }
+
       res.status(202).json({
         success: true,
         status: result.status,
         scenarioId: result.scenarioId,
         message: result.message,
         method: result.method || 'proxy',
-        proxyUrl: result.proxyUrl || null,
-        clientGateUrl: result.clientGateUrl || null,
+        proxyUrl,
+        clientGateUrl,
+        recordToken: result.recordToken || null,
         browserPid: result.browserPid,
         targetKind: result.targetKind || null,
         reachability: result.reachability || null,
@@ -797,25 +818,55 @@ window.__targetBase=${JSON.stringify(url)};
         if (String(d.sessionId) !== String(sessionId)) return;
         var step = d.data;
         if (!step || typeof step !== 'object') return;
-        fetch(appOrigin + '/api/recorder/client-step/' + encodeURIComponent(sessionId), {
+        var stepKey = d.stepKey || ((step.selector || '') + '_' + (step.timestamp || Date.now()));
+        // Relative URL — same origin as this gate page (avoids wrong appOrigin / mixed content)
+        fetch('/api/recorder/client-step/' + encodeURIComponent(sessionId), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'X-Record-Token': recordToken
           },
-          body: JSON.stringify(step)
+          body: JSON.stringify(step),
+          credentials: 'same-origin'
         }).then(function(r) {
+          return r.json().then(function(body) {
+            return { ok: r.ok, status: r.status, body: body || {} };
+          }).catch(function() {
+            return { ok: r.ok, status: r.status, body: {} };
+          });
+        }).then(function(result) {
           var el = document.getElementById('bridgeStatus');
-          if (!el) return;
-          if (r.ok) {
-            bridgeCount++;
-            el.textContent = 'Bridge OK: ' + bridgeCount + ' step diterima (jangan tutup tab ini)';
-            // ACK back so target toolbar turns green
+          if (result.ok) {
+            bridgeCount = result.body.stepCount || (bridgeCount + 1);
+            if (el) el.textContent = 'Bridge OK: ' + bridgeCount + ' step diterima (jangan tutup tab ini)';
             try {
-              if (ev.source) ev.source.postMessage({ type: '__REC_BRIDGE_READY__', sessionId: sessionId }, '*');
+              if (ev.source) {
+                ev.source.postMessage({ type: '__REC_STEP_ACK__', sessionId: sessionId, stepKey: stepKey }, '*');
+                ev.source.postMessage({ type: '__REC_BRIDGE_READY__', sessionId: sessionId }, '*');
+              }
+            } catch (_) {}
+            // Push live steps into the main app tab (opener and/or BroadcastChannel)
+            var syncMsg = {
+              type: '__REC_UI_SYNC__',
+              sessionId: sessionId,
+              step: step,
+              steps: result.body.steps || null,
+              stepCount: bridgeCount,
+              timestamp: Date.now()
+            };
+            try {
+              if (window.opener && !window.opener.closed) {
+                window.opener.postMessage(syncMsg, '*');
+              }
+            } catch (_) {}
+            try {
+              if (!window.__recUiChannel) {
+                window.__recUiChannel = new BroadcastChannel('tsn-recorder-' + sessionId);
+              }
+              window.__recUiChannel.postMessage(syncMsg);
             } catch (_) {}
           } else {
-            el.textContent = 'Bridge gagal: HTTP ' + r.status + ' — cek sesi recording masih aktif';
+            if (el) el.textContent = 'Bridge gagal: HTTP ' + result.status + ' — cek sesi recording masih aktif';
           }
         }).catch(function(e) {
           var el = document.getElementById('bridgeStatus');
@@ -914,7 +965,12 @@ window.__targetBase=${JSON.stringify(url)};
           error: 'Recording session not active. Please restart recording.',
         })
       }
-      return res.json({ ok: true })
+      const session = recorderService.findActiveSessionByScenarioId(String(scenarioId))
+      return res.json({
+        ok: true,
+        stepCount: session?.steps?.length || 0,
+        steps: session?.steps || [],
+      })
     } catch (err) {
       console.error('[RECORDER] receiveClientStep error:', err)
       return res.status(500).json({ ok: false, error: 'Internal server error' })

@@ -104,6 +104,12 @@ export function getRecorderScript(sessionId = null, options = {}) {
   var __maxRetries = 3;
   var __retryDelays = [500, 2000, 5000]; // ms between retries
   var __connectionOk = true;
+  var __pendingAcks = {};
+  var __acceptedKeys = {};
+  var __ackTimeoutMs = 2500;
+  var __bridgeReady = false;
+  var __flushTimer = null;
+  var __bridgeRetryScheduled = false;
   
   function __showRecErr(msg) {
     var el = document.getElementById('__rec_status');
@@ -144,6 +150,10 @@ export function getRecorderScript(sessionId = null, options = {}) {
     if (__RECORD_TOKEN) return __recOrigin + '/api/recorder/client-step/' + __SESSION_ID;
     return __recOrigin + '/api/recorder/step/' + __SESSION_ID;
   }
+
+  function __stepKey(step) {
+    return String(step.selector || '') + '_' + String(step.timestamp || Date.now());
+  }
   
   function __getBridgeWindow() {
     try {
@@ -161,6 +171,7 @@ export function getRecorderScript(sessionId = null, options = {}) {
       sessionId: __SESSION_ID,
       data: step,
       recordToken: __RECORD_TOKEN || null,
+      stepKey: __stepKey(step),
       timestamp: Date.now()
     };
     var delivered = false;
@@ -177,22 +188,107 @@ export function getRecorderScript(sessionId = null, options = {}) {
     return delivered;
   }
 
+  function __queueStep(step) {
+    var qid = __stepKey(step);
+    step.id = qid;
+    if (!__failedQueue.find(function(s) { return s.id === qid; })) {
+      __failedQueue.push(step);
+      __retryCount[qid] = 0;
+    }
+  }
+
+  function __markStepAccepted(stepKey) {
+    if (!stepKey) return;
+    if (__pendingAcks[stepKey]) delete __pendingAcks[stepKey];
+    var idx = __failedQueue.findIndex(function(s) { return s.id === stepKey || __stepKey(s) === stepKey; });
+    if (idx >= 0) __failedQueue.splice(idx, 1);
+    __bridgeReady = true;
+    __connectionOk = true;
+    if (!__acceptedKeys[stepKey]) {
+      __acceptedKeys[stepKey] = true;
+      __updateCounter();
+    }
+    __showRecInfo('Connected (bridge)');
+  }
+
+  function __awaitAck(step) {
+    var key = __stepKey(step);
+    if (__acceptedKeys[key]) return;
+    __pendingAcks[key] = Date.now();
+    setTimeout(function() {
+      if (!__pendingAcks[key]) return;
+      delete __pendingAcks[key];
+      if (__acceptedKeys[key]) return;
+      __queueStep(step);
+      __showRecErr('Bridge putus — klik Hubungkan bridge');
+      __processFailedQueue();
+    }, __ackTimeoutMs);
+  }
+
   window.__recFlushBridgeQueue = function() {
     if (!__RECORD_TOKEN) return;
-    while (__failedQueue.length) {
-      var step = __failedQueue[0];
-      if (!__broadcastStep(step)) break;
-      __failedQueue.shift();
-      __updateCounter();
+    __bridgeReady = true;
+    __connectionOk = true;
+    __showRecInfo('Connected (bridge)');
+    var pending = __failedQueue.slice();
+    __failedQueue = [];
+    pending.forEach(function(step) {
+      if (!__broadcastStep(step)) {
+        __queueStep(step);
+        return;
+      }
+      __awaitAck(step);
+    });
+  };
+
+  window.addEventListener('message', function(ev) {
+    var d = ev.data;
+    if (!d) return;
+    if (d.type === '__REC_BRIDGE_READY__' && String(d.sessionId || __SESSION_ID) === String(__SESSION_ID)) {
+      __bridgeReady = true;
       __connectionOk = true;
       __showRecInfo('Connected (bridge)');
+      if (__flushTimer) clearTimeout(__flushTimer);
+      __flushTimer = setTimeout(function() {
+        if (window.__recFlushBridgeQueue) window.__recFlushBridgeQueue();
+      }, 50);
+      return;
     }
-  };
+    if (d.type === '__REC_STEP_ACK__' && String(d.sessionId) === String(__SESSION_ID)) {
+      __markStepAccepted(String(d.stepKey || ''));
+    }
+  });
 
   function __processFailedQueue() {
     if (__failedQueue.length === 0) return;
-    var step = __failedQueue[0];
-    var attempts = __retryCount[step.id] || 0;
+    if (__RECORD_TOKEN) {
+      // Never drop client-direct steps — keep retrying until bridge ACKs
+      if (__bridgeRetryScheduled) return;
+      __bridgeRetryScheduled = true;
+      setTimeout(function() {
+        __bridgeRetryScheduled = false;
+        var step = __failedQueue[0];
+        if (!step) return;
+        var key = __stepKey(step);
+        if (__pendingAcks[key] || __acceptedKeys[key]) {
+          if (__acceptedKeys[key]) {
+            var di = __failedQueue.findIndex(function(s) { return s.id === key || __stepKey(s) === key; });
+            if (di >= 0) __failedQueue.splice(di, 1);
+          }
+          __processFailedQueue();
+          return;
+        }
+        if (__broadcastStep(step)) {
+          __awaitAck(step);
+        } else {
+          __showRecErr('Bridge putus — klik Hubungkan bridge');
+        }
+        __processFailedQueue();
+      }, 1200);
+      return;
+    }
+    var step2 = __failedQueue[0];
+    var attempts = __retryCount[step2.id] || 0;
     if (attempts >= __maxRetries) {
       __failedQueue.shift();
       __showRecErr('Step dropped after ' + __maxRetries + ' retries');
@@ -200,20 +296,7 @@ export function getRecorderScript(sessionId = null, options = {}) {
     }
     var delay = __retryDelays[Math.min(attempts, __retryDelays.length - 1)];
     setTimeout(function() {
-      if (__RECORD_TOKEN) {
-        if (__broadcastStep(step)) {
-          __failedQueue.shift();
-          __updateCounter();
-          __connectionOk = true;
-          __showRecInfo('Connected (bridge)');
-          __processFailedQueue();
-        } else {
-          __retryCount[step.id] = attempts + 1;
-          __processFailedQueue();
-        }
-        return;
-      }
-      __sendStepDirect(step, true, false);
+      __sendStepDirect(step2, true, false);
     }, delay);
   }
 
@@ -278,21 +361,17 @@ export function getRecorderScript(sessionId = null, options = {}) {
       return;
     }
 
-    // Client-direct: postMessage bridge ONLY (no fetch — CSP connect-src)
+    // Client-direct: postMessage bridge ONLY; count only after ACK from gate
     if (__RECORD_TOKEN) {
-      if (__broadcastStep(step)) {
-        __updateCounter();
-        __connectionOk = true;
-        __showRecInfo('Connected (bridge)');
+      var key = __stepKey(step);
+      step.id = key;
+      if (!__broadcastStep(step)) {
+        __showRecErr('Bridge putus — klik Hubungkan bridge');
+        __queueStep(step);
         return;
       }
-      __showRecErr('Bridge putus — klik Hubungkan di toolbar');
-      var qid = (step.selector || '') + '_' + (step.timestamp || Date.now());
-      step.id = qid;
-      if (!__failedQueue.find(function(s) { return s.id === qid; })) {
-        __failedQueue.push(step);
-        __retryCount[qid] = 0;
-      }
+      __showRecInfo('Mengirim ke bridge…');
+      __awaitAck(step);
       return;
     }
 
@@ -306,6 +385,7 @@ export function getRecorderScript(sessionId = null, options = {}) {
         data: step,
         token: headers.Authorization ? headers.Authorization.replace(/^Bearer\\s+/i, '') : null,
         recordToken: null,
+        stepKey: __stepKey(step),
         timestamp: Date.now()
       }, '*');
     } catch(e) {
@@ -1060,6 +1140,7 @@ export const recorderService = {
           method: 'client-direct',
           proxyUrl: null,
           clientGateUrl,
+          recordToken,
           startUrl: url,
           scenarioId,
           message,
@@ -1201,9 +1282,22 @@ export const recorderService = {
    * Called via /api/recorder/step/:scenarioId when frontend captures interactions
    * (Still supports for backward compatibility with proxy method)
    */
-  addStep(userId, scenarioId, step) {
-    const key = sessionKey(userId, scenarioId)
-    const session = sessions.get(key)
+    addStep(userId, scenarioId, step) {
+    let key = sessionKey(userId, scenarioId)
+    let session = sessions.get(key)
+    if (!session) {
+      for (const [k, s] of sessions.entries()) {
+        if (
+          String(s.scenarioId) === String(scenarioId) &&
+          String(s.userId) === String(userId) &&
+          s.status === 'recording'
+        ) {
+          session = s
+          key = k
+          break
+        }
+      }
+    }
     if (!session) {
       console.warn(`[RECORDER] No session found for key ${key}. Active sessions: [${[...sessions.keys()].join(', ')}]`)
       return false
@@ -1228,7 +1322,7 @@ export const recorderService = {
    */
   findActiveSessionByScenarioId(scenarioId) {
     for (const session of sessions.values()) {
-      if (session.scenarioId === scenarioId && session.status === 'recording') {
+      if (String(session.scenarioId) === String(scenarioId) && session.status === 'recording') {
         return session
       }
     }
@@ -1251,7 +1345,15 @@ export const recorderService = {
    */
   getStatus(userId, scenarioId) {
     const key = sessionKey(userId, scenarioId)
-    const session = sessions.get(key)
+    let session = sessions.get(key)
+
+    // Fallback: userId string/number mismatch between JWT and session key
+    if (!session) {
+      const byScenario = this.findActiveSessionByScenarioId(scenarioId)
+      if (byScenario && String(byScenario.userId) === String(userId)) {
+        session = byScenario
+      }
+    }
 
     if (!session) {
       return { status: 'idle', steps: [], message: 'No active recording' }
@@ -1262,7 +1364,8 @@ export const recorderService = {
       steps: session.steps,
       startedAt: session.startedAt,
       startUrl: session.startUrl,
-      stepCount: session.steps.length
+      stepCount: session.steps.length,
+      method: session.method || null,
     }
   },
 

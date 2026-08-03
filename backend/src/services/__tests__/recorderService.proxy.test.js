@@ -204,6 +204,7 @@ describe('recorderService.startRecording proxy mode', () => {
     expect(result.targetKind).toBe('public')
     expect(result.proxyUrl).toBeNull()
     expect(result.clientGateUrl).toContain('/api/recorder/client-gate?')
+    expect(result.recordToken).toBeTruthy()
   })
 
   test('uses client-direct when target resolves to private IP', async () => {

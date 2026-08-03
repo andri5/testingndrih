@@ -200,6 +200,7 @@ export default function ScenarioDetailPage() {
   const [targetInfoMessage, setTargetInfoMessage] = useState('')
   const [isProbingTarget, setIsProbingTarget] = useState(false)
   const targetProbeRef = useRef(0)
+  const recordTokenRef = useRef(null)
 
   // Auto-open recording panel if navigated via Quick Record (?autoRecord=1)
   useEffect(() => {
@@ -757,18 +758,67 @@ export default function ScenarioDetailPage() {
     }
   }, [])
 
-  // CSP-safe bridge: client-direct tab may postMessage steps here if opener is the app
+  // Live sync from client-gate: postMessage (opener) + BroadcastChannel
   useEffect(() => {
-    if (!isRecording) return undefined
+    if (!isRecording || !id) return undefined
+
+    const applySync = (payload) => {
+      if (!payload || payload.type !== '__REC_UI_SYNC__') return
+      if (String(payload.sessionId) !== String(id)) return
+      if (Array.isArray(payload.steps) && payload.steps.length > 0) {
+        setRecordingSteps(payload.steps)
+        return
+      }
+      if (payload.step && typeof payload.step === 'object') {
+        setRecordingSteps((prev) => {
+          const key = `${payload.step.type}|${payload.step.selector || ''}|${payload.step.timestamp || ''}`
+          if (prev.some((s) => `${s.type}|${s.selector || ''}|${s.timestamp || ''}` === key)) {
+            return prev
+          }
+          return [...prev, payload.step]
+        })
+      }
+    }
+
     const onMessage = (event) => {
       const data = event.data
-      if (!data || data.type !== '__REC_STEP__') return
+      if (!data || typeof data !== 'object') return
+
+      if (data.type === '__REC_UI_SYNC__') {
+        applySync(data)
+        return
+      }
+
+      // Legacy/backup: target or gate may still post raw steps here
+      if (data.type !== '__REC_STEP__') return
       if (String(data.sessionId) !== String(id)) return
       if (!data.data || typeof data.data !== 'object') return
+      const rt = data.recordToken || recordTokenRef.current
+      if (rt) {
+        recorderAPI.receiveClientStep(id, data.data, rt)
+          .then((res) => {
+            if (Array.isArray(res.data?.steps)) setRecordingSteps(res.data.steps)
+          })
+          .catch(() => {})
+        return
+      }
       recorderAPI.receiveStep(id, data.data).catch(() => {})
     }
+
     window.addEventListener('message', onMessage)
-    return () => window.removeEventListener('message', onMessage)
+
+    let channel = null
+    try {
+      channel = new BroadcastChannel(`tsn-recorder-${id}`)
+      channel.onmessage = (ev) => applySync(ev.data)
+    } catch (_) {
+      channel = null
+    }
+
+    return () => {
+      window.removeEventListener('message', onMessage)
+      try { channel?.close() } catch (_) { /* ignore */ }
+    }
   }, [isRecording, id])
 
   // Cleanup polling on unmount
@@ -822,6 +872,8 @@ export default function ScenarioDetailPage() {
         ? (res.data.clientGateUrl || res.data.proxyUrl)
         : (res.data.proxyUrl || res.data.clientGateUrl)
 
+      recordTokenRef.current = res.data.recordToken || null
+
       if (openUrl) {
         if (recWindow && !recWindow.closed) {
           recWindow.location.href = openUrl
@@ -859,6 +911,7 @@ export default function ScenarioDetailPage() {
   const handleStopRecording = async () => {
     setIsStoppingRecording(true)
     stopPolling() // Stop polling steps from backend
+    recordTokenRef.current = null
     try {
       // ═══ Stop Playwright-based Recording ═══
       const res = await recorderAPI.stop(id)

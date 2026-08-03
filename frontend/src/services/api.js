@@ -247,6 +247,13 @@ export const recorderAPI = {
   /** Forward a live step (JWT) — used when client-direct posts via window.opener/parent bridge */
   receiveStep: (scenarioId, step) =>
     apiClient.post(`/recorder/step/${scenarioId}`, step, { skipGlobalErrorRedirect: true }),
+
+  /** Client-direct backup ingest (X-Record-Token) when app tab receives postMessage */
+  receiveClientStep: (scenarioId, step, recordToken) =>
+    apiClient.post(`/recorder/client-step/${scenarioId}`, step, {
+      headers: recordToken ? { 'X-Record-Token': recordToken } : {},
+      skipGlobalErrorRedirect: true,
+    }),
 }
 
 export const analyticsAPI = {
