@@ -120,8 +120,8 @@ describe('client-direct CSP bridge E2E', () => {
     expect(script).toContain('__REC_STEP_ACK__')
     expect(script).toContain('__REC_BRIDGE_READY__')
     expect(script).toContain('__recFlushBridgeQueue')
-    expect(script).toContain('__rec_bridge_iframe')
-    expect(script).toContain('Connected (direct)')
+    expect(script).toContain('Connected (bridge)')
+    expect(script).not.toContain('Connected (direct)')
   })
 
   test('start → inject → click records steps end-to-end via bridge', async () => {

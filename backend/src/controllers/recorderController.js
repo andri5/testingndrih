@@ -59,38 +59,33 @@ function buildClientInjectPayload(sessionId, recordToken, appOrigin, bridgeUrl =
     else el.style.background='#b91c1c';
   }
 
-  function embedBridgeUrl(url) {
-    if (!url) return '';
-    return url + (url.indexOf('?') >= 0 ? '&' : '?') + 'embed=1';
+  function hideConnectOverlay() {
+    var ov=document.getElementById('__rec_connect_overlay');
+    if (ov) ov.remove();
   }
 
-  // Hidden iframe bridge — works without popup permission (fixes Bridge putus on LPDP/COOP)
-  window.__recMountIframeBridge = function() {
-    var url=window.__recBridgeUrl;
-    if (!url) return false;
-    var embed=embedBridgeUrl(url);
-    var existing=document.getElementById('__rec_bridge_iframe');
-    if (existing) {
-      try { window.__recBridgeWin = existing.contentWindow; } catch (e) {}
-      return true;
-    }
-    var ifr=document.createElement('iframe');
-    ifr.id='__rec_bridge_iframe';
-    ifr.src=embed;
-    ifr.setAttribute('title','tsn-recorder-bridge');
-    ifr.setAttribute('aria-hidden','true');
-    ifr.style.cssText='position:fixed!important;width:1px!important;height:1px!important;opacity:0!important;pointer-events:none!important;border:0!important;left:-9999px!important;top:0!important;';
-    ifr.addEventListener('load', function(){
-      // Do not mark ready here — CSP may block the embed; wait for __REC_BRIDGE_READY__
-      setStatus('Bridge iframe loading…', 'wait');
-    });
-    (document.body||document.documentElement).appendChild(ifr);
-    return true;
-  };
+  // LPDP/Garuda CSP blocks fetch+iframe to testsambilngopi.com.
+  // Only postMessage via opener or popup works — popup needs a user gesture.
+  function showConnectOverlay() {
+    if (document.getElementById('__rec_connect_overlay')) return;
+    var hasBridge=false;
+    try { hasBridge=!!(window.opener && !window.opener.closed); } catch(e) {}
+    try { hasBridge=hasBridge||!!(window.__recBridgeWin && !window.__recBridgeWin.closed); } catch(e2) {}
+    if (hasBridge) return;
+    var ov=document.createElement('div');
+    ov.id='__rec_connect_overlay';
+    ov.style.cssText='position:fixed;inset:0;z-index:2147483646;background:rgba(15,23,42,.72);display:flex;align-items:center;justify-content:center;padding:24px';
+    ov.innerHTML='<div style="max-width:420px;background:#0f172a;color:#e2e8f0;border-radius:12px;padding:24px;text-align:center;font:14px/1.45 system-ui,sans-serif;box-shadow:0 20px 50px rgba(0,0,0,.45)"><p style="margin:0 0 12px;font-size:16px;font-weight:700">Hubungkan bridge recording</p><p style="margin:0 0 18px;color:#94a3b8">Situs ini memblokir fetch/iframe ke Test Sambil Ngopi (CSP). Klik sekali untuk membuka jembatan (popup).</p><button type="button" id="__rec_connect_cta" style="background:#dc2626;color:#fff;border:0;border-radius:8px;padding:12px 18px;font-weight:700;cursor:pointer;font-size:15px">Hubungkan bridge sekarang</button><p style="margin:14px 0 0;font-size:12px;color:#64748b">Izinkan popup untuk situs ini jika diminta browser.</p></div>';
+    (document.body||document.documentElement).appendChild(ov);
+    var cta=document.getElementById('__rec_connect_cta');
+    if (cta) cta.addEventListener('click', function(ev){
+      ev.preventDefault();
+      ev.stopPropagation();
+      window.__recConnectBridge();
+    }, true);
+  }
 
-  // Popup fallback if iframe blocked by target CSP frame-src
   window.__recConnectBridge = function() {
-    window.__recMountIframeBridge();
     var url=window.__recBridgeUrl;
     if (!url) {
       alert('Bridge URL kosong — Start Recording ulang dari aplikasi Test Sambil Ngopi.');
@@ -101,22 +96,19 @@ function buildClientInjectPayload(sessionId, recordToken, appOrigin, bridgeUrl =
     if (!w) {
       try { w=window.open(url, 'tsn_rec_bridge'); } catch (e2) {}
     }
-    if (w) {
-      window.__recBridgeWin=w;
-      try { w.location.href=url; } catch (e3) {
-        try { w.location=url; } catch (e4) {}
-      }
-      setStatus('Bridge dibuka — menunggu READY…', 'wait');
-      return true;
+    if (!w) {
+      alert('Popup diblokir.\\n\\nIzinkan popup untuk situs ini, lalu klik Hubungkan bridge lagi.');
+      setStatus('Bridge putus — izinkan popup', false);
+      showConnectOverlay();
+      return false;
     }
-    var ifr=document.getElementById('__rec_bridge_iframe');
-    if (ifr && ifr.dataset && ifr.dataset.ready === '1') {
-      setStatus('Bridge iframe aktif — lanjut interaksi', 'wait');
-      return true;
+    window.__recBridgeWin=w;
+    try { w.location.href=url; } catch (e3) {
+      try { w.location=url; } catch (e4) {}
     }
-    alert('Bridge gagal.\\n\\nIzinkan popup ATAU pastikan situs tidak memblokir iframe ke testsambilngopi.com, lalu klik Hubungkan bridge lagi.');
-    setStatus('Bridge putus — izinkan popup / iframe', false);
-    return false;
+    setStatus('Bridge dibuka — menunggu READY…', 'wait');
+    hideConnectOverlay();
+    return true;
   };
 
   var btn=document.getElementById('__rec_bridge_btn');
@@ -130,43 +122,29 @@ function buildClientInjectPayload(sessionId, recordToken, appOrigin, bridgeUrl =
     var d=ev.data;
     if (!d) return;
     if (d.type==='__REC_BRIDGE_READY__') {
-      try {
-        var readyIfr=document.getElementById('__rec_bridge_iframe');
-        if (readyIfr) {
-          readyIfr.dataset.ready='1';
-          // Prefer iframe only when it actually announced READY (not a CSP-blocked shell)
-          if (!window.__recBridgeWin || window.__recBridgeWin.closed || window.__recBridgeWin === readyIfr.contentWindow) {
-            window.__recBridgeWin = readyIfr.contentWindow;
-          }
-        }
-      } catch(e) {}
+      hideConnectOverlay();
       setStatus('Bridge siap — menunggu step', 'wait');
       if (window.__recFlushBridgeQueue) window.__recFlushBridgeQueue();
       return;
     }
     if (d.type==='__REC_STEP_ACK__' && d.stored !== false) {
+      hideConnectOverlay();
       setStatus('Connected (bridge)', true);
     }
   });
-
-  // Auto-mount iframe immediately (no user gesture needed)
-  if (window.__recRecordToken) {
-    setTimeout(function(){ window.__recMountIframeBridge(); }, 50);
-  }
 
   function tryInitialNavigate() {
     if (!window.__recSendStep) return;
     var hasBridge=false;
     try { hasBridge=!!(window.opener && !window.opener.closed); } catch(e) {}
     try { hasBridge=hasBridge||!!(window.__recBridgeWin && !window.__recBridgeWin.closed); } catch(e2) {}
-    try { hasBridge=hasBridge||!!document.getElementById('__rec_bridge_iframe'); } catch(e3) {}
     if (window.__recRecordToken && !hasBridge) {
-      setStatus('Menghubungkan bridge…', 'wait');
-      window.__recMountIframeBridge();
+      setStatus('Klik Hubungkan bridge (CSP memblokir auto-connect)', false);
+      showConnectOverlay();
     }
     window.__recSendStep({type:'NAVIGATE',selector:'',value:location.href,description:'Navigate to '+location.href,tagName:'',timestamp:Date.now()});
   }
-  setTimeout(tryInitialNavigate, 500);
+  setTimeout(tryInitialNavigate, 400);
 })();`
   return `${bootstrap}\n${script}\n${toolbar}`
 }
@@ -855,10 +833,9 @@ window.__targetBase=${JSON.stringify(url)};
         </li>
         <li>Paste script: <kbd>Ctrl+V</kbd> → <strong>Enter</strong>.</li>
         <li class="warn" style="list-style:none;margin:8px 0 8px -1.2rem;padding:10px 12px;border:1px solid #f59e0b55;border-radius:8px;background:#78350f33">
-          Setelah paste script, bridge biasanya tersambung otomatis via <strong>iframe tersembunyi</strong>
-          (tanpa popup). Status harus jadi <em>Bridge siap</em> / <em>Connected</em>.
-          Jika masih putus: klik <strong>Hubungkan bridge</strong>. Jangan tutup tab panduan.
-          Angka step di aplikasi utama harus ikut naik.
+          Situs dengan CSP ketat (LPDP/Garuda) memblokir fetch &amp; iframe ke testsambilngopi.com.
+          Setelah paste, klik <strong>Hubungkan bridge sekarang</strong> (izinkan popup).
+          Status harus jadi <em>Bridge siap</em> / <em>Connected</em>. Jangan tutup tab panduan.
         </li>
         <li>Toolbar merah muncul; angka bridge di halaman ini naik saat Anda berinteraksi.</li>
         <li>Di aplikasi utama → <strong>Stop</strong>.</li>

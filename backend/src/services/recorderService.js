@@ -110,7 +110,6 @@ export function getRecorderScript(sessionId = null, options = {}) {
   var __bridgeReady = false;
   var __flushTimer = null;
   var __bridgeRetryScheduled = false;
-  var __directOk = null; // null=probing, true=CSP allows fetch, false=must use bridge
   
   function __showRecErr(msg) {
     var el = document.getElementById('__rec_status');
@@ -157,22 +156,12 @@ export function getRecorderScript(sessionId = null, options = {}) {
   }
   
   function __getBridgeWindow() {
-    // Prefer live opener/popup — unfinished iframe must not steal messages
     try {
       if (window.opener && !window.opener.closed) return window.opener;
     } catch (e) {}
     try {
-      var ifr = document.getElementById('__rec_bridge_iframe');
-      if (window.__recBridgeWin && !window.__recBridgeWin.closed) {
-        if (!ifr || window.__recBridgeWin !== ifr.contentWindow) return window.__recBridgeWin;
-      }
+      if (window.__recBridgeWin && !window.__recBridgeWin.closed) return window.__recBridgeWin;
     } catch (e2) {}
-    try {
-      var readyIfr = document.getElementById('__rec_bridge_iframe');
-      if (readyIfr && readyIfr.dataset && readyIfr.dataset.ready === '1' && readyIfr.contentWindow) {
-        return readyIfr.contentWindow;
-      }
-    } catch (e3) {}
     return null;
   }
 
@@ -215,7 +204,7 @@ export function getRecorderScript(sessionId = null, options = {}) {
       __acceptedKeys[stepKey] = true;
       __updateCounter();
     }
-    __showRecInfo(__directOk ? 'Connected (direct)' : 'Connected (bridge)');
+    __showRecInfo('Connected (bridge)');
   }
 
   function __awaitAck(step) {
@@ -232,78 +221,12 @@ export function getRecorderScript(sessionId = null, options = {}) {
     }, __ackTimeoutMs);
   }
 
-  function __sendClientDirect(step) {
-    var key = __stepKey(step);
-    step.id = key;
-    var headers = __authHeaders();
-    if (!headers) return;
-    __nativeFetch(__stepEndpoint(), {
-      method: 'POST',
-      headers: headers,
-      body: JSON.stringify(step),
-      signal: AbortSignal.timeout(10000)
-    }).then(function(r) {
-      return r.json().then(function(b) {
-        return { httpOk: r.ok, body: b || {} };
-      }).catch(function() {
-        return { httpOk: false, body: {} };
-      });
-    }).then(function(result) {
-      var body = result.body || {};
-      if (result.httpOk && body.ok === true && body.stored === true) {
-        __markStepAccepted(key);
-        return;
-      }
-      if (result.httpOk && body.ok === true && body.ignored) {
-        return;
-      }
-      __directOk = false;
-      __queueStep(step);
-      if (__broadcastStep(step)) __awaitAck(step);
-      else __showRecErr('Bridge putus — klik Hubungkan bridge');
-    }).catch(function() {
-      __directOk = false;
-      __queueStep(step);
-      if (__broadcastStep(step)) __awaitAck(step);
-      else __showRecErr('Bridge putus — klik Hubungkan bridge');
-    });
-  }
-
-  // Probe whether target CSP allows posting steps directly (common on internal HTTP apps).
-  // Deferred so console paste / addScriptTag is not aborted by a sync CSP violation.
-  if (__RECORD_TOKEN) {
-    setTimeout(function() {
-      try {
-        __nativeFetch(__stepEndpoint(), {
-          method: 'OPTIONS',
-          headers: { 'X-Record-Token': __RECORD_TOKEN },
-          signal: AbortSignal.timeout(3500)
-        }).then(function(r) {
-          __directOk = !!(r && (r.ok || r.status === 204 || r.status === 200));
-          if (__directOk) {
-            __connectionOk = true;
-            __showRecInfo('Connected (direct)');
-            if (window.__recFlushBridgeQueue) window.__recFlushBridgeQueue();
-          }
-        }).catch(function() {
-          __directOk = false;
-        });
-      } catch (e) {
-        __directOk = false;
-      }
-    }, 0);
-  }
-
   window.__recFlushBridgeQueue = function() {
     if (!__RECORD_TOKEN) return;
     __bridgeReady = true;
     var pending = __failedQueue.slice();
     __failedQueue = [];
     pending.forEach(function(step) {
-      if (__directOk === true) {
-        __sendClientDirect(step);
-        return;
-      }
       if (!__broadcastStep(step)) {
         __queueStep(step);
         return;
@@ -318,7 +241,7 @@ export function getRecorderScript(sessionId = null, options = {}) {
     if (d.type === '__REC_BRIDGE_READY__' && String(d.sessionId || __SESSION_ID) === String(__SESSION_ID)) {
       __bridgeReady = true;
       var el = document.getElementById('__rec_status');
-      if (el && !__directOk) {
+      if (el) {
         el.textContent = 'Bridge siap — menunggu step';
         el.style.background = '#d97706';
       }
@@ -353,15 +276,6 @@ export function getRecorderScript(sessionId = null, options = {}) {
           __processFailedQueue();
           return;
         }
-        if (__directOk === true) {
-          __failedQueue.shift();
-          __sendClientDirect(step);
-          __processFailedQueue();
-          return;
-        }
-        if (typeof window.__recMountIframeBridge === 'function') {
-          try { window.__recMountIframeBridge(); } catch (e) {}
-        }
         if (__broadcastStep(step)) {
           __awaitAck(step);
         } else {
@@ -385,7 +299,7 @@ export function getRecorderScript(sessionId = null, options = {}) {
   }
 
   function __sendStepDirect(step, isRetry, silent) {
-    // Proxy/JWT path only — client-direct uses __sendClientDirect when allowed
+    // Never fetch from client-direct — target CSP connect-src blocks it and floods console
     if (__RECORD_TOKEN) return;
     var headers = __authHeaders();
     if (!headers) {
@@ -445,22 +359,16 @@ export function getRecorderScript(sessionId = null, options = {}) {
       return;
     }
 
-    // Client-direct: prefer direct POST when CSP allows; else postMessage bridge (iframe/opener)
+    // Client-direct: postMessage only (CSP often blocks fetch/iframe to recorder origin)
     if (__RECORD_TOKEN) {
       var key = __stepKey(step);
       step.id = key;
-      if (__directOk === true) {
-        __sendClientDirect(step);
-        return;
-      }
-      if (typeof window.__recMountIframeBridge === 'function') {
-        try { window.__recMountIframeBridge(); } catch (e) {}
-      }
       if (!__broadcastStep(step)) {
         __showRecErr('Bridge putus — klik Hubungkan bridge');
         __queueStep(step);
         return;
       }
+      __connectionOk = true;
       __showRecInfo('Mengirim ke bridge…');
       __awaitAck(step);
       return;
