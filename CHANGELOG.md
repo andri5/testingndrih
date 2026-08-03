@@ -1,3 +1,12 @@
+## [1.15.6](https://github.com/andri5/testingndrih/compare/v1.15.5...v1.15.6) (2026-08-03)
+
+
+### Bug Fixes
+
+* **ci:** exclude Playwright bridge E2E from default Jest suite ([9182373](https://github.com/andri5/testingndrih/commit/9182373b89ad9bb8ab9f6f7c267fcd41a037a28e))
+* **recorder:** only ACK when client-direct steps are stored ([c900575](https://github.com/andri5/testingndrih/commit/c900575e752741d5c930292e6c43ccd4594f3964))
+* **recorder:** sync client-direct steps to app UI reliably ([56aa90d](https://github.com/andri5/testingndrih/commit/56aa90d5544df1c6efd8265b544d8e791719d2c6))
+
 ## [1.15.5](https://github.com/andri5/testingndrih/compare/v1.15.4...v1.15.5) (2026-07-30)
 
 
