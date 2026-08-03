@@ -2,6 +2,11 @@ export default {
   testEnvironment: 'node',
   roots: ['<rootDir>/src'],
   testMatch: ['**/__tests__/**/*.js', '**/?(*.)+(spec|test).js'],
+  // Playwright browser E2E — run via `npm run test:e2e-bridge`, not default CI unit suite
+  testPathIgnorePatterns: [
+    '/node_modules/',
+    '\\.e2e\\.test\\.js$'
+  ],
   setupFilesAfterEnv: ['<rootDir>/jest-setup.js'],
   moduleNameMapper: {
     '^(\\.{1,2}/.*)\\.js$': '$1'

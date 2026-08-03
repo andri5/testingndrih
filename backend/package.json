@@ -12,6 +12,7 @@
     "test:coverage": "jest --coverage --json --outputFile=test-results.json",
     "test:watch": "jest --watch",
     "test:unit": "jest --config jest.config.js",
+    "test:e2e-bridge": "jest --config jest.e2e-bridge.config.js --coverage=false",
     "test:integration": "cross-env NODE_ENV=test jest --config jest.integration.config.js",
     "test:security": "jest --config jest.security.config.js",
     "test:database": "jest --config jest.database.config.js",
