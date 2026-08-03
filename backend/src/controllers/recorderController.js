@@ -54,7 +54,9 @@ function buildClientInjectPayload(sessionId, recordToken, appOrigin, bridgeUrl =
     var el=document.getElementById('__rec_status');
     if (!el) return;
     el.textContent=msg;
-    el.style.background= ok ? '#10b981' : '#b91c1c';
+    if (ok === true) el.style.background='#10b981';
+    else if (ok === 'wait') el.style.background='#d97706';
+    else el.style.background='#b91c1c';
   }
 
   // about:blank first — modern Chrome often returns null from window.open(crossOrigin)
@@ -79,8 +81,7 @@ function buildClientInjectPayload(sessionId, recordToken, appOrigin, bridgeUrl =
     try { w.location.href=url; } catch (e3) {
       try { w.location=url; } catch (e4) {}
     }
-    setStatus('Bridge dibuka — menunggu READY…', true);
-    // Flush only after __REC_BRIDGE_READY__ (see message listener below)
+    setStatus('Bridge dibuka — menunggu READY…', 'wait');
     return true;
   };
 
@@ -95,36 +96,27 @@ function buildClientInjectPayload(sessionId, recordToken, appOrigin, bridgeUrl =
     var d=ev.data;
     if (!d) return;
     if (d.type==='__REC_BRIDGE_READY__') {
-      setStatus('Connected (bridge)', true);
+      setStatus('Bridge siap — menunggu step', 'wait');
       if (window.__recFlushBridgeQueue) window.__recFlushBridgeQueue();
       return;
     }
-    if (d.type==='__REC_STEP_ACK__') {
+    if (d.type==='__REC_STEP_ACK__' && d.stored !== false) {
       setStatus('Connected (bridge)', true);
     }
   });
 
-  // Queue NAVIGATE even without bridge; auto-connect so COOP sites still record
+  // Queue initial NAVIGATE; if opener missing (COOP), user must click Hubungkan (user gesture)
   function tryInitialNavigate() {
     if (!window.__recSendStep) return;
     var hasBridge=false;
     try { hasBridge=!!(window.opener && !window.opener.closed); } catch(e) {}
     try { hasBridge=hasBridge||!!(window.__recBridgeWin && !window.__recBridgeWin.closed); } catch(e2) {}
     if (window.__recRecordToken && !hasBridge) {
-      setStatus('Menghubungkan bridge…', false);
-      if (typeof window.__recConnectBridge === 'function') window.__recConnectBridge();
+      setStatus('Klik Hubungkan bridge (izinkan popup)', false);
     }
     window.__recSendStep({type:'NAVIGATE',selector:'',value:location.href,description:'Navigate to '+location.href,tagName:'',timestamp:Date.now()});
   }
   setTimeout(tryInitialNavigate, 400);
-  // Retry auto-bridge once if first popup was blocked
-  setTimeout(function(){
-    if (!window.__recRecordToken) return;
-    var ok=false;
-    try { ok=!!(window.opener && !window.opener.closed); } catch(e) {}
-    try { ok=ok||!!(window.__recBridgeWin && !window.__recBridgeWin.closed); } catch(e2) {}
-    if (!ok && typeof window.__recConnectBridge === 'function') window.__recConnectBridge();
-  }, 1200);
 })();`
   return `${bootstrap}\n${script}\n${toolbar}`
 }
@@ -739,9 +731,10 @@ window.__targetBase=${JSON.stringify(url)};
         </li>
         <li>Paste script: <kbd>Ctrl+V</kbd> → <strong>Enter</strong>.</li>
         <li class="warn" style="list-style:none;margin:8px 0 8px -1.2rem;padding:10px 12px;border:1px solid #f59e0b55;border-radius:8px;background:#78350f33">
-          Jika toolbar merah bilang <strong>Bridge putus</strong>: klik
-          <strong>Hubungkan bridge</strong> (izinkan popup). Status harus jadi
-          <em>Connected (bridge)</em>. Jangan tutup tab panduan.
+          Jika toolbar bilang <strong>Klik Hubungkan bridge</strong>: klik tombol itu di toolbar merah
+          (izinkan popup). Status harus jadi <em>Bridge siap</em>, lalu hijau
+          <em>Connected (bridge)</em> setelah interaksi pertama. Jangan tutup tab panduan.
+          Angka step di aplikasi utama harus ikut naik.
         </li>
         <li>Toolbar merah muncul; angka bridge di halaman ini naik saat Anda berinteraksi.</li>
         <li>Di aplikasi utama → <strong>Stop</strong>.</li>
@@ -830,27 +823,28 @@ window.__targetBase=${JSON.stringify(url)};
           credentials: 'same-origin'
         }).then(function(r) {
           return r.json().then(function(body) {
-            return { ok: r.ok, status: r.status, body: body || {} };
+            return { httpOk: r.ok, status: r.status, body: body || {} };
           }).catch(function() {
-            return { ok: r.ok, status: r.status, body: {} };
+            return { httpOk: false, status: r.status, body: { ok: false, error: 'non-json response' } };
           });
         }).then(function(result) {
           var el = document.getElementById('bridgeStatus');
-          if (result.ok) {
-            bridgeCount = result.body.stepCount || (bridgeCount + 1);
+          var body = result.body || {};
+          var stored = result.httpOk && body.ok === true && body.stored === true;
+          if (stored) {
+            bridgeCount = typeof body.stepCount === 'number' ? body.stepCount : (bridgeCount + 1);
             if (el) el.textContent = 'Bridge OK: ' + bridgeCount + ' step diterima (jangan tutup tab ini)';
             try {
               if (ev.source) {
-                ev.source.postMessage({ type: '__REC_STEP_ACK__', sessionId: sessionId, stepKey: stepKey }, '*');
+                ev.source.postMessage({ type: '__REC_STEP_ACK__', sessionId: sessionId, stepKey: stepKey, stored: true }, '*');
                 ev.source.postMessage({ type: '__REC_BRIDGE_READY__', sessionId: sessionId }, '*');
               }
             } catch (_) {}
-            // Push live steps into the main app tab (opener and/or BroadcastChannel)
             var syncMsg = {
               type: '__REC_UI_SYNC__',
               sessionId: sessionId,
               step: step,
-              steps: result.body.steps || null,
+              steps: body.steps || null,
               stepCount: bridgeCount,
               timestamp: Date.now()
             };
@@ -865,8 +859,13 @@ window.__targetBase=${JSON.stringify(url)};
               }
               window.__recUiChannel.postMessage(syncMsg);
             } catch (_) {}
+          } else if (result.httpOk && body.ok === true && body.ignored) {
+            if (el) el.textContent = 'Bridge aktif (noise diabaikan) — lanjut interaksi';
+            try {
+              if (ev.source) ev.source.postMessage({ type: '__REC_BRIDGE_READY__', sessionId: sessionId }, '*');
+            } catch (_) {}
           } else {
-            if (el) el.textContent = 'Bridge gagal: HTTP ' + result.status + ' — cek sesi recording masih aktif';
+            if (el) el.textContent = 'Bridge gagal: step tidak tersimpan (HTTP ' + result.status + ') — Start Recording ulang';
           }
         }).catch(function(e) {
           var el = document.getElementById('bridgeStatus');
@@ -959,15 +958,18 @@ window.__targetBase=${JSON.stringify(url)};
         `[RECORDER] receiveClientStep scenario=${scenarioId} type=${sanitized.type} selector=${sanitized.selector.substring(0, 50)}`
       )
       const added = recorderService.addStepByRecordToken(scenarioId, String(recordToken), sanitized)
-      if (!added) {
+      if (!added || !added.ok) {
         return res.status(409).json({
           ok: false,
+          stored: false,
           error: 'Recording session not active. Please restart recording.',
         })
       }
       const session = recorderService.findActiveSessionByScenarioId(String(scenarioId))
       return res.json({
         ok: true,
+        stored: Boolean(added.stored),
+        ignored: Boolean(added.ignored),
         stepCount: session?.steps?.length || 0,
         steps: session?.steps || [],
       })
@@ -1115,7 +1117,7 @@ window.__targetBase=${JSON.stringify(url)};
       console.log(`[RECORDER] receiveStep user=${userId} scenario=${scenarioId} type=${sanitized.type} selector=${sanitized.selector.substring(0, 50)}`)
       const added = recorderService.addStep(userId, scenarioId, sanitized)
 
-      if (!added) {
+      if (!added || !added.ok) {
         // Session not found or not recording
         return res.status(409).json({
           ok: false,
@@ -1123,7 +1125,7 @@ window.__targetBase=${JSON.stringify(url)};
         })
       }
 
-      res.json({ ok: true, stepNumber: sanitized.stepNumber })
+      res.json({ ok: true, stored: Boolean(added.stored), ignored: Boolean(added.ignored), stepNumber: sanitized.stepNumber })
     } catch (err) {
       console.error(`[RECORDER] receiveStep error:`, err)
       res.status(500).json({ ok: false, error: 'Internal server error' })

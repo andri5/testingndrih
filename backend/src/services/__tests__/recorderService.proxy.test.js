@@ -113,7 +113,7 @@ describe('recorder noise filtering', () => {
         value: '',
         description: 'Select ""',
       })
-    ).toBe(true)
+    ).toMatchObject({ ok: true, stored: false, ignored: true })
     expect(recorderService.getStatus('user-1', 'scen-noise').stepCount).toBe(0)
 
     expect(
@@ -123,7 +123,7 @@ describe('recorder noise filtering', () => {
         value: 'a@b.com',
         description: 'Fill email',
       })
-    ).toBe(true)
+    ).toMatchObject({ ok: true, stored: true })
     expect(recorderService.getStatus('user-1', 'scen-noise').stepCount).toBe(1)
 
     expect(
@@ -132,7 +132,7 @@ describe('recorder noise filtering', () => {
         value: 'http://localhost:3000/api/recorder/asset?url=http://x',
         description: 'Navigate proxy asset',
       })
-    ).toBe(true)
+    ).toMatchObject({ ok: true, stored: false, ignored: true })
     expect(recorderService.getStatus('user-1', 'scen-noise').stepCount).toBe(1)
 
     await recorderService.stopRecording('user-1', 'scen-noise')
@@ -187,7 +187,7 @@ describe('recorderService.startRecording proxy mode', () => {
       type: 'CLICK',
       selector: '#login',
       description: 'Click login',
-    })).toBe(true)
+    })).toMatchObject({ ok: true, stored: true })
 
     expect(recorderService.getStatus('user-1', 'scen-1').stepCount).toBe(1)
   })
@@ -238,7 +238,7 @@ describe('recorderService.startRecording proxy mode', () => {
         selector: '#login',
         description: 'Click login',
       })
-    ).toBe(true)
+    ).toMatchObject({ ok: true, stored: true })
     expect(recorderService.getStatus('user-1', 'scen-1').stepCount).toBe(1)
   })
 

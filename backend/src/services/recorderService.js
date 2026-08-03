@@ -174,18 +174,14 @@ export function getRecorderScript(sessionId = null, options = {}) {
       stepKey: __stepKey(step),
       timestamp: Date.now()
     };
-    var delivered = false;
     var bridge = __getBridgeWindow();
-    if (bridge) {
-      try { bridge.postMessage(msg, '*'); delivered = true; } catch (e) {}
-    }
+    if (!bridge) return false;
     try {
-      if (window.parent && window.parent !== window) {
-        window.parent.postMessage(msg, '*');
-        delivered = true;
-      }
-    } catch (e) {}
-    return delivered;
+      bridge.postMessage(msg, '*');
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 
   function __queueStep(step) {
@@ -228,8 +224,6 @@ export function getRecorderScript(sessionId = null, options = {}) {
   window.__recFlushBridgeQueue = function() {
     if (!__RECORD_TOKEN) return;
     __bridgeReady = true;
-    __connectionOk = true;
-    __showRecInfo('Connected (bridge)');
     var pending = __failedQueue.slice();
     __failedQueue = [];
     pending.forEach(function(step) {
@@ -246,8 +240,11 @@ export function getRecorderScript(sessionId = null, options = {}) {
     if (!d) return;
     if (d.type === '__REC_BRIDGE_READY__' && String(d.sessionId || __SESSION_ID) === String(__SESSION_ID)) {
       __bridgeReady = true;
-      __connectionOk = true;
-      __showRecInfo('Connected (bridge)');
+      var el = document.getElementById('__rec_status');
+      if (el) {
+        el.textContent = 'Bridge siap — menunggu step';
+        el.style.background = '#d97706';
+      }
       if (__flushTimer) clearTimeout(__flushTimer);
       __flushTimer = setTimeout(function() {
         if (window.__recFlushBridgeQueue) window.__recFlushBridgeQueue();
@@ -255,6 +252,7 @@ export function getRecorderScript(sessionId = null, options = {}) {
       return;
     }
     if (d.type === '__REC_STEP_ACK__' && String(d.sessionId) === String(__SESSION_ID)) {
+      if (d.stored === false) return;
       __markStepAccepted(String(d.stepKey || ''));
     }
   });
@@ -1300,21 +1298,23 @@ export const recorderService = {
     }
     if (!session) {
       console.warn(`[RECORDER] No session found for key ${key}. Active sessions: [${[...sessions.keys()].join(', ')}]`)
-      return false
+      return { ok: false, stored: false, ignored: false }
     }
     if (session.status !== 'recording') {
       console.warn(`[RECORDER] Session ${key} has status=${session.status}, cannot add step`)
-      return false
+      return { ok: false, stored: false, ignored: false }
     }
     if (isNoiseRecordingStep(step)) {
       console.log(`[RECORDER] Skipping noise step: ${step.type} ${step.selector || step.value || ''}`)
-      return true // acknowledged but not stored
+      return { ok: true, stored: false, ignored: true }
     }
     const before = session.steps.length
     appendRecordingStep(session, step)
-    if (session.steps.length === before) return true
+    if (session.steps.length === before) {
+      return { ok: true, stored: false, ignored: true }
+    }
     console.log(`[RECORDER] Step added to ${key}: ${step.type} (total: ${session.steps.length})`)
-    return true
+    return { ok: true, stored: true, ignored: false }
   },
 
   /**
@@ -1335,7 +1335,7 @@ export const recorderService = {
   addStepByRecordToken(scenarioId, recordToken, step) {
     const session = this.findActiveSessionByScenarioId(scenarioId)
     if (!session || !session.recordToken || session.recordToken !== recordToken) {
-      return false
+      return { ok: false, stored: false, ignored: false }
     }
     return this.addStep(session.userId, scenarioId, step)
   },
