@@ -1,3 +1,10 @@
+## [1.15.7](https://github.com/andri5/testingndrih/compare/v1.15.6...v1.15.7) (2026-08-03)
+
+
+### Bug Fixes
+
+* **recorder:** auto-connect via hidden iframe and direct fetch ([1801569](https://github.com/andri5/testingndrih/commit/1801569e982906808d8c5d7f7924a6b7670f0180))
+
 ## [1.15.6](https://github.com/andri5/testingndrih/compare/v1.15.5...v1.15.6) (2026-08-03)
 
 
