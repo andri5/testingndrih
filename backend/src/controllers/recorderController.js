@@ -59,9 +59,38 @@ function buildClientInjectPayload(sessionId, recordToken, appOrigin, bridgeUrl =
     else el.style.background='#b91c1c';
   }
 
-  // about:blank first — modern Chrome often returns null from window.open(crossOrigin)
-  // when noopener is implied; keeping the WindowProxy lets postMessage work under COOP.
+  function embedBridgeUrl(url) {
+    if (!url) return '';
+    return url + (url.indexOf('?') >= 0 ? '&' : '?') + 'embed=1';
+  }
+
+  // Hidden iframe bridge — works without popup permission (fixes Bridge putus on LPDP/COOP)
+  window.__recMountIframeBridge = function() {
+    var url=window.__recBridgeUrl;
+    if (!url) return false;
+    var embed=embedBridgeUrl(url);
+    var existing=document.getElementById('__rec_bridge_iframe');
+    if (existing) {
+      try { window.__recBridgeWin = existing.contentWindow; } catch (e) {}
+      return true;
+    }
+    var ifr=document.createElement('iframe');
+    ifr.id='__rec_bridge_iframe';
+    ifr.src=embed;
+    ifr.setAttribute('title','tsn-recorder-bridge');
+    ifr.setAttribute('aria-hidden','true');
+    ifr.style.cssText='position:fixed!important;width:1px!important;height:1px!important;opacity:0!important;pointer-events:none!important;border:0!important;left:-9999px!important;top:0!important;';
+    ifr.addEventListener('load', function(){
+      // Do not mark ready here — CSP may block the embed; wait for __REC_BRIDGE_READY__
+      setStatus('Bridge iframe loading…', 'wait');
+    });
+    (document.body||document.documentElement).appendChild(ifr);
+    return true;
+  };
+
+  // Popup fallback if iframe blocked by target CSP frame-src
   window.__recConnectBridge = function() {
+    window.__recMountIframeBridge();
     var url=window.__recBridgeUrl;
     if (!url) {
       alert('Bridge URL kosong — Start Recording ulang dari aplikasi Test Sambil Ngopi.');
@@ -72,17 +101,22 @@ function buildClientInjectPayload(sessionId, recordToken, appOrigin, bridgeUrl =
     if (!w) {
       try { w=window.open(url, 'tsn_rec_bridge'); } catch (e2) {}
     }
-    if (!w) {
-      alert('Popup diblokir.\\n\\nIzinkan popup untuk situs ini, lalu klik Hubungkan bridge lagi.');
-      setStatus('Bridge putus — izinkan popup', false);
-      return false;
+    if (w) {
+      window.__recBridgeWin=w;
+      try { w.location.href=url; } catch (e3) {
+        try { w.location=url; } catch (e4) {}
+      }
+      setStatus('Bridge dibuka — menunggu READY…', 'wait');
+      return true;
     }
-    window.__recBridgeWin=w;
-    try { w.location.href=url; } catch (e3) {
-      try { w.location=url; } catch (e4) {}
+    var ifr=document.getElementById('__rec_bridge_iframe');
+    if (ifr && ifr.dataset && ifr.dataset.ready === '1') {
+      setStatus('Bridge iframe aktif — lanjut interaksi', 'wait');
+      return true;
     }
-    setStatus('Bridge dibuka — menunggu READY…', 'wait');
-    return true;
+    alert('Bridge gagal.\\n\\nIzinkan popup ATAU pastikan situs tidak memblokir iframe ke testsambilngopi.com, lalu klik Hubungkan bridge lagi.');
+    setStatus('Bridge putus — izinkan popup / iframe', false);
+    return false;
   };
 
   var btn=document.getElementById('__rec_bridge_btn');
@@ -96,6 +130,16 @@ function buildClientInjectPayload(sessionId, recordToken, appOrigin, bridgeUrl =
     var d=ev.data;
     if (!d) return;
     if (d.type==='__REC_BRIDGE_READY__') {
+      try {
+        var readyIfr=document.getElementById('__rec_bridge_iframe');
+        if (readyIfr) {
+          readyIfr.dataset.ready='1';
+          // Prefer iframe only when it actually announced READY (not a CSP-blocked shell)
+          if (!window.__recBridgeWin || window.__recBridgeWin.closed || window.__recBridgeWin === readyIfr.contentWindow) {
+            window.__recBridgeWin = readyIfr.contentWindow;
+          }
+        }
+      } catch(e) {}
       setStatus('Bridge siap — menunggu step', 'wait');
       if (window.__recFlushBridgeQueue) window.__recFlushBridgeQueue();
       return;
@@ -105,18 +149,24 @@ function buildClientInjectPayload(sessionId, recordToken, appOrigin, bridgeUrl =
     }
   });
 
-  // Queue initial NAVIGATE; if opener missing (COOP), user must click Hubungkan (user gesture)
+  // Auto-mount iframe immediately (no user gesture needed)
+  if (window.__recRecordToken) {
+    setTimeout(function(){ window.__recMountIframeBridge(); }, 50);
+  }
+
   function tryInitialNavigate() {
     if (!window.__recSendStep) return;
     var hasBridge=false;
     try { hasBridge=!!(window.opener && !window.opener.closed); } catch(e) {}
     try { hasBridge=hasBridge||!!(window.__recBridgeWin && !window.__recBridgeWin.closed); } catch(e2) {}
+    try { hasBridge=hasBridge||!!document.getElementById('__rec_bridge_iframe'); } catch(e3) {}
     if (window.__recRecordToken && !hasBridge) {
-      setStatus('Klik Hubungkan bridge (izinkan popup)', false);
+      setStatus('Menghubungkan bridge…', 'wait');
+      window.__recMountIframeBridge();
     }
     window.__recSendStep({type:'NAVIGATE',selector:'',value:location.href,description:'Navigate to '+location.href,tagName:'',timestamp:Date.now()});
   }
-  setTimeout(tryInitialNavigate, 400);
+  setTimeout(tryInitialNavigate, 500);
 })();`
   return `${bootstrap}\n${script}\n${toolbar}`
 }
@@ -645,6 +695,80 @@ window.__targetBase=${JSON.stringify(url)};
     }
 
     const appOrigin = resolveAppOrigin(req).replace(/^http:\/\/testsambilngopi\.com/i, 'https://testsambilngopi.com')
+    const embed = String(req.query.embed || '') === '1'
+
+    // Hidden iframe bridge — not blocked by popup blockers (COOP / internal sites)
+    if (embed) {
+      res.removeHeader('content-security-policy')
+      res.removeHeader('Content-Security-Policy')
+      res.removeHeader('x-frame-options')
+      res.removeHeader('X-Frame-Options')
+      res.set('content-type', 'text/html; charset=utf-8')
+      res.set('cache-control', 'no-store')
+      res.set(
+        'Content-Security-Policy',
+        "default-src 'none'; script-src 'unsafe-inline'; connect-src 'self'; frame-ancestors *; base-uri 'none'"
+      )
+      return res.send(`<!DOCTYPE html>
+<html><head><meta charset="utf-8"/><title>TSN bridge</title></head>
+<body>
+<script>
+(function(){
+  var sessionId = ${JSON.stringify(String(sessionId))};
+  var recordToken = ${JSON.stringify(String(rt))};
+  function notify(msg) {
+    try { if (window.parent && window.parent !== window) window.parent.postMessage(msg, '*'); } catch (e) {}
+    try { if (window.opener && !window.opener.closed) window.opener.postMessage(msg, '*'); } catch (e2) {}
+  }
+  function announceReady() {
+    notify({ type: '__REC_BRIDGE_READY__', sessionId: sessionId });
+  }
+  window.addEventListener('message', function(ev) {
+    var d = ev.data;
+    if (!d || d.type !== '__REC_STEP__') return;
+    if (String(d.sessionId) !== String(sessionId)) return;
+    var step = d.data;
+    if (!step || typeof step !== 'object') return;
+    var stepKey = d.stepKey || ((step.selector || '') + '_' + (step.timestamp || Date.now()));
+    fetch('/api/recorder/client-step/' + encodeURIComponent(sessionId), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Record-Token': recordToken },
+      body: JSON.stringify(step),
+      credentials: 'same-origin'
+    }).then(function(r) {
+      return r.json().then(function(body) {
+        return { httpOk: r.ok, body: body || {} };
+      }).catch(function() { return { httpOk: false, body: {} }; });
+    }).then(function(result) {
+      var body = result.body || {};
+      var stored = result.httpOk && body.ok === true && body.stored === true;
+      if (stored) {
+        notify({ type: '__REC_STEP_ACK__', sessionId: sessionId, stepKey: stepKey, stored: true });
+        notify({ type: '__REC_BRIDGE_READY__', sessionId: sessionId });
+        try {
+          if (!window.__recUiChannel) window.__recUiChannel = new BroadcastChannel('tsn-recorder-' + sessionId);
+          window.__recUiChannel.postMessage({
+            type: '__REC_UI_SYNC__',
+            sessionId: sessionId,
+            step: step,
+            steps: body.steps || null,
+            stepCount: body.stepCount || 0,
+            timestamp: Date.now()
+          });
+        } catch (_) {}
+      } else if (result.httpOk && body.ok === true && body.ignored) {
+        notify({ type: '__REC_BRIDGE_READY__', sessionId: sessionId });
+      }
+    }).catch(function() {});
+  });
+  announceReady();
+  setTimeout(announceReady, 300);
+  setTimeout(announceReady, 1000);
+})();
+</script>
+</body></html>`)
+    }
+
     // Full inline payload — never fetch inject.js (target CSP connect-src blocks it)
     const gateParams = new URLSearchParams({
       url: String(url),
@@ -731,9 +855,9 @@ window.__targetBase=${JSON.stringify(url)};
         </li>
         <li>Paste script: <kbd>Ctrl+V</kbd> → <strong>Enter</strong>.</li>
         <li class="warn" style="list-style:none;margin:8px 0 8px -1.2rem;padding:10px 12px;border:1px solid #f59e0b55;border-radius:8px;background:#78350f33">
-          Jika toolbar bilang <strong>Klik Hubungkan bridge</strong>: klik tombol itu di toolbar merah
-          (izinkan popup). Status harus jadi <em>Bridge siap</em>, lalu hijau
-          <em>Connected (bridge)</em> setelah interaksi pertama. Jangan tutup tab panduan.
+          Setelah paste script, bridge biasanya tersambung otomatis via <strong>iframe tersembunyi</strong>
+          (tanpa popup). Status harus jadi <em>Bridge siap</em> / <em>Connected</em>.
+          Jika masih putus: klik <strong>Hubungkan bridge</strong>. Jangan tutup tab panduan.
           Angka step di aplikasi utama harus ikut naik.
         </li>
         <li>Toolbar merah muncul; angka bridge di halaman ini naik saat Anda berinteraksi.</li>
