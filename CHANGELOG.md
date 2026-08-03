@@ -1,3 +1,10 @@
+## [1.15.8](https://github.com/andri5/testingndrih/compare/v1.15.7...v1.15.8) (2026-08-03)
+
+
+### Bug Fixes
+
+* **recorder:** stop CSP-blocked fetch/iframe auto-connect ([4c45169](https://github.com/andri5/testingndrih/commit/4c4516968973f6cfde2b4e607bc93d0d1d15fa66))
+
 ## [1.15.7](https://github.com/andri5/testingndrih/compare/v1.15.6...v1.15.7) (2026-08-03)
 
 
