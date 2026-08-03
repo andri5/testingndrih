@@ -520,6 +520,7 @@ export default function ScenariosPage() {
                       </div>
                     </button>
 
+                    {isAdmin && (
                     <button
                       type="button"
                       onClick={() => {
@@ -540,6 +541,7 @@ export default function ScenariosPage() {
                         <div className="text-xs text-[#666] dark:text-[#A0A0A4]">{t.quickRecordDesc}</div>
                       </div>
                     </button>
+                    )}
 
                     <button
                       type="button"
@@ -807,7 +809,7 @@ export default function ScenariosPage() {
           onCreated={handleTemplateCreated}
         />
       )}
-      {showQuickRecord && (
+      {isAdmin && showQuickRecord && (
         <QuickRecordModal
           onClose={() => setShowQuickRecord(false)}
           onCreated={handleQuickRecordCreated}

@@ -167,6 +167,10 @@ export default function BrowserSelector({
           <div className={`text-xs ${label}`}>Run without visible browser UI</div>
         </label>
       </div>
+
+      <p className={`text-xs ${label}`}>
+        Live run uses an isolated browser session (Incognito-like: no cookies or storage from previous runs).
+      </p>
     </div>
   )
 }

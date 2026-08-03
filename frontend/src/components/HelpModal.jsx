@@ -14,11 +14,11 @@ const content = {
         label: 'Scenarios',
         icon: <ClipboardList size={14} />,
         steps: [
-          { num: 1, title: 'Create a Scenario', desc: 'Go to Scenarios → click "+ Create Scenario" dropdown. Choose "Create Manual" to fill in name, URL, and description manually.' },
-          { num: 2, title: 'Add Test Steps', desc: 'Open a scenario → click "+ Add Step". Choose step type: click, fill, navigate, wait, assert, etc.' },
-          { num: 3, title: 'Use Quick Record', desc: 'Click "+ Create Scenario" → "Quick Record" → enter URL → browser actions are recorded automatically as steps.' },
-          { num: 4, title: 'Use Templates', desc: 'Click "+ Create Scenario" → "Templates" to load a pre-built scenario (Login, E-Commerce, Navigation, Form).' },
-          { num: 5, title: 'Import / Clone', desc: 'Import Excel: Click "+ Create Scenario" → "Import Excel" (Ctrl+Click to view template). Clone: Hover a scenario card → use Clone to duplicate.' },
+          { num: 1, title: 'Create a Scenario', desc: 'Go to Scenarios → click "+ Create Scenario" dropdown. Choose "Create Manual" to fill in name, URL, and description manually.', adminOnly: false },
+          { num: 2, title: 'Add Test Steps', desc: 'Open a scenario → click "+ Add Step". Choose step type: click, fill, navigate, wait, assert, etc.', adminOnly: false },
+          { num: 3, title: 'Use Quick Record', desc: 'Click "+ Create Scenario" → "Quick Record" → enter URL → browser actions are recorded automatically as steps.', adminOnly: true },
+          { num: 4, title: 'Use Templates', desc: 'Click "+ Create Scenario" → "Templates" to load a pre-built scenario (Login, E-Commerce, Navigation, Form).', adminOnly: false },
+          { num: 5, title: 'Import / Clone', desc: 'Import Excel: Click "+ Create Scenario" → "Import Excel" (Ctrl+Click to view template). Clone: Hover a scenario card → use Clone to duplicate.', adminOnly: false },
         ],
       },
       {
@@ -159,10 +159,12 @@ export default function HelpModal({ onClose }) {
 
         {/* Steps */}
         <div className="px-5 py-4 space-y-3 max-h-80 overflow-y-auto help-modal-body">
-          {activeTabData?.steps.map(step => (
+          {(activeTabData?.steps || [])
+            .filter((step) => isAdmin || !step.adminOnly)
+            .map((step, idx) => (
             <div key={step.num} className="flex gap-3">
               <div className="shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold help-step-num">
-                {step.num}
+                {idx + 1}
               </div>
               <div className="min-w-0">
                 <p className="text-sm font-medium help-step-title leading-snug">{step.title}</p>

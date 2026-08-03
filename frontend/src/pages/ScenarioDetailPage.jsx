@@ -58,6 +58,8 @@ const i18n = {
     backToScenarios: '← Back to Scenarios',
     running: 'Running...',
     runScenario: 'Run Scenario',
+    liveRunIsolatedHint:
+      'Live run memakai browser terisolasi (seperti Incognito: tanpa cookie/storage dari run sebelumnya).',
     stopRecording: 'Stop',
     recordingActive: 'Recording Active...',
     recordingMode: 'Recording Mode',
@@ -313,7 +315,11 @@ export default function ScenarioDetailPage() {
   // Step form handlers
   const openAddForm = () => {
     setEditingStep(null)
-    setStepForm({ ...emptyStep })
+    setStepForm({
+      ...emptyStep,
+      value: scenario?.url || '',
+      description: scenario?.url ? `Navigate to ${scenario.url}` : '',
+    })
     setShowStepForm(true)
     setTimeout(() => {
       stepFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -1063,6 +1069,9 @@ export default function ScenarioDetailPage() {
             >
               {isExecuting ? t.running : t.runScenario}
             </ExportFormatButton>
+            <p className="text-xs text-[#888] basis-full max-w-xs sm:text-right">
+              {t.liveRunIsolatedHint}
+            </p>
           </div>
         </div>
 

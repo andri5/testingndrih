@@ -9,6 +9,9 @@ import os from 'os'
 const isWindows = os.platform() === 'win32'
 const isLinux = os.platform() === 'linux'
 
+// Do NOT pass Chromium --incognito here: with Playwright launch + newContext it can
+// open an extra blank window and break CDP screencast / live viewer. Isolation comes
+// from browser.newContext() (ephemeral, no storageState) — Incognito-equivalent.
 export const CHROMIUM_DOCKER_ARGS = [
   '--no-sandbox',
   '--disable-dev-shm-usage',

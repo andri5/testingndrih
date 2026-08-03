@@ -16,6 +16,7 @@ import {
 } from './environmentService.js'
 import { substituteStep } from '../utils/variableSubstitution.js'
 import { handleStepScreenshot } from './visualRegressionService.js'
+import { CHROMIUM_DOCKER_ARGS } from '../lib/browserLauncher.js'
 
 /* Phase 2.1: Self Healing Selector configuration */
 const ENABLE_SELF_HEALING = true
@@ -525,11 +526,11 @@ export const executionService = {
       const selectedBrowserName = options.browser && browserEngines[options.browser] ? options.browser : 'chromium'
       const browserEngine = browserEngines[selectedBrowserName]
 
-      const chromiumArgs = [
-        '--no-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-gpu',
-      ]
+      const chromiumArgs = [...CHROMIUM_DOCKER_ARGS]
+
+      if (selectedBrowserName === 'chromium') {
+        console.log(`[EXECUTION] Launching Chromium (headless=${runHeadless}) args:`, chromiumArgs)
+      }
 
       try {
         browser = await browserEngine.launch({
@@ -561,6 +562,8 @@ export const executionService = {
         fs.mkdirSync(videoDir, { recursive: true })
       }
 
+      // Ephemeral context (Incognito-like): no storageState / persistent profile —
+      // each live run starts with clean cookies, localStorage, and cache.
       const contextOptions = deviceDescriptor
         ? { ...deviceDescriptor, recordVideo: { dir: videoDir, size: { width: 1280, height: 720 } } }
         : { viewport: { width: 1280, height: 720 }, recordVideo: { dir: videoDir, size: { width: 1280, height: 720 } } }
@@ -618,6 +621,19 @@ export const executionService = {
         })
       })
 
+      // Manual scenarios often set scenario.url but forget a NAVIGATE step value —
+      // open the target URL first so live viewer is not stuck on about:blank.
+      const firstStep = stepsToRun[0]
+      const firstStepHasNavigateUrl = firstStep?.type === 'NAVIGATE' && !!String(firstStep.value || '').trim()
+      if (scenario.url && !firstStepHasNavigateUrl) {
+        console.log(`[EXECUTION] Opening scenario URL before steps: ${scenario.url}`)
+        await this.executeNavigate(page, {
+          type: 'NAVIGATE',
+          value: scenario.url,
+          description: `Open scenario URL: ${scenario.url}`,
+        })
+      }
+
       let stopped = false
 
       // Execute each step (with {{variable}} substitution applied)
@@ -661,7 +677,7 @@ export const executionService = {
         const executeStepOnce = async () => {
           switch (step.type) {
             case 'NAVIGATE':
-              await this.executeNavigate(page, step)
+              await this.executeNavigate(page, step, scenario.url)
               break
 
             case 'CLICK':
@@ -1098,20 +1114,22 @@ export const executionService = {
   },
 
   /**
-   * Execute NAVIGATE step - Navigate to URL with smart wait
+   * Execute NAVIGATE step - Navigate to URL with smart wait.
+   * Falls back to scenario URL when the step value is empty (manual scenarios).
    */
-  async executeNavigate(page, step) {
-    if (!step.value) {
-      throw new Error('NAVIGATE step requires a URL in value field')
+  async executeNavigate(page, step, scenarioUrl = null) {
+    const targetUrl = String(step.value || scenarioUrl || '').trim()
+    if (!targetUrl) {
+      throw new Error('NAVIGATE step requires a URL in value field (or set the scenario target URL)')
     }
 
     try {
-      new URL(step.value) // Validate URL
+      new URL(targetUrl) // Validate URL
     } catch (error) {
-      throw new Error(`Invalid URL: ${step.value}`)
+      throw new Error(`Invalid URL: ${targetUrl}`)
     }
 
-    await page.goto(step.value, { waitUntil: 'domcontentloaded', timeout: 30000 })
+    await page.goto(targetUrl, { waitUntil: 'domcontentloaded', timeout: 30000 })
     // Smart wait: wait for load + networkidle (with fallback timeout)
     await page.waitForLoadState('load').catch(() => {})
     await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {})

@@ -113,6 +113,9 @@ export function ExecuteScenarioButton({ scenarioId, scenarioName, onExecutionSta
               />
             </div>
           </div>
+          <p className="text-xs text-emerald-800/80">
+            Live run uses an isolated browser session (no cookies from previous runs).
+          </p>
           <div className="flex flex-wrap gap-2">
             <ExportFormatButton
               format="csv"
