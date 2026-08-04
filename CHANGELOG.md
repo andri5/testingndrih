@@ -1,3 +1,10 @@
+# [1.18.0](https://github.com/andri5/testingndrih/compare/v1.17.0...v1.18.0) (2026-08-04)
+
+
+### Features
+
+* **agent:** harden P2 with durable AgentJob queue and execution results ([f2fe4f6](https://github.com/andri5/testingndrih/commit/f2fe4f6d41c82dfd5139f5e148625e4ba7b1f6da))
+
 # [1.17.0](https://github.com/andri5/testingndrih/compare/v1.16.0...v1.17.0) (2026-08-04)
 
 
