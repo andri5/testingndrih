@@ -78,21 +78,39 @@ describe('ExecutionController', () => {
       )
     })
 
-    it('should handle service errors', async () => {
+    it('should return 404 when scenario is missing', async () => {
       req.params.scenarioId = 'scenario-1'
-
-      // Force fallback path: no execution record found → controller awaits promise
-      prisma.execution.findFirst.mockResolvedValueOnce(null)
-
-      executionService.executeScenario.mockRejectedValue(
-        new Error('Scenario not found')
-      )
+      prisma.scenario.findFirst.mockResolvedValueOnce(null)
 
       await executionController.executeScenario(req, res)
+
+      expect(res.status).toHaveBeenCalledWith(404)
+      const response = res.json.mock.calls[0][0]
+      expect(response.success).toBe(false)
+      expect(response.message).toMatch(/not found/i)
+      expect(executionService.executeScenario).not.toHaveBeenCalled()
+    })
+
+    it('should handle service errors when no execution row is created', async () => {
+      req.params.scenarioId = 'scenario-1'
+      prisma.execution.findFirst.mockResolvedValue(null)
+
+      let rejectJob
+      const deferred = new Promise((_, reject) => {
+        rejectJob = reject
+      })
+      executionService.executeScenario.mockReturnValue(deferred)
+
+      const finished = executionController.executeScenario(req, res)
+      // Reject after controller has chained handlers / started the wait
+      await new Promise((r) => setTimeout(r, 20))
+      rejectJob(new Error('Scenario not found'))
+      await finished
 
       expect(res.status).toHaveBeenCalledWith(400)
       const response = res.json.mock.calls[0][0]
       expect(response.success).toBe(false)
+      expect(response.message).toContain('Scenario not found')
     })
   })
 

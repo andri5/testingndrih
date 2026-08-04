@@ -83,11 +83,11 @@ export const executionController = {
 
       // Fire and forget — execution runs in background
       const executionPromise = executionService.executeScenario(userId, scenarioId, options)
-      // Attach early catch to prevent unhandled rejection warning while we wait
-      executionPromise.finally(() => {
+      // Keep a settled handler attached during the short wait so rejections are not "unhandled"
+      const tracked = executionPromise.finally(() => {
         try { releaseQuota?.() } catch { /* ignore */ }
       })
-      executionPromise.catch(() => {})
+      tracked.catch(() => {})
 
       // Wait briefly for the execution record to be created (it's created at the start of executeScenario)
       // so we can get the execution ID
@@ -101,23 +101,30 @@ export const executionController = {
 
       if (!latestExec) {
         // Fallback: wait for the promise (old behavior)
-        const result = await executionPromise
-        return res.status(200).json({
-          success: true,
-          message: 'Scenario executed successfully',
-          execution: result.execution,
-          ...(preflight.privateNetwork ? { warning: preflight.message } : {}),
-        })
+        try {
+          const result = await executionPromise
+          return res.status(200).json({
+            success: true,
+            message: 'Scenario executed successfully',
+            execution: result.execution,
+            ...(preflight.privateNetwork ? { warning: preflight.message } : {}),
+          })
+        } catch (err) {
+          return res.status(400).json({
+            success: false,
+            message: err.message || 'Execution failed',
+          })
+        }
       }
 
-      // Let the execution continue in background
+      // Let the execution continue in background (errors logged, not thrown to client)
       executionPromise.then(() => {
         console.log(`[EXECUTION] Scenario ${scenarioId} completed`)
       }).catch(err => {
         console.error(`[EXECUTION] Scenario ${scenarioId} failed:`, err.message)
       })
 
-      res.status(200).json({
+      return res.status(200).json({
         success: true,
         message: 'Eksekusi dimulai — jendela Browser Runner menampilkan proses secara live',
         execution: {
