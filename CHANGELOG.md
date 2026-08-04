@@ -1,3 +1,10 @@
+# [1.16.0](https://github.com/andri5/testingndrih/compare/v1.15.9...v1.16.0) (2026-08-04)
+
+
+### Features
+
+* **execution:** block cloud Run for private/VPN targets (P0) ([f38d64f](https://github.com/andri5/testingndrih/commit/f38d64f66080c13346fda28c8742d8ff2493d2bb))
+
 ## [1.15.9](https://github.com/andri5/testingndrih/compare/v1.15.8...v1.15.9) (2026-08-03)
 
 
