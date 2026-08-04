@@ -175,7 +175,7 @@ Planned improvements (documentation only until a phase is approved for implement
 | **P0** | Run internal (highest pain) | **Done** | Preflight reachability before execute; UI public/internal badge; block cloud Run for private IPs in production; actionable navigation errors |
 | **P1** | Scenario quality & UX | **Done** | NAVIGATE URL validation on save; self-heal badge (old → new selector) in step results |
 | **P2** | Hybrid local agent | **Done** | Durable `AgentJob` + Execution/StepResults; UI status polling; `scripts/local-agent` |
-| **P3** | Observability, collab, scale | **Partial** | Concurrent run quota (`MAX_CONCURRENT_RUNS_PER_USER`); secret redaction in error payloads; share links / full flaky UX still planned |
+| **P3** | Observability, collab, scale | **Partial** | Concurrent run quota; secret redaction; **shareable run links**; flaky UX still planned |
 
 **Also shipped:** landing copy aligned with USER capabilities; [`docs/RUN_INTERNAL.md`](./docs/RUN_INTERNAL.md); Pricing page; onboarding checklist; app i18n store foundation.
 

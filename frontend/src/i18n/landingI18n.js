@@ -72,6 +72,18 @@ export const landingCopy = {
     reachTitle: 'Public cloud vs staging internal',
     reachSubtitle:
       'VPS production hanya bisa Run ke URL publik. Staging di LAN/VPN (mis. 10.x): Record dari browser Anda tetap bisa; Run pakai backend lokal di jaringan yang sama, atau Queue local agent di PC VPN.',
+    reachPublicLabel: 'Publik (external)',
+    reachInternalLabel: 'Internal / VPN',
+    reachPublicItems: [
+      'DNS ke IP internet publik — bisa dibuka dari mana saja',
+      'Record & Run di testsambilngopi.com biasanya berhasil',
+      'Cocok untuk staging/demo yang sudah diekspos ke internet',
+    ],
+    reachInternalItems: [
+      'IP privat: 10.x, 192.168.x, 172.16–31.x, localhost',
+      'Cloud Run diblokir — VPS tidak bisa masuk LAN/VPN Anda',
+      'Record tetap bisa di browser PC; Run via backend lokal atau local agent',
+    ],
     reachBullet1: 'Record (client-direct) — jalan di PC Anda, cocok untuk internal/VPN',
     reachBullet2: 'Run di testsambilngopi.com — hanya URL publik',
     reachBullet3: 'Run staging internal — jalankan app lokal saat VPN/LAN aktif',
@@ -158,6 +170,18 @@ export const landingCopy = {
     reachTitle: 'Public cloud vs internal staging',
     reachSubtitle:
       'Production VPS can only Run public URLs. LAN/VPN staging (e.g. 10.x): Record from your browser still works; Run using a local backend on the same network, or Queue local agent on a VPN PC.',
+    reachPublicLabel: 'Public (external)',
+    reachInternalLabel: 'Internal / VPN',
+    reachPublicItems: [
+      'DNS resolves to a public internet IP — reachable from anywhere',
+      'Record & Run on testsambilngopi.com usually work',
+      'Best for staging/demo already exposed on the internet',
+    ],
+    reachInternalItems: [
+      'Private IPs: 10.x, 192.168.x, 172.16–31.x, localhost',
+      'Cloud Run is blocked — the VPS cannot reach your LAN/VPN',
+      'Record still works in your browser; Run via local backend or local agent',
+    ],
     reachBullet1: 'Record (client-direct) — runs on your PC, works for internal/VPN',
     reachBullet2: 'Run on testsambilngopi.com — public URLs only',
     reachBullet3: 'Run internal staging — run the app locally while on VPN/LAN',

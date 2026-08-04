@@ -8,7 +8,9 @@ import StepResultCard, { StepResultsSummary } from '../components/StepResultCard
 import TestStepList from '../components/TestStepList'
 import { scenarioAPI, executionAPI, recorderAPI, agentAPI } from '../services/api'
 import ExportFormatButton from '../components/ExportFormatButton'
-import { CheckCircle2, XCircle, ClipboardList, Clock, HelpCircle, Globe, Play, Circle, Square, ChevronDown, ListTree, Plus, Copy, Trash2, Save, Loader2, Zap } from 'lucide-react'
+import { CheckCircle2, XCircle, ClipboardList, Clock, HelpCircle, Globe, Play, Circle, Square, ChevronDown, ListTree, Plus, Copy, Trash2, Save, Loader2, Zap, Link2 } from 'lucide-react'
+import ShareRunModal from '../components/ShareRunModal'
+import TargetKindBanner, { defaultTargetKindLabels } from '../components/TargetKindBanner'
 
 const RecordIcon = (props) => <Circle {...props} className="text-red-500 fill-red-500" />
 
@@ -127,6 +129,8 @@ const i18n = {
     updateStepBtn: 'Update Step',
     cancel: 'Cancel',
     executionResults: 'Execution Results',
+    shareRun: 'Share',
+    shareRunHint: 'Create a read-only link for this run',
     passed: 'Passed',
     failed: 'Failed',
     duration: 'Duration',
@@ -221,10 +225,12 @@ export default function ScenarioDetailPage() {
   const [recordingModeChoice, setRecordingModeChoice] = useState('client-direct')
   const [targetKind, setTargetKind] = useState(null) // 'public' | 'internal' | null
   const [targetInfoMessage, setTargetInfoMessage] = useState('')
+  const [targetAddresses, setTargetAddresses] = useState([])
   const [executionBlocked, setExecutionBlocked] = useState(false)
   const [isProbingTarget, setIsProbingTarget] = useState(false)
   const [agentJob, setAgentJob] = useState(null)
   const [isQueueingAgent, setIsQueueingAgent] = useState(false)
+  const [shareExecutionId, setShareExecutionId] = useState(null)
   const agentPollRef = useRef(null)
   const targetProbeRef = useRef(0)
   const recordTokenRef = useRef(null)
@@ -235,6 +241,7 @@ export default function ScenarioDetailPage() {
     if (!url || !/^https?:\/\//i.test(url)) {
       setTargetKind(null)
       setTargetInfoMessage('')
+      setTargetAddresses([])
       setExecutionBlocked(false)
       return
     }
@@ -248,11 +255,13 @@ export default function ScenarioDetailPage() {
         const kind = res.data.targetKind === 'internal' ? 'internal' : 'public'
         setTargetKind(kind)
         setTargetInfoMessage(res.data.reachability?.message || '')
+        setTargetAddresses(Array.isArray(res.data.reachability?.addresses) ? res.data.reachability.addresses : [])
         setExecutionBlocked(Boolean(res.data.executionBlocked))
       } catch {
         if (probeId !== targetProbeRef.current) return
         setTargetKind(null)
         setTargetInfoMessage('')
+        setTargetAddresses([])
         setExecutionBlocked(false)
       } finally {
         if (probeId === targetProbeRef.current) setIsProbingTarget(false)
@@ -285,6 +294,7 @@ export default function ScenarioDetailPage() {
     if (!url || !/^https?:\/\//i.test(url)) {
       setTargetKind(null)
       setTargetInfoMessage('')
+      setTargetAddresses([])
       return
     }
 
@@ -297,6 +307,7 @@ export default function ScenarioDetailPage() {
         const kind = res.data.targetKind === 'internal' ? 'internal' : 'public'
         setTargetKind(kind)
         setTargetInfoMessage(res.data.reachability?.message || '')
+        setTargetAddresses(Array.isArray(res.data.reachability?.addresses) ? res.data.reachability.addresses : [])
         setExecutionBlocked(Boolean(res.data.executionBlocked))
         // Always recommend client-direct; lock to it for internal
         setRecordingModeChoice('client-direct')
@@ -304,6 +315,7 @@ export default function ScenarioDetailPage() {
         if (probeId !== targetProbeRef.current) return
         setTargetKind(null)
         setTargetInfoMessage('')
+        setTargetAddresses([])
         setExecutionBlocked(false)
       } finally {
         if (probeId === targetProbeRef.current) setIsProbingTarget(false)
@@ -1210,23 +1222,19 @@ export default function ScenarioDetailPage() {
             <div className="flex flex-wrap items-center gap-3 mt-2 text-sm text-[#888]">
               <span className="break-all">🌐 {scenario.url}</span>
               <span>📋 {steps.length} steps</span>
-              {targetKind && (
-                <span
-                  className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold ${
-                    targetKind === 'internal'
-                      ? 'bg-amber-500/15 text-amber-300 border border-amber-500/30'
-                      : 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'
-                  }`}
-                  title={targetInfoMessage || undefined}
-                >
-                  {isProbingTarget ? '…' : targetKind === 'internal' ? t.targetInternal : t.targetPublic}
-                </span>
-              )}
             </div>
-            {targetKind === 'internal' && (
-              <p className="text-xs text-amber-400/90 mt-1.5 max-w-xl">
-                {executionBlocked ? t.targetInternalRunHint : t.runWarnInternal}
-              </p>
+            {(targetKind || isProbingTarget) && (
+              <div className="mt-3 max-w-3xl">
+                <TargetKindBanner
+                  targetKind={targetKind}
+                  executionBlocked={executionBlocked}
+                  isProbing={isProbingTarget}
+                  message={targetInfoMessage}
+                  addresses={targetAddresses}
+                  url={scenario.url}
+                  labels={defaultTargetKindLabels}
+                />
+              </div>
             )}
           </div>
 
@@ -1411,28 +1419,25 @@ export default function ScenarioDetailPage() {
                 </div>
 
                 <div>
-                  <div className="flex flex-wrap items-center gap-2 mb-2">
-                    <span className="text-sm font-medium text-[#A0A0A4]">{t.recordingOverviewSelectMode}</span>
-                    {isProbingTarget && (
-                      <span className="text-xs text-[#888]">{t.recordingOverviewProbing}</span>
-                    )}
-                    {targetKind === 'internal' && (
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30">
-                        {t.recordingOverviewInternalBadge}
-                      </span>
-                    )}
-                    {targetKind === 'public' && (
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
-                        {t.recordingOverviewPublicBadge}
-                      </span>
-                    )}
-                  </div>
-                  {targetInfoMessage && (
-                    <p className="text-xs text-[#888] mb-2">{targetInfoMessage}</p>
+                  {(targetKind || isProbingTarget) && (
+                    <div className="mb-3">
+                      <TargetKindBanner
+                        targetKind={targetKind}
+                        executionBlocked={executionBlocked}
+                        isProbing={isProbingTarget}
+                        message={targetInfoMessage}
+                        addresses={targetAddresses}
+                        url={(recordingUrl.trim() || scenario?.url || '').trim()}
+                        labels={defaultTargetKindLabels}
+                      />
+                    </div>
                   )}
                   {targetKind === 'internal' && (
                     <p className="text-xs text-amber-300/90 mb-3">{t.recordingOverviewInternalLock}</p>
                   )}
+                  <div className="flex flex-wrap items-center gap-2 mb-2">
+                    <span className="text-sm font-medium text-[#A0A0A4]">{t.recordingOverviewSelectMode}</span>
+                  </div>
 
                   <div className="grid gap-3 sm:grid-cols-2">
                     <button
@@ -1791,16 +1796,28 @@ export default function ScenarioDetailPage() {
         {executionResult && (
           <div ref={executionResultRef}>
           <Card>
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
               <div>
                 <h2 className={`text-xl font-bold ${'text-gray-900'}`}>{t.executionResults}</h2>
                 <p className={`text-xs mt-0.5 ${'text-gray-500'}`}>
                   {`Run #${executionIteration}`}
                 </p>
               </div>
-              <Badge variant={executionResult.status === 'PASSED' ? 'success' : 'danger'}>
-                {executionResult.status === 'PASSED' ? '✓' : '✗'} {executionResult.status}
-              </Badge>
+              <div className="flex items-center gap-2">
+                {executionResult.id && ['PASSED', 'FAILED'].includes(executionResult.status) && (
+                  <ExportFormatButton
+                    format="json"
+                    icon={Link2}
+                    onClick={() => setShareExecutionId(executionResult.id)}
+                    title={t.shareRunHint}
+                  >
+                    {t.shareRun}
+                  </ExportFormatButton>
+                )}
+                <Badge variant={executionResult.status === 'PASSED' ? 'success' : 'danger'}>
+                  {executionResult.status === 'PASSED' ? '✓' : '✗'} {executionResult.status}
+                </Badge>
+              </div>
             </div>
 
             {/* Simple 2-Column Stats Row */}
@@ -1955,6 +1972,12 @@ export default function ScenarioDetailPage() {
             </div>
           </div>
         )}
+
+        <ShareRunModal
+          executionId={shareExecutionId}
+          open={Boolean(shareExecutionId)}
+          onClose={() => setShareExecutionId(null)}
+        />
       </div>
     </Layout>
   )

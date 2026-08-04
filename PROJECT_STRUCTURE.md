@@ -168,7 +168,7 @@ High-level product plan (not implemented until a phase is explicitly approved). 
 | **P0** | Cloud Run + private/internal URLs | **Done** | Preflight + UI badge + block in production; env `ALLOW_PRIVATE_NETWORK_EXECUTION` for on-prem |
 | **P1** | Scenario quality & UX | **Done** | NAVIGATE validation; self-heal surfaced in StepResultCard |
 | **P2** | Hybrid local agent | **Done** | Durable `AgentJob` DB queue; results → Execution/StepResult; UI polling |
-| **P3** | Observability, collab, scale | **Partial** | Run quota + secret redaction; share links / flaky productization TBD |
+| **P3** | Observability, collab, scale | **Partial** | Run quota + secret redaction + shareable run links; flaky productization TBD |
 
 ### P0 — Run internal (implemented)
 
@@ -206,7 +206,8 @@ flowchart TB
 
 - Concurrent-run quota: `MAX_CONCURRENT_RUNS_PER_USER` (default 2)
 - Mask FILL password-like values in error payloads (`secretRedaction.js`)
-- Still planned: shareable run links, full flaky productization, deeper log/screenshot scrubbing
+- **Shareable run links (done):** `ExecutionShareLink` + `GET /api/public/shared-runs/:token` + SPA `/share/runs/:token`; redacted DTO (no step values / scenario URL). Owner creates/revokes from Execution page or Scenario Detail. Screenshot/video files remain on public static mounts (obscurity) for v1.
+- Still planned: full flaky productization, deeper media ACL
 
 ---
 

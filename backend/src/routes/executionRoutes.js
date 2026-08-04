@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import { executionController } from '../controllers/executionController.js'
+import { executionShareController } from '../controllers/executionShareController.js'
 import { authenticateToken } from '../middleware/auth.js'
 
 const executionRoutes = Router()
@@ -185,4 +186,9 @@ executionRoutes.delete('/:executionId', executionController.deleteExecution)
  */
 executionRoutes.get('/:executionId/export', executionController.exportReport)
 
+executionRoutes.post('/:executionId/share', executionShareController.create)
+executionRoutes.get('/:executionId/shares', executionShareController.list)
+executionRoutes.delete('/:executionId/shares/:shareId', executionShareController.revoke)
+
 export default executionRoutes
+

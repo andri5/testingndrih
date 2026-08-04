@@ -99,6 +99,7 @@ model User {
   visualBaselines        VisualBaseline[]
   visualComparisons      VisualComparison[]
   agentJobs              AgentJob[]
+  executionShareLinks    ExecutionShareLink[]
 
   @@map("users")
 }
@@ -333,6 +334,7 @@ model Execution {
   executionLogs ExecutionLog[]
   stressMetrics StressMetrics?
   agentJob      AgentJob?
+  shareLinks    ExecutionShareLink[]
 
   @@index([userId])
   @@index([scenarioId])
@@ -341,6 +343,26 @@ model Execution {
   @@index([executionBatchId])
   @@index([stressProfile])
   @@map("executions")
+}
+
+/// Public share links for a completed/finished run (P3)
+model ExecutionShareLink {
+  id              String    @id @default(cuid())
+  tokenHash       String    @unique
+  prefix          String
+  expiresAt       DateTime?
+  revokedAt       DateTime?
+  lastAccessedAt  DateTime?
+  createdAt       DateTime  @default(now())
+  executionId     String
+  createdByUserId String
+
+  execution Execution @relation(fields: [executionId], references: [id], onDelete: Cascade)
+  createdBy User      @relation(fields: [createdByUserId], references: [id], onDelete: Cascade)
+
+  @@index([executionId])
+  @@index([createdByUserId])
+  @@map("execution_share_links")
 }
 
 /// Hybrid local-agent queue (P2) — durable jobs for private/VPN targets

@@ -10,7 +10,8 @@ import StepResultCard, { StepResultsSummary } from '../components/StepResultCard
 import { ExecuteScenarioButton } from '../components/ExecuteScenarioButton'
 import SoftSelect from '../components/SoftSelect'
 import ExecutionRunDiff from '../components/ExecutionRunDiff'
-import { PlayCircle, CheckCircle2, XCircle, TrendingUp, ClipboardList, Clock, Eye, ListTree, GitCompare } from 'lucide-react'
+import { PlayCircle, CheckCircle2, XCircle, TrendingUp, ClipboardList, Clock, Eye, ListTree, GitCompare, Link2 } from 'lucide-react'
+import ShareRunModal from '../components/ShareRunModal'
 
 const i18n = {
     title: 'Test Execution',
@@ -34,6 +35,7 @@ const i18n = {
     view: 'View',
     exportHTML: 'Export HTML',
     exportPDF: 'Export PDF',
+    share: 'Share',
     compareRuns: 'Compare Runs',
     compareSelected: 'Compare Selected',
     selectTwoRuns: 'Select 2 runs to compare',
@@ -48,6 +50,7 @@ export default function ExecutionPage() {
   const [screenshotModal, setScreenshotModal] = useState(null)
   const [compareIds, setCompareIds] = useState([])
   const [diffPair, setDiffPair] = useState(null)
+  const [shareExecutionId, setShareExecutionId] = useState(null)
   
   const {
     executions,
@@ -321,13 +324,23 @@ export default function ExecutionPage() {
           <Card>
             <div className="flex items-start justify-between">
               <div className="flex-1">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 flex-wrap">
                   <h2 className="text-2xl font-bold text-[#E0E0E2]">
                     {currentExecution.scenario?.name}
                   </h2>
                   <Badge variant={getStatusColor(currentExecution.status)}>
                     {getStatusIcon(currentExecution.status)} {currentExecution.status}
                   </Badge>
+                  {['PASSED', 'FAILED'].includes(currentExecution.status) && currentExecution.id && (
+                    <ExportFormatButton
+                      format="json"
+                      icon={Link2}
+                      onClick={() => setShareExecutionId(currentExecution.id)}
+                      title="Share run link"
+                    >
+                      {t.share}
+                    </ExportFormatButton>
+                  )}
                 </div>
 
                 <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
@@ -564,6 +577,14 @@ export default function ExecutionPage() {
                           >
                             {t.exportPDF}
                           </ExportFormatButton>
+                          <ExportFormatButton
+                            format="json"
+                            icon={Link2}
+                            onClick={() => setShareExecutionId(execution.id)}
+                            title="Share run link"
+                          >
+                            {t.share}
+                          </ExportFormatButton>
                         </div>
                       </td>
                     </tr>
@@ -640,6 +661,12 @@ export default function ExecutionPage() {
             </div>
           </div>
         )}
+
+        <ShareRunModal
+          executionId={shareExecutionId}
+          open={Boolean(shareExecutionId)}
+          onClose={() => setShareExecutionId(null)}
+        />
       </div>
     </Layout>
   )

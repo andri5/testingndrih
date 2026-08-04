@@ -176,9 +176,41 @@ export default function LandingPage({ lang: langProp }) {
       </section>
 
       <section id="jangkauan" className="py-14 sm:py-20 px-4 sm:px-6 lp-section-alt">
-        <div className="max-w-3xl mx-auto text-center lp-animate-in">
+        <div className="max-w-4xl mx-auto text-center lp-animate-in">
           <h2 className="text-xl sm:text-2xl font-bold lp-hero-title mb-3">{t.reachTitle}</h2>
-          <p className="lp-muted text-sm sm:text-base leading-relaxed mb-6">{t.reachSubtitle}</p>
+          <p className="lp-muted text-sm sm:text-base leading-relaxed mb-8 max-w-2xl mx-auto">{t.reachSubtitle}</p>
+
+          <div className="grid sm:grid-cols-2 gap-4 text-left mb-8">
+            <div className="rounded-2xl border-2 border-emerald-500/40 bg-emerald-500/5 p-5">
+              <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-emerald-500 text-emerald-950 text-xs font-bold uppercase tracking-wide mb-3">
+                <Globe size={14} />
+                {t.reachPublicLabel}
+              </div>
+              <ul className="space-y-2">
+                {(t.reachPublicItems || []).map((item) => (
+                  <li key={item} className="flex items-start gap-2 text-sm lp-muted">
+                    <CheckCircle2 size={16} className="text-emerald-600 shrink-0 mt-0.5" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="rounded-2xl border-2 border-amber-500/45 bg-amber-500/5 p-5">
+              <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-amber-500 text-amber-950 text-xs font-bold uppercase tracking-wide mb-3">
+                <Shield size={14} />
+                {t.reachInternalLabel}
+              </div>
+              <ul className="space-y-2">
+                {(t.reachInternalItems || []).map((item) => (
+                  <li key={item} className="flex items-start gap-2 text-sm lp-muted">
+                    <CheckCircle2 size={16} className="text-amber-600 shrink-0 mt-0.5" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
           <ul className="text-left space-y-2 max-w-xl mx-auto mb-6">
             {[t.reachBullet1, t.reachBullet2, t.reachBullet3].map((item) => (
               <li key={item} className="flex items-start gap-2 text-sm lp-muted">

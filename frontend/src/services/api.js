@@ -226,6 +226,15 @@ export const executionAPI = {
 
   clearHighlight: (executionId) =>
     apiClient.post(`/executions/${executionId}/clear-highlight`, {}, { skipGlobalErrorRedirect: true }),
+
+  createShare: (executionId, options = {}) =>
+    apiClient.post(`/executions/${executionId}/share`, options),
+
+  listShares: (executionId) =>
+    apiClient.get(`/executions/${executionId}/shares`),
+
+  revokeShare: (executionId, shareId) =>
+    apiClient.delete(`/executions/${executionId}/shares/${shareId}`),
 }
 
 export const recorderAPI = {

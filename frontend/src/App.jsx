@@ -7,6 +7,7 @@ import AboutPage from './pages/AboutPage'
 import RegisterPage from './pages/RegisterPage'
 import ForgotPasswordPage from './pages/ForgotPasswordPage'
 import ResetPasswordPage from './pages/ResetPasswordPage'
+import SharedRunPage from './pages/SharedRunPage'
 import DashboardPage from './pages/DashboardPage'
 import AnalyticsPage from './pages/AnalyticsPage'
 import ScenariosPage from './pages/ScenariosPage'
@@ -142,6 +143,7 @@ export default function App() {
           path="/reset-password/:token"
           element={token ? <Navigate to="/dashboard" /> : <ResetPasswordPage />}
         />
+        <Route path="/share/runs/:token" element={<SharedRunPage />} />
 
         {/* Protected Routes */}
         <Route

@@ -202,6 +202,26 @@ jest.mock('./src/lib/prisma.js', () => {
         updateMany: jest.fn(() => Promise.resolve({ count: 1 })),
         groupBy: jest.fn(() => Promise.resolve([])),
       },
+      executionShareLink: {
+        create: jest.fn((args) =>
+          Promise.resolve({
+            id: 'share-1',
+            tokenHash: 'hash',
+            prefix: 'tsnshare_ab…',
+            expiresAt: new Date(Date.now() + 30 * 86400000),
+            revokedAt: null,
+            lastAccessedAt: null,
+            createdAt: new Date(),
+            executionId: 'exec-1',
+            createdByUserId: 'user-1',
+            ...args?.data,
+          })
+        ),
+        findMany: jest.fn(() => Promise.resolve([])),
+        findFirst: jest.fn(() => Promise.resolve(null)),
+        findUnique: jest.fn(() => Promise.resolve(null)),
+        update: jest.fn((args) => Promise.resolve({ id: args.where.id, ...args.data })),
+      },
       $transaction: jest.fn(async (arg) => {
         if (typeof arg === 'function') return arg({
           stepResult: { create: jest.fn(() => Promise.resolve({ id: 'sr-1' })) },
