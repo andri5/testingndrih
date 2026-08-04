@@ -71,7 +71,7 @@ export const landingCopy = {
     howTitle: 'Cara kerja',
     reachTitle: 'Public cloud vs staging internal',
     reachSubtitle:
-      'VPS production hanya bisa Run ke URL publik. Staging di LAN/VPN (mis. 10.x): Record dari browser Anda tetap bisa; Run pakai backend lokal di jaringan yang sama (atau local agent nanti).',
+      'VPS production hanya bisa Run ke URL publik. Staging di LAN/VPN (mis. 10.x): Record dari browser Anda tetap bisa; Run pakai backend lokal di jaringan yang sama, atau Queue local agent di PC VPN.',
     reachBullet1: 'Record (client-direct) — jalan di PC Anda, cocok untuk internal/VPN',
     reachBullet2: 'Run di testsambilngopi.com — hanya URL publik',
     reachBullet3: 'Run staging internal — jalankan app lokal saat VPN/LAN aktif',
@@ -157,7 +157,7 @@ export const landingCopy = {
     howTitle: 'How it works',
     reachTitle: 'Public cloud vs internal staging',
     reachSubtitle:
-      'Production VPS can only Run public URLs. LAN/VPN staging (e.g. 10.x): Record from your browser still works; Run using a local backend on the same network (or a local agent later).',
+      'Production VPS can only Run public URLs. LAN/VPN staging (e.g. 10.x): Record from your browser still works; Run using a local backend on the same network, or Queue local agent on a VPN PC.',
     reachBullet1: 'Record (client-direct) — runs on your PC, works for internal/VPN',
     reachBullet2: 'Run on testsambilngopi.com — public URLs only',
     reachBullet3: 'Run internal staging — run the app locally while on VPN/LAN',

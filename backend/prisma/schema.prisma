@@ -60,6 +60,14 @@ enum UserRole {
   USER
 }
 
+enum AgentJobStatus {
+  QUEUED
+  CLAIMED
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
 // MODELS
 model User {
   id        String   @id @default(cuid())
@@ -90,6 +98,7 @@ model User {
   testEnvironments       TestEnvironment[]
   visualBaselines        VisualBaseline[]
   visualComparisons      VisualComparison[]
+  agentJobs              AgentJob[]
 
   @@map("users")
 }
@@ -213,6 +222,7 @@ model Scenario {
   securityScans SecurityScan[]
   visualBaselines VisualBaseline[]
   visualComparisons VisualComparison[]
+  agentJobs AgentJob[]
 
   @@index([userId])
   @@index([isStress])
@@ -322,6 +332,7 @@ model Execution {
   issues       Issue[]
   executionLogs ExecutionLog[]
   stressMetrics StressMetrics?
+  agentJob      AgentJob?
 
   @@index([userId])
   @@index([scenarioId])
@@ -330,6 +341,31 @@ model Execution {
   @@index([executionBatchId])
   @@index([stressProfile])
   @@map("executions")
+}
+
+/// Hybrid local-agent queue (P2) — durable jobs for private/VPN targets
+model AgentJob {
+  id           String         @id @default(cuid())
+  status       AgentJobStatus @default(QUEUED)
+  optionsJson  String?        // JSON: browser, headless, environmentId
+  resultJson   String?        // JSON payload from agent
+  errorMessage String?
+  claimedAt    DateTime?
+  completedAt  DateTime?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  userId       String
+  scenarioId   String
+  executionId  String         @unique
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  scenario  Scenario  @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+  execution Execution @relation(fields: [executionId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status])
+  @@index([scenarioId])
+  @@index([status, createdAt])
+  @@map("agent_jobs")
 }
 
 model StepResult {

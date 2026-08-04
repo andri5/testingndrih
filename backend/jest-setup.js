@@ -178,7 +178,38 @@ jest.mock('./src/lib/prisma.js', () => {
         findMany: findManyMock,
         findFirst: findFirstMock,
         update: updateMock
-      }
+      },
+      agentJob: {
+        create: jest.fn((args) =>
+          Promise.resolve({
+            id: 'agent-job-1',
+            status: 'QUEUED',
+            executionId: 'exec-1',
+            userId: 'user-1',
+            scenarioId: 'scenario-1',
+            optionsJson: args?.data?.optionsJson || '{}',
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            ...args?.data,
+            execution: { id: 'exec-1', status: 'PENDING' },
+            scenario: { id: 'scenario-1', name: 'Test', url: 'http://10.0.0.1' },
+          })
+        ),
+        findMany: jest.fn(() => Promise.resolve([])),
+        findFirst: jest.fn(() => Promise.resolve(null)),
+        findUnique: jest.fn(() => Promise.resolve(null)),
+        update: jest.fn((args) => Promise.resolve({ id: args.where.id, ...args.data })),
+        updateMany: jest.fn(() => Promise.resolve({ count: 1 })),
+        groupBy: jest.fn(() => Promise.resolve([])),
+      },
+      $transaction: jest.fn(async (arg) => {
+        if (typeof arg === 'function') return arg({
+          stepResult: { create: jest.fn(() => Promise.resolve({ id: 'sr-1' })) },
+          execution: { update: jest.fn((a) => Promise.resolve({ id: a.where.id, ...a.data })) },
+          agentJob: { update: jest.fn((a) => Promise.resolve({ id: a.where.id, ...a.data })) },
+        })
+        return Promise.all(arg)
+      }),
     }
   }
 }, { virtual: true })

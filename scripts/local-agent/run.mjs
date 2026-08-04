@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 /**
- * Hybrid local agent (P2 MVP)
+ * Hybrid local agent (P2 — durable queue)
  *
  * Runs on a machine that can reach private/VPN staging URLs.
  * Polls the cloud API for queued jobs, executes Playwright locally, reports back.
+ * Results are stored as Execution + StepResult on the server.
  *
  * Usage:
  *   set AGENT_API_URL=https://testsambilngopi.com
@@ -109,7 +110,7 @@ async function runSteps(scenario, options = {}) {
 }
 
 async function loop() {
-  console.log(`[agent] Polling ${API_URL} every ${POLL_MS}ms`)
+  console.log(`[agent] Polling ${API_URL} every ${POLL_MS}ms (durable DB queue)`)
   for (;;) {
     try {
       const { job } = await api('/jobs/next')
@@ -117,7 +118,9 @@ async function loop() {
         await new Promise((r) => setTimeout(r, POLL_MS))
         continue
       }
-      console.log(`[agent] Claimed job ${job.id} for scenario ${job.scenarioId}`)
+      console.log(
+        `[agent] Claimed job ${job.id} → execution ${job.executionId || '?'} (scenario ${job.scenarioId})`
+      )
       if (!job.scenario) {
         await api(`/jobs/${job.id}/complete`, {
           method: 'POST',
@@ -125,12 +128,14 @@ async function loop() {
         })
         continue
       }
-      const outcome = await runSteps(job.scenario, job.options)
+      const outcome = await runSteps(job.scenario, job.options || {})
       await api(`/jobs/${job.id}/complete`, {
         method: 'POST',
         body: JSON.stringify(outcome),
       })
-      console.log(`[agent] Job ${job.id} → ${outcome.success ? 'COMPLETED' : 'FAILED'}`)
+      console.log(
+        `[agent] Job ${job.id} → ${outcome.success ? 'COMPLETED' : 'FAILED'} (execution ${job.executionId || '?'})`
+      )
     } catch (err) {
       console.error(`[agent] Error: ${err.message}`)
       await new Promise((r) => setTimeout(r, POLL_MS))

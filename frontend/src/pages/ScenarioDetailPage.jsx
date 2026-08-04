@@ -56,8 +56,16 @@ const i18n = {
     targetInternalRunHint: 'Cloud Run diblokir untuk URL internal — pakai backend lokal di LAN yang sama, atau Queue local agent.',
     queueLocalAgent: 'Queue local agent',
     queueLocalAgentHint:
-      'Job diantrekan. Jalankan node scripts/local-agent/run.mjs di PC VPN (API token di Settings).',
+      'Job tersimpan di database. Jalankan node scripts/local-agent/run.mjs di PC VPN (API token di Settings).',
     queueLocalAgentError: 'Gagal mengantrekan job local agent',
+    agentJobStatus: 'Local agent job',
+    agentJobQueued: 'Menunggu agent…',
+    agentJobClaimed: 'Agent sedang menjalankan…',
+    agentJobCompleted: 'Local agent selesai',
+    agentJobFailed: 'Local agent gagal',
+    agentJobCancelled: 'Job dibatalkan',
+    cancelAgentJob: 'Batalkan antrean',
+    viewAgentExecution: 'Lihat hasil di bawah',
     startRecordingError: 'Failed to start recording',
     stepsSavedRecording: (c) => `${c} steps recorded and saved`,
     recordingAutoSaveError: (c, e) => `Recording completed (${c} steps), but failed to auto-save: ${e}. Click "Save" to try again.`,
@@ -215,6 +223,9 @@ export default function ScenarioDetailPage() {
   const [targetInfoMessage, setTargetInfoMessage] = useState('')
   const [executionBlocked, setExecutionBlocked] = useState(false)
   const [isProbingTarget, setIsProbingTarget] = useState(false)
+  const [agentJob, setAgentJob] = useState(null)
+  const [isQueueingAgent, setIsQueueingAgent] = useState(false)
+  const agentPollRef = useRef(null)
   const targetProbeRef = useRef(0)
   const recordTokenRef = useRef(null)
 
@@ -592,14 +603,96 @@ export default function ScenarioDetailPage() {
 
   const executionResultRef = useRef(null)
 
+  const stopAgentPoll = useCallback(() => {
+    if (agentPollRef.current) {
+      clearTimeout(agentPollRef.current)
+      agentPollRef.current = null
+    }
+  }, [])
+
+  const pollAgentJob = useCallback(
+    async (jobId) => {
+      stopAgentPoll()
+      try {
+        const res = await agentAPI.getJob(jobId)
+        const job = res.data.job
+        setAgentJob(job)
+        const terminal = ['COMPLETED', 'FAILED', 'CANCELLED'].includes(job?.status)
+        if (terminal && job?.executionId) {
+          try {
+            const detailRes = await executionAPI.getDetails(job.executionId)
+            const result = detailRes.data.execution || detailRes.data
+            setExecutionResult(result)
+            if (job.status === 'FAILED' || result.status === 'FAILED') {
+              setError(t.executionFailed(result.failedSteps ?? 0))
+            } else if (job.status === 'COMPLETED') {
+              showSuccess(t.agentJobCompleted)
+            }
+            setTimeout(() => {
+              executionResultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+            }, 200)
+          } catch {
+            /* execution detail optional */
+          }
+          return
+        }
+        agentPollRef.current = setTimeout(() => pollAgentJob(jobId), 2000)
+      } catch {
+        agentPollRef.current = setTimeout(() => pollAgentJob(jobId), 4000)
+      }
+    },
+    [stopAgentPoll, t]
+  )
+
+  useEffect(() => () => stopAgentPoll(), [stopAgentPoll])
+
+  useEffect(() => {
+    if (!id || targetKind !== 'internal') return
+    let cancelled = false
+    ;(async () => {
+      try {
+        const res = await agentAPI.listJobs({ scenarioId: id, limit: 1 })
+        const latest = res.data.jobs?.[0]
+        if (cancelled || !latest) return
+        setAgentJob(latest)
+        if (['QUEUED', 'CLAIMED'].includes(latest.status)) {
+          pollAgentJob(latest.id)
+        }
+      } catch {
+        /* ignore */
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [id, targetKind, pollAgentJob])
+
   const handleQueueLocalAgent = async () => {
     try {
       setError(null)
-      await agentAPI.queue(id, {
+      setIsQueueingAgent(true)
+      const res = await agentAPI.queue(id, {
         browser: selectedBrowser,
         headless: headlessMode,
       })
+      const job = res.data.job
+      setAgentJob(job)
       showSuccess(t.queueLocalAgentHint)
+      if (job?.id) pollAgentJob(job.id)
+    } catch (err) {
+      setError(err.response?.data?.message || t.queueLocalAgentError)
+    } finally {
+      setIsQueueingAgent(false)
+    }
+  }
+
+  const handleCancelAgentJob = async () => {
+    if (!agentJob?.id) return
+    try {
+      const res = await agentAPI.cancelJob(agentJob.id)
+      setAgentJob(res.data.job)
+      stopAgentPoll()
+      showSuccess(t.agentJobCancelled)
     } catch (err) {
       setError(err.response?.data?.message || t.queueLocalAgentError)
     }
@@ -1184,9 +1277,10 @@ export default function ScenarioDetailPage() {
             {targetKind === 'internal' && (
               <ExportFormatButton
                 format="json"
-                icon={Zap}
+                icon={isQueueingAgent ? Loader2 : Zap}
                 onClick={handleQueueLocalAgent}
-                disabled={steps.length === 0 || isRecording || isExecuting}
+                disabled={steps.length === 0 || isRecording || isExecuting || isQueueingAgent || agentJob?.status === 'QUEUED' || agentJob?.status === 'CLAIMED'}
+                className={isQueueingAgent ? '[&_svg]:animate-spin' : ''}
               >
                 {t.queueLocalAgent}
               </ExportFormatButton>
@@ -1196,6 +1290,51 @@ export default function ScenarioDetailPage() {
             </p>
           </div>
         </div>
+
+        {agentJob && targetKind === 'internal' && (
+          <Card className="border border-amber-200/80 bg-amber-50/40">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-slate-800">{t.agentJobStatus}</p>
+                <p className="text-sm text-slate-600 mt-0.5">
+                  {agentJob.status === 'QUEUED' && t.agentJobQueued}
+                  {agentJob.status === 'CLAIMED' && t.agentJobClaimed}
+                  {agentJob.status === 'COMPLETED' && t.agentJobCompleted}
+                  {agentJob.status === 'FAILED' && (agentJob.error || t.agentJobFailed)}
+                  {agentJob.status === 'CANCELLED' && t.agentJobCancelled}
+                </p>
+                {agentJob.executionId && (
+                  <p className="text-xs text-slate-500 mt-1 font-mono truncate">
+                    execution: {agentJob.executionId}
+                    {['COMPLETED', 'FAILED'].includes(agentJob.status) ? ` — ${t.viewAgentExecution}` : ''}
+                  </p>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <Badge
+                  variant={
+                    agentJob.status === 'COMPLETED'
+                      ? 'success'
+                      : agentJob.status === 'FAILED' || agentJob.status === 'CANCELLED'
+                        ? 'danger'
+                        : 'warning'
+                  }
+                >
+                  {agentJob.status}
+                </Badge>
+                {agentJob.status === 'QUEUED' && (
+                  <button
+                    type="button"
+                    onClick={handleCancelAgentJob}
+                    className="text-xs px-2.5 py-1 rounded border border-slate-300 text-slate-700 hover:bg-white"
+                  >
+                    {t.cancelAgentJob}
+                  </button>
+                )}
+              </div>
+            </div>
+          </Card>
+        )}
 
         {/* Alerts */}
         {error && <Alert type="error" message={error} onClose={() => setError(null)} />}

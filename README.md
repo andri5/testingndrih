@@ -160,7 +160,7 @@ Proxy (public sites only, optional):
 | Production deploy (self-hosted) | Complete |
 | Maintenance / down detection | Complete |
 | Telegram deploy notify | Complete (release deploys only) |
-| Cloud Run for private/internal URLs | P0 done — preflight block + UI badge; hybrid agent still Planned (P2) |
+| Cloud Run for private/internal URLs | P0 done — preflight + UI; P2 local agent durable queue |
 
 **Recent releases (v1.6 – v1.9):** role-based access, welcome splash, production smoke CI, Telegram deploy notifications, maintenance page, favicon, deploy hardening.
 
@@ -174,7 +174,7 @@ Planned improvements (documentation only until a phase is approved for implement
 |-------|--------|--------|------------------------|
 | **P0** | Run internal (highest pain) | **Done** | Preflight reachability before execute; UI public/internal badge; block cloud Run for private IPs in production; actionable navigation errors |
 | **P1** | Scenario quality & UX | **Done** | NAVIGATE URL validation on save; self-heal badge (old → new selector) in step results |
-| **P2** | Hybrid local agent | **MVP** | Queue from UI + `scripts/local-agent` poll/claim/run Playwright on VPN PC |
+| **P2** | Hybrid local agent | **Done** | Durable `AgentJob` + Execution/StepResults; UI status polling; `scripts/local-agent` |
 | **P3** | Observability, collab, scale | **Partial** | Concurrent run quota (`MAX_CONCURRENT_RUNS_PER_USER`); secret redaction in error payloads; share links / full flaky UX still planned |
 
 **Also shipped:** landing copy aligned with USER capabilities; [`docs/RUN_INTERNAL.md`](./docs/RUN_INTERNAL.md); Pricing page; onboarding checklist; app i18n store foundation.

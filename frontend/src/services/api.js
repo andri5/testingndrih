@@ -415,6 +415,12 @@ export const aiAPI = {
 export const agentAPI = {
   queue: (scenarioId, options = {}) =>
     apiClient.post(`/agent/queue/${scenarioId}`, options),
+  listJobs: (params = {}) =>
+    apiClient.get('/agent/jobs', { params }),
+  getJob: (jobId) =>
+    apiClient.get(`/agent/jobs/${jobId}`),
+  cancelJob: (jobId) =>
+    apiClient.post(`/agent/jobs/${jobId}/cancel`),
   stats: () => apiClient.get('/agent/stats'),
 }
 

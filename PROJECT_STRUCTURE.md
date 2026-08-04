@@ -167,7 +167,7 @@ High-level product plan (not implemented until a phase is explicitly approved). 
 |-------|--------|--------|--------|
 | **P0** | Cloud Run + private/internal URLs | **Done** | Preflight + UI badge + block in production; env `ALLOW_PRIVATE_NETWORK_EXECUTION` for on-prem |
 | **P1** | Scenario quality & UX | **Done** | NAVIGATE validation; self-heal surfaced in StepResultCard |
-| **P2** | Hybrid local agent | **MVP** | `/api/agent/*` + `scripts/local-agent` (in-memory queue) |
+| **P2** | Hybrid local agent | **Done** | Durable `AgentJob` DB queue; results → Execution/StepResult; UI polling |
 | **P3** | Observability, collab, scale | **Partial** | Run quota + secret redaction; share links / flaky productization TBD |
 
 ### P0 — Run internal (implemented)
@@ -189,27 +189,18 @@ High-level product plan (not implemented until a phase is explicitly approved). 
 - Validate NAVIGATE URL on step save; scenario-URL fallback on execute
 - Surface self-heal locator changes in run results (`StepResultCard`)
 
-### P2 — Hybrid local agent (MVP)
+### P2 — Hybrid local agent (done)
 
 ```mermaid
 flowchart TB
-  subgraph today [Today]
-    Rec[Record client-direct on user PC]
-    RunCloud[Run Playwright on VPS]
-  end
-  subgraph planned [Planned P2]
-    Agent[Local agent on user VPN]
-    RunCloud2[Run public URLs on VPS]
-    RunAgent[Run private URLs via agent]
-  end
-  Rec --> DB[(PostgreSQL)]
-  DB --> RunCloud
-  DB --> RunCloud2
-  DB --> RunAgent
-  RunAgent --> Agent
+  UI[Scenario Detail Queue] --> API[/api/agent]
+  API --> DB[(AgentJob + Execution)]
+  Agent[local-agent on VPN PC] -->|claim/complete| API
+  Agent -->|Playwright| Private[Private staging URL]
+  DB --> History[Step results in UI]
 ```
 
-**Shipped MVP touch points:** `backend/src/services/agentJobService.js`, `backend/src/routes/agentRoutes.js`, `scripts/local-agent/`, Scenario Detail **Queue local agent**.
+**Touch points:** `AgentJob` Prisma model, `agentJobService.js`, `agentRoutes.js`, `scripts/local-agent/`, Scenario Detail status panel + poll.
 
 ### P3 — Observability, collaboration, scale (partial)
 
