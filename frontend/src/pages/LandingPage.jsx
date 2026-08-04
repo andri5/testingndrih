@@ -127,6 +127,11 @@ export default function LandingPage({ lang: langProp }) {
               <span className="flex items-center gap-1.5">
                 <CheckCircle2 size={14} className="text-emerald-500" /> {t.trust3}
               </span>
+              {t.trust4 && (
+                <span className="flex items-center gap-1.5">
+                  <CheckCircle2 size={14} className="text-emerald-500" /> {t.trust4}
+                </span>
+              )}
             </div>
           </div>
           <div className="lp-animate-in lp-delay-2">
@@ -167,6 +172,30 @@ export default function LandingPage({ lang: langProp }) {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      <section id="jangkauan" className="py-14 sm:py-20 px-4 sm:px-6 lp-section-alt">
+        <div className="max-w-3xl mx-auto text-center lp-animate-in">
+          <h2 className="text-xl sm:text-2xl font-bold lp-hero-title mb-3">{t.reachTitle}</h2>
+          <p className="lp-muted text-sm sm:text-base leading-relaxed mb-6">{t.reachSubtitle}</p>
+          <ul className="text-left space-y-2 max-w-xl mx-auto mb-6">
+            {[t.reachBullet1, t.reachBullet2, t.reachBullet3].map((item) => (
+              <li key={item} className="flex items-start gap-2 text-sm lp-muted">
+                <CheckCircle2 size={16} className="text-indigo-500 shrink-0 mt-0.5" />
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+          <a
+            href="https://github.com/andri5/testingndrih/blob/main/docs/RUN_INTERNAL.md"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="lp-btn-secondary inline-flex items-center gap-2 font-medium px-4 py-2.5 rounded-xl text-sm"
+          >
+            {t.reachCta}
+            <ArrowRight size={16} />
+          </a>
         </div>
       </section>
 

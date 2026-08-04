@@ -1,4 +1,4 @@
-import { CheckCircle2, XCircle, Clock, ImageIcon } from 'lucide-react'
+import { CheckCircle2, XCircle, Clock, ImageIcon, Wrench } from 'lucide-react'
 import StepErrorDetail from './StepErrorDetail'
 
 const TYPE_COLORS = {
@@ -15,6 +15,15 @@ function formatDuration(ms) {
   if (!ms && ms !== 0) return null
   if (ms >= 1000) return `${(ms / 1000).toFixed(2)}s`
   return `${ms}ms`
+}
+
+function parseHealMeta(errorMessage) {
+  if (!errorMessage) return null
+  try {
+    const data = typeof errorMessage === 'string' ? JSON.parse(errorMessage) : errorMessage
+    if (data?.healed && data.originalSelector && data.healedSelector) return data
+  } catch { /* not JSON */ }
+  return null
 }
 
 export default function StepResultCard({
@@ -35,6 +44,8 @@ export default function StepResultCard({
   const selector = result.testStep?.selector
   const duration = formatDuration(result.duration)
   const typeClass = TYPE_COLORS[stepType] || TYPE_COLORS.default
+  const healMeta = parseHealMeta(result.errorMessage)
+  const showErrorDetail = result.errorMessage && !healMeta
 
   return (
     <article
@@ -68,6 +79,15 @@ export default function StepResultCard({
             <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-md ${typeClass}`}>
               {stepType}
             </span>
+            {healMeta && (
+              <span
+                className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-md bg-amber-50 text-amber-800 border border-amber-200"
+                title={`${healMeta.originalSelector} → ${healMeta.healedSelector}`}
+              >
+                <Wrench size={12} />
+                Self-healed
+              </span>
+            )}
             {duration && (
               <span className="inline-flex items-center gap-1 text-[11px] font-medium text-gray-500 ml-auto">
                 <Clock size={12} />
@@ -78,16 +98,25 @@ export default function StepResultCard({
 
           <p className="font-semibold text-gray-900 leading-snug">{description}</p>
 
-          {selector && (
+          {healMeta ? (
+            <div className="mt-1.5 text-xs font-mono space-y-1">
+              <p className="text-gray-400 line-through truncate" title={healMeta.originalSelector}>
+                {healMeta.originalSelector}
+              </p>
+              <p className="text-amber-800 truncate bg-amber-50 border border-amber-100 rounded px-2 py-1" title={healMeta.healedSelector}>
+                → {healMeta.healedSelector}
+              </p>
+            </div>
+          ) : selector ? (
             <p
               className="mt-1.5 text-xs font-mono text-gray-500 truncate bg-gray-50 border border-gray-100 rounded px-2 py-1"
               title={selector}
             >
               {selector}
             </p>
-          )}
+          ) : null}
 
-          {result.errorMessage && (
+          {showErrorDetail && (
             <div className="mt-3">
               <StepErrorDetail
                 errorMessage={result.errorMessage}
@@ -129,6 +158,7 @@ export function StepResultsSummary({ stepResults = [] }) {
   const failed = stepResults.length - passed
   const total = stepResults.length
   const passRate = total ? Math.round((passed / total) * 100) : 0
+  const healed = stepResults.filter((r) => parseHealMeta(r.errorMessage)).length
 
   return (
     <div className="flex flex-wrap items-center gap-3 mb-4 p-3 rounded-xl border border-gray-200 bg-gray-50/80 shadow-sm">
@@ -141,6 +171,12 @@ export function StepResultsSummary({ stepResults = [] }) {
           <XCircle size={16} />
           {failed} failed
         </span>
+        {healed > 0 && (
+          <span className="inline-flex items-center gap-1.5 font-medium text-amber-700">
+            <Wrench size={16} />
+            {healed} self-healed
+          </span>
+        )}
       </div>
       <div className="flex-1 min-w-[120px] h-2 rounded-full bg-gray-200 overflow-hidden">
         <div

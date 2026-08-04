@@ -4,6 +4,7 @@ import {
   collectExecutionTargetUrls,
   preflightExecutionTargets,
 } from '../utils/networkReachability.js'
+import { beginUserRun } from '../services/runQuotaService.js'
 
 /**
  * Execution Controller
@@ -53,6 +54,17 @@ export const executionController = {
         })
       }
 
+      let releaseQuota
+      try {
+        releaseQuota = beginUserRun(userId)
+      } catch (quotaErr) {
+        return res.status(429).json({
+          success: false,
+          code: quotaErr.code || 'RUN_QUOTA',
+          message: quotaErr.message,
+        })
+      }
+
       // Return execution ID immediately so the live viewer can connect
       // Execution runs in the background
       // Preserve explicit true/false; omit → service picks production-safe default
@@ -72,6 +84,9 @@ export const executionController = {
       // Fire and forget — execution runs in background
       const executionPromise = executionService.executeScenario(userId, scenarioId, options)
       // Attach early catch to prevent unhandled rejection warning while we wait
+      executionPromise.finally(() => {
+        try { releaseQuota?.() } catch { /* ignore */ }
+      })
       executionPromise.catch(() => {})
 
       // Wait briefly for the execution record to be created (it's created at the start of executeScenario)

@@ -18,6 +18,7 @@ import { substituteStep } from '../utils/variableSubstitution.js'
 import { handleStepScreenshot } from './visualRegressionService.js'
 import { CHROMIUM_DOCKER_ARGS } from '../lib/browserLauncher.js'
 import { formatPlaywrightNavigationError } from '../utils/networkReachability.js'
+import { redactStepForError } from '../utils/secretRedaction.js'
 
 /* Phase 2.1: Self Healing Selector configuration */
 const ENABLE_SELF_HEALING = true
@@ -791,13 +792,13 @@ export const executionService = {
 
           const errorDetail = {
             message: error.message,
-            step: {
+            step: redactStepForError({
               number: step.stepNumber,
               type: step.type,
               selector: step.selector || null,
               value: step.type === 'FILL' ? step.value : (step.type === 'NAVIGATE' ? step.value : null),
               description: step.description
-            },
+            }),
             page: {
               url: currentUrl
             },
@@ -830,12 +831,28 @@ export const executionService = {
 
         // Record step result
         const stepDuration = Date.now() - stepStartTime
+        let resultPayload = errorMessage
+        if (stepStatus === 'PASSED' && step._healedFrom && step._healedTo) {
+          resultPayload = JSON.stringify({
+            healed: true,
+            originalSelector: step._healedFrom,
+            healedSelector: step._healedTo,
+            message: `Self-heal: "${step._healedFrom}" → "${step._healedTo}"`,
+          })
+        } else if (stepStatus === 'FAILED' && step._healedFrom && errorMessage) {
+          try {
+            const detail = JSON.parse(errorMessage)
+            detail.healedAttempt = { originalSelector: step._healedFrom, healedSelector: step._healedTo || step.selector }
+            resultPayload = JSON.stringify(detail)
+          } catch { /* keep */ }
+        }
+
         const stepResult = await prisma.stepResult.create({
           data: {
             executionId: execution.id,
             testStepId: step.id,
             status: stepStatus,
-            errorMessage,
+            errorMessage: resultPayload,
             duration: stepDuration
           }
         })
@@ -1152,6 +1169,8 @@ export const executionService = {
 
     const { locator, selector } = await this.resolveLocatorWithFallbacks(page, step, 'CLICK')
     if (selector !== step.selector) {
+      step._healedFrom = step.selector
+      step._healedTo = selector
       step.selector = selector
     }
 
@@ -1178,6 +1197,8 @@ export const executionService = {
     const value = step.value ?? ''
     const { locator, selector } = await this.resolveLocatorWithFallbacks(page, step, 'FILL')
     if (selector !== step.selector) {
+      step._healedFrom = step.selector
+      step._healedTo = selector
       step.selector = selector
     }
 

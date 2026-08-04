@@ -412,6 +412,12 @@ export const aiAPI = {
     aiClient.post('/ai/suggest-locator', payload),
 }
 
+export const agentAPI = {
+  queue: (scenarioId, options = {}) =>
+    apiClient.post(`/agent/queue/${scenarioId}`, options),
+  stats: () => apiClient.get('/agent/stats'),
+}
+
 export const siteAPI = {
   track: (path, lang) =>
     axios.post(`${API_BASE}/site/track`, { path, lang }, { withCredentials: true }),

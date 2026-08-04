@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { getQuickActionsForRole } from '../constants/quickActions'
+import OnboardingChecklist from '../components/OnboardingChecklist'
 import OpenIssuesWidget from '../components/OpenIssuesWidget'
 import WelcomeSplashModal from '../components/WelcomeSplashModal'
 import ExportFormatButton from '../components/ExportFormatButton'
@@ -189,6 +190,8 @@ export default function DashboardPage() {
             {t.hereIs}
           </p>
         </div>
+
+        <OnboardingChecklist />
 
         {loading ? (
           <div className="flex justify-center py-16">

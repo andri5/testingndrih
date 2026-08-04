@@ -6,9 +6,9 @@ import BrowserSelector from '../components/BrowserSelector'
 import StepErrorDetail from '../components/StepErrorDetail'
 import StepResultCard, { StepResultsSummary } from '../components/StepResultCard'
 import TestStepList from '../components/TestStepList'
-import { scenarioAPI, executionAPI, recorderAPI } from '../services/api'
+import { scenarioAPI, executionAPI, recorderAPI, agentAPI } from '../services/api'
 import ExportFormatButton from '../components/ExportFormatButton'
-import { CheckCircle2, XCircle, ClipboardList, Clock, HelpCircle, Globe, Play, Circle, Square, ChevronDown, ListTree, Plus, Copy, Trash2, Save, Loader2 } from 'lucide-react'
+import { CheckCircle2, XCircle, ClipboardList, Clock, HelpCircle, Globe, Play, Circle, Square, ChevronDown, ListTree, Plus, Copy, Trash2, Save, Loader2, Zap } from 'lucide-react'
 
 const RecordIcon = (props) => <Circle {...props} className="text-red-500 fill-red-500" />
 
@@ -16,6 +16,8 @@ const i18n = {
     loadScenarioError: 'Failed to load scenario',
     loadStepsError: 'Failed to load test steps',
     typeRequired: 'Type and description are required',
+    navigateUrlRequired: 'NAVIGATE steps need a URL in Value (or set the scenario target URL first)',
+    invalidNavigateUrl: 'NAVIGATE value must be a valid http(s) URL',
     invalidMetadata: 'Metadata must be valid JSON',
     stepUpdated: 'Step updated successfully',
     stepAdded: 'Step added successfully',
@@ -51,7 +53,11 @@ const i18n = {
       'URL target tampak internal/VPN. Run hanya akan berhasil jika server runner ada di jaringan yang sama. Lanjutkan?',
     targetPublic: 'Publik',
     targetInternal: 'Internal / VPN',
-    targetInternalRunHint: 'Cloud Run diblokir untuk URL internal — pakai backend lokal di LAN yang sama.',
+    targetInternalRunHint: 'Cloud Run diblokir untuk URL internal — pakai backend lokal di LAN yang sama, atau Queue local agent.',
+    queueLocalAgent: 'Queue local agent',
+    queueLocalAgentHint:
+      'Job diantrekan. Jalankan node scripts/local-agent/run.mjs di PC VPN (API token di Settings).',
+    queueLocalAgentError: 'Gagal mengantrekan job local agent',
     startRecordingError: 'Failed to start recording',
     stepsSavedRecording: (c) => `${c} steps recorded and saved`,
     recordingAutoSaveError: (c, e) => `Recording completed (${c} steps), but failed to auto-save: ${e}. Click "Save" to try again.`,
@@ -396,6 +402,29 @@ export default function ScenarioDetailPage() {
       return
     }
 
+    if (stepForm.type === 'NAVIGATE') {
+      const navUrl = String(stepForm.value || scenario?.url || '').trim()
+      if (!navUrl) {
+        setError(t.navigateUrlRequired)
+        return
+      }
+      try {
+        const u = new URL(navUrl)
+        if (!/^https?:$/i.test(u.protocol)) {
+          setError(t.invalidNavigateUrl)
+          return
+        }
+      } catch {
+        setError(t.invalidNavigateUrl)
+        return
+      }
+    }
+
+    const valueToSave =
+      stepForm.type === 'NAVIGATE' && !String(stepForm.value || '').trim() && scenario?.url
+        ? scenario.url
+        : (stepForm.value || null)
+
     setIsSaving(true)
     setError(null)
 
@@ -416,7 +445,7 @@ export default function ScenarioDetailPage() {
           type: stepForm.type,
           description: stepForm.description.trim(),
           selector: stepForm.selector || null,
-          value: stepForm.value || null,
+          value: valueToSave,
           metadata: parsedMetadata
         })
         showSuccess(t.stepUpdated)
@@ -427,7 +456,7 @@ export default function ScenarioDetailPage() {
           stepForm.type,
           stepForm.description.trim(),
           stepForm.selector || null,
-          stepForm.value || null,
+          valueToSave,
           parsedMetadata
         )
         showSuccess(t.stepAdded)
@@ -562,6 +591,19 @@ export default function ScenarioDetailPage() {
   }
 
   const executionResultRef = useRef(null)
+
+  const handleQueueLocalAgent = async () => {
+    try {
+      setError(null)
+      await agentAPI.queue(id, {
+        browser: selectedBrowser,
+        headless: headlessMode,
+      })
+      showSuccess(t.queueLocalAgentHint)
+    } catch (err) {
+      setError(err.response?.data?.message || t.queueLocalAgentError)
+    }
+  }
 
   const handleExecute = async () => {
     if (steps.length === 0) {
@@ -1134,11 +1176,21 @@ export default function ScenarioDetailPage() {
               format="csv"
               icon={isExecuting ? Loader2 : Play}
               onClick={handleExecute}
-              disabled={isExecuting || steps.length === 0 || isRecording}
+              disabled={isExecuting || steps.length === 0 || isRecording || (targetKind === 'internal' && executionBlocked)}
               className={isExecuting ? '[&_svg]:animate-spin' : ''}
             >
               {isExecuting ? t.running : t.runScenario}
             </ExportFormatButton>
+            {targetKind === 'internal' && (
+              <ExportFormatButton
+                format="json"
+                icon={Zap}
+                onClick={handleQueueLocalAgent}
+                disabled={steps.length === 0 || isRecording || isExecuting}
+              >
+                {t.queueLocalAgent}
+              </ExportFormatButton>
+            )}
             <p className="text-xs text-[#888] basis-full max-w-xs sm:text-right">
               {t.liveRunIsolatedHint}
             </p>

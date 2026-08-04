@@ -75,6 +75,9 @@ export default function LandingNav({ lang, t }) {
         ]
       : []),
     { href: about, label: t.navAbout, active: onAbout },
+    ...(t.navPricing
+      ? [{ href: lang === 'id' ? '/id/pricing' : '/pricing', label: t.navPricing, active: pathname.includes('/pricing') }]
+      : []),
   ]
 
   return (

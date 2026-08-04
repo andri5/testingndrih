@@ -33,6 +33,7 @@ import visualRegressionRoutes from './routes/visualRegressionRoutes.js'
 import userRoutes from './routes/userRoutes.js'
 import siteRoutes from './routes/siteRoutes.js'
 import aiRoutes from './routes/aiRoutes.js'
+import agentRoutes from './routes/agentRoutes.js'
 import { errorHandler } from './middleware/auth.js'
 import { swaggerSpec } from './lib/swagger.js'
 import { validateProductionSecurity } from './lib/productionSecurity.js'
@@ -150,6 +151,7 @@ app.use('/api/visual-regression', visualRegressionRoutes)
 app.use('/api/users', userRoutes)
 app.use('/api/site', siteRoutes)
 app.use('/api/ai', aiRoutes)
+app.use('/api/agent', agentRoutes)
 
 // Swagger API docs — available at /api/docs
 app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {

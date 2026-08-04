@@ -1,30 +1,39 @@
 /** Shown once after a new user completes registration (see authStore + DashboardPage). */
 export const WELCOME_SPLASH_STORAGE_KEY = 'pendingWelcomeSplash'
 
+export const ONBOARDING_CHECKLIST_KEY = 'onboardingChecklistV1'
+
+export const defaultOnboardingChecklist = () => ({
+  createScenario: false,
+  addOrRecordSteps: false,
+  runPublicOrLocal: false,
+  dismissed: false,
+})
+
 export const welcomeSplashContent = {
   badge: 'New member',
   title: (name) => `Welcome, ${name || 'Tester'}!`,
   headline: 'Your coffee is hot. Your bugs are nervous.',
   description:
-    'You just joined Test Sambil Ngopi — the chill way to automate tests without losing your sanity (or your afternoon coffee).',
+    'You just joined Test Sambil Ngopi — automate tests without losing your afternoon coffee.',
   tips: [
     {
-      emoji: '☕',
-      title: 'Sip, then script',
-      desc: 'Create a scenario or grab a template. No rush — the browser will wait.',
+      emoji: '1',
+      title: 'Create a scenario',
+      desc: 'Use Create Manual, Templates, or Import Excel (Quick Record is admin-only).',
     },
     {
-      emoji: '🎯',
-      title: 'Hit Run & watch',
-      desc: 'Green means glory. Red means… well, at least you found it before users did.',
+      emoji: '2',
+      title: 'Add steps or Record',
+      desc: 'Open the scenario → Add Step or Record on the real site (client-direct).',
     },
     {
-      emoji: '🔄',
-      title: 'Repeat until smug',
-      desc: 'Fix, rerun, celebrate. That\'s the whole vibe.',
+      emoji: '3',
+      title: 'Run the right way',
+      desc: 'Public URLs: Run in the cloud. Internal/VPN staging: local backend or Queue local agent.',
     },
   ],
   ctaPrimary: 'Create my first scenario',
   ctaSecondary: 'Explore dashboard',
-  footnote: 'Pro tip: bugs fear testers who test while caffeinated.',
+  footnote: 'Tip: internal staging cannot Run from a public VPS — see docs/RUN_INTERNAL.md.',
 }

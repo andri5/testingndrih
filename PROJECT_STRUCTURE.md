@@ -166,9 +166,9 @@ High-level product plan (not implemented until a phase is explicitly approved). 
 | Phase | Focus | Status | Notes |
 |-------|--------|--------|--------|
 | **P0** | Cloud Run + private/internal URLs | **Done** | Preflight + UI badge + block in production; env `ALLOW_PRIVATE_NETWORK_EXECUTION` for on-prem |
-| **P1** | Scenario quality & UX | Planned | Validation, self-heal visibility, optional session reuse |
-| **P2** | Hybrid local agent | Planned | Run private targets on user machine; public on VPS |
-| **P3** | Observability, collab, scale | Planned | Better errors, share links, flaky, quotas, secrets |
+| **P1** | Scenario quality & UX | **Done** | NAVIGATE validation; self-heal surfaced in StepResultCard |
+| **P2** | Hybrid local agent | **MVP** | `/api/agent/*` + `scripts/local-agent` (in-memory queue) |
+| **P3** | Observability, collab, scale | **Partial** | Run quota + secret redaction; share links / flaky productization TBD |
 
 ### P0 — Run internal (implemented)
 
@@ -176,6 +176,7 @@ High-level product plan (not implemented until a phase is explicitly approved). 
 - UI badge public vs internal on Scenario Detail; hard-block when `executionBlocked`
 - Actionable `formatPlaywrightNavigationError` on `page.goto` failures
 - Production blocks private IPs unless `ALLOW_PRIVATE_NETWORK_EXECUTION=true`
+- Guide: [`docs/RUN_INTERNAL.md`](./docs/RUN_INTERNAL.md)
 
 **Touched:**
 - `backend/src/utils/networkReachability.js`
@@ -183,13 +184,12 @@ High-level product plan (not implemented until a phase is explicitly approved). 
 - `backend/src/services/executionService.js`
 - `frontend/src/pages/ScenarioDetailPage.jsx`
 
-### P1 — Scenario quality & UX
+### P1 — Scenario quality & UX (implemented)
 
-- Validate NAVIGATE URL on step save; keep scenario-URL fallback on execute
-- Surface self-heal locator changes in run results / Browser Runner
-- Optional encrypted storage state / reuse login per environment (toggle, default off)
+- Validate NAVIGATE URL on step save; scenario-URL fallback on execute
+- Surface self-heal locator changes in run results (`StepResultCard`)
 
-### P2 — Hybrid local agent
+### P2 — Hybrid local agent (MVP)
 
 ```mermaid
 flowchart TB
@@ -209,15 +209,13 @@ flowchart TB
   RunAgent --> Agent
 ```
 
-**Likely touch points (when implemented):** new agent package/service, job queue or websocket from API, execution routing by target kind.
+**Shipped MVP touch points:** `backend/src/services/agentJobService.js`, `backend/src/routes/agentRoutes.js`, `scripts/local-agent/`, Scenario Detail **Queue local agent**.
 
-### P3 — Observability, collaboration, scale
+### P3 — Observability, collaboration, scale (partial)
 
-- Map network/CSP failures to Indonesian guidance
-- Shareable run links
-- Flaky-step detection from analytics history
-- Concurrent-run quota per user
-- Masked environment secrets in logs / screenshots
+- Concurrent-run quota: `MAX_CONCURRENT_RUNS_PER_USER` (default 2)
+- Mask FILL password-like values in error payloads (`secretRedaction.js`)
+- Still planned: shareable run links, full flaky productization, deeper log/screenshot scrubbing
 
 ---
 

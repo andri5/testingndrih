@@ -18,6 +18,7 @@ Welcome to **Test Sambil Ngopi** documentation — guides for setup, development
 | [SECURITY_TESTING.md](./SECURITY_TESTING.md) | Pentest checklist, OWASP Jest suite, in-app scanner |
 | [API_ENDPOINTS.md](./API_ENDPOINTS.md) | REST API reference |
 | [DEPLOYMENT.md](./DEPLOYMENT.md) | Release, VPS deploy, GitHub Actions |
+| [RUN_INTERNAL.md](./RUN_INTERNAL.md) | Public cloud vs internal staging Run (local / agent) |
 | [../PROJECT_STRUCTURE.md](../PROJECT_STRUCTURE.md) | High-level repo map |
 | [../README.md](../README.md) | Main readme (quick start, features) |
 

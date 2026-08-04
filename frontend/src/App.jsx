@@ -29,6 +29,7 @@ import VisualRegressionPage from './pages/VisualRegressionPage'
 import SmokeTestHelpPage from './pages/SmokeTestHelpPage'
 import StressTestHelpPage from './pages/StressTestHelpPage'
 import SecurityTestHelpPage from './pages/SecurityTestHelpPage'
+import PricingPage from './pages/PricingPage'
 import ProtectedRoute from './components/ProtectedRoute'
 import AdminRoute from './components/AdminRoute'
 import NotFoundPage from './pages/NotFoundPage'
@@ -111,6 +112,14 @@ export default function App() {
         <Route
           path="/id/about"
           element={token ? <Navigate to="/dashboard" replace /> : <PublicAboutPage />}
+        />
+        <Route
+          path="/pricing"
+          element={token ? <Navigate to="/dashboard" replace /> : <PricingPage />}
+        />
+        <Route
+          path="/id/pricing"
+          element={token ? <Navigate to="/dashboard" replace /> : <PricingPage />}
         />
         <Route path="/en" element={<Navigate to="/" replace />} />
         <Route path="/en/about" element={<Navigate to="/about" replace />} />

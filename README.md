@@ -173,11 +173,11 @@ Planned improvements (documentation only until a phase is approved for implement
 | Phase | Focus | Status | Deliverables (summary) |
 |-------|--------|--------|------------------------|
 | **P0** | Run internal (highest pain) | **Done** | Preflight reachability before execute; UI public/internal badge; block cloud Run for private IPs in production; actionable navigation errors |
-| **P1** | Scenario quality & UX | Planned | Step validation on save (NAVIGATE + URL); self-heal locator highlight in results / live viewer; optional storage-state / reuse login per environment (default off) |
-| **P2** | Hybrid local agent | Planned | Lightweight agent on user VPN machine; private URLs run via agent, public URLs stay on VPS |
-| **P3** | Observability, collab, scale | Planned | Network/CSP → Indonesian guidance; shareable run links; flaky detection; concurrent-run quota; masked environment secrets |
+| **P1** | Scenario quality & UX | **Done** | NAVIGATE URL validation on save; self-heal badge (old → new selector) in step results |
+| **P2** | Hybrid local agent | **MVP** | Queue from UI + `scripts/local-agent` poll/claim/run Playwright on VPN PC |
+| **P3** | Observability, collab, scale | **Partial** | Concurrent run quota (`MAX_CONCURRENT_RUNS_PER_USER`); secret redaction in error payloads; share links / full flaky UX still planned |
 
-**Next:** **P1**, then P2 → P3.
+**Also shipped:** landing copy aligned with USER capabilities; [`docs/RUN_INTERNAL.md`](./docs/RUN_INTERNAL.md); Pricing page; onboarding checklist; app i18n store foundation.
 
 ---
 
