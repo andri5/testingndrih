@@ -17,6 +17,7 @@ import {
 import { substituteStep } from '../utils/variableSubstitution.js'
 import { handleStepScreenshot } from './visualRegressionService.js'
 import { CHROMIUM_DOCKER_ARGS } from '../lib/browserLauncher.js'
+import { formatPlaywrightNavigationError } from '../utils/networkReachability.js'
 
 /* Phase 2.1: Self Healing Selector configuration */
 const ENABLE_SELF_HEALING = true
@@ -1129,7 +1130,9 @@ export const executionService = {
       throw new Error(`Invalid URL: ${targetUrl}`)
     }
 
-    await page.goto(targetUrl, { waitUntil: 'domcontentloaded', timeout: 30000 })
+    await page.goto(targetUrl, { waitUntil: 'domcontentloaded', timeout: 30000 }).catch((err) => {
+      throw new Error(formatPlaywrightNavigationError(err, targetUrl))
+    })
     // Smart wait: wait for load + networkidle (with fallback timeout)
     await page.waitForLoadState('load').catch(() => {})
     await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {})

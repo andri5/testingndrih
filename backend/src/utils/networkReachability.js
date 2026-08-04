@@ -25,6 +25,15 @@ export function isPrivateIp(ip) {
 }
 
 /**
+ * In production, cloud Playwright cannot reach private/VPN hosts.
+ * Override with ALLOW_PRIVATE_NETWORK_EXECUTION=true (on-prem runner on the same LAN).
+ */
+export function isPrivateNetworkExecutionBlocked() {
+  if (process.env.ALLOW_PRIVATE_NETWORK_EXECUTION === 'true') return false
+  return process.env.NODE_ENV === 'production'
+}
+
+/**
  * Resolve hostname and detect if any address is private / unreachable from public internet.
  */
 export async function analyzeTargetReachability(rawUrl) {
@@ -33,6 +42,19 @@ export async function analyzeTargetReachability(rawUrl) {
     hostname = new URL(rawUrl).hostname
   } catch {
     return { ok: false, reason: 'invalid_url', privateNetwork: false, addresses: [] }
+  }
+
+  // Literal private IP — no DNS needed
+  if (net.isIP(hostname) && isPrivateIp(hostname)) {
+    return {
+      ok: false,
+      reason: 'private_network',
+      privateNetwork: true,
+      addresses: [hostname],
+      message:
+        `URL mengarah ke jaringan internal (${hostname}). ` +
+        'Server production di internet tidak bisa membuka halaman ini.',
+    }
   }
 
   if (hostname === 'localhost' || hostname.endsWith('.local')) {
@@ -90,12 +112,109 @@ export function formatFetchNetworkError(err) {
 }
 
 /**
+ * Turn Playwright navigation failures into actionable Indonesian messages.
+ */
+export function formatPlaywrightNavigationError(err, targetUrl = '') {
+  const raw = err?.message || String(err || 'Navigation failed')
+  const urlHint = targetUrl ? ` (${targetUrl})` : ''
+  const lower = raw.toLowerCase()
+
+  if (lower.includes('timeout') || lower.includes('exceeded')) {
+    return (
+      `Timeout membuka halaman${urlHint}. ` +
+      'Jika URL berada di jaringan internal/VPN (mis. 10.x), server production tidak bisa menjangkaunya — ' +
+      'rekam dari PC Anda boleh, tapi Run cloud akan gagal. Jalankan backend di jaringan yang sama atau gunakan URL publik.'
+    )
+  }
+  if (lower.includes('net::err_connection_refused') || lower.includes('connection refused')) {
+    return `Koneksi ditolak saat membuka${urlHint}. Pastikan layanan target berjalan dan dapat diakses dari server.`
+  }
+  if (lower.includes('net::err_name_not_resolved') || lower.includes('enotfound')) {
+    return `DNS tidak menemukan host${urlHint}. Periksa ejaan URL atau DNS server.`
+  }
+  if (
+    lower.includes('net::err_connection_timed_out') ||
+    lower.includes('net::err_address_unreachable') ||
+    lower.includes('err_network_access_denied')
+  ) {
+    return (
+      `Host tidak terjangkau dari server${urlHint}. ` +
+      'Kemungkinan jaringan internal/VPN — Run di cloud production tidak mendukung target privat.'
+    )
+  }
+  if (lower.includes('ssl') || lower.includes('certificate')) {
+    return `Masalah sertifikat TLS saat membuka${urlHint}: ${raw}`
+  }
+  return raw
+}
+
+/**
+ * Collect unique http(s) URLs that execution will try to open.
+ */
+export function collectExecutionTargetUrls(scenario, steps = []) {
+  const urls = []
+  const push = (v) => {
+    const s = String(v || '').trim()
+    if (!s) return
+    try {
+      const u = new URL(s)
+      if (u.protocol === 'http:' || u.protocol === 'https:') urls.push(u.href)
+    } catch { /* ignore */ }
+  }
+
+  push(scenario?.url)
+  for (const step of steps) {
+    if (step?.type === 'NAVIGATE') push(step.value)
+  }
+  return [...new Set(urls)]
+}
+
+/**
+ * Preflight before cloud Run. Blocks private targets in production (unless overridden).
+ */
+export async function preflightExecutionTargets(urls = []) {
+  const unique = [...new Set((urls || []).filter(Boolean))]
+  const blockPrivate = isPrivateNetworkExecutionBlocked()
+
+  for (const url of unique) {
+    const reach = await analyzeTargetReachability(url)
+    if (!reach.privateNetwork) continue
+
+    const message = blockPrivate
+      ? `Target "${url}" berada di jaringan internal/VPN. ` +
+        'Run di server production tidak bisa membuka URL ini (akan timeout). ' +
+        'Rekam dari browser Anda tetap bisa; untuk playback, jalankan backend di jaringan yang sama ' +
+        'atau set ALLOW_PRIVATE_NETWORK_EXECUTION=true pada runner on-prem.'
+      : `Peringatan: "${url}" tampak internal/VPN. Lanjutkan hanya jika runner berada di jaringan yang sama.`
+
+    return {
+      privateNetwork: true,
+      blocked: blockPrivate,
+      url,
+      code: 'PRIVATE_NETWORK',
+      message,
+      ...summarizeTargetReachability(reach),
+    }
+  }
+
+  return {
+    privateNetwork: false,
+    blocked: false,
+    targetKind: 'public',
+    code: null,
+    message: null,
+  }
+}
+
+/**
  * UI/API summary: public vs internal (private IP / localhost).
  */
 export function summarizeTargetReachability(reach) {
   const privateNetwork = Boolean(reach?.privateNetwork)
+  const executionBlocked = privateNetwork && isPrivateNetworkExecutionBlocked()
   return {
     targetKind: privateNetwork ? 'internal' : 'public',
+    executionBlocked,
     reachability: {
       privateNetwork,
       ok: reach?.ok !== false && !privateNetwork,
@@ -104,7 +223,7 @@ export function summarizeTargetReachability(reach) {
       message:
         reach?.message ||
         (privateNetwork
-          ? 'Target berada di jaringan internal/VPN — server production tidak bisa mem-proxy halaman ini.'
+          ? 'Target berada di jaringan internal/VPN — server production tidak bisa mem-proxy / Run cloud ke halaman ini.'
           : 'Target tampak publik (DNS bukan IP privat).'),
     },
   }

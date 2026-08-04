@@ -20,14 +20,15 @@
 2. [Key features](#-key-features)
 3. [Record & playback](#-record--playback)
 4. [Current status](#-current-status)
-5. [Tested features](#-tested-features)
-6. [Quick start](#-quick-start)
-7. [Docker quick start](#-docker-quick-start)
-8. [Documentation](#-documentation)
-9. [Testing](#-testing)
-10. [CI/CD & production](#-cicd--production)
-11. [Security](#-security-public-repository)
-12. [Project structure](#-project-structure)
+5. [Product roadmap](#product-roadmap)
+6. [Tested features](#-tested-features)
+7. [Quick start](#-quick-start)
+8. [Docker quick start](#-docker-quick-start)
+9. [Documentation](#-documentation)
+10. [Testing](#-testing)
+11. [CI/CD & production](#-cicd--production)
+12. [Security](#-security-public-repository)
+13. [Project structure](#-project-structure)
 
 ---
 
@@ -139,6 +140,8 @@ Proxy (public sites only, optional):
 4. Screenshots / videos captured on failure
 5. Results stored; analytics & issues updated
 
+**Limitation (production):** Playback runs Playwright on the **VPS**. Only **public** URLs are reachable. Internal/VPN targets (e.g. `10.x.x.x`) are **blocked before Run** (preflight) with a clear message — they no longer wait 30s then timeout. Record (client-direct on your PC) still works. Override on on-prem runners: `ALLOW_PRIVATE_NETWORK_EXECUTION=true`. See [Product roadmap](#product-roadmap).
+
 ---
 
 ## Current status
@@ -157,8 +160,24 @@ Proxy (public sites only, optional):
 | Production deploy (self-hosted) | Complete |
 | Maintenance / down detection | Complete |
 | Telegram deploy notify | Complete (release deploys only) |
+| Cloud Run for private/internal URLs | P0 done — preflight block + UI badge; hybrid agent still Planned (P2) |
 
 **Recent releases (v1.6 – v1.9):** role-based access, welcome splash, production smoke CI, Telegram deploy notifications, maintenance page, favicon, deploy hardening.
+
+---
+
+## Product roadmap
+
+Planned improvements (documentation only until a phase is approved for implementation). Detail, target files, and architecture notes: [`PROJECT_STRUCTURE.md`](./PROJECT_STRUCTURE.md#product-roadmap-planned).
+
+| Phase | Focus | Status | Deliverables (summary) |
+|-------|--------|--------|------------------------|
+| **P0** | Run internal (highest pain) | **Done** | Preflight reachability before execute; UI public/internal badge; block cloud Run for private IPs in production; actionable navigation errors |
+| **P1** | Scenario quality & UX | Planned | Step validation on save (NAVIGATE + URL); self-heal locator highlight in results / live viewer; optional storage-state / reuse login per environment (default off) |
+| **P2** | Hybrid local agent | Planned | Lightweight agent on user VPN machine; private URLs run via agent, public URLs stay on VPS |
+| **P3** | Observability, collab, scale | Planned | Network/CSP → Indonesian guidance; shareable run links; flaky detection; concurrent-run quota; masked environment secrets |
+
+**Next:** **P1**, then P2 → P3.
 
 ---
 

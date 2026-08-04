@@ -45,6 +45,13 @@ const i18n = {
     recordingPopupBlocked: 'Popup diblokir browser. Izinkan popup untuk situs ini, lalu mulai recording lagi.',
     browserRunnerPopupBlocked: 'Popup Browser Runner diblokir. Izinkan popup untuk situs ini, lalu Run lagi.',
     startingBrowserRunner: 'Opening Browser Runner...',
+    runBlockedInternal:
+      'Target URL berada di jaringan internal/VPN. Run di cloud production tidak bisa membuka halaman ini (akan timeout). Rekam dari PC Anda tetap bisa; untuk playback jalankan backend di jaringan yang sama atau pakai URL publik.',
+    runWarnInternal:
+      'URL target tampak internal/VPN. Run hanya akan berhasil jika server runner ada di jaringan yang sama. Lanjutkan?',
+    targetPublic: 'Publik',
+    targetInternal: 'Internal / VPN',
+    targetInternalRunHint: 'Cloud Run diblokir untuk URL internal — pakai backend lokal di LAN yang sama.',
     startRecordingError: 'Failed to start recording',
     stepsSavedRecording: (c) => `${c} steps recorded and saved`,
     recordingAutoSaveError: (c, e) => `Recording completed (${c} steps), but failed to auto-save: ${e}. Click "Save" to try again.`,
@@ -200,9 +207,43 @@ export default function ScenarioDetailPage() {
   const [recordingModeChoice, setRecordingModeChoice] = useState('client-direct')
   const [targetKind, setTargetKind] = useState(null) // 'public' | 'internal' | null
   const [targetInfoMessage, setTargetInfoMessage] = useState('')
+  const [executionBlocked, setExecutionBlocked] = useState(false)
   const [isProbingTarget, setIsProbingTarget] = useState(false)
   const targetProbeRef = useRef(0)
   const recordTokenRef = useRef(null)
+
+  // Probe scenario URL for Run badge (public vs internal) whenever scenario loads
+  useEffect(() => {
+    const url = (scenario?.url || '').trim()
+    if (!url || !/^https?:\/\//i.test(url)) {
+      setTargetKind(null)
+      setTargetInfoMessage('')
+      setExecutionBlocked(false)
+      return
+    }
+
+    const probeId = ++targetProbeRef.current
+    const timer = setTimeout(async () => {
+      setIsProbingTarget(true)
+      try {
+        const res = await recorderAPI.targetInfo(url)
+        if (probeId !== targetProbeRef.current) return
+        const kind = res.data.targetKind === 'internal' ? 'internal' : 'public'
+        setTargetKind(kind)
+        setTargetInfoMessage(res.data.reachability?.message || '')
+        setExecutionBlocked(Boolean(res.data.executionBlocked))
+      } catch {
+        if (probeId !== targetProbeRef.current) return
+        setTargetKind(null)
+        setTargetInfoMessage('')
+        setExecutionBlocked(false)
+      } finally {
+        if (probeId === targetProbeRef.current) setIsProbingTarget(false)
+      }
+    }, 300)
+
+    return () => clearTimeout(timer)
+  }, [scenario?.url])
 
   // Auto-open recording panel if navigated via Quick Record (?autoRecord=1)
   useEffect(() => {
@@ -239,12 +280,14 @@ export default function ScenarioDetailPage() {
         const kind = res.data.targetKind === 'internal' ? 'internal' : 'public'
         setTargetKind(kind)
         setTargetInfoMessage(res.data.reachability?.message || '')
+        setExecutionBlocked(Boolean(res.data.executionBlocked))
         // Always recommend client-direct; lock to it for internal
         setRecordingModeChoice('client-direct')
       } catch {
         if (probeId !== targetProbeRef.current) return
         setTargetKind(null)
         setTargetInfoMessage('')
+        setExecutionBlocked(false)
       } finally {
         if (probeId === targetProbeRef.current) setIsProbingTarget(false)
       }
@@ -524,6 +567,16 @@ export default function ScenarioDetailPage() {
     if (steps.length === 0) {
       setError(t.addStepFirst)
       return
+    }
+
+    // P0: hard-block when server reports cloud Run cannot reach private targets
+    if (targetKind === 'internal' && executionBlocked) {
+      setError(t.runBlockedInternal)
+      return
+    }
+
+    if (targetKind === 'internal' && !executionBlocked) {
+      if (!window.confirm(t.runWarnInternal)) return
     }
 
     if (!window.confirm(t.confirmExecute(scenario.name))) return
@@ -1019,10 +1072,27 @@ export default function ScenarioDetailPage() {
             {scenario.description && (
               <p className="text-[#A0A0A4] mt-1">{scenario.description}</p>
             )}
-            <div className="flex items-center gap-4 mt-2 text-sm text-[#888]">
-              <span>🌐 {scenario.url}</span>
+            <div className="flex flex-wrap items-center gap-3 mt-2 text-sm text-[#888]">
+              <span className="break-all">🌐 {scenario.url}</span>
               <span>📋 {steps.length} steps</span>
+              {targetKind && (
+                <span
+                  className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold ${
+                    targetKind === 'internal'
+                      ? 'bg-amber-500/15 text-amber-300 border border-amber-500/30'
+                      : 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'
+                  }`}
+                  title={targetInfoMessage || undefined}
+                >
+                  {isProbingTarget ? '…' : targetKind === 'internal' ? t.targetInternal : t.targetPublic}
+                </span>
+              )}
             </div>
+            {targetKind === 'internal' && (
+              <p className="text-xs text-amber-400/90 mt-1.5 max-w-xl">
+                {executionBlocked ? t.targetInternalRunHint : t.runWarnInternal}
+              </p>
+            )}
           </div>
 
           <div className="flex flex-wrap items-center gap-2 shrink-0">

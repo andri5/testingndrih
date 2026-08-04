@@ -2,7 +2,7 @@
 
 High-level map of the **Test Sambil Ngopi** monorepo. For file-by-file detail see [`docs/DIRECTORY_STRUCTURE.md`](./docs/DIRECTORY_STRUCTURE.md).
 
-**Last updated:** July 2026 · **Version:** 1.14.x
+**Last updated:** August 2026 · **Version:** 1.14.x
 
 ---
 
@@ -153,6 +153,72 @@ flowchart LR
 
 **Modes:** `client-direct` (default; required for internal/VPN) · `proxy` (optional, public only) · `playwright` (local headed, opt-in).
 
+**Playback isolation:** Each cloud Run uses Playwright `browser.newContext()` (ephemeral, no `storageState`) — Incognito-like. Chromium `--incognito` is **not** used (breaks CDP screencast / live viewer). The Browser Runner popup cannot be forced into Chrome Incognito from the web app.
+
+**Quick Record:** Create-menu item is **ADMIN-only**; regular users use Create Manual / Templates / Import.
+
+---
+
+## Product roadmap (planned)
+
+High-level product plan (not implemented until a phase is explicitly approved). Summary also in [`README.md`](./README.md#product-roadmap).
+
+| Phase | Focus | Status | Notes |
+|-------|--------|--------|--------|
+| **P0** | Cloud Run + private/internal URLs | **Done** | Preflight + UI badge + block in production; env `ALLOW_PRIVATE_NETWORK_EXECUTION` for on-prem |
+| **P1** | Scenario quality & UX | Planned | Validation, self-heal visibility, optional session reuse |
+| **P2** | Hybrid local agent | Planned | Run private targets on user machine; public on VPS |
+| **P3** | Observability, collab, scale | Planned | Better errors, share links, flaky, quotas, secrets |
+
+### P0 — Run internal (implemented)
+
+- Reuses [`backend/src/utils/networkReachability.js`](./backend/src/utils/networkReachability.js) via `preflightExecutionTargets` before execute
+- UI badge public vs internal on Scenario Detail; hard-block when `executionBlocked`
+- Actionable `formatPlaywrightNavigationError` on `page.goto` failures
+- Production blocks private IPs unless `ALLOW_PRIVATE_NETWORK_EXECUTION=true`
+
+**Touched:**
+- `backend/src/utils/networkReachability.js`
+- `backend/src/controllers/executionController.js`
+- `backend/src/services/executionService.js`
+- `frontend/src/pages/ScenarioDetailPage.jsx`
+
+### P1 — Scenario quality & UX
+
+- Validate NAVIGATE URL on step save; keep scenario-URL fallback on execute
+- Surface self-heal locator changes in run results / Browser Runner
+- Optional encrypted storage state / reuse login per environment (toggle, default off)
+
+### P2 — Hybrid local agent
+
+```mermaid
+flowchart TB
+  subgraph today [Today]
+    Rec[Record client-direct on user PC]
+    RunCloud[Run Playwright on VPS]
+  end
+  subgraph planned [Planned P2]
+    Agent[Local agent on user VPN]
+    RunCloud2[Run public URLs on VPS]
+    RunAgent[Run private URLs via agent]
+  end
+  Rec --> DB[(PostgreSQL)]
+  DB --> RunCloud
+  DB --> RunCloud2
+  DB --> RunAgent
+  RunAgent --> Agent
+```
+
+**Likely touch points (when implemented):** new agent package/service, job queue or websocket from API, execution routing by target kind.
+
+### P3 — Observability, collaboration, scale
+
+- Map network/CSP failures to Indonesian guidance
+- Shareable run links
+- Flaky-step detection from analytics history
+- Concurrent-run quota per user
+- Masked environment secrets in logs / screenshots
+
 ---
 
 ## Configuration files
@@ -190,4 +256,5 @@ flowchart LR
 | Run tests | [`docs/TESTING.md`](./docs/TESTING.md) |
 | Security / pentest | [`docs/SECURITY_TESTING.md`](./docs/SECURITY_TESTING.md) |
 | Architecture deep-dive | [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) |
+| Product roadmap (summary) | [`README.md` § Product roadmap](./README.md#product-roadmap) |
 | Script reference | [`scripts/README.md`](./scripts/README.md) |

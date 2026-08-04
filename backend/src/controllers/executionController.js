@@ -1,5 +1,9 @@
 import { executionService, executionEvents } from '../services/executionService.js'
 import { reportService } from '../services/reportService.js'
+import {
+  collectExecutionTargetUrls,
+  preflightExecutionTargets,
+} from '../utils/networkReachability.js'
 
 /**
  * Execution Controller
@@ -35,6 +39,20 @@ export const executionController = {
         return res.status(400).json({ success: false, message: 'Scenario has no test steps' })
       }
 
+      // P0: block cloud Run for private/VPN targets before starting Playwright
+      const targetUrls = collectExecutionTargetUrls(scenario, scenario.testSteps)
+      const preflight = await preflightExecutionTargets(targetUrls)
+      if (preflight.blocked) {
+        return res.status(400).json({
+          success: false,
+          code: preflight.code || 'PRIVATE_NETWORK',
+          message: preflight.message,
+          targetKind: preflight.targetKind || 'internal',
+          url: preflight.url,
+          executionBlocked: true,
+        })
+      }
+
       // Return execution ID immediately so the live viewer can connect
       // Execution runs in the background
       // Preserve explicit true/false; omit → service picks production-safe default
@@ -47,7 +65,8 @@ export const executionController = {
         browser: browser || 'chromium',
         headless: headlessOpt,
         device: device || null,
-        environmentId: environmentId || null
+        environmentId: environmentId || null,
+        reachabilityWarning: preflight.privateNetwork ? preflight.message : null,
       }
 
       // Fire and forget — execution runs in background
@@ -71,7 +90,8 @@ export const executionController = {
         return res.status(200).json({
           success: true,
           message: 'Scenario executed successfully',
-          execution: result.execution
+          execution: result.execution,
+          ...(preflight.privateNetwork ? { warning: preflight.message } : {}),
         })
       }
 
@@ -91,7 +111,8 @@ export const executionController = {
           totalSteps: scenario.testSteps.length,
           scenarioId
         },
-        liveViewUrl: `/api/executions/${latestExec.id}/live-view`
+        liveViewUrl: `/api/executions/${latestExec.id}/live-view`,
+        ...(preflight.privateNetwork ? { warning: preflight.message, targetKind: 'internal' } : {}),
       })
     } catch (error) {
       console.error('Execution error:', error)
