@@ -1,3 +1,15 @@
+# [1.17.0](https://github.com/andri5/testingndrih/compare/v1.16.0...v1.17.0) (2026-08-04)
+
+
+### Bug Fixes
+
+* **ci:** stabilize executionController error-path tests ([43c72ed](https://github.com/andri5/testingndrih/commit/43c72edccd6227fc0cc8c6c931917c23664d259e))
+
+
+### Features
+
+* ship product roadmap slices (landing, P1-P2 MVP, growth, scale) ([f9fa61e](https://github.com/andri5/testingndrih/commit/f9fa61ec0cf2c2ac80c7d057f3b178eb27046f92))
+
 # [1.16.0](https://github.com/andri5/testingndrih/compare/v1.15.9...v1.16.0) (2026-08-04)
 
 
