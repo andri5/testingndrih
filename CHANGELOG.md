@@ -1,3 +1,10 @@
+# [1.19.0](https://github.com/andri5/testingndrih/compare/v1.18.0...v1.19.0) (2026-08-04)
+
+
+### Features
+
+* add shareable run links and clearer public vs internal URL UX ([e7b63f1](https://github.com/andri5/testingndrih/commit/e7b63f1cba5919b795dff3ceda150a9ed2a1e808))
+
 # [1.18.0](https://github.com/andri5/testingndrih/compare/v1.17.0...v1.18.0) (2026-08-04)
 
 
