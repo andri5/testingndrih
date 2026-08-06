@@ -7,6 +7,7 @@ Operational scripts for **Test Sambil Ngopi**. Core application code lives in `b
 ```
 scripts/
 ├── deploy/          # Production deploy & maintenance
+├── local-agent/     # Hybrid VPN agent for private-target runs
 ├── notify/          # Telegram notifications
 └── ops/             # Health check, secrets, runner setup
 ```
@@ -34,6 +35,12 @@ scripts/
 | `git-push-safe.js` | `npm run push` — safe push with pre-checks |
 | `setup-github-runner.sh` | One-time VPS setup for self-hosted GitHub Actions runner |
 | `configure-production-ai.sh` | Configure AI keys on production (workflow dispatch) |
+
+## Local agent (`local-agent/`)
+
+| Script | Purpose |
+|--------|---------|
+| `run.mjs` | Hybrid local agent for private/VPN targets (claims `AgentJob` from API). See [`local-agent/README.md`](./local-agent/README.md). |
 
 ## Backend scripts
 

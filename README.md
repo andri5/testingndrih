@@ -286,7 +286,7 @@ docker compose down -v      # stop + remove volumes
 |----------|-------------|
 | [`docs/README.md`](./docs/README.md) | Documentation index |
 | [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) | Architecture & data flow |
-| [`docs/DIRECTORY_STRUCTURE.md`](./docs/DIRECTORY_STRUCTURE.md) | Full folder layout |
+| [`PROJECT_STRUCTURE.md`](./PROJECT_STRUCTURE.md) | Canonical folder layout |
 | [`docs/SETUP.md`](./docs/SETUP.md) | Detailed setup & troubleshooting |
 | [`docs/TESTING.md`](./docs/TESTING.md) | Test strategy & commands |
 | [`docs/API_ENDPOINTS.md`](./docs/API_ENDPOINTS.md) | REST API reference |
@@ -379,8 +379,7 @@ testingndrih/
 └── package.json             # Monorepo root
 ```
 
-Full map: [`PROJECT_STRUCTURE.md`](./PROJECT_STRUCTURE.md) · file-level: [`docs/DIRECTORY_STRUCTURE.md`](./docs/DIRECTORY_STRUCTURE.md)
-Full detail: [`PROJECT_STRUCTURE.md`](./PROJECT_STRUCTURE.md) and [`docs/DIRECTORY_STRUCTURE.md`](./docs/DIRECTORY_STRUCTURE.md).
+Full map: [`PROJECT_STRUCTURE.md`](./PROJECT_STRUCTURE.md)
 
 ---
 

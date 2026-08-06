@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react'
 import apiClient from '../services/api'
-import StressTestSummary from '../components/StressTestSummary'
-import StressTestRunner from '../components/StressTestRunner'
-import StressTestHistory from '../components/StressTestHistory'
+import StressTestSummary from '../components/stress/StressTestSummary'
+import StressTestRunner from '../components/stress/StressTestRunner'
+import StressTestHistory from '../components/stress/StressTestHistory'
 import ExportButtons from '../components/ExportButtons'
 import Layout from '../components/Layout'
-import { Zap, AlertCircle, Loader, Play, BarChart3, Gauge, TrendingUp, Layers } from 'lucide-react'
+import { Zap, AlertCircle, Loader, Play, BarChart3, Gauge, TrendingUp, Layers } from 'lucide-react'
 import { analyzeStressTestResults } from '../utils/testAnalysis'
 
-const i18n = {
+const i18n = {
     title: 'Stress Tests',
     description: 'Validate system performance under load - measure throughput, response times, and error rates',
     selectScenario: 'Select Scenario',

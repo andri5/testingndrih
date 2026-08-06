@@ -35,7 +35,7 @@ testingndrih/
 └── .github/workflows/    # CI, release, deploy, monitor
 ```
 
-Full file map: [DIRECTORY_STRUCTURE.md](./DIRECTORY_STRUCTURE.md) · [PROJECT_STRUCTURE.md](../PROJECT_STRUCTURE.md)
+Full file map: [PROJECT_STRUCTURE.md](../PROJECT_STRUCTURE.md)
 
 ---
 

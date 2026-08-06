@@ -265,7 +265,7 @@ npm run e2e
 npm run e2e -- --ui
 
 # E2E specific file
-npm run e2e -- auth.spec.js
+npm run e2e -- e2e/platform-features-e2e.spec.js
 ```
 
 ### Building for Production

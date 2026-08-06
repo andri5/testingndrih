@@ -6,7 +6,6 @@ import {
   pathToMenuKey,
   menuKeyToPath,
 } from '../constants/menuPermissions'
-import { GlobalLoading } from './Loading'
 import HelpModal from './HelpModal'
 import BrandLogo from './BrandLogo'
 import {
@@ -387,9 +386,6 @@ export default function Layout({ children }) {
 
       {/* Help Modal */}
       {helpOpen && <HelpModal onClose={() => setHelpOpen(false)} />}
-
-      {/* Global Loading Overlay */}
-      <GlobalLoading />
     </div>
   )
 }

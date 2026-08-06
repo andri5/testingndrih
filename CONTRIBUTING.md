@@ -100,7 +100,7 @@ Update docs jika menambah endpoint, halaman, atau fitur:
 
 - `docs/API_ENDPOINTS.md` — referensi API
 - `docs/DEPLOYMENT.md` — rilis & deploy production
-- `docs/DIRECTORY_STRUCTURE.md` — struktur folder
+- `PROJECT_STRUCTURE.md` — struktur folder
 - `docs/SECURITY_TESTING.md` — pentest & OWASP
 
 ## Pertanyaan

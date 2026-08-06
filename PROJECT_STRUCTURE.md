@@ -1,8 +1,8 @@
 # Project Structure
 
-High-level map of the **Test Sambil Ngopi** monorepo. For file-by-file detail see [`docs/DIRECTORY_STRUCTURE.md`](./docs/DIRECTORY_STRUCTURE.md).
+High-level map of the **Test Sambil Ngopi** monorepo (canonical folder layout).
 
-**Last updated:** August 2026 · **Version:** 1.14.x
+**Last updated:** August 2026 · **Version:** 1.19.x
 
 ---
 
@@ -33,28 +33,31 @@ testingndrih/
 │   │   ├── components/
 │   │   │   ├── landing/          # Public site: nav, footer, carousel, feedback
 │   │   │   ├── security/         # Security scan UI widgets
+│   │   │   ├── smoke/            # Smoke test runner / history / summary
+│   │   │   ├── stress/           # Stress test runner / history / metrics
 │   │   │   └── ui/               # Shared primitives (Button, Card, Spinner)
-│   │   ├── store/                # Zustand (auth, settings, loading)
+│   │   ├── store/                # Zustand (auth, settings, scenarios, …)
 │   │   ├── services/             # Axios API client
 │   │   ├── hooks/                # useNavScrollSpy, useScrollReveal, …
 │   │   ├── i18n/                 # Landing page copy (EN / ID)
-│   │   ├── constants/            # App paths, welcome splash
+│   │   ├── constants/            # Menu permissions, welcome splash
 │   │   └── utils/                # landingRoutes, validation, export
-│   ├── e2e/                      # Playwright end-to-end specs
+│   ├── e2e/                      # Active Playwright specs (CI + prod monitor)
 │   └── public/                   # favicon, maintenance.html, sitemap
 │
 ├── docs/                         # Documentation (see docs/README.md)
 │   ├── ARCHITECTURE.md
-│   ├── DIRECTORY_STRUCTURE.md
 │   ├── SETUP.md
 │   ├── TESTING.md
 │   ├── SECURITY_TESTING.md       # Pentest & OWASP guide
 │   ├── API_ENDPOINTS.md
 │   ├── DEPLOYMENT.md
+│   ├── RUN_INTERNAL.md
 │   └── examples/                 # CI workflow templates
 │
 ├── scripts/                      # Ops scripts (see scripts/README.md)
 │   ├── deploy/                   # deploy-production, maintenance-mode
+│   ├── local-agent/              # Hybrid VPN agent for private targets
 │   ├── notify/                   # Telegram deploy notifications
 │   └── ops/                      # health-check, secrets, runner setup
 │
@@ -122,7 +125,8 @@ testingndrih/
 | **Public** | Landing (`/`, `/id`), About (`/about`, `/id/about`), LandingNotFound |
 | **Auth** | Login, Register, ForgotPassword, ResetPassword |
 | **Core** | Dashboard, Scenarios, ScenarioDetail (dual recording overviews), Execution, Reports, Analytics, Settings |
-| **Admin tools** | SmokeTest, StressTest, SecurityTest, ApiTesting, VisualRegression, Environments, Chains, ChainBuilder, ChainExecutor, Scheduler, Parallel, BrowserMatrix |
+| **Admin tools** | SmokeTestPage, StressTestPage, SecurityTest, ApiTesting, VisualRegression, Environments, Chains, ChainBuilder, ChainExecutor, Scheduler, Parallel, BrowserMatrix |
+| **Share** | SharedRunPage (`/share/runs/:token`) |
 | **System** | Maintenance, SessionExpired, Forbidden, ServerError, NotFound |
 | **Help** | SmokeTestHelp, StressTestHelp, SecurityTestHelp |
 

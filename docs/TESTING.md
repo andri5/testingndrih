@@ -128,19 +128,13 @@ backend/tests/database/
 
 ## Frontend E2E (Playwright)
 
-Lokasi: `frontend/e2e/` (16 spec files)
+Lokasi: `frontend/e2e/` — hanya spec yang aktif di CI / monitoring.
 
-| Spec | Area |
-|------|------|
-| `platform-features-e2e.spec.js` | API Testing, Issues, Environments, Visual Regression |
-| `auth.spec.js` / `auth-e2e.spec.js` | Login, logout, session |
-| `scenarios.spec.js` / `scenario-e2e.spec.js` | CRUD scenario |
-| `execution-e2e.spec.js` | Jalankan test |
-| `parallel-e2e.spec.js` | Parallel execution |
-| `scheduler-e2e.spec.js` | Penjadwalan |
-| `browser-matrix-e2e.spec.js` | Cross-browser |
-| `comprehensive.spec.js` | Full user journey |
-| `features-e2e.spec.js` | Fitur tambahan |
+| Spec | Area | Used by |
+|------|------|---------|
+| `platform-features-e2e.spec.js` | Platform features (mocked API) | CI (`ci.yml`) |
+| `production-smoke-e2e.spec.js` | Live production smoke | `prod-monitor.yml` |
+| `helpers/productionProbe.js` | Shared probe helpers | prod smoke |
 
 Konfigurasi: `frontend/playwright.config.js` (baseURL: `http://localhost:3001`)
 

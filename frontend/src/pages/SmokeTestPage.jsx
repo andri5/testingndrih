@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react'
 import { Zap, AlertCircle, Loader, CheckCircle2, Zap as ZapIcon, Rocket, MonitorPlay, BarChart2, ListChecks } from 'lucide-react'
-import SmokeTestRunner from '../components/SmokeTestRunner'
-import SmokeTestHistory from '../components/SmokeTestHistory'
-import SmokeTestSummary from '../components/SmokeTestSummary'
+import SmokeTestRunner from '../components/smoke/SmokeTestRunner'
+import SmokeTestHistory from '../components/smoke/SmokeTestHistory'
+import SmokeTestSummary from '../components/smoke/SmokeTestSummary'
 import ExportButtons from '../components/ExportButtons'
 import Layout from '../components/Layout'
-import apiClient from '../services/api'
+import apiClient from '../services/api'
 import { analyzeSmokeTestResults } from '../utils/testAnalysis'
 
-const i18n = {
+const i18n = {
     title: 'Smoke Tests',
     description: 'Quick validation of core functionality through automated smoke tests',
     selectScenario: 'Select Scenario',

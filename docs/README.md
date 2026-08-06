@@ -3,7 +3,7 @@
 Welcome to **Test Sambil Ngopi** documentation — guides for setup, development, testing, and production deployment.
 
 **Live:** [testsambilngopi.com](https://testsambilngopi.com)  
-**Last updated:** June 2026 · **Project version:** 1.14.x
+**Last updated:** August 2026 · **Project version:** 1.19.x
 
 ---
 
@@ -12,14 +12,13 @@ Welcome to **Test Sambil Ngopi** documentation — guides for setup, development
 | Document | Description |
 |----------|-------------|
 | [ARCHITECTURE.md](./ARCHITECTURE.md) | Tech stack, data flow, record/playback, modules |
-| [DIRECTORY_STRUCTURE.md](./DIRECTORY_STRUCTURE.md) | Full folder layout & naming conventions |
+| [../PROJECT_STRUCTURE.md](../PROJECT_STRUCTURE.md) | Canonical repo / folder map |
 | [SETUP.md](./SETUP.md) | Local install, Docker, env vars, troubleshooting |
 | [TESTING.md](./TESTING.md) | Jest, Vitest, Playwright E2E, CI coverage |
 | [SECURITY_TESTING.md](./SECURITY_TESTING.md) | Pentest checklist, OWASP Jest suite, in-app scanner |
 | [API_ENDPOINTS.md](./API_ENDPOINTS.md) | REST API reference |
 | [DEPLOYMENT.md](./DEPLOYMENT.md) | Release, VPS deploy, GitHub Actions |
 | [RUN_INTERNAL.md](./RUN_INTERNAL.md) | Public cloud vs internal staging Run (local / agent) |
-| [../PROJECT_STRUCTURE.md](../PROJECT_STRUCTURE.md) | High-level repo map |
 | [../README.md](../README.md) | Main readme (quick start, features) |
 
 ---
@@ -29,7 +28,7 @@ Welcome to **Test Sambil Ngopi** documentation — guides for setup, development
 ### Getting started
 1. **New to the project?** → [ARCHITECTURE.md](./ARCHITECTURE.md)
 2. **Set up locally** → [SETUP.md](./SETUP.md)
-3. **Find a file** → [DIRECTORY_STRUCTURE.md](./DIRECTORY_STRUCTURE.md)
+3. **Find a file** → [PROJECT_STRUCTURE.md](../PROJECT_STRUCTURE.md)
 
 ### Development
 - Backend: [SETUP.md](./SETUP.md) — backend section
@@ -50,12 +49,11 @@ Welcome to **Test Sambil Ngopi** documentation — guides for setup, development
 
 | Metric | Count |
 |--------|-------|
-| Backend controllers | 21 |
-| Backend services | 33 |
-| Frontend pages | 32 |
-| E2E spec files | 17 |
-| Database migrations | 17 |
-| GitHub workflows | 7 |
+| Backend controllers | ~25 |
+| Backend services | ~37 |
+| Frontend pages | ~36 |
+| Active E2E specs | 2 (CI + prod monitor) |
+| GitHub workflows | 6 |
 
 ---
 
