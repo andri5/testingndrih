@@ -2,6 +2,11 @@ name: Deploy Production
 
 # Triggered by Release workflow (gh workflow run) or manual dispatch.
 # Runs on self-hosted runner on the VPS — see scripts/ops/setup-github-runner.sh
+#
+# Approval flow:
+# 1) Job `approve` on ubuntu-latest uses environment `production-gate`
+#    (required reviewers) → shows "Review deployments" even if VPS runner is offline.
+# 2) Job `deploy` uses environment `production` for secrets only (no reviewers).
 on:
   workflow_dispatch:
     inputs:
@@ -29,10 +34,25 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  approve:
+    name: Review deployments
+    runs-on: ubuntu-latest
+    environment:
+      name: production-gate
+      url: https://testsambilngopi.com
+    steps:
+      - name: Waiting for reviewer approval
+        run: |
+          echo "Approved — production deploy may proceed."
+          echo "Environment: production-gate (required reviewers)."
+
   deploy:
     name: Deploy to testsambilngopi.com
+    needs: approve
     runs-on: [self-hosted, production]
-    environment: production
+    environment:
+      name: production
+      url: https://testsambilngopi.com
     outputs:
       deployed: ${{ steps.complete.outputs.deployed }}
       tag: ${{ steps.tag.outputs.tag }}
@@ -97,6 +117,7 @@ jobs:
       # Enrich tag for Telegram: main → main@sha + latest release notes tag
       - name: Resolve notify metadata
         id: notify_meta
+        if: always()
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -117,51 +138,32 @@ jobs:
             echo "Notify target: ${TAG}"
           fi
 
-  notify-telegram-success:
-    name: Telegram — deploy success
-    needs: deploy
-    runs-on: ubuntu-latest
-    if: >-
-      success() &&
-      needs.deploy.outputs.deployed == 'true' &&
-      github.event.inputs.notify_telegram == 'true'
-    environment: production
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Notify deploy success
+      - name: Notify Telegram (success)
+        if: >-
+          success() &&
+          github.event.inputs.notify_telegram == 'true'
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          DEPLOY_TAG: ${{ needs.deploy.outputs.deploy_tag || needs.deploy.outputs.tag }}
-          RELEASE_NOTES_TAG: ${{ needs.deploy.outputs.release_notes_tag }}
+          DEPLOY_TAG: ${{ steps.notify_meta.outputs.deploy_tag || steps.tag.outputs.tag }}
+          RELEASE_NOTES_TAG: ${{ steps.notify_meta.outputs.release_notes_tag }}
           GITHUB_REPOSITORY: ${{ github.repository }}
           GITHUB_ACTOR: ${{ github.actor }}
           GITHUB_RUN_ID: ${{ github.run_id }}
           GITHUB_SERVER_URL: ${{ github.server_url }}
         run: bash scripts/notify/telegram-deploy-notify.sh success
 
-  notify-telegram-failure:
-    name: Telegram — deploy failed
-    needs: deploy
-    runs-on: ubuntu-latest
-    if: >-
-      failure() &&
-      github.event.inputs.notify_telegram == 'true'
-    environment: production
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Notify deploy failure
+      - name: Notify Telegram (failure)
+        if: >-
+          failure() &&
+          github.event.inputs.notify_telegram == 'true'
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          DEPLOY_TAG: ${{ needs.deploy.outputs.deploy_tag || needs.deploy.outputs.tag }}
-          RELEASE_NOTES_TAG: ${{ needs.deploy.outputs.release_notes_tag }}
+          DEPLOY_TAG: ${{ steps.notify_meta.outputs.deploy_tag || steps.tag.outputs.tag }}
+          RELEASE_NOTES_TAG: ${{ steps.notify_meta.outputs.release_notes_tag }}
           GITHUB_REPOSITORY: ${{ github.repository }}
           GITHUB_ACTOR: ${{ github.actor }}
           GITHUB_RUN_ID: ${{ github.run_id }}
