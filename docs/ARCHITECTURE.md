@@ -4,7 +4,7 @@
 
 - **Tech stack:** React 18 + Vite + TailwindCSS | Node.js 20 + Express | PostgreSQL 16 + Prisma 7 | Playwright 1.58
 - **Architecture:** npm workspaces monorepo (`backend/` + `frontend/`) with optional Docker Compose
-- **Production:** [testsambilngopi.com](https://testsambilngopi.com)
+- **Production:** [testsambilngopi.my.id](https://testsambilngopi.my.id)
 - **Status:** Production ready (v1.9.x)
 
 ---

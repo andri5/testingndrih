@@ -8,7 +8,7 @@ on:
 
 env:
   HUSKY: 0
-  PROD_URL: https://testsambilngopi.com
+  PROD_URL: https://testsambilngopi.my.id
 
 jobs:
   pre-check:
@@ -87,7 +87,7 @@ jobs:
       - run: npx playwright test e2e/production-smoke-e2e.spec.js --project=chromium
         env:
           CI: true
-          PLAYWRIGHT_BASE_URL: https://testsambilngopi.com
+          PLAYWRIGHT_BASE_URL: https://testsambilngopi.my.id
 
   maintenance-note:
     name: Maintenance — smoke skipped

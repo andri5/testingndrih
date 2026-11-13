@@ -51,7 +51,7 @@ export function validateProductionSecurity() {
   const frontendUrl = (process.env.FRONTEND_URL || '').trim()
   if (!frontendUrl) {
     errors.push(
-      'FRONTEND_URL must be set in production (e.g. https://testsambilngopi.com) for password-reset emails'
+      'FRONTEND_URL must be set in production (e.g. https://testsambilngopi.my.id) for password-reset emails'
     )
   } else if (/localhost|127\.0\.0\.1/i.test(frontendUrl)) {
     errors.push(

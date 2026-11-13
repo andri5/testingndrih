@@ -12,7 +12,7 @@ Jobs and results are **persisted in the database** (Execution + StepResult). Res
 ```bash
 cd testingndrih
 # Playwright must be installed (backend dependency)
-set AGENT_API_URL=https://testsambilngopi.com
+set AGENT_API_URL=https://testsambilngopi.my.id
 set AGENT_TOKEN=tsn_your_token_here
 node scripts/local-agent/run.mjs
 ```
@@ -20,7 +20,7 @@ node scripts/local-agent/run.mjs
 Linux/macOS:
 
 ```bash
-export AGENT_API_URL=https://testsambilngopi.com
+export AGENT_API_URL=https://testsambilngopi.my.id
 export AGENT_TOKEN=tsn_your_token_here
 node scripts/local-agent/run.mjs
 ```

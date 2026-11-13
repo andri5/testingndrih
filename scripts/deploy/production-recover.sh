@@ -5,7 +5,7 @@ set -euo pipefail
 
 APP_PATH="${APP_PATH:-/opt/testingndrih}"
 HEALTH_LOCAL="${HEALTH_LOCAL:-http://127.0.0.1:3000/health}"
-PUBLIC_URL="${PUBLIC_URL:-https://testsambilngopi.com/health}"
+PUBLIC_URL="${PUBLIC_URL:-https://testsambilngopi.my.id/health}"
 
 echo "=== Production recovery: ${APP_PATH} ==="
 

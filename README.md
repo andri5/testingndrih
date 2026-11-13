@@ -2,7 +2,7 @@
 
 **Intelligent test recording & playback platform** — record browser interactions with Playwright, turn them into reusable scenarios, and run them with scheduling, cross-browser matrix, analytics, and CI integration.
 
-**Live:** [testsambilngopi.com](https://testsambilngopi.com)  
+**Live:** [testsambilngopi.my.id](https://testsambilngopi.my.id)  
 **Docs:** [`docs/README.md`](./docs/README.md)  
 **Version:** 1.14.x (semantic release)
 
@@ -50,7 +50,7 @@
 | **API docs** | Swagger UI | `/api/docs` |
 | **Container** | Docker Compose | App + PostgreSQL single stack |
 | **CI/CD** | GitHub Actions | Lint, test, release, deploy |
-| **Deploy** | Self-hosted runner on VPS | `testsambilngopi.com` |
+| **Deploy** | Self-hosted runner on VPS | `testsambilngopi.my.id` |
 
 **Monorepo workspaces:** `backend/` + `frontend/` (root `package.json` orchestrates scripts).
 
@@ -146,7 +146,7 @@ Proxy (public sites only, optional):
 
 ## Current status
 
-**Overall:** Production ready — live at [testsambilngopi.com](https://testsambilngopi.com)
+**Overall:** Production ready — live at [testsambilngopi.my.id](https://testsambilngopi.my.id)
 
 | Area | Status |
 |------|--------|
@@ -324,18 +324,25 @@ See [`docs/TESTING.md`](./docs/TESTING.md) for coverage targets and [`docs/SECUR
 
 ## CI/CD & production
 
+Production: **https://testsambilngopi.my.id** (Test Repository UI). Guide: [`docs/DEPLOYMENT.md`](./docs/DEPLOYMENT.md).
+
+```
+local → PR → merge main → CI → Release → Deploy
+                              ↓
+              Approve "Review deployments" → self-hosted VPS → health .my.id
+```
+
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
 | **CI** | Push / PR to `main` | Lint, backend tests, platform E2E |
-| **Release** | CI success on `main` | Semantic version tag |
-| **Deploy Production** | New release / manual | Deploy to VPS |
+| **Release** | CI success on `main` | Semantic version tag + dispatch deploy |
+| **Deploy Production** | Manual / after release | Approve → self-hosted deploy |
 | **Configure Production AI** | Manual dispatch | AI keys on VPS |
-| **Production Monitor** | Every 6h / manual | Live smoke tests |
+| **Production Monitor** | Every 6h / manual | Live smoke on `.my.id` |
 | **Post-Maintenance** | Every 15 min | Deploy once when prod recovers |
 
-Production URL: **https://testsambilngopi.com**
-
-Manual deploy with latest `main`: GitHub Actions → Deploy Production → check `use_main`.
+**Day-to-day:** Actions → **Deploy Production** → `use_main=true` (default) → approve → runner Idle.  
+Big UI changes: set `force_no_cache=true`.
 
 ---
 

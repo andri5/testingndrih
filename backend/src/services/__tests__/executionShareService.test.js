@@ -58,7 +58,7 @@ describe('executionShareService', () => {
       createdAt: new Date(),
     }))
 
-    const result = await createShare('user-1', 'exec-1', { expiresInDays: 7 }, 'https://testsambilngopi.com')
+    const result = await createShare('user-1', 'exec-1', { expiresInDays: 7 }, 'https://testsambilngopi.my.id')
 
     expect(result.token).toMatch(/^tsnshare_/)
     expect(result.shareUrl).toContain('/share/runs/tsnshare_')

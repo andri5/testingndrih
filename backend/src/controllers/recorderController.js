@@ -64,7 +64,7 @@ function buildClientInjectPayload(sessionId, recordToken, appOrigin, bridgeUrl =
     if (ov) ov.remove();
   }
 
-  // LPDP/Garuda CSP blocks fetch+iframe to testsambilngopi.com.
+  // LPDP/Garuda CSP blocks fetch+iframe to testsambilngopi.my.id.
   // Only postMessage via opener or popup works — popup needs a user gesture.
   function showConnectOverlay() {
     if (document.getElementById('__rec_connect_overlay')) return;
@@ -196,7 +196,7 @@ export const recorderController = {
       }
       const result = await recorderService.startRecording(userId, scenarioId, url, mode)
 
-      const appOrigin = resolveAppOrigin(req).replace(/^http:\/\/testsambilngopi\.com/i, 'https://testsambilngopi.com')
+      const appOrigin = resolveAppOrigin(req).replace(/^http:\/\/testsambilngopi\.my\.id/i, 'https://testsambilngopi.my.id')
       let clientGateUrl = result.clientGateUrl || null
       let proxyUrl = result.proxyUrl || null
       if (clientGateUrl && clientGateUrl.startsWith('/')) {
@@ -672,7 +672,7 @@ window.__targetBase=${JSON.stringify(url)};
       </body></html>`)
     }
 
-    const appOrigin = resolveAppOrigin(req).replace(/^http:\/\/testsambilngopi\.com/i, 'https://testsambilngopi.com')
+    const appOrigin = resolveAppOrigin(req).replace(/^http:\/\/testsambilngopi\.my\.id/i, 'https://testsambilngopi.my.id')
     const embed = String(req.query.embed || '') === '1'
 
     // Hidden iframe bridge — not blocked by popup blockers (COOP / internal sites)
@@ -802,7 +802,7 @@ window.__targetBase=${JSON.stringify(url)};
   <div class="wrap">
     <h1>Rekam di browser Anda</h1>
     <p class="muted">Mode client-direct: rekam di situs asli. Halaman ini menjadi <strong>jembatan</strong> step
-      (postMessage) karena CSP target sering memblokir koneksi ke testsambilngopi.com.</p>
+      (postMessage) karena CSP target sering memblokir koneksi ke testsambilngopi.my.id.</p>
     <p class="warn"><strong>Jangan tutup tab panduan ini</strong> selama recording — biarkan tetap terbuka di belakang.</p>
     <p class="ok">Jangan paste URL <code>inject.js</code> / jangan fetch script. Hanya paste <strong>script inline</strong> dari tombol di bawah.</p>
     ${reason ? `<p class="warn">${escHTML(String(reason))}</p>` : ''}
@@ -833,7 +833,7 @@ window.__targetBase=${JSON.stringify(url)};
         </li>
         <li>Paste script: <kbd>Ctrl+V</kbd> → <strong>Enter</strong>.</li>
         <li class="warn" style="list-style:none;margin:8px 0 8px -1.2rem;padding:10px 12px;border:1px solid #f59e0b55;border-radius:8px;background:#78350f33">
-          Situs dengan CSP ketat (LPDP/Garuda) memblokir fetch &amp; iframe ke testsambilngopi.com.
+          Situs dengan CSP ketat (LPDP/Garuda) memblokir fetch &amp; iframe ke testsambilngopi.my.id.
           Setelah paste, klik <strong>Hubungkan bridge sekarang</strong> (izinkan popup).
           Status harus jadi <em>Bridge siap</em> / <em>Connected</em>. Jangan tutup tab panduan.
         </li>
@@ -886,7 +886,7 @@ window.__targetBase=${JSON.stringify(url)};
             return;
           }
           if (!w) {
-            alert('Popup diblokir. Izinkan popup untuk testsambilngopi.com, lalu klik lagi.');
+            alert('Popup diblokir. Izinkan popup untuk testsambilngopi.my.id, lalu klik lagi.');
           }
         });
       }
@@ -1016,7 +1016,7 @@ window.__targetBase=${JSON.stringify(url)};
 
     const appOrigin = String(origin || resolveAppOrigin(req)).replace(/\/$/, '')
     // Force https origin when request came as http behind TLS terminator
-    const safeOrigin = appOrigin.replace(/^http:\/\/testsambilngopi\.com/i, 'https://testsambilngopi.com')
+    const safeOrigin = appOrigin.replace(/^http:\/\/testsambilngopi\.my\.id/i, 'https://testsambilngopi.my.id')
     const gateParams = new URLSearchParams({
       url: String(session.startUrl || req.query.url || ''),
       sessionId: String(sessionId),

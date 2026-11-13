@@ -165,7 +165,7 @@ export const defaultTargetKindLabels = {
   internalTitle: 'Internal / VPN',
   publicBullets: [
     'DNS resolve ke IP publik di internet (bukan rentang privat RFC1918).',
-    'Record & Run dari production (testsambilngopi.com) biasanya berhasil.',
+    'Record & Run dari production (testsambilngopi.my.id) biasanya berhasil.',
     'Cocok untuk staging/demo yang sudah diekspos ke internet (HTTP/HTTPS publik).',
     'Live Browser Runner di cloud memakai Playwright di VPS yang sama.',
   ],

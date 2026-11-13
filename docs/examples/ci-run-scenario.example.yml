@@ -22,7 +22,7 @@ jobs:
           SCENARIO_ID: ${{ inputs.scenario_id || secrets.TSN_SCENARIO_ID }}
           API_URL: ${{ secrets.TSN_API_URL }}
         run: |
-          API_URL="${API_URL:-https://testsambilngopi.com}"
+          API_URL="${API_URL:-https://testsambilngopi.my.id}"
           echo "api_url=${API_URL}" >> "$GITHUB_OUTPUT"
           if [ -z "${TOKEN}" ] || [ -z "${SCENARIO_ID}" ]; then
             echo "configured=false" >> "$GITHUB_OUTPUT"
@@ -38,7 +38,7 @@ jobs:
           echo "Add repository secrets:"
           echo "  TSN_API_TOKEN  (Settings → Integrations → API token)"
           echo "  TSN_SCENARIO_ID (UUID of scenario to run)"
-          echo "Optional: TSN_API_URL (default https://testsambilngopi.com)"
+          echo "Optional: TSN_API_URL (default https://testsambilngopi.my.id)"
 
       - name: Verify CI API
         if: steps.cfg.outputs.configured == 'true'

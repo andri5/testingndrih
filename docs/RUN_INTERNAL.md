@@ -1,6 +1,6 @@
 # Run internal / VPN staging targets
 
-Cloud production ([testsambilngopi.com](https://testsambilngopi.com)) runs Playwright on a **public VPS**. Private RFC1918 hosts (`10.x`, `192.168.x`, `172.16–31.x`), `localhost`, and typical VPN-only DNS **cannot** be opened from that VPS.
+Cloud production ([testsambilngopi.my.id](https://testsambilngopi.my.id)) runs Playwright on a **public VPS**. Private RFC1918 hosts (`10.x`, `192.168.x`, `172.16–31.x`), `localhost`, and typical VPN-only DNS **cannot** be opened from that VPS.
 
 | Action | Where it runs | Internal staging? |
 |--------|----------------|-------------------|

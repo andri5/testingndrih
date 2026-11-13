@@ -35,10 +35,10 @@ jobs:
             echo "previous=unknown" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Probe testsambilngopi.com
+      - name: Probe testsambilngopi.my.id
         id: health
         run: |
-          if curl -fsS --connect-timeout 20 https://testsambilngopi.com/health; then
+          if curl -fsSk --connect-timeout 20 https://testsambilngopi.my.id/health; then
             echo "healthy=true" >> "$GITHUB_OUTPUT"
             echo "Production is reachable."
           else

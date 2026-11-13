@@ -1,12 +1,14 @@
 name: Deploy Production
 
-# Triggered by Release workflow (gh workflow run) or manual dispatch.
-# Runs on self-hosted runner on the VPS — see scripts/ops/setup-github-runner.sh
+# Manual or dispatched after Release.
+# Self-hosted runner on the VPS — scripts/ops/setup-github-runner.sh
 #
-# Approval flow:
-# 1) Job `approve` on ubuntu-latest uses environment `production-gate`
-#    (required reviewers) → shows "Review deployments" even if VPS runner is offline.
-# 2) Job `deploy` uses environment `production` for secrets only (no reviewers).
+# Flow (easy day-to-day):
+# 1) Approve job on ubuntu-latest → environment production-gate ("Review deployments")
+# 2) Deploy job on [self-hosted, production] → secrets from environment production
+# 3) Health check https://testsambilngopi.my.id/health
+#
+# Prefer "use_main=true" for quick UI/backend deploys during active development.
 on:
   workflow_dispatch:
     inputs:
@@ -14,11 +16,11 @@ on:
         description: 'Release tag (empty = latest GitHub release)'
         required: false
       use_main:
-        description: 'Deploy latest main instead of a release tag'
+        description: 'Deploy latest main (recommended for day-to-day)'
         type: boolean
-        default: false
+        default: true
       force_no_cache:
-        description: 'Docker build without layer cache (slower, use if stale image)'
+        description: 'Docker build without layer cache (use after big UI changes)'
         type: boolean
         default: false
       notify_telegram:
@@ -33,26 +35,32 @@ concurrency:
   group: deploy-production
   cancel-in-progress: false
 
+env:
+  PROD_SITE_URL: https://testsambilngopi.my.id
+  HEALTH_PUBLIC: https://testsambilngopi.my.id/health
+
 jobs:
   approve:
     name: Review deployments
     runs-on: ubuntu-latest
     environment:
       name: production-gate
-      url: https://testsambilngopi.com
+      url: https://testsambilngopi.my.id
     steps:
       - name: Waiting for reviewer approval
         run: |
           echo "Approved — production deploy may proceed."
+          echo "Site: ${{ env.PROD_SITE_URL }}"
           echo "Environment: production-gate (required reviewers)."
+          echo "Tip: keep self-hosted runner Idle before approving."
 
   deploy:
-    name: Deploy to testsambilngopi.com
+    name: Deploy to testsambilngopi.my.id
     needs: approve
     runs-on: [self-hosted, production]
     environment:
       name: production
-      url: https://testsambilngopi.com
+      url: https://testsambilngopi.my.id
     outputs:
       deployed: ${{ steps.complete.outputs.deployed }}
       tag: ${{ steps.tag.outputs.tag }}
@@ -78,7 +86,7 @@ jobs:
               | jq -r .tag_name)
           fi
           if [ -z "$TAG" ] || [ "$TAG" = "null" ]; then
-            echo "No published release found"
+            echo "No published release found — set use_main=true or pass a tag"
             exit 1
           fi
           echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
@@ -94,6 +102,7 @@ jobs:
           fi
           if [ ! -d "${PROD_APP_PATH}" ]; then
             echo "Deploy path does not exist: ${PROD_APP_PATH}"
+            echo "Expected a git checkout with docker-compose.yml + .env"
             exit 1
           fi
           echo "Deploy path OK: ${PROD_APP_PATH}"
@@ -108,13 +117,14 @@ jobs:
         env:
           APP_PATH: ${{ secrets.PROD_APP_PATH }}
           FORCE_NO_CACHE: ${{ github.event.inputs.force_no_cache }}
+          HEALTH_PUBLIC: ${{ env.HEALTH_PUBLIC }}
+          PROD_SITE_URL: ${{ env.PROD_SITE_URL }}
         run: bash scripts/deploy/deploy-production.sh
 
       - name: Mark deploy complete
         id: complete
         run: echo "deployed=true" >> "$GITHUB_OUTPUT"
 
-      # Enrich tag for Telegram: main → main@sha + latest release notes tag
       - name: Resolve notify metadata
         id: notify_meta
         if: always()
@@ -146,6 +156,7 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PROD_SITE_URL: ${{ env.PROD_SITE_URL }}
           DEPLOY_TAG: ${{ steps.notify_meta.outputs.deploy_tag || steps.tag.outputs.tag }}
           RELEASE_NOTES_TAG: ${{ steps.notify_meta.outputs.release_notes_tag }}
           GITHUB_REPOSITORY: ${{ github.repository }}
@@ -162,6 +173,7 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PROD_SITE_URL: ${{ env.PROD_SITE_URL }}
           DEPLOY_TAG: ${{ steps.notify_meta.outputs.deploy_tag || steps.tag.outputs.tag }}
           RELEASE_NOTES_TAG: ${{ steps.notify_meta.outputs.release_notes_tag }}
           GITHUB_REPOSITORY: ${{ github.repository }}

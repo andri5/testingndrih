@@ -73,7 +73,7 @@ export default function TurnstileWidget({ siteKey, onVerify, onExpire, onError, 
           'expired-callback': () => onExpireRef.current?.(),
           'error-callback': () => {
             setLoadError(
-              'Captcha verification failed. Ensure testsambilngopi.com is added in Cloudflare Turnstile.'
+              'Captcha verification failed. Ensure testsambilngopi.my.id is added in Cloudflare Turnstile.'
             )
             onErrorRef.current?.()
           },

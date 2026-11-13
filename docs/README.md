@@ -2,7 +2,7 @@
 
 Welcome to **Test Sambil Ngopi** documentation — guides for setup, development, testing, and production deployment.
 
-**Live:** [testsambilngopi.com](https://testsambilngopi.com)  
+**Live:** [testsambilngopi.my.id](https://testsambilngopi.my.id)  
 **Last updated:** August 2026 · **Project version:** 1.19.x
 
 ---
@@ -17,7 +17,7 @@ Welcome to **Test Sambil Ngopi** documentation — guides for setup, development
 | [TESTING.md](./TESTING.md) | Jest, Vitest, Playwright E2E, CI coverage |
 | [SECURITY_TESTING.md](./SECURITY_TESTING.md) | Pentest checklist, OWASP Jest suite, in-app scanner |
 | [API_ENDPOINTS.md](./API_ENDPOINTS.md) | REST API reference |
-| [DEPLOYMENT.md](./DEPLOYMENT.md) | Release, VPS deploy, GitHub Actions |
+| [DEPLOYMENT.md](./DEPLOYMENT.md) | Dev → approve → deploy `.my.id` + Test Repository UI map |
 | [RUN_INTERNAL.md](./RUN_INTERNAL.md) | Public cloud vs internal staging Run (local / agent) |
 | [../README.md](../README.md) | Main readme (quick start, features) |
 
@@ -105,7 +105,7 @@ Details: [ARCHITECTURE.md](./ARCHITECTURE.md#record--playback) · [PROJECT_STRUC
 | Admin tools & visual regression | Production |
 | User management & roles | Production |
 | CI/CD + semantic release | Production |
-| Live deployment (testsambilngopi.com) | Production |
+| Live deployment (testsambilngopi.my.id) | Production |
 | Maintenance / downtime UX | Production |
 
 ---

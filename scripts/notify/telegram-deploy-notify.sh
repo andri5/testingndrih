@@ -15,7 +15,7 @@ TAG="${DEPLOY_TAG:-}"
 REPO="${GITHUB_REPOSITORY:-}"
 ACTOR="${GITHUB_ACTOR:-unknown}"
 RUN_URL="${GITHUB_SERVER_URL:-https://github.com}/${REPO}/actions/runs/${GITHUB_RUN_ID:-0}"
-SITE_URL="${PROD_SITE_URL:-https://testsambilngopi.com}"
+SITE_URL="${PROD_SITE_URL:-https://testsambilngopi.my.id}"
 TOKEN="${TELEGRAM_BOT_TOKEN:-}"
 CHAT_ID="${TELEGRAM_CHAT_ID:-}"
 GH_TOKEN="${GITHUB_TOKEN:-}"
@@ -285,7 +285,7 @@ if [ "${MODE}" = "success" ]; then
 
 Production udah live. Bug? Mereka lagi ngantri di luar pintu.
 
-🌐 <a href="${SITE_URL}">testsambilngopi.com</a>
+🌐 <a href="${SITE_URL}">testsambilngopi.my.id</a>
 🏷 Versi / target: <code>${DISPLAY_TAG}</code>
 👤 Deploy dipicu oleh: <b>${ACTOR}</b>
 🕐 Waktu: ${DEPLOYED_AT}
@@ -309,7 +309,7 @@ elif [ "${MODE}" = "failure" ]; then
 
 Production belum ke-update. Kopi jangan dibuang, log-nya yang dibuka.
 
-🌐 Target: <a href="${SITE_URL}">testsambilngopi.com</a>
+🌐 Target: <a href="${SITE_URL}">testsambilngopi.my.id</a>
 🏷 Versi target: <code>${TAG:-unknown}</code>
 👤 Dipicu oleh: <b>${ACTOR}</b>
 

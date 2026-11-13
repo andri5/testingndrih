@@ -1,28 +1,62 @@
-# Deployment & Release Workflow
+# Deployment & Development Workflow
 
-Panduan deploy production untuk **Test Sambil Ngopi** (`https://testsambilngopi.com`).
+Production: **https://testsambilngopi.my.id**  
+App UI: **Test Repository** (icon rail + folder tree + scenario table).
 
-Tanpa staging — semua rilis production melalui branch `main`, semantic versioning, dan approval manual sebelum deploy.
+Tanpa staging — rilis lewat `main`, dengan **Review deployments** sebelum deploy VPS.
 
 ---
 
-## Alur kerja (ringkas)
+## Alur development (sehari-hari)
 
 ```
-feat/fix/hotfix/*  →  PR ke main  →  CI (test + lint + E2E + commitlint)
-                                        ↓
-                                   merge main
-                                        ↓
-                                   CI hijau
-                                        ↓
-                              semantic-release (tag vX.Y.Z)
-                                        ↓
-                              GitHub Release published
-                                        ↓
-                         Deploy Production (approval manual ⏸)
-                                        ↓
-                              https://testsambilngopi.com
+1. Local develop
+   frontend :3001  |  backend :5001  |  DB docker :5434
+   UI: /scenarios = Test Repository (folders, Create menu, DnD)
+
+2. Commit (Conventional Commits)
+   feat(scenarios): ...
+   fix(ui): ...
+
+3. Push branch → PR ke main
+   CI: lint + tests + E2E + commitlint
+
+4. Merge main
+   CI hijau → Release (semantic-release) → dispatch Deploy
+
+5. Deploy Production
+   Approve "Review deployments" (production-gate)
+   Self-hosted runner build/up di VPS
+   Health: https://testsambilngopi.my.id/health
 ```
+
+### Manual deploy cepat (tanpa nunggu release)
+
+GitHub → Actions → **Deploy Production** → Run workflow:
+
+| Input | Nilai tipikal |
+|--------|----------------|
+| `use_main` | **true** (default) |
+| `force_no_cache` | true setelah perubahan UI besar |
+| `notify_telegram` | true |
+
+Lalu approve **Review deployments**.
+
+---
+
+## Peta UI production (referensi QA)
+
+| Menu (icon rail) | Path | Catatan |
+|------------------|------|---------|
+| Dashboard | `/dashboard` | Ringkasan |
+| Scenarios | `/scenarios` | **Test Repository** + folder pane |
+| Execution | `/execution` | Run history |
+| Environments | `/environments` | Variabel `{{var}}` |
+| Reports / Analytics | `/reports`, `/analytics` | Laporan |
+| Tools | overflow | Smoke, stress, chains, … |
+| Settings | `/settings` | Profile, users, AI |
+
+Create di repository: Manual / Quick Record / Templates / Excel / AI — assign ke folder aktif.
 
 ---
 
@@ -30,51 +64,40 @@ feat/fix/hotfix/*  →  PR ke main  →  CI (test + lint + E2E + commitlint)
 
 | Branch | Peran | Deploy |
 |--------|--------|--------|
-| `main` | Production | Ya (setelah release + approval) |
-| `feat/*` | Fitur baru | Tidak |
-| `fix/*` | Perbaikan bug | Tidak |
-| `hotfix/*` | Perbaikan darurat production | Tidak |
+| `main` | Production | Ya (setelah approval) |
+| `feat/*` | Fitur | Tidak |
+| `fix/*` | Bugfix | Tidak |
+| `hotfix/*` | Darurat | Tidak |
 
-Branch `develop` **tidak dipakai** dalam workflow ini.
+`develop` tidak dipakai.
 
 ---
 
-## Semantic commit (Conventional Commits)
-
-Format:
+## Semantic commit
 
 ```
 <type>(<scope opsional>): <deskripsi>
-
-[body opsional — max 100 karakter per baris]
 ```
 
-| Type | Contoh | Dampak versi |
-|------|--------|----------------|
-| `feat` | `feat(api): add export endpoint` | Minor (2.0.0 → 2.1.0) |
-| `fix` | `fix(ui): correct login redirect` | Patch (2.0.0 → 2.0.1) |
-| `feat!` atau `BREAKING CHANGE:` | breaking API change | Major (2.0.0 → 3.0.0) |
-| `docs`, `test`, `chore`, `ci`, `refactor`, `perf` | maintenance | Tidak memicu rilis* |
+| Type | Dampak versi |
+|------|----------------|
+| `feat` | Minor |
+| `fix` | Patch |
+| `feat!` / `BREAKING CHANGE:` | Major |
+| `docs`, `chore`, `ci`, … | Tidak rilis* |
 
-\*Kecuali ada penanda breaking change.
-
-Validasi lokal: Husky `commit-msg` + commitlint.  
-Validasi CI: commitlint pada setiap Pull Request.
+\*Kecuali breaking. Validasi: Husky + commitlint (PR).
 
 ---
 
 ## Semantic release
 
-Setelah merge ke `main` dan CI sukses, workflow **Release** menjalankan [semantic-release](https://semantic-release.gitbook.io/):
+Setelah CI `main` sukses, workflow **Release**:
 
-1. Menganalisis commit sejak tag terakhir
-2. Menentukan versi baru (`feat` → minor, `fix` → patch)
-3. Memperbarui `CHANGELOG.md` dan `package.json`
-4. Membuat Git tag (`v2.1.0`) dan GitHub Release
-
-Commit rilis bot memakai `[skip ci]` agar tidak memicu loop CI/deploy.
-
-Konfigurasi: `.releaserc.json`
+1. Analisis commit sejak tag terakhir  
+2. Bump versi + `CHANGELOG.md`  
+3. Tag `vX.Y.Z` + GitHub Release  
+4. Dispatch **Deploy Production** (`use_main=true`)
 
 ---
 
@@ -82,225 +105,76 @@ Konfigurasi: `.releaserc.json`
 
 Workflow: `.github/workflows/deploy-production.yml`
 
-**Trigger:** GitHub Release `published` (setelah semantic-release).
+1. **Approve** — job `Review deployments` / environment `production-gate`  
+2. **Deploy** — self-hosted `[self-hosted, production]`  
+3. Script: `scripts/deploy/deploy-production.sh`  
+   - sync `FRONTEND_URL` / `CORS_ORIGIN` → `https://testsambilngopi.my.id`  
+   - build app, recreate app only  
+   - attach DB network alias `postgres` (hindari conflict container)  
+   - health lokal + publik  
 
-**Approval:** Environment `production` di GitHub — deploy tidak jalan sebelum Anda menyetujui.
+### Secrets (environment `production`)
 
-**Langkah di server (via SSH):**
+| Secret | Keterangan |
+|--------|------------|
+| `PROD_APP_PATH` | Path checkout di VPS (harus berisi `docker-compose.yml` + `.env`) |
+| `TELEGRAM_BOT_TOKEN` / `TELEGRAM_CHAT_ID` | Notifikasi (opsional) |
 
-1. `git fetch --tags` + `git checkout <tag>`
-2. `docker compose build`
-3. `docker compose up -d`
-4. Health check: `https://testsambilngopi.com/health`
+### Environments
+
+| Name | Fungsi |
+|------|--------|
+| `production-gate` | Required reviewers → tombol Review deployments |
+| `production` | Secrets deploy (tanpa double-approve) |
+
+### Self-hosted runner (wajib)
+
+Tanpa runner Idle, job deploy **queued** selamanya.
+
+```bash
+# di VPS (sekali / setelah runner hilang)
+RUNNER_TOKEN=XXXX sudo -E bash scripts/ops/setup-github-runner.sh
+```
+
+Cek: GitHub → Settings → Actions → Runners → hijau Idle.
+
+Label: `self-hosted`, `production`, `linux`.
 
 ---
 
-## Setup server (sekali)
-
-### 1. User deploy
-
-```bash
-sudo adduser deploy
-sudo usermod -aG docker deploy
-```
-
-### 2. Deploy runner (self-hosted)
-
-Deploy production memakai **self-hosted runner** di VPS (bukan SSH dari GitHub cloud).
-Setup sekali: `bash scripts/ops/setup-github-runner.sh` di server.
-
-<details>
-<summary>Legacy: SSH key (tidak dipakai workflow deploy saat ini)</summary>
-
-Di laptop Anda:
-
-```bash
-ssh-keygen -t ed25519 -C "github-actions-deploy" -f deploy_key -N ""
-```
-
-- Public key (`deploy_key.pub`) → `~deploy/.ssh/authorized_keys` di VPS
-- Private key → GitHub Secret (jangan commit ke repo)
-
-</details>
-
-### 3. Clone repository
-
-```bash
-sudo mkdir -p /opt/testingndrih
-sudo chown deploy:deploy /opt/testingndrih
-sudo -u deploy git clone https://github.com/andri5/testingndrih.git /opt/testingndrih
-cd /opt/testingndrih
-sudo -u deploy git checkout main
-```
-
-### 4. Environment production
-
-Buat `/opt/testingndrih/.env` (jangan di-commit):
+## Environment production (VPS `.env`)
 
 ```env
 NODE_ENV=production
-PORT=3000
-FRONTEND_PORT=3000
-
-DATABASE_URL=postgresql://USER:PASS@postgres:5432/testingndrih
-DB_USER=testingndrih_user
-DB_PASSWORD=<strong-password>
-DB_NAME=testingndrih
-
-JWT_SECRET=<long-random-secret>
-JWT_EXPIRES_IN=7d
-
-CORS_ORIGIN=https://testsambilngopi.com
-FRONTEND_URL=https://testsambilngopi.com
-
-# Gmail SMTP (password reset emails)
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_SECURE=false
-SMTP_USER=your-email@gmail.com
-SMTP_PASSWORD=<gmail-app-password>
-SMTP_FROM="Test Sambil Ngopi <your-email@gmail.com>"
-
-# First deploy only — set false after admin user exists
-RUN_SEED=true
-SEED_EMAIL=admin@testingndrih.local
-SEED_PASSWORD=<change-me>
-ENABLE_SCHEDULER=true
+FRONTEND_URL=https://testsambilngopi.my.id
+CORS_ORIGIN=https://testsambilngopi.my.id
+DATABASE_URL=postgresql://...@postgres:5432/testingndrih
+RUN_SEED=false
 ```
 
-Setelah admin berhasil dibuat, ubah `RUN_SEED=false` di `.env` VPS agar redeploy tidak menjalankan seed lagi.
-
-Jalankan pertama kali:
-
-```bash
-cd /opt/testingndrih
-docker compose up -d
-```
-
-### 5. Reverse proxy (Nginx contoh)
-
-SSL di-handle Certbot. Proxy ke container port 3000:
-
-```nginx
-server {
-    listen 443 ssl http2;
-    server_name testsambilngopi.com;
-
-    # ssl_certificate ... (Certbot)
-
-    location / {
-        proxy_pass http://127.0.0.1:3000;
-        proxy_http_version 1.1;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-}
-```
+Reverse proxy saat ini: **Caddy** → `testsambilngopi.my.id` → `172.17.0.1:3000`.
 
 ---
 
-## GitHub configuration
+## Local vs production
 
-> **Jangan pernah** commit token Telegram, password SMTP, atau private key ke repository publik.
-> Simpan hanya di GitHub **Secrets** / environment **production** di VPS.
+| | Local | Production |
+|--|--------|------------|
+| URL | http://localhost:3001 | https://testsambilngopi.my.id |
+| API | http://localhost:5001 | same origin `/api` |
+| UI | Vite HMR | Docker image (rebuild) |
+| DB | docker `:5434` | container `testingndrih-db` |
 
-### Secrets (Settings → Secrets and variables → Actions)
-
-| Secret | Contoh | Keterangan |
-|--------|--------|------------|
-| `PROD_SSH_HOST` | `123.45.67.89` | IP atau hostname VPS |
-| `PROD_SSH_USER` | `deploy` | User SSH |
-| `PROD_SSH_KEY` | `-----BEGIN OPENSSH...` | Private key |
-| `PROD_APP_PATH` | `/opt/testingndrih` | Path clone di server |
-| `TELEGRAM_BOT_TOKEN` | `123456:ABC...` | Token dari [@BotFather](https://t.me/BotFather) — notifikasi deploy |
-| `TELEGRAM_CHAT_ID` | `123456789` | Chat ID Anda (DM bot atau grup) |
-
-**Setup Telegram (sekali):**
-
-1. Buka [@BotFather](https://t.me/BotFather) → `/newbot` → salin **token**
-2. Kirim pesan ke bot Anda, lalu buka  
-   `https://api.telegram.org/bot<TOKEN>/getUpdates` → cari `"chat":{"id":...}`
-3. GitHub → Settings → Environments → **production** → Add secret:  
-   `TELEGRAM_BOT_TOKEN` dan `TELEGRAM_CHAT_ID`
-
-Setelah deploy sukses/gagal, notifikasi dikirim otomatis.
-
-### Environment `production`
-
-1. Settings → Environments → New environment → `production`
-2. **Required reviewers:** tambahkan akun Anda
-3. (Opsional) Deployment branches: `main` only
-
-### Branch protection `main` (disarankan)
-
-- Require pull request before merging
-- Require status checks: `Backend Tests`, `Platform E2E`, `Commit lint`
-- Do not allow bypassing
+Setelah deploy UI: hard refresh (`Ctrl+Shift+R`).
 
 ---
 
-## Keamanan production (wajib)
+## Troubleshooting singkat
 
-Checklist setelah server live:
-
-1. **Jangan commit `.env`** — file ini hanya di VPS / lokal.
-2. **Generate secret kuat** di laptop:
-   ```bash
-   npm run generate-secrets
-   ```
-   Salin `JWT_SECRET` (minimal 32 karakter) ke `/opt/testingndrih/.env`.
-3. **Ganti password admin** di VPS:
-   ```bash
-   cd /opt/testingndrih
-   docker compose exec -e NEW_ADMIN_PASSWORD='<your-strong-password>' app node scripts/rotate-admin-password.js
-   ```
-4. **Pastikan** `RUN_SEED=false` setelah user admin ada.
-5. **Restart app** setelah mengubah `.env`:
-   ```bash
-   docker compose up -d --force-recreate app
-   ```
-
-Server production akan **menolak start** jika `JWT_SECRET` masih default atau kurang dari 32 karakter.
-
----
-
-## Rollback
-
-Di server:
-
-```bash
-cd /opt/testingndrih
-git fetch --tags
-git checkout v2.0.0   # versi sebelumnya
-docker compose build
-docker compose up -d
-```
-
-Atau re-run workflow deploy dari GitHub Release tag lama (setelah approval).
-
----
-
-## Troubleshooting
-
-| Masalah | Solusi |
-|---------|--------|
-| Deploy gagal SSH | Cek secrets, firewall port 22, `authorized_keys` |
-| Health check gagal | `docker compose logs -f app`, cek Nginx & port 3000 |
-| Migrasi DB gagal | `docker compose logs app`, backup DB sebelum deploy |
-| Tidak ada release baru | Commit mungkin hanya `chore`/`docs` — tidak memicu versi |
-| Loop CI | Commit rilis memakai `[skip ci]` — pastikan tidak dihapus |
-
----
-
-## File terkait
-
-| File | Fungsi |
-|------|--------|
-| `.github/workflows/ci.yml` | Test, lint, E2E, commitlint |
-| `.github/workflows/release.yml` | Semantic release |
-| `.github/workflows/deploy-production.yml` | Deploy ke VPS |
-| `.releaserc.json` | Aturan versioning |
-| `docker-compose.yml` | Stack production |
-| `commitlint.config.js` | Aturan commit message |
+| Gejala | Perbaikan |
+|--------|-----------|
+| Deploy queued, no job | Nyalakan self-hosted runner |
+| Review deployments tidak muncul | Cek environment `production-gate` + required reviewers |
+| App 502 / P1001 postgres | `docker network connect --alias postgres <app_net> testingndrih-db` lalu restart app |
+| UI masih lama | Rebuild `--no-cache` / `force_no_cache=true`; pastikan `PROD_APP_PATH` = checkout git terbaru |
+| Health publik gagal | Cek Caddy + `curl -sk https://testsambilngopi.my.id/health` |

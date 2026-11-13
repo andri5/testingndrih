@@ -11,7 +11,7 @@ export function getFrontendUrl() {
 
   if (process.env.NODE_ENV === 'production') {
     throw new Error(
-      'FRONTEND_URL is not set. Add FRONTEND_URL=https://testsambilngopi.com to production .env'
+      'FRONTEND_URL is not set. Add FRONTEND_URL=https://testsambilngopi.my.id to production .env'
     )
   }
 

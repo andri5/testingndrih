@@ -1,4 +1,4 @@
-# Nginx snippet for testsambilngopi.com
+# Nginx snippet for testsambilngopi.my.id
 # Copy to /etc/nginx/sites-available/ and include maintenance block.
 #
 # Before VPS maintenance:
@@ -8,7 +8,7 @@
 
 server {
     listen 443 ssl http2;
-    server_name testsambilngopi.com;
+    server_name testsambilngopi.my.id;
 
     # ssl_certificate ... (managed by certbot)
 

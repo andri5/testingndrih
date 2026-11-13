@@ -1,4 +1,4 @@
-export const SITE_URL = 'https://testsambilngopi.com'
+export const SITE_URL = 'https://testsambilngopi.my.id'
 
 export const LANDING_SEO = {
   id: {
@@ -76,7 +76,7 @@ export const landingCopy = {
     reachInternalLabel: 'Internal / VPN',
     reachPublicItems: [
       'DNS ke IP internet publik — bisa dibuka dari mana saja',
-      'Record & Run di testsambilngopi.com biasanya berhasil',
+      'Record & Run di testsambilngopi.my.id biasanya berhasil',
       'Cocok untuk staging/demo yang sudah diekspos ke internet',
     ],
     reachInternalItems: [
@@ -85,7 +85,7 @@ export const landingCopy = {
       'Record tetap bisa di browser PC; Run via backend lokal atau local agent',
     ],
     reachBullet1: 'Record (client-direct) — jalan di PC Anda, cocok untuk internal/VPN',
-    reachBullet2: 'Run di testsambilngopi.com — hanya URL publik',
+    reachBullet2: 'Run di testsambilngopi.my.id — hanya URL publik',
     reachBullet3: 'Run staging internal — jalankan app lokal saat VPN/LAN aktif',
     reachCta: 'Baca panduan Run lokal',
     aiBadge: 'AI-Powered',
@@ -174,7 +174,7 @@ export const landingCopy = {
     reachInternalLabel: 'Internal / VPN',
     reachPublicItems: [
       'DNS resolves to a public internet IP — reachable from anywhere',
-      'Record & Run on testsambilngopi.com usually work',
+      'Record & Run on testsambilngopi.my.id usually work',
       'Best for staging/demo already exposed on the internet',
     ],
     reachInternalItems: [
@@ -183,7 +183,7 @@ export const landingCopy = {
       'Record still works in your browser; Run via local backend or local agent',
     ],
     reachBullet1: 'Record (client-direct) — runs on your PC, works for internal/VPN',
-    reachBullet2: 'Run on testsambilngopi.com — public URLs only',
+    reachBullet2: 'Run on testsambilngopi.my.id — public URLs only',
     reachBullet3: 'Run internal staging — run the app locally while on VPN/LAN',
     reachCta: 'Read local Run guide',
     aiBadge: 'AI-Powered',
@@ -286,7 +286,7 @@ export const aboutCopy = {
       'Bahasa Indonesia & English — landing dan docs ramah untuk tim lokal dan global.',
     ],
     liveTitle: 'Production',
-    liveText: 'Platform live di testsambilngopi.com — open source workflow dengan deploy otomatis via GitHub Actions.',
+    liveText: 'Platform live di testsambilngopi.my.id — open source workflow dengan deploy otomatis via GitHub Actions.',
     ctaTitle: 'Mau coba sendiri?',
     ctaText: 'Buat akun gratis dan rekam skenario pertama hari ini.',
     ctaButton: 'Mulai Gratis',
@@ -324,7 +324,7 @@ export const aboutCopy = {
       'Indonesian & English — landing and UX friendly for local and global teams.',
     ],
     liveTitle: 'Production',
-    liveText: 'Live at testsambilngopi.com — open-source workflow with automated deploy via GitHub Actions.',
+    liveText: 'Live at testsambilngopi.my.id — open-source workflow with automated deploy via GitHub Actions.',
     ctaTitle: 'Want to try it?',
     ctaText: 'Create a free account and record your first scenario today.',
     ctaButton: 'Start Free',

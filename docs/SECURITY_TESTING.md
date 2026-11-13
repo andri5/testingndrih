@@ -203,7 +203,7 @@ cd backend && npm audit
 cd frontend && npm audit
 
 # Health & headers
-curl -I https://testsambilngopi.com/health
+curl -I https://testsambilngopi.my.id/health
 
 # Generate production secrets (VPS setup)
 npm run generate-secrets

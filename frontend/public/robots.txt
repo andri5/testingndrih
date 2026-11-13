@@ -7,4 +7,4 @@ Disallow: /scenarios
 Disallow: /execution
 Disallow: /settings
 
-Sitemap: https://testsambilngopi.com/sitemap.xml
+Sitemap: https://testsambilngopi.my.id/sitemap.xml

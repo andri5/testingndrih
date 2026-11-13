@@ -7,7 +7,7 @@
  * Results are stored as Execution + StepResult on the server.
  *
  * Usage:
- *   set AGENT_API_URL=https://testsambilngopi.com
+ *   set AGENT_API_URL=https://testsambilngopi.my.id
  *   set AGENT_TOKEN=tsn_your_api_token
  *   node scripts/local-agent/run.mjs
  *
