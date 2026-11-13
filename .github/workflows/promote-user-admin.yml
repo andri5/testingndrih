@@ -1,0 +1,30 @@
+name: Promote User Admin
+
+# One-shot: set a production user role to ADMIN via self-hosted runner.
+on:
+  workflow_dispatch:
+    inputs:
+      email:
+        description: 'User email to promote to ADMIN'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: promote-user-admin
+  cancel-in-progress: false
+
+jobs:
+  promote:
+    name: Promote to ADMIN
+    runs-on: [self-hosted, production]
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Promote user
+        env:
+          EMAIL: ${{ github.event.inputs.email }}
+        run: bash scripts/ops/promote-user-admin.sh
