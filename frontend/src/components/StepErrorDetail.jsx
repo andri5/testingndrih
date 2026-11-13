@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { ChevronDown, Lightbulb, RotateCcw, Globe, Code2, Terminal } from 'lucide-react'
 import SmartSuggestionPanel from './SmartSuggestionPanel'
-import AIInsightPanel from './AIInsightPanel'
 import ExportFormatButton from './ExportFormatButton'
 import { analyzeErrorSuggestions, CONFIDENCE_LABELS } from '../utils/errorSuggestionAnalyzer'
 
@@ -166,8 +165,6 @@ export default function StepErrorDetail({
               </div>
             </div>
           </section>
-
-          <AIInsightPanel errorDetail={detail} />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <section className="rounded-xl border border-[#0F766E]/25 bg-[#EEF0FF]/70 p-4 shadow-sm">

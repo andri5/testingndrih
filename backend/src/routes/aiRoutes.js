@@ -4,7 +4,6 @@ import { authenticateToken } from '../middleware/auth.js'
 import {
   aiStatusHandler,
   explainFailureHandler,
-  generateScenarioHandler,
   suggestLocatorHandler,
 } from '../controllers/aiController.js'
 
@@ -28,7 +27,6 @@ router.use(aiLimiter)
 
 router.get('/status', aiStatusHandler)
 router.post('/explain-failure', explainFailureHandler)
-router.post('/generate-scenario', generateScenarioHandler)
 router.post('/suggest-locator', suggestLocatorHandler)
 
 export default router

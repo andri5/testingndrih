@@ -3,11 +3,6 @@
  * Requires AI_ENABLED=true and OPENAI_API_KEY in server env.
  */
 
-const STEP_TYPES = [
-  'NAVIGATE', 'CLICK', 'FILL', 'SCREENSHOT', 'WAIT', 'ASSERTION',
-  'API_CALL', 'HOVER', 'SCROLL', 'FILE_UPLOAD', 'DRAG', 'MOCK_ROUTE',
-]
-
 const SENSITIVE_PATTERN = /(password|secret|token|api[_-]?key|authorization|bearer)\s*[:=]\s*\S+/gi
 
 export function isAiEnabled() {
@@ -133,70 +128,6 @@ export async function explainFailure(context) {
   const safe = redactContext(context)
   const userPrompt = `Explain this test step failure:\n${JSON.stringify(safe, null, 2)}`
   return callLlm(EXPLAIN_SYSTEM, userPrompt)
-}
-
-const GENERATE_SYSTEM = `You are a test scenario author for a Playwright automation platform.
-Given a user description, output ONLY valid JSON:
-{
-  "name": "short scenario name",
-  "description": "what this scenario validates",
-  "url": "starting URL https://...",
-  "steps": [
-    {
-      "stepNumber": 1,
-      "type": "NAVIGATE|CLICK|FILL|WAIT|ASSERTION|SCREENSHOT",
-      "description": "human-readable step label",
-      "selector": "css selector or null for NAVIGATE/WAIT",
-      "value": "url, text to type, wait ms, or assertion text — null if N/A"
-    }
-  ]
-}
-Rules:
-- Use only these step types: ${STEP_TYPES.join(', ')}
-- Prefer stable selectors: data-testid, role, name, aria-label
-- Add WAIT (1000-2000) after NAVIGATE when page loads dynamic content
-- Keep 3-12 steps unless user asks for more
-- Do not include real credentials; use placeholders like {{username}}`
-
-const generateCache = new Map()
-const GENERATE_CACHE_TTL_MS = 10 * 60 * 1000
-const GENERATE_CACHE_MAX = 40
-
-function cacheKeyGenerate(prompt, url) {
-  return `${(url || '').trim()}::${prompt.trim().toLowerCase()}`
-}
-
-export async function generateScenario({ prompt, url }) {
-  const key = cacheKeyGenerate(prompt, url)
-  const cached = generateCache.get(key)
-  if (cached && Date.now() - cached.at < GENERATE_CACHE_TTL_MS) {
-    return structuredClone(cached.data)
-  }
-
-  const userPrompt = url
-    ? `Base URL: ${url}\n\nUser request:\n${prompt}`
-    : `User request:\n${prompt}`
-  const result = await callLlm(GENERATE_SYSTEM, userPrompt, { temperature: 0.4 })
-  validateGeneratedScenario(result)
-
-  if (generateCache.size >= GENERATE_CACHE_MAX) {
-    const oldest = generateCache.keys().next().value
-    generateCache.delete(oldest)
-  }
-  generateCache.set(key, { at: Date.now(), data: result })
-
-  return result
-}
-
-function validateGeneratedScenario(data) {
-  if (!data?.name || !data?.url || !Array.isArray(data.steps) || data.steps.length === 0) {
-    throw new Error('AI generated an invalid scenario structure')
-  }
-  for (const step of data.steps) {
-    if (!STEP_TYPES.includes(step.type)) {
-      throw new Error(`Invalid step type from AI: ${step.type}`)
-    }
-  }
 }
 
 const LOCATOR_SYSTEM = `You are a Playwright locator expert.

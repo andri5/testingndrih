@@ -4,7 +4,6 @@ import {
   ClipboardList,
   BarChart2,
   Layers,
-  Sparkles,
   GitCompare,
   Zap,
   Globe,
@@ -18,7 +17,6 @@ import {
   ArrowRight,
   CheckCircle2,
   Mic,
-  Bot,
 } from 'lucide-react'
 import LandingNav, { LandingFooter } from '../components/landing/LandingNav'
 import LandingFeedbackSection from '../components/landing/LandingFeedbackSection'
@@ -28,9 +26,9 @@ import { landingCopy, ADVANCED_LABELS } from '../i18n/landingI18n'
 import { useLandingSEO } from '../hooks/useLandingSEO'
 import { getPublicLang } from '../utils/landingRoutes'
 
-const FEATURE_ICONS = [Mic, ClipboardList, PlayCircle, Sparkles, Layers, BarChart2, GitCompare, Webhook]
+const FEATURE_ICONS = [Mic, ClipboardList, PlayCircle, Layers, BarChart2, GitCompare, Webhook]
 const FEATURE_ICON_CLASSES = [
-  'lp-icon-indigo', 'lp-icon-teal', 'lp-icon-emerald', 'lp-icon-violet',
+  'lp-icon-indigo', 'lp-icon-teal', 'lp-icon-emerald',
   'lp-icon-indigo', 'lp-icon-amber', 'lp-icon-rose', 'lp-icon-sky',
 ]
 const ADVANCED_ICONS = [Link2, Clock, Globe, Activity, Gauge, Shield, Image, Zap]
@@ -99,7 +97,7 @@ export default function LandingPage({ lang: langProp }) {
           <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
             <div className="lp-animate-in max-w-xl">
               <p className="inline-flex items-center gap-2 text-xs font-semibold lp-badge rounded-full px-3 py-1.5 mb-6">
-                <Bot size={14} />
+                <PlayCircle size={14} />
                 {t.badge}
               </p>
               <h1 className="lp-hero-title text-3xl sm:text-4xl lg:text-5xl leading-tight">
@@ -212,35 +210,6 @@ export default function LandingPage({ lang: langProp }) {
             {t.reachCta}
             <ArrowRight size={16} />
           </a>
-        </div>
-      </section>
-
-      <section className="py-16 sm:py-24 px-4 sm:px-6">
-        <div className="max-w-6xl mx-auto lp-ai-panel rounded-3xl p-8 sm:p-12 lp-animate-in">
-          <div className="grid lg:grid-cols-2 gap-8 items-center">
-            <div>
-              <div className="inline-flex items-center gap-2 text-teal-700 text-sm font-semibold mb-4">
-                <Sparkles size={18} />
-                {t.aiBadge}
-              </div>
-              <h2 className="text-2xl sm:text-3xl font-bold lp-hero-title">{t.aiTitle}</h2>
-              <p className="mt-4 lp-muted leading-relaxed text-base">{t.aiSubtitle}</p>
-              <ul className="mt-6 space-y-3">
-                {t.aiItems.map((item) => (
-                  <li key={item} className="flex items-center gap-2 text-sm lp-muted">
-                    <CheckCircle2 size={16} className="text-teal-600 shrink-0" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="lp-code p-5 font-mono text-xs">
-              <p className="text-teal-300 mb-2">// Prompt</p>
-              <p className="text-slate-100 mb-4">&quot;{t.aiPrompt}&quot;</p>
-              <p className="text-teal-300 mb-2">{t.aiGenerated}</p>
-              <p className="text-slate-300">NAVIGATE → FILL → FILL → CLICK → WAIT → ASSERTION</p>
-            </div>
-          </div>
         </div>
       </section>
 

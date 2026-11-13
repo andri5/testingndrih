@@ -65,7 +65,6 @@ export function usePublicSEO(lang, seoMap, alternatePaths) {
       offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
       featureList: [
         'Playwright record and playback',
-        'AI test scenario generator',
         'Cross-browser execution',
         'Visual regression testing',
         'CI/CD integration',

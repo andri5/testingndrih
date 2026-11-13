@@ -40,7 +40,7 @@ export const pricingCopy = {
         features: [
           'Scenario, Record, Run (URL publik)',
           'Environments & reports',
-          'Kuota AI harian',
+          'Compare runs & analytics',
           'Local agent untuk staging internal',
         ],
       },
@@ -98,7 +98,7 @@ export const pricingCopy = {
         features: [
           'Scenarios, Record, Run (public URLs)',
           'Environments & reports',
-          'Daily AI quota',
+          'Compare runs & analytics',
           'Local agent for internal staging',
         ],
       },

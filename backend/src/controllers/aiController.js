@@ -1,7 +1,6 @@
 import {
   isAiEnabled,
   explainFailure,
-  generateScenario,
   suggestLocator,
 } from '../services/aiService.js'
 import {
@@ -46,24 +45,6 @@ export async function explainFailureHandler(req, res, next) {
     }
     const insight = await withAiQuota(req.user.id, () => explainFailure(errorDetail))
     res.json({ success: true, insight, quota: getAiQuotaStatus(req.user.id) })
-  } catch (error) {
-    next(error)
-  }
-}
-
-export async function generateScenarioHandler(req, res, next) {
-  try {
-    const { prompt, url } = req.body
-    if (!prompt?.trim()) {
-      return res.status(400).json({
-        success: false,
-        message: 'prompt is required',
-      })
-    }
-    const scenario = await withAiQuota(req.user.id, () =>
-      generateScenario({ prompt: prompt.trim(), url: url?.trim() })
-    )
-    res.json({ success: true, scenario, quota: getAiQuotaStatus(req.user.id) })
   } catch (error) {
     next(error)
   }

@@ -2,18 +2,18 @@ export const SITE_URL = 'https://testsambilngopi.my.id'
 
 export const LANDING_SEO = {
   id: {
-    title: 'Test Sambil Ngopi — Platform Testing Otomatis Playwright & AI',
+    title: 'Test Sambil Ngopi — Platform Testing Otomatis Playwright',
     description:
-      'Platform test automation Indonesia: rekam & playback browser dengan Playwright, AI generate skenario, analytics, compare runs, CI/CD. Gratis mulai sekarang.',
+      'Platform test automation Indonesia: rekam & playback browser dengan Playwright, analytics, compare runs, CI/CD. Gratis mulai sekarang.',
     keywords:
       'platform testing otomatis, test automation indonesia, playwright testing, QA automation, rekam test browser, end to end testing, automated testing, smoke test, visual regression, test sambil ngopi',
     locale: 'id_ID',
     path: '/id',
   },
   en: {
-    title: 'Test Sambil Ngopi — Playwright Test Automation & AI Platform',
+    title: 'Test Sambil Ngopi — Playwright Test Automation Platform',
     description:
-      'Record & playback browser tests with Playwright, AI scenario generator, analytics, run diff, and CI integration. Free to start — self-hosted ready.',
+      'Record & playback browser tests with Playwright, analytics, run diff, and CI integration. Free to start — self-hosted ready.',
     keywords:
       'automated testing platform, playwright test automation, record and playback testing, end to end testing, QA automation tool, browser testing, smoke test, visual regression, CI test automation',
     locale: 'en_US',
@@ -25,7 +25,7 @@ export const ABOUT_SEO = {
   id: {
     title: 'Tentang Kami — Test Sambil Ngopi',
     description:
-      'Kenali Test Sambil Ngopi: platform test automation berbasis Playwright & AI untuk tim QA dan developer Indonesia. Self-hosted, rekam & playback, CI-ready.',
+      'Kenali Test Sambil Ngopi: platform test automation berbasis Playwright untuk tim QA dan developer Indonesia. Self-hosted, rekam & playback, CI-ready.',
     keywords:
       'tentang test sambil ngopi, platform QA indonesia, test automation, playwright, about us',
     locale: 'id_ID',
@@ -34,7 +34,7 @@ export const ABOUT_SEO = {
   en: {
     title: 'About — Test Sambil Ngopi',
     description:
-      'Learn about Test Sambil Ngopi: a Playwright & AI test automation platform for QA teams and developers. Self-hosted, record & playback, CI-ready.',
+      'Learn about Test Sambil Ngopi: a Playwright test automation platform for QA teams and developers. Self-hosted, record & playback, CI-ready.',
     keywords:
       'about test sambil ngopi, QA platform, test automation, playwright, about us',
     locale: 'en_US',
@@ -50,14 +50,14 @@ export const landingCopy = {
     navAbout: 'Tentang',
     navLogin: 'Login',
     navCta: 'Mulai Gratis',
-    footerTagline: 'Platform test automation Playwright & AI — ngopi dulu, yakin kemudian.',
+    footerTagline: 'Platform test automation Playwright — ngopi dulu, yakin kemudian.',
     footerProduct: 'Produk',
     footerAccount: 'Akun',
-    badge: 'Playwright · AI · CI-ready',
+    badge: 'Playwright · Record · CI-ready',
     heroTitle: 'Platform testing yang',
     heroHighlight: 'ngopi dulu, yakin kemudian',
     heroSubtitle:
-      'Rekam, bangun, dan jalankan skenario otomatis. Buat manual, template, AI generate, atau Record di halaman scenario — plus analytics & compare runs.',
+      'Rekam, bangun, dan jalankan skenario otomatis. Buat manual, template, atau Record di halaman scenario — plus analytics & compare runs.',
     ctaPrimary: 'Mulai Gratis',
     ctaSecondary: 'Sign In',
     trust1: 'Tanpa kartu kredit',
@@ -88,13 +88,6 @@ export const landingCopy = {
     reachBullet2: 'Run di testsambilngopi.my.id — hanya URL publik',
     reachBullet3: 'Run staging internal — jalankan app lokal saat VPN/LAN aktif',
     reachCta: 'Baca panduan Run lokal',
-    aiBadge: 'AI-Powered',
-    aiTitle: 'Testing lebih cepat dengan AI',
-    aiSubtitle:
-      'Generate skenario dari bahasa natural, dapatkan penjelasan saat step gagal, dan saran locator cerdas — tanpa mengganti engine Playwright yang sudah reliable.',
-    aiItems: ['AI Scenario Generator', 'AI Failure Explainer', 'AI Locator Assistant'],
-    aiPrompt: 'Login dengan kredensial valid, pastikan dashboard muncul',
-    aiGenerated: '→ Generated 6 steps',
     advancedTitle: 'Advanced tools untuk power user',
     advancedSubtitle: 'Admin workspace: chains, scheduler, parallel runs, dan specialized testing.',
     ctaFinalTitle: 'Siap mengotomatisasi testing Anda?',
@@ -128,17 +121,16 @@ export const landingCopy = {
       { title: 'Record & Playback', desc: 'Rekam di situs asli (client-direct) atau buat step manual — lalu playback dengan Playwright.' },
       { title: 'Scenario Management', desc: 'Buat manual, template, import Excel, clone, tag, dan favorit. (Quick Record khusus admin.)' },
       { title: 'Execution Engine', desc: 'Jalankan step-by-step dengan screenshot, retry, saran locator, dan run diff. Self-heal ditampilkan saat selector diperbaiki.' },
-      { title: 'AI Assistant', desc: 'Generate scenario dari deskripsi, analisis kegagalan, dan saran locator — dengan kuota harian yang adil.' },
       { title: 'Environments', desc: 'Kelola variabel per environment (dev/staging/prod) dengan substitusi {{var}} di steps.' },
       { title: 'Analytics & Reports', desc: 'Trend eksekusi, flaky steps, export HTML/PDF, dan insight performa test.' },
       { title: 'Compare Runs', desc: 'Bandingkan dua eksekusi side-by-side — lihat step mana yang berubah status atau error.' },
       { title: 'CI & Notifications', desc: 'API token untuk pipeline, webhook & email saat test gagal, smoke test deploy gate.' },
     ],
     steps: [
-      { title: 'Buat skenario', text: 'Form manual, template, import Excel, atau AI Generate. Lalu Record di halaman scenario.' },
+      { title: 'Buat skenario', text: 'Form manual, template, atau import Excel. Lalu Record di halaman scenario.' },
       { title: 'Atur steps', text: 'Edit selector, tambah assertion, set environment variables.' },
       { title: 'Jalankan', text: 'Run URL publik di cloud. Staging internal: Run dari backend lokal di LAN/VPN.' },
-      { title: 'Analisis', text: 'Lihat report, compare runs, perbaiki dengan saran locator & AI.' },
+      { title: 'Analisis', text: 'Lihat report, compare runs, perbaiki dengan saran locator.' },
     ],
   },
   en: {
@@ -148,14 +140,14 @@ export const landingCopy = {
     navAbout: 'About',
     navLogin: 'Login',
     navCta: 'Start Free',
-    footerTagline: 'Playwright test automation with AI — sip coffee, ship with confidence.',
+    footerTagline: 'Playwright test automation — sip coffee, ship with confidence.',
     footerProduct: 'Product',
     footerAccount: 'Account',
-    badge: 'Playwright · AI · CI-ready',
+    badge: 'Playwright · Record · CI-ready',
     heroTitle: 'Test automation that lets you',
     heroHighlight: 'sip coffee, ship with confidence',
     heroSubtitle:
-      'Record, build, and run automated scenarios. Create manually, use templates, AI generate, or Record on the scenario page — plus analytics and run diff.',
+      'Record, build, and run automated scenarios. Create manually, use templates, or Record on the scenario page — plus analytics and run diff.',
     ctaPrimary: 'Start Free',
     ctaSecondary: 'Sign In',
     trust1: 'No credit card',
@@ -186,13 +178,6 @@ export const landingCopy = {
     reachBullet2: 'Run on testsambilngopi.my.id — public URLs only',
     reachBullet3: 'Run internal staging — run the app locally while on VPN/LAN',
     reachCta: 'Read local Run guide',
-    aiBadge: 'AI-Powered',
-    aiTitle: 'Faster testing with AI',
-    aiSubtitle:
-      'Generate scenarios from plain language, explain failures, and get smart locator suggestions — powered by Playwright under the hood.',
-    aiItems: ['AI Scenario Generator', 'AI Failure Explainer', 'AI Locator Assistant'],
-    aiPrompt: 'Login with valid credentials and verify the dashboard appears',
-    aiGenerated: '→ Generated 6 steps',
     advancedTitle: 'Advanced tools for power users',
     advancedSubtitle: 'Admin workspace: chains, scheduler, parallel runs, and specialized testing.',
     ctaFinalTitle: 'Ready to automate your testing?',
@@ -226,17 +211,16 @@ export const landingCopy = {
       { title: 'Record & Playback', desc: 'Record on the real site (client-direct) or build steps manually — then replay with Playwright.' },
       { title: 'Scenario Management', desc: 'Manual create, templates, Excel import, clone, tags, favorites. (Quick Record is admin-only.)' },
       { title: 'Execution Engine', desc: 'Step-by-step runs with screenshots, retries, locator suggestions, and run diff. Self-heal is surfaced when a selector is repaired.' },
-      { title: 'AI Assistant', desc: 'Generate scenarios from descriptions, explain failures, and suggest locators with fair daily quotas.' },
       { title: 'Environments', desc: 'Manage variables per environment (dev/staging/prod) with {{var}} substitution in steps.' },
       { title: 'Analytics & Reports', desc: 'Execution trends, flaky step detection, HTML/PDF export, and performance insights.' },
       { title: 'Compare Runs', desc: 'Side-by-side comparison of two executions — see which steps changed status or errors.' },
       { title: 'CI & Notifications', desc: 'API tokens for pipelines, webhooks & email on failure, smoke test deploy gates.' },
     ],
     steps: [
-      { title: 'Create a scenario', text: 'Manual form, templates, Excel import, or AI Generate. Then Record on the scenario page.' },
+      { title: 'Create a scenario', text: 'Manual form, templates, or Excel import. Then Record on the scenario page.' },
       { title: 'Configure steps', text: 'Edit selectors, add assertions, set environment variables.' },
       { title: 'Execute', text: 'Run public URLs in the cloud. Internal staging: Run from a local backend on LAN/VPN.' },
-      { title: 'Analyze', text: 'View reports, compare runs, fix with locator suggestions & AI.' },
+      { title: 'Analyze', text: 'View reports, compare runs, fix with locator suggestions.' },
     ],
   },
 }
@@ -269,7 +253,7 @@ export const aboutCopy = {
       },
       {
         title: 'Developer',
-        desc: 'Self-hosted ready, API token untuk pipeline, environments per stage, dan AI assistant saat locator atau step gagal.',
+        desc: 'Self-hosted ready, API token untuk pipeline, dan environments per stage.',
       },
       {
         title: 'Tim kecil & indie',
@@ -277,11 +261,11 @@ export const aboutCopy = {
       },
     ],
     builtTitle: 'Dibangun dengan',
-    builtItems: ['Playwright', 'Node.js & Express', 'React', 'PostgreSQL', 'Docker', 'GitHub Actions CI/CD', 'AI (Groq/OpenAI-compatible)'],
+    builtItems: ['Playwright', 'Node.js & Express', 'React', 'PostgreSQL', 'Docker', 'GitHub Actions CI/CD'],
     valuesTitle: 'Prinsip kami',
     values: [
       'Playwright di core — bukan wrapper tipis, engine execution yang reliable.',
-      'AI sebagai asisten, bukan pengganti: generate skenario, explain failure, suggest locator.',
+      'Record & playback yang praktis: buat skenario, jalankan, bandingkan hasil.',
       'Transparan & self-hosted: deploy di VPS sendiri, data test tetap milik Anda.',
       'Bahasa Indonesia & English — landing dan docs ramah untuk tim lokal dan global.',
     ],
@@ -307,7 +291,7 @@ export const aboutCopy = {
       },
       {
         title: 'Developers',
-        desc: 'Self-hosted ready, API tokens for pipelines, per-stage environments, and AI help when locators or steps fail.',
+        desc: 'Self-hosted ready, API tokens for pipelines, and per-stage environments.',
       },
       {
         title: 'Small & indie teams',
@@ -315,11 +299,11 @@ export const aboutCopy = {
       },
     ],
     builtTitle: 'Built with',
-    builtItems: ['Playwright', 'Node.js & Express', 'React', 'PostgreSQL', 'Docker', 'GitHub Actions CI/CD', 'AI (Groq/OpenAI-compatible)'],
+    builtItems: ['Playwright', 'Node.js & Express', 'React', 'PostgreSQL', 'Docker', 'GitHub Actions CI/CD'],
     valuesTitle: 'What we believe',
     values: [
       'Playwright at the core — a reliable execution engine, not a thin wrapper.',
-      'AI as assistant, not replacement: generate scenarios, explain failures, suggest locators.',
+      'Practical record & playback: build scenarios, run them, compare results.',
       'Transparent & self-hosted: deploy on your VPS, your test data stays yours.',
       'Indonesian & English — landing and UX friendly for local and global teams.',
     ],
