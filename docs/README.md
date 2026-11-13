@@ -12,7 +12,7 @@ Welcome to **Test Sambil Ngopi** documentation — guides for setup, development
 | Document | Description |
 |----------|-------------|
 | [ARCHITECTURE.md](./ARCHITECTURE.md) | Tech stack, data flow, record/playback, modules |
-| [../PROJECT_STRUCTURE.md](../PROJECT_STRUCTURE.md) | Canonical repo / folder map |
+| [PROJECT_STRUCTURE.md](./PROJECT_STRUCTURE.md) | Canonical repo / folder map |
 | [SETUP.md](./SETUP.md) | Local install, Docker, env vars, troubleshooting |
 | [TESTING.md](./TESTING.md) | Jest, Vitest, Playwright E2E, CI coverage |
 | [SECURITY_TESTING.md](./SECURITY_TESTING.md) | Pentest checklist, OWASP Jest suite, in-app scanner |
@@ -28,7 +28,7 @@ Welcome to **Test Sambil Ngopi** documentation — guides for setup, development
 ### Getting started
 1. **New to the project?** → [ARCHITECTURE.md](./ARCHITECTURE.md)
 2. **Set up locally** → [SETUP.md](./SETUP.md)
-3. **Find a file** → [PROJECT_STRUCTURE.md](../PROJECT_STRUCTURE.md)
+3. **Find a file** → [PROJECT_STRUCTURE.md](./PROJECT_STRUCTURE.md)
 
 ### Development
 - Backend: [SETUP.md](./SETUP.md) — backend section
@@ -92,7 +92,7 @@ Stop    → POST /api/recorder/stop  → optional save to PostgreSQL
 Run     → POST /api/executions     → executionService replays on real URL
 ```
 
-Details: [ARCHITECTURE.md](./ARCHITECTURE.md#record--playback) · [PROJECT_STRUCTURE.md](../PROJECT_STRUCTURE.md)
+Details: [ARCHITECTURE.md](./ARCHITECTURE.md#record--playback) · [PROJECT_STRUCTURE.md](./PROJECT_STRUCTURE.md)
 
 ---
 

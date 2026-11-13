@@ -168,7 +168,7 @@ Proxy (public sites only, optional):
 
 ## Product roadmap
 
-Planned improvements (documentation only until a phase is approved for implementation). Detail, target files, and architecture notes: [`PROJECT_STRUCTURE.md`](./PROJECT_STRUCTURE.md#product-roadmap-planned).
+Planned improvements (documentation only until a phase is approved for implementation). Detail, target files, and architecture notes: [`docs/PROJECT_STRUCTURE.md`](./docs/PROJECT_STRUCTURE.md#product-roadmap-planned).
 
 | Phase | Focus | Status | Deliverables (summary) |
 |-------|--------|--------|------------------------|
@@ -286,7 +286,7 @@ docker compose down -v      # stop + remove volumes
 |----------|-------------|
 | [`docs/README.md`](./docs/README.md) | Documentation index |
 | [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) | Architecture & data flow |
-| [`PROJECT_STRUCTURE.md`](./PROJECT_STRUCTURE.md) | Canonical folder layout |
+| [`docs/PROJECT_STRUCTURE.md`](./docs/PROJECT_STRUCTURE.md) | Canonical folder layout |
 | [`docs/SETUP.md`](./docs/SETUP.md) | Detailed setup & troubleshooting |
 | [`docs/TESTING.md`](./docs/TESTING.md) | Test strategy & commands |
 | [`docs/API_ENDPOINTS.md`](./docs/API_ENDPOINTS.md) | REST API reference |
@@ -386,7 +386,7 @@ testingndrih/
 └── package.json             # Monorepo root
 ```
 
-Full map: [`PROJECT_STRUCTURE.md`](./PROJECT_STRUCTURE.md)
+Full map: [`docs/PROJECT_STRUCTURE.md`](./docs/PROJECT_STRUCTURE.md)
 
 ---
 

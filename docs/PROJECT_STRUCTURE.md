@@ -2,7 +2,7 @@
 
 High-level map of the **Test Sambil Ngopi** monorepo (canonical folder layout).
 
-**Last updated:** August 2026 · **Version:** 1.19.x
+**Last updated:** November 2026 · **Version:** 1.19.x
 
 ---
 
@@ -30,13 +30,14 @@ testingndrih/
 ├── frontend/                     # React 18 + Vite SPA
 │   ├── src/
 │   │   ├── pages/                # Route-level screens (landing, app, admin, help)
-│   │   ├── components/
+│   │   ├── components/           # Layout (icon rail), ScenarioFolderTree,
+│   │   │   │                     # ScenarioRepositoryTable, modals, …
 │   │   │   ├── landing/          # Public site: nav, footer, carousel, feedback
 │   │   │   ├── security/         # Security scan UI widgets
 │   │   │   ├── smoke/            # Smoke test runner / history / summary
 │   │   │   ├── stress/           # Stress test runner / history / metrics
 │   │   │   └── ui/               # Shared primitives (Button, Card, Spinner)
-│   │   ├── store/                # Zustand (auth, settings, scenarios, …)
+│   │   ├── store/                # Zustand (auth, settings, scenarios, folders, …)
 │   │   ├── services/             # Axios API client
 │   │   ├── hooks/                # useNavScrollSpy, useScrollReveal, …
 │   │   ├── i18n/                 # Landing page copy (EN / ID)
@@ -46,12 +47,13 @@ testingndrih/
 │   └── public/                   # favicon, maintenance.html, sitemap
 │
 ├── docs/                         # Documentation (see docs/README.md)
+│   ├── PROJECT_STRUCTURE.md      # This file
 │   ├── ARCHITECTURE.md
 │   ├── SETUP.md
 │   ├── TESTING.md
 │   ├── SECURITY_TESTING.md       # Pentest & OWASP guide
 │   ├── API_ENDPOINTS.md
-│   ├── DEPLOYMENT.md
+│   ├── DEPLOYMENT.md             # Dev → approve → deploy (.my.id)
 │   ├── RUN_INTERNAL.md
 │   └── examples/                 # CI workflow templates
 │

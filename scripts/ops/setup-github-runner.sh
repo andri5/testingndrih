@@ -3,8 +3,20 @@
 # Deploy workflow runs ON the server — no inbound SSH from GitHub cloud needed.
 set -euo pipefail
 
-RUNNER_USER="${RUNNER_USER:-deploy}"
-RUNNER_HOME="/home/${RUNNER_USER}"
+# Prefer explicit RUNNER_USER, else deploy → ubuntu → SUDO_USER → who invoked sudo
+if [ -z "${RUNNER_USER:-}" ]; then
+  if id deploy >/dev/null 2>&1; then
+    RUNNER_USER=deploy
+  elif id ubuntu >/dev/null 2>&1; then
+    RUNNER_USER=ubuntu
+  elif [ -n "${SUDO_USER:-}" ] && id "${SUDO_USER}" >/dev/null 2>&1; then
+    RUNNER_USER="${SUDO_USER}"
+  else
+    RUNNER_USER=ubuntu
+  fi
+fi
+RUNNER_HOME="$(getent passwd "${RUNNER_USER}" | cut -d: -f6)"
+RUNNER_HOME="${RUNNER_HOME:-/home/${RUNNER_USER}}"
 RUNNER_DIR="${RUNNER_HOME}/actions-runner"
 REPO_URL="${REPO_URL:-https://github.com/andri5/testingndrih}"
 RUNNER_VERSION="${RUNNER_VERSION:-2.334.0}"
@@ -18,12 +30,16 @@ if [ -z "${RUNNER_TOKEN:-}" ]; then
   echo "Set RUNNER_TOKEN from GitHub:"
   echo "  Settings → Actions → Runners → New self-hosted runner → copy token"
   echo ""
-  echo "Example:"
-  echo "  RUNNER_TOKEN=XXXX sudo -E bash scripts/ops/setup-github-runner.sh"
+  echo "Example (VPS ini pakai user ubuntu):"
+  echo "  RUNNER_TOKEN=XXXX RUNNER_USER=ubuntu sudo -E bash scripts/ops/setup-github-runner.sh"
   exit 1
 fi
 
-id "${RUNNER_USER}" >/dev/null 2>&1 || { echo "User ${RUNNER_USER} not found"; exit 1; }
+if ! id "${RUNNER_USER}" >/dev/null 2>&1; then
+  echo "User ${RUNNER_USER} not found. Set RUNNER_USER=ubuntu (or create deploy)."
+  exit 1
+fi
+echo "Installing runner as user: ${RUNNER_USER} (${RUNNER_DIR})"
 usermod -aG docker "${RUNNER_USER}"
 
 mkdir -p "${RUNNER_DIR}"

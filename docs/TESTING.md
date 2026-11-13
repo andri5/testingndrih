@@ -195,7 +195,7 @@ Contoh remote run: `docs/examples/ci-run-scenario.example.yml`
 - [x] CI workflow dev — `.github/workflows/ci.yml`
 - [x] API reference — `docs/API_ENDPOINTS.md`
 - [ ] Naikkan coverage global ke 80%+ (`npm run test:coverage`)
-- [ ] Component tests (React Testing Library) untuk `ScenariosList`, `ExecuteScenarioButton`
+- [ ] Component tests (React Testing Library) untuk `ScenarioRepositoryTable`, `ExecuteScenarioButton`
 
 ### MEDIUM
 - [ ] Performance benchmark API (<500ms)

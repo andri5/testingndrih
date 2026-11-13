@@ -235,7 +235,7 @@
 
 **Header:** `X-API-Token: <token>`
 
-Contoh workflow: `.github/workflows/ci-run-scenario.example.yml`
+Contoh workflow: `docs/examples/ci-run-scenario.example.yml`
 
 ---
 
