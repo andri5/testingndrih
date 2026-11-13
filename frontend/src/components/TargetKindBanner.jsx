@@ -3,6 +3,7 @@ import { Globe, ShieldAlert, ChevronDown, ChevronUp, CheckCircle2, XCircle, Info
 
 /**
  * Prominent public vs internal/VPN target explanation for scenario URLs.
+ * Light-surface contrast: dark body text on soft tinted backgrounds.
  */
 export default function TargetKindBanner({
   targetKind,
@@ -17,8 +18,8 @@ export default function TargetKindBanner({
 
   if (isProbing) {
     return (
-      <div className="rounded-xl border border-slate-600/40 bg-slate-800/40 px-4 py-3 text-sm text-slate-300 flex items-center gap-2">
-        <span className="inline-block w-3.5 h-3.5 rounded-full border-2 border-slate-400 border-t-transparent animate-spin" />
+      <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 flex items-center gap-2">
+        <span className="inline-block w-3.5 h-3.5 rounded-full border-2 border-slate-500 border-t-transparent animate-spin" />
         {labels.probing || 'Mendeteksi jenis URL target…'}
       </div>
     )
@@ -28,11 +29,11 @@ export default function TargetKindBanner({
 
   const isInternal = targetKind === 'internal'
   const shell = isInternal
-    ? 'border-amber-500/50 bg-gradient-to-br from-amber-950/50 to-amber-900/20'
-    : 'border-emerald-500/40 bg-gradient-to-br from-emerald-950/40 to-emerald-900/15'
+    ? 'border-amber-300 bg-gradient-to-br from-amber-50 to-orange-50'
+    : 'border-emerald-300 bg-gradient-to-br from-emerald-50 to-teal-50'
   const badge = isInternal
-    ? 'bg-amber-500 text-amber-950'
-    : 'bg-emerald-500 text-emerald-950'
+    ? 'bg-amber-600 text-white'
+    : 'bg-emerald-600 text-white'
   const Icon = isInternal ? ShieldAlert : Globe
 
   return (
@@ -41,7 +42,7 @@ export default function TargetKindBanner({
         <div className="flex items-start gap-3 min-w-0 flex-1">
           <div
             className={`shrink-0 w-10 h-10 rounded-xl flex items-center justify-center ${
-              isInternal ? 'bg-amber-500/20 text-amber-300' : 'bg-emerald-500/20 text-emerald-300'
+              isInternal ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'
             }`}
           >
             <Icon size={20} />
@@ -52,19 +53,19 @@ export default function TargetKindBanner({
                 {isInternal ? labels.badgeInternal || 'Internal / VPN' : labels.badgePublic || 'Publik (external)'}
               </span>
               {isInternal && executionBlocked && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-semibold bg-red-500/20 text-red-300 border border-red-500/30">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-semibold bg-red-100 text-red-800 border border-red-200">
                   <XCircle size={12} />
                   {labels.cloudRunBlocked || 'Cloud Run diblokir'}
                 </span>
               )}
               {!isInternal && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-semibold bg-emerald-500/15 text-emerald-300 border border-emerald-500/25">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200">
                   <CheckCircle2 size={12} />
                   {labels.cloudRunOk || 'Cloud Run tersedia'}
                 </span>
               )}
             </div>
-            <p className={`text-sm font-medium ${isInternal ? 'text-amber-100' : 'text-emerald-100'}`}>
+            <p className={`text-sm font-semibold ${isInternal ? 'text-amber-950' : 'text-emerald-950'}`}>
               {isInternal
                 ? labels.summaryInternal ||
                   'URL ini mengarah ke jaringan privat/VPN — berbeda dari situs publik di internet.'
@@ -72,8 +73,8 @@ export default function TargetKindBanner({
                   'URL ini tampak publik (external) — bisa dijangkau dari server cloud production.'}
             </p>
             {(message || url) && (
-              <p className="text-xs text-slate-400 mt-1 break-all">
-                {url && <span className="font-mono text-slate-300">{url}</span>}
+              <p className="text-xs text-slate-700 mt-1 break-all">
+                {url && <span className="font-mono font-medium text-slate-900">{url}</span>}
                 {url && message ? ' — ' : ''}
                 {message}
               </p>
@@ -83,10 +84,10 @@ export default function TargetKindBanner({
         <button
           type="button"
           onClick={() => setExpanded((v) => !v)}
-          className={`shrink-0 inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1.5 rounded-lg border ${
+          className={`shrink-0 inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 rounded-lg border ${
             isInternal
-              ? 'border-amber-500/40 text-amber-200 hover:bg-amber-500/10'
-              : 'border-emerald-500/40 text-emerald-200 hover:bg-emerald-500/10'
+              ? 'border-amber-300 text-amber-900 bg-white/70 hover:bg-amber-100'
+              : 'border-emerald-300 text-emerald-900 bg-white/70 hover:bg-emerald-100'
           }`}
         >
           <Info size={13} />
@@ -96,27 +97,27 @@ export default function TargetKindBanner({
       </div>
 
       {expanded && (
-        <div className={`mt-3 pt-3 border-t ${isInternal ? 'border-amber-500/25' : 'border-emerald-500/25'}`}>
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-2 flex items-center gap-1.5">
-            <Info size={12} />
+        <div className={`mt-3 pt-3 border-t ${isInternal ? 'border-amber-200' : 'border-emerald-200'}`}>
+          <p className="text-xs font-bold uppercase tracking-wide text-slate-800 mb-2 flex items-center gap-1.5">
+            <Info size={12} className="text-slate-600" />
             {labels.detailsTitle || 'Apa bedanya Publik vs Internal?'}
           </p>
           <div className="grid sm:grid-cols-2 gap-3 text-sm">
-            <div className="rounded-lg bg-black/20 border border-white/5 p-3">
-              <p className="font-semibold text-emerald-300 mb-1.5">
+            <div className="rounded-lg bg-white border border-emerald-200 p-3 shadow-sm">
+              <p className="font-bold text-emerald-800 mb-1.5">
                 {labels.publicTitle || 'Publik (external)'}
               </p>
-              <ul className="space-y-1.5 text-xs text-slate-300 list-disc pl-4">
+              <ul className="space-y-1.5 text-xs text-slate-700 list-disc pl-4 leading-relaxed">
                 {(labels.publicBullets || []).map((b, i) => (
                   <li key={i}>{b}</li>
                 ))}
               </ul>
             </div>
-            <div className="rounded-lg bg-black/20 border border-white/5 p-3">
-              <p className="font-semibold text-amber-300 mb-1.5">
+            <div className="rounded-lg bg-white border border-amber-200 p-3 shadow-sm">
+              <p className="font-bold text-amber-800 mb-1.5">
                 {labels.internalTitle || 'Internal / VPN'}
               </p>
-              <ul className="space-y-1.5 text-xs text-slate-300 list-disc pl-4">
+              <ul className="space-y-1.5 text-xs text-slate-700 list-disc pl-4 leading-relaxed">
                 {(labels.internalBullets || []).map((b, i) => (
                   <li key={i}>{b}</li>
                 ))}
@@ -125,11 +126,11 @@ export default function TargetKindBanner({
           </div>
 
           {isInternal && (
-            <div className="mt-3 rounded-lg bg-amber-500/10 border border-amber-500/25 p-3">
-              <p className="text-xs font-semibold text-amber-200 mb-1.5">
+            <div className="mt-3 rounded-lg bg-amber-100 border border-amber-300 p-3">
+              <p className="text-xs font-bold text-amber-950 mb-1.5">
                 {labels.whatYouCanDo || 'Yang bisa Anda lakukan untuk URL internal'}
               </p>
-              <ul className="space-y-1.5 text-xs text-amber-100/90 list-disc pl-4">
+              <ul className="space-y-1.5 text-xs text-amber-950 list-disc pl-4 leading-relaxed">
                 {(labels.internalActions || []).map((b, i) => (
                   <li key={i}>{b}</li>
                 ))}
@@ -138,7 +139,7 @@ export default function TargetKindBanner({
           )}
 
           {Array.isArray(addresses) && addresses.length > 0 && (
-            <p className="text-[11px] text-slate-500 mt-2 font-mono">
+            <p className="text-[11px] text-slate-600 mt-2 font-mono">
               {labels.resolvedIps || 'Resolved IP'}: {addresses.join(', ')}
             </p>
           )}
