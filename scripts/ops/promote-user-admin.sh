@@ -18,28 +18,34 @@ if ! docker ps --format '{{.Names}}' | grep -qx "${DB_CONTAINER}"; then
   exit 1
 fi
 
-query_user() {
-  docker exec "${DB_CONTAINER}" psql -U "${DB_USER}" -d "${DB_NAME}" -v ON_ERROR_STOP=1 \
-    -v "email=${EMAIL}" -Atc \
-    "SELECT id || ' | ' || email || ' | ' || role FROM \"User\" WHERE lower(email) = lower(:'email');"
+psql_at() {
+  docker exec -i "${DB_CONTAINER}" \
+    psql -U "${DB_USER}" -d "${DB_NAME}" -v ON_ERROR_STOP=1 -At -F '|'
+}
+
+psql_c() {
+  docker exec -i "${DB_CONTAINER}" \
+    psql -U "${DB_USER}" -d "${DB_NAME}" -v ON_ERROR_STOP=1
 }
 
 echo "Looking up user: ${EMAIL}"
-BEFORE="$(query_user || true)"
+BEFORE="$(printf "SELECT id, email, role FROM \"User\" WHERE lower(email) = lower('%s');\n" "${EMAIL}" | psql_at || true)"
+
 if [ -z "${BEFORE}" ]; then
   echo "ERROR: user not found: ${EMAIL}"
+  echo "Nearby emails:"
+  printf "SELECT email, role FROM \"User\" WHERE email ILIKE '%%%s%%' ORDER BY email LIMIT 20;\n" \
+    "$(printf '%s' "${EMAIL}" | cut -d@ -f1 | tr -cd 'a-z0-9._+-')" | psql_at || true
   exit 1
 fi
 echo "Before: ${BEFORE}"
 
-docker exec "${DB_CONTAINER}" psql -U "${DB_USER}" -d "${DB_NAME}" -v ON_ERROR_STOP=1 \
-  -v "email=${EMAIL}" -c \
-  "UPDATE \"User\" SET role = 'ADMIN', \"updatedAt\" = NOW() WHERE lower(email) = lower(:'email');"
+printf "UPDATE \"User\" SET role = 'ADMIN', \"updatedAt\" = NOW() WHERE lower(email) = lower('%s');\n" "${EMAIL}" | psql_c
 
-AFTER="$(query_user)"
+AFTER="$(printf "SELECT id, email, role FROM \"User\" WHERE lower(email) = lower('%s');\n" "${EMAIL}" | psql_at)"
 echo "After:  ${AFTER}"
 
-if echo "${AFTER}" | grep -q '| ADMIN$'; then
+if echo "${AFTER}" | grep -q '|ADMIN$'; then
   echo "OK: ${EMAIL} is ADMIN"
 else
   echo "ERROR: role update failed"
