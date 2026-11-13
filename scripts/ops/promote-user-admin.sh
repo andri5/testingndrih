@@ -29,20 +29,20 @@ psql_c() {
 }
 
 echo "Looking up user: ${EMAIL}"
-BEFORE="$(printf "SELECT id, email, role FROM \"User\" WHERE lower(email) = lower('%s');\n" "${EMAIL}" | psql_at || true)"
+BEFORE="$(printf "SELECT id, email, role FROM users WHERE lower(email) = lower('%s');\n" "${EMAIL}" | psql_at || true)"
 
 if [ -z "${BEFORE}" ]; then
   echo "ERROR: user not found: ${EMAIL}"
   echo "Nearby emails:"
-  printf "SELECT email, role FROM \"User\" WHERE email ILIKE '%%%s%%' ORDER BY email LIMIT 20;\n" \
+  printf "SELECT email, role FROM users WHERE email ILIKE '%%%s%%' ORDER BY email LIMIT 20;\n" \
     "$(printf '%s' "${EMAIL}" | cut -d@ -f1 | tr -cd 'a-z0-9._+-')" | psql_at || true
   exit 1
 fi
 echo "Before: ${BEFORE}"
 
-printf "UPDATE \"User\" SET role = 'ADMIN', \"updatedAt\" = NOW() WHERE lower(email) = lower('%s');\n" "${EMAIL}" | psql_c
+printf "UPDATE users SET role = 'ADMIN', \"updatedAt\" = NOW() WHERE lower(email) = lower('%s');\n" "${EMAIL}" | psql_c
 
-AFTER="$(printf "SELECT id, email, role FROM \"User\" WHERE lower(email) = lower('%s');\n" "${EMAIL}" | psql_at)"
+AFTER="$(printf "SELECT id, email, role FROM users WHERE lower(email) = lower('%s');\n" "${EMAIL}" | psql_at)"
 echo "After:  ${AFTER}"
 
 if echo "${AFTER}" | grep -q '|ADMIN$'; then
