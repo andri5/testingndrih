@@ -1,6 +1,7 @@
 import {
   Star,
   Eye,
+  Pencil,
   Copy,
   Trash2,
   GripVertical,
@@ -45,6 +46,7 @@ export default function ScenarioRepositoryTable({
   onToggleSelect,
   onToggleSelectAll,
   onOpen,
+  onEdit,
   onDuplicate,
   onDelete,
   onToggleFavorite,
@@ -130,11 +132,7 @@ export default function ScenarioRepositoryTable({
                       <GripVertical size={14} />
                     </td>
                     <td className="px-3 py-2.5">
-                      <button
-                        type="button"
-                        onClick={() => onOpen(s)}
-                        className="text-left group"
-                      >
+                      <div className="text-left group">
                         <div className="flex items-center gap-2">
                           <button
                             type="button"
@@ -143,19 +141,35 @@ export default function ScenarioRepositoryTable({
                               onToggleFavorite?.(s.id)
                             }}
                             className={s.isFavorite ? 'text-amber-500' : 'text-ink-subtle hover:text-amber-500'}
+                            title="Favorite"
                           >
                             <Star size={14} fill={s.isFavorite ? 'currentColor' : 'none'} />
                           </button>
-                          <span className="font-medium text-ink group-hover:text-brand truncate max-w-[280px] sm:max-w-md">
+                          <button
+                            type="button"
+                            onClick={() => onOpen(s)}
+                            onDoubleClick={(e) => {
+                              e.preventDefault()
+                              e.stopPropagation()
+                              onEdit?.(s)
+                            }}
+                            className="font-medium text-ink group-hover:text-brand truncate max-w-[280px] sm:max-w-md text-left"
+                            title="Open · double-click to edit"
+                          >
                             {s.name}
-                          </span>
+                          </button>
                         </div>
+                        {s.description ? (
+                          <p className="text-[11px] text-ink-muted truncate max-w-[280px] sm:max-w-md mt-0.5 pl-6">
+                            {s.description}
+                          </p>
+                        ) : null}
                         {s.url && (
                           <p className="text-[11px] text-ink-subtle truncate max-w-[280px] sm:max-w-md mt-0.5 pl-6">
                             {s.url}
                           </p>
                         )}
-                      </button>
+                      </div>
                     </td>
                     <td className="px-3 py-2.5 hidden md:table-cell text-ink-muted">
                       <span className="inline-flex items-center gap-1 text-xs">
@@ -178,6 +192,14 @@ export default function ScenarioRepositoryTable({
                           className="p-1.5 rounded-md bg-brand-soft text-brand hover:bg-teal-200"
                         >
                           <Eye size={14} />
+                        </button>
+                        <button
+                          type="button"
+                          title="Edit name, description, URL"
+                          onClick={() => onEdit?.(s)}
+                          className="p-1.5 rounded-md hover:bg-surface-muted text-ink-muted hover:text-brand"
+                        >
+                          <Pencil size={14} />
                         </button>
                         <button
                           type="button"

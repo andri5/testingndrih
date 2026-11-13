@@ -271,19 +271,13 @@ export default function ScenarioDetailPage() {
     return () => clearTimeout(timer)
   }, [scenario?.url])
 
-  // Auto-open recording panel if navigated via Quick Record (?autoRecord=1)
+  // Legacy ?autoRecord=1 — only open panel (no auto window.open; gesture lost after timeout)
   useEffect(() => {
     const params = new URLSearchParams(routeLocation.search)
     if (params.get('autoRecord') === '1') {
       setShowRecordingPanel(true)
       setRecordingUrl(scenario?.url || '')
-      // Auto-start recording immediately
-      setTimeout(() => {
-        handleStartRecording()
-      }, 500)
-      // Clean up URL param without re-render
-      const cleanUrl = routeLocation.pathname
-      window.history.replaceState(null, '', cleanUrl)
+      window.history.replaceState(null, '', routeLocation.pathname)
     }
   }, [routeLocation, scenario])
 

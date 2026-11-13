@@ -1156,6 +1156,7 @@ export const recorderService = {
         status: 'recording',
         method: 'proxy',
         proxyUrl,
+        recordToken,
         startUrl: url,
         scenarioId,
         message: 'Recording started — interact di jendela browser yang terbuka, lalu klik Stop di aplikasi',

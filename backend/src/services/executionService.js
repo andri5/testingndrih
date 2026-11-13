@@ -75,6 +75,9 @@ async function startExecutionScreencast(page, executionId) {
         await client.send('Page.screencastFrameAck', { sessionId: frame.sessionId })
       } catch { /* session may be closed */ }
 
+      // Freeze live preview while paused/stopping so controls feel responsive
+      if (pausedExecutions.has(executionId) || cancelledExecutions.has(executionId)) return
+
       const now = Date.now()
       if (now - lastSent < 120) return
       if (executionEvents.listenerCount(`exec:${executionId}`) === 0) return
@@ -124,6 +127,50 @@ const DEBUG_SESSION_TTL_MS = 15 * 60 * 1000
  */
 export const cancelledExecutions = new Set()
 export const pausedExecutions = new Set()
+
+function sleepMs(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+/** Abort in-flight Playwright actions so Stop takes effect mid-step. */
+async function interruptActiveExecution(executionId) {
+  const data = activePages.get(executionId)
+  if (!data) return
+  try {
+    await stopExecutionScreencast(data.screencastClient)
+  } catch { /* ignore */ }
+  // Closing the page rejects pending goto/click/fill/waitFor and unblocks the step loop.
+  try {
+    if (data.page && !data.page.isClosed()) {
+      await data.page.close({ runBeforeUnload: false })
+    }
+  } catch { /* ignore */ }
+}
+
+/**
+ * Wait while paused; returns true if stop was requested.
+ * Emits paused/resumed once per pause cycle.
+ */
+async function waitWhilePaused(executionId, stepNumber = null) {
+  if (!pausedExecutions.has(executionId)) return false
+  executionEvents.emit(`exec:${executionId}`, {
+    event: 'execution-paused',
+    stepNumber,
+  })
+  while (pausedExecutions.has(executionId)) {
+    if (cancelledExecutions.has(executionId)) {
+      pausedExecutions.delete(executionId)
+      return true
+    }
+    await sleepMs(200)
+  }
+  if (cancelledExecutions.has(executionId)) return true
+  executionEvents.emit(`exec:${executionId}`, {
+    event: 'execution-resumed',
+    stepNumber,
+  })
+  return false
+}
 
 /**
  * Comprehensive execution service using Playwright
@@ -499,6 +546,7 @@ export const executionService = {
     let screencastClient = null
     let passedSteps = 0
     let failedSteps = 0
+    let stopped = false
 
     this._executionOptions = options
 
@@ -636,10 +684,15 @@ export const executionService = {
         })
       }
 
-      let stopped = false
-
       // Execute each step (with {{variable}} substitution applied)
       for (const step of stepsToRun) {
+        // Honor pause before starting the next step (not only after a step ends)
+        if (await waitWhilePaused(execution.id, step.stepNumber)) {
+          cancelledExecutions.delete(execution.id)
+          stopped = true
+          break
+        }
+
         // Check for stop signal from live viewer before starting step
         if (cancelledExecutions.has(execution.id)) {
           cancelledExecutions.delete(execution.id)
@@ -691,7 +744,7 @@ export const executionService = {
               break
 
             case 'WAIT':
-              await this.executeWait(step)
+              await this.executeWait(step, execution.id)
               break
 
             case 'ASSERTION':
@@ -763,19 +816,28 @@ export const executionService = {
               logger.info('executionService', `Step ${step.stepNumber} (${step.type}): ${failureType}`)
               throw err
             }
-          } else {
+            } else {
             // Other step types: basic retry loop
             let lastErr = null
             for (let attempt = 0; attempt <= maxRetries; attempt++) {
+              if (cancelledExecutions.has(execution.id)) {
+                throw new Error('EXECUTION_STOPPED')
+              }
+              if (await waitWhilePaused(execution.id, step.stepNumber)) {
+                throw new Error('EXECUTION_STOPPED')
+              }
               try {
                 await executeStepOnce()
                 lastErr = null
                 break // success
               } catch (err) {
                 lastErr = err
+                if (err?.message === 'EXECUTION_STOPPED' || cancelledExecutions.has(execution.id)) {
+                  throw err
+                }
                 if (attempt < maxRetries) {
                   logger.warn('executionService', `Step ${step.stepNumber} attempt ${attempt + 1} failed, retrying...`)
-                  await new Promise(r => setTimeout(r, 1000)) // 1s wait between retries
+                  await sleepMs(1000) // 1s wait between retries
                 }
               }
             }
@@ -784,6 +846,20 @@ export const executionService = {
 
           passedSteps++
         } catch (error) {
+          // Stop abort closes the page mid-action — treat as user stop, not step failure
+          const pageClosed =
+            /has been closed|Target closed|Execution context was destroyed/i.test(String(error?.message || ''))
+          if (
+            cancelledExecutions.has(execution.id) ||
+            error?.message === 'EXECUTION_STOPPED' ||
+            pageClosed
+          ) {
+            cancelledExecutions.delete(execution.id)
+            pausedExecutions.delete(execution.id)
+            stopped = true
+            break
+          }
+
           stepStatus = 'FAILED'
 
           // Build rich error detail
@@ -979,26 +1055,11 @@ export const executionService = {
           break
         }
 
-        // Check for pause signal from live viewer
-        if (pausedExecutions.has(execution.id)) {
-          executionEvents.emit(`exec:${execution.id}`, {
-            event: 'execution-paused',
-            stepNumber: step.stepNumber
-          })
-          while (pausedExecutions.has(execution.id)) {
-            if (cancelledExecutions.has(execution.id)) {
-              pausedExecutions.delete(execution.id)
-              cancelledExecutions.delete(execution.id)
-              stopped = true
-              break
-            }
-            await new Promise(r => setTimeout(r, 300))
-          }
-          if (stopped) break
-          executionEvents.emit(`exec:${execution.id}`, {
-            event: 'execution-resumed',
-            stepNumber: step.stepNumber
-          })
+        // Pause between steps when requested from live viewer
+        if (await waitWhilePaused(execution.id, step.stepNumber)) {
+          cancelledExecutions.delete(execution.id)
+          stopped = true
+          break
         }
 
         // Check stop again after potential pause exit
@@ -1115,8 +1176,9 @@ export const executionService = {
     } finally {
       this._executionOptions = null
 
-      // Keep browser open after failures so users can test selectors (15 min TTL)
-      const keepForDebug = failedSteps > 0 && page && context && browser
+      // Keep browser open after failures so users can test selectors (15 min TTL).
+      // User-initiated stop should close immediately.
+      const keepForDebug = failedSteps > 0 && !stopped && page && context && browser
       if (keepForDebug) {
         activePages.set(execution.id, { page, context, browser, screencastClient, debugMode: true })
         this.scheduleDebugSessionCleanup(execution.id)
@@ -1253,9 +1315,9 @@ export const executionService = {
   },
 
   /**
-   * Execute WAIT step - Wait for time
+   * Execute WAIT step - Wait for time (interruptible by pause/stop)
    */
-  async executeWait(step) {
+  async executeWait(step, executionId = null) {
     let waitTime = 1000 // Default 1 second
 
     if (step.value && !isNaN(step.value)) {
@@ -1266,7 +1328,19 @@ export const executionService = {
       throw new Error('Wait time must be between 0 and 60000 ms')
     }
 
-    await new Promise(resolve => setTimeout(resolve, waitTime))
+    const chunk = 200
+    let elapsed = 0
+    while (elapsed < waitTime) {
+      if (executionId && cancelledExecutions.has(executionId)) {
+        throw new Error('EXECUTION_STOPPED')
+      }
+      if (executionId && (await waitWhilePaused(executionId, step.stepNumber))) {
+        throw new Error('EXECUTION_STOPPED')
+      }
+      const slice = Math.min(chunk, waitTime - elapsed)
+      await sleepMs(slice)
+      elapsed += slice
+    }
   },
 
   /**
@@ -1692,8 +1766,11 @@ export const executionService = {
       throw new Error('Cannot cancel completed execution')
     }
 
-    // Signal the running loop to stop immediately
+    // Signal the running loop to stop immediately and abort in-flight Playwright work
     cancelledExecutions.add(executionId)
+    pausedExecutions.delete(executionId)
+    interruptActiveExecution(executionId).catch(() => {})
+    executionEvents.emit(`exec:${executionId}`, { event: 'execution-stopping' })
 
     await prisma.execution.update({
       where: { id: executionId },
@@ -1712,6 +1789,9 @@ export const executionService = {
    */
   viewerStop(executionId) {
     cancelledExecutions.add(executionId)
+    pausedExecutions.delete(executionId)
+    interruptActiveExecution(executionId).catch(() => {})
+    executionEvents.emit(`exec:${executionId}`, { event: 'execution-stopping' })
     return { message: 'Stop signal sent' }
   },
 
@@ -1720,6 +1800,8 @@ export const executionService = {
    */
   viewerPause(executionId) {
     pausedExecutions.add(executionId)
+    // Immediate UI feedback; loop emits execution-paused once it parks
+    executionEvents.emit(`exec:${executionId}`, { event: 'execution-pausing' })
     return { message: 'Pause signal sent' }
   },
 
@@ -1728,6 +1810,7 @@ export const executionService = {
    */
   viewerResume(executionId) {
     pausedExecutions.delete(executionId)
+    executionEvents.emit(`exec:${executionId}`, { event: 'execution-resuming' })
     return { message: 'Resume signal sent' }
   },
 

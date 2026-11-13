@@ -561,19 +561,48 @@ body{font-family:Segoe UI,system-ui,sans-serif;background:#111827;color:#e5e7eb;
       return;
     }
 
+    if (d.event === 'execution-pausing') {
+      document.getElementById('btnPause').disabled = true;
+      document.getElementById('btnPause').textContent = 'Pausing...';
+      setBadge('PAUSING', 'badge-paused');
+      document.getElementById('stepInfo').textContent = 'Pause diminta — menunggu step saat ini selesai...';
+    }
+
     if (d.event === 'execution-paused') {
       document.getElementById('btnPause').style.display = 'none';
+      document.getElementById('btnPause').disabled = false;
+      document.getElementById('btnPause').textContent = 'Pause';
       document.getElementById('btnResume').style.display = 'inline-block';
+      document.getElementById('btnResume').disabled = false;
       setBadge('PAUSED', 'badge-paused');
-      document.getElementById('stepInfo').textContent = 'Paused after step ' + d.stepNumber;
+      document.getElementById('stepInfo').textContent = d.stepNumber
+        ? ('Paused after step ' + d.stepNumber)
+        : 'Paused';
+    }
+
+    if (d.event === 'execution-resuming') {
+      document.getElementById('btnResume').disabled = true;
+      document.getElementById('btnResume').textContent = 'Resuming...';
+      setBadge('RUNNING', 'badge-running');
     }
 
     if (d.event === 'execution-resumed') {
       document.getElementById('btnPause').style.display = 'inline-block';
-      document.getElementById('btnResume').style.display = 'none';
       document.getElementById('btnPause').disabled = false;
       document.getElementById('btnPause').textContent = 'Pause';
+      document.getElementById('btnResume').style.display = 'none';
+      document.getElementById('btnResume').disabled = false;
+      document.getElementById('btnResume').textContent = 'Resume';
       setBadge('RUNNING', 'badge-running');
+    }
+
+    if (d.event === 'execution-stopping') {
+      document.getElementById('btnPause').disabled = true;
+      document.getElementById('btnResume').disabled = true;
+      document.getElementById('btnStop').disabled = true;
+      document.getElementById('btnStop').textContent = 'Stopping...';
+      setBadge('STOPPING', 'badge-failed');
+      document.getElementById('stepInfo').textContent = 'Menghentikan runner...';
     }
 
     if (d.event === 'step-start') {
@@ -624,15 +653,23 @@ body{font-family:Segoe UI,system-ui,sans-serif;background:#111827;color:#e5e7eb;
 
   function sendCtrl(action) {
     fetch('/api/executions/' + execId + '/viewer-' + action, { method: 'POST' }).catch(function(){});
+    // Optimistic UI — do not wait for next step boundary
     if (action === 'pause') {
       document.getElementById('btnPause').disabled = true;
       document.getElementById('btnPause').textContent = 'Pausing...';
+      setBadge('PAUSING', 'badge-paused');
+      document.getElementById('stepInfo').textContent = 'Pause diminta — menunggu step saat ini selesai...';
     } else if (action === 'stop') {
+      document.getElementById('btnPause').disabled = true;
+      document.getElementById('btnResume').disabled = true;
       document.getElementById('btnStop').disabled = true;
       document.getElementById('btnStop').textContent = 'Stopping...';
+      setBadge('STOPPING', 'badge-failed');
+      document.getElementById('stepInfo').textContent = 'Menghentikan runner...';
     } else if (action === 'resume') {
-      document.getElementById('btnResume').style.display = 'none';
-      document.getElementById('btnPause').style.display = 'inline-block';
+      document.getElementById('btnResume').disabled = true;
+      document.getElementById('btnResume').textContent = 'Resuming...';
+      setBadge('RUNNING', 'badge-running');
     }
   }
 

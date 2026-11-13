@@ -33,6 +33,84 @@ function resolveAppOrigin(req) {
 }
 
 /**
+ * Rewrite SPA/static asset URLs through /api/recorder/asset (same-origin).
+ * Vite module scripts use crossorigin — loading them from the real target origin
+ * while the document is on the proxy fails CORS and shows a blank page.
+ * Use absolute proxyOrigin URLs: a path like /api/recorder/asset is resolved against
+ * <base href="https://target/"> and would otherwise hit the target host (404/blank).
+ * Do NOT rewrite normal page navigations (/login, /register, …).
+ */
+function rewriteHtmlAssetsThroughProxy(html, targetOriginHref, proxyOrigin) {
+  let targetOrigin
+  try {
+    targetOrigin = new URL(targetOriginHref).origin
+  } catch {
+    return html
+  }
+  const proxyBase = String(proxyOrigin || '').replace(/\/$/, '')
+
+  const isAssetPath = (pathname) => {
+    if (pathname.startsWith('/assets/')) return true
+    if (pathname.startsWith('/_next/') || pathname.startsWith('/static/')) return true
+    return /\.(?:js|mjs|cjs|css|map|png|jpe?g|gif|svg|webp|ico|woff2?|ttf|eot|json|webmanifest)(?:$|\?)/i.test(
+      pathname
+    )
+  }
+
+  const toAsset = (rawUrl) => {
+    try {
+      const abs = new URL(String(rawUrl), targetOriginHref)
+      if (!['http:', 'https:'].includes(abs.protocol)) return null
+      if (abs.pathname.startsWith('/api/recorder/')) return null
+      if (abs.origin !== targetOrigin) return null
+      if (!isAssetPath(abs.pathname)) return null
+      const path = `/api/recorder/asset?url=${encodeURIComponent(abs.href)}`
+      return proxyBase ? `${proxyBase}${path}` : path
+    } catch {
+      return null
+    }
+  }
+
+  // src="/assets/..." href="/assets/...." (not protocol-relative //)
+  let out = html.replace(
+    /\b(src|href)=(["'])(\/(?!\/)[^"']+)\2/gi,
+    (match, attr, quote, path) => {
+      const proxied = toAsset(path)
+      return proxied ? `${attr}=${quote}${proxied}${quote}` : match
+    }
+  )
+
+  // Absolute same-origin assets
+  out = out.replace(
+    /\b(src|href)=(["'])(https?:\/\/[^"']+)\2/gi,
+    (match, attr, quote, url) => {
+      const proxied = toAsset(url)
+      return proxied ? `${attr}=${quote}${proxied}${quote}` : match
+    }
+  )
+
+  // srcset="... 1x, ..."
+  out = out.replace(/\bsrcset=(["'])([^"']+)\1/gi, (match, quote, value) => {
+    const rewritten = value
+      .split(',')
+      .map((part) => {
+        const trimmed = part.trim()
+        if (!trimmed) return part
+        const bits = trimmed.split(/\s+/)
+        const url = bits[0]
+        const rest = bits.slice(1).join(' ')
+        const proxied = toAsset(url)
+        if (!proxied) return trimmed
+        return rest ? `${proxied} ${rest}` : proxied
+      })
+      .join(', ')
+    return `srcset=${quote}${rewritten}${quote}`
+  })
+
+  return out
+}
+
+/**
  * Full recorder bootstrap as inline JS (no external <script src>).
  * Needed when the target site CSP blocks third-party script-src.
  * @param {string} [bridgeUrl] client-gate URL — opened via user gesture if opener is missing
@@ -563,19 +641,26 @@ window.__targetBase=${JSON.stringify(url)};
     });
   }
   // ── SPA router URL fix ──
-  // Next.js, Nuxt, Vue Router etc. read window.location.pathname for initialization.
-  // Without this, they see '/api/recorder/proxy' instead of the real page path.
+  // React/Vue/Next read window.location.pathname on boot. Without rewrite they see
+  // '/api/recorder/proxy' (no matching route → blank page), including for homepage '/'.
   try{
     var _tu=new URL(_base);
     var _tp2=_tu.pathname+_tu.search+_tu.hash;
-    if(window.location.pathname.indexOf('/api/recorder/')===0&&_tp2&&_tp2!=='/'){
+    if(!_tp2) _tp2='/';
+    if(window.location.pathname.indexOf('/api/recorder/')===0){
       _or.call(history,null,document.title,_tp2);
     }
   }catch(_){}
 })();
 </script>`
 
-      // Add <base> so relative URLs resolve to the target origin
+      // Rewrite SPA assets through same-origin proxy (avoids CORS blank page).
+      // Absolute proxy origin required — <base href=target> would otherwise resolve
+      // path-absolute /api/recorder/asset to the target host.
+      const proxyOrigin = resolveAppOrigin(req)
+      html = rewriteHtmlAssetsThroughProxy(html, finalUrl || url, proxyOrigin)
+
+      // Add <base> so remaining relative URLs resolve to the target origin
       const baseTag = `<base href="${escHTML(finalUrl)}">`
       if (/<head[^>]*>/i.test(html)) {
         html = html.replace(/<head[^>]*>/i, `$&\n  ${earlyCapture}\n  ${baseTag}`)
@@ -583,8 +668,10 @@ window.__targetBase=${JSON.stringify(url)};
         html = baseTag + html
       }
 
-      // Build recorder script — uses fetch to POST steps back to our API
-      const recScript = getRecorderScript(sessionId)
+      // Build recorder script — prefer X-Record-Token (proxy window has no app JWT)
+      const recScript = getRecorderScript(sessionId, {
+        recordToken: recordToken || session?.recordToken || null,
+      })
       // Add link interception for multi-page proxy navigation
       const linkIntercept = `
 (function(){
@@ -631,8 +718,11 @@ window.__targetBase=${JSON.stringify(url)};
 
       res.removeHeader('x-frame-options')
       res.removeHeader('content-security-policy')
+      res.removeHeader('cross-origin-resource-policy')
+      res.removeHeader('cross-origin-opener-policy')
       res.set('content-type', 'text/html; charset=utf-8')
       res.set('content-security-policy', "default-src * 'unsafe-inline' 'unsafe-eval' data: blob:")
+      res.set('cross-origin-resource-policy', 'cross-origin')
       res.send(html)
 
     } catch (err) {
@@ -1145,6 +1235,11 @@ window.__targetBase=${JSON.stringify(url)};
       res.set('content-type', contentType)
       res.set('access-control-allow-origin', '*')
       res.set('cache-control', 'no-store')
+      // Allow module scripts (crossorigin) to load; Helmet CORP/COOP break SPA bundles
+      res.removeHeader('cross-origin-resource-policy')
+      res.removeHeader('cross-origin-opener-policy')
+      res.removeHeader('content-security-policy')
+      res.set('cross-origin-resource-policy', 'cross-origin')
 
       const buffer = await response.arrayBuffer()
       res.status(response.status).send(Buffer.from(buffer))

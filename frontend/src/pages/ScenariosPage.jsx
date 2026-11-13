@@ -16,8 +16,6 @@ import { Tooltip } from '../components/ui'
 import { useScenarioStore } from '../store/scenarioStore'
 import { useFolderStore } from '../store/folderStore'
 import { executionAPI } from '../services/api'
-import { useAuthStore } from '../store/authStore'
-
 const i18n = {
     title: 'Test Repository',
     subtitle: 'Organize scenarios in folders — create, move, and run from one place',
@@ -26,15 +24,15 @@ const i18n = {
     runningBulk: 'Running executions sequentially (headless)...',
     close: 'Close',
     cancel: 'Cancel',
-    quickRecordTitle: 'Create scenario & start recording immediately',
+    quickRecordTitle: 'Enter URL → Start. One window records; steps appear in the modal.',
     templatesTitle: 'Create scenario from ready-made template',
     // Menu items
     createManual: 'Create Manual',
     createManualDesc: 'Form-based creation',
     createManualTooltip: 'Create a new scenario using the form. Fill in name, URL, and add steps manually.',
     quickRecord: 'Quick Record',
-    quickRecordDesc: 'Record interactions',
-    quickRecordTooltip: 'Enter a URL and start recording user interactions to create test steps automatically.',
+    quickRecordDesc: '1 window · steps in modal',
+    quickRecordTooltip: 'One click starts recording in a single target window. Live steps show in the modal — Stop & Save when done.',
     templates: 'Templates',
     templatesDesc: 'Pre-made templates',
     templatesMenuTooltip: 'Choose from ready-made scenario templates (Login, E-Commerce, Navigation, Form Testing).',
@@ -94,7 +92,6 @@ export default function ScenariosPage() {
   const activeFolderId =
     selectedFolderKey === 'all' || selectedFolderKey === 'unfiled' ? null : selectedFolderKey
   const folderOptions = useMemo(() => flattenFolderOptions(folderTree), [folderTree])
-  const isAdmin = useAuthStore((state) => state.user)?.role === 'ADMIN'
   const { configured: aiConfigured } = useAiEnabled()
   const t = i18n
   const pageSize = pagination.take || 50
@@ -263,6 +260,8 @@ export default function ScenariosPage() {
     try {
       await updateScenario(editingScenario.id, formData.name, formData.description, formData.url)
       setEditingScenario(null)
+      refreshList()
+      fetchFolders()
     } catch (error) {}
   }
 
@@ -394,12 +393,19 @@ export default function ScenariosPage() {
     navigate(`/scenarios/${scenario.id}`)
   }
 
-  // ── Quick Record ────────────────────────────────────────────────────────────
-  const handleQuickRecordCreated = (scenario) => {
+  // ── Quick Record Studio (create + record in modal; no autoRecord hop) ───────
+  const handleQuickRecordFinished = (scenario, meta = {}) => {
     setShowQuickRecord(false)
     refreshList()
-    // Navigate to detail page — recording panel will be visible there
-    navigate(`/scenarios/${scenario.id}?autoRecord=1`)
+    fetchTags()
+    if (scenario?.id && !meta.cancelled) {
+      navigate(`/scenarios/${scenario.id}`)
+      return
+    }
+    if (scenario?.id && meta.cancelled) {
+      // Scenario may exist with 0 steps — still open detail so QA can retry/edit
+      navigate(`/scenarios/${scenario.id}`)
+    }
   }
 
   // ── Excel Import ────────────────────────────────────────────────────────────
@@ -625,7 +631,6 @@ export default function ScenariosPage() {
                       </div>
                     </button>
 
-                    {isAdmin && (
                     <button
                       type="button"
                       onClick={() => {
@@ -646,7 +651,6 @@ export default function ScenariosPage() {
                         <div className="text-xs text-[#666] dark:text-[#A0A0A4]">{t.quickRecordDesc}</div>
                       </div>
                     </button>
-                    )}
 
                     <button
                       type="button"
@@ -754,11 +758,16 @@ export default function ScenariosPage() {
                 >✕</button>
               </div>
             </div>
-            {!editingScenario && (
+            {editingScenario ? (
+              <p className="text-sm text-[#8A8A8F] mb-4 -mt-2">
+                Ubah <strong className="text-[#E0E0E2]">nama</strong>, deskripsi, dan URL target. Step tetap di halaman detail.
+              </p>
+            ) : (
               <p className="text-sm text-[#8A8A8F] mb-4 -mt-2">
                 Manual form below — or use <strong className="text-[#0F766E]">Generate with AI</strong> to draft steps from a short description.
               </p>
             )}
+
             <ScenarioForm
               onSubmit={editingScenario ? handleUpdateScenario : handleCreateScenario}
               initialScenario={editingScenario}
@@ -855,6 +864,7 @@ export default function ScenariosPage() {
               onToggleSelect={handleToggleSelect}
               onToggleSelectAll={handleSelectAll}
               onOpen={handleViewScenario}
+              onEdit={handleEditScenario}
               onDuplicate={handleDuplicateScenario}
               onDelete={handleDeleteScenario}
               onToggleFavorite={handleToggleFavorite}
@@ -882,10 +892,10 @@ export default function ScenariosPage() {
           folderId={activeFolderId}
         />
       )}
-      {isAdmin && showQuickRecord && (
+      {showQuickRecord && (
         <QuickRecordModal
           onClose={() => setShowQuickRecord(false)}
-          onCreated={handleQuickRecordCreated}
+          onFinished={handleQuickRecordFinished}
           folderId={activeFolderId}
         />
       )}
