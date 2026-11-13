@@ -10,15 +10,15 @@ export function Button({
   className = '',
   ...props
 }) {
-  const base = 'font-medium rounded-md transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-offset-[#0F0E11] inline-flex items-center justify-center gap-2 cursor-pointer'
+  const base = 'font-medium rounded-md transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-offset-white inline-flex items-center justify-center gap-2 cursor-pointer'
 
   const variants = {
-    primary:   'bg-[#5E6AD2] hover:bg-[#6B7AE8] text-white focus:ring-[#5E6AD2]',
-    secondary: 'bg-[#1A1A1C] hover:bg-[#252528] text-[#E0E0E2] border border-[rgba(255,255,255,0.1)] focus:ring-[#5E6AD2]',
+    primary:   'bg-brand hover:bg-brand-hover text-white focus:ring-brand shadow-sm shadow-brand/20',
+    secondary: 'bg-white hover:bg-surface-muted text-ink border border-surface-border focus:ring-brand',
     danger:    'bg-[#C24B4B] hover:bg-[#D45555] text-white focus:ring-[#C24B4B]',
-    ghost:     'bg-transparent hover:bg-[rgba(255,255,255,0.05)] text-[#8A8A8F] hover:text-[#E0E0E2] focus:ring-[#5E6AD2]',
+    ghost:     'bg-transparent hover:bg-surface-muted text-ink-muted hover:text-ink focus:ring-brand',
     success:   'bg-[#3DAF7A] hover:bg-[#44C287] text-white focus:ring-[#3DAF7A]',
-    cyan:      'bg-[#3A9E9E] hover:bg-[#44B2B2] text-white focus:ring-[#3A9E9E]',
+    cyan:      'bg-brand-hover hover:bg-brand text-white focus:ring-brand',
   }
 
   const sizes = {
@@ -53,7 +53,7 @@ export function Input({
   return (
     <div className="w-full">
       {label && (
-        <label className="block text-xs font-medium text-[#8A8A8F] mb-1.5 uppercase tracking-wider">
+        <label className="block text-xs font-medium text-ink-muted mb-1.5 uppercase tracking-wider">
           {label}
         </label>
       )}
@@ -63,12 +63,12 @@ export function Input({
         onChange={onChange}
         placeholder={placeholder}
         disabled={disabled}
-        className={`w-full px-3 py-2 bg-[#161618] border rounded-md focus:ring-1 focus:ring-[#5E6AD2] focus:border-[#5E6AD2] outline-none transition-all text-[#E0E0E2] placeholder-[#4A4A52] text-sm ${
-          error ? 'border-[#C24B4B]' : 'border-[rgba(255,255,255,0.1)]'
+        className={`w-full px-3 py-2 bg-white border rounded-md focus:ring-1 focus:ring-brand focus:border-brand outline-none transition-all text-ink placeholder-ink-subtle text-sm ${
+          error ? 'border-[#C24B4B]' : 'border-surface-border'
         } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
         {...props}
       />
-      {error && <p className="text-[#F87171] text-xs mt-1">{error}</p>}
+      {error && <p className="text-[#DC2626] text-xs mt-1">{error}</p>}
     </div>
   )
 }
@@ -85,10 +85,10 @@ export function Card({ children, className = '' }) {
 // ─── Alert Component ──────────────────────────────────────────────────────────
 export function Alert({ type = 'info', message, onClose }) {
   const styles = {
-    info:    'bg-[#1A1A2E] border-[#5E6AD2]/40 text-[#9BA3F0]',
-    success: 'bg-[#0F1F17] border-[#34D399]/40 text-[#34D399]',
-    warning: 'bg-[#1F1A0F] border-[#FBBF24]/40 text-[#FBBF24]',
-    error:   'bg-[#1F0F0F] border-[#F87171]/40 text-[#F87171]',
+    info:    'bg-brand-soft border-brand/30 text-brand-ink',
+    success: 'bg-[#ECFDF5] border-[#34D399]/40 text-[#047857]',
+    warning: 'bg-[#FFFBEB] border-[#FBBF24]/40 text-[#B45309]',
+    error:   'bg-[#FEF2F2] border-[#F87171]/40 text-[#B91C1C]',
   }
 
   return (
@@ -111,11 +111,11 @@ export function Alert({ type = 'info', message, onClose }) {
 // ─── Badge Component ──────────────────────────────────────────────────────────
 export function Badge({ children, variant = 'default' }) {
   const colors = {
-    default: { dot: 'bg-[#8A8A8F]', text: 'text-[#8A8A8F]' },
-    primary: { dot: 'bg-[#5E6AD2]', text: 'text-[#9BA3F0]' },
-    success: { dot: 'bg-[#34D399]', text: 'text-[#34D399]' },
-    warning: { dot: 'bg-[#FBBF24]', text: 'text-[#FBBF24]' },
-    danger:  { dot: 'bg-[#F87171]', text: 'text-[#F87171]' },
+    default: { dot: 'bg-ink-subtle', text: 'text-ink-muted' },
+    primary: { dot: 'bg-brand', text: 'text-brand' },
+    success: { dot: 'bg-[#34D399]', text: 'text-[#059669]' },
+    warning: { dot: 'bg-[#FBBF24]', text: 'text-[#D97706]' },
+    danger:  { dot: 'bg-[#F87171]', text: 'text-[#DC2626]' },
   }
 
   const c = colors[variant] ?? colors.default
@@ -132,14 +132,14 @@ export function Badge({ children, variant = 'default' }) {
 export function Spinner({ size = 'md' }) {
   const sizes = { sm: 'w-4 h-4', md: 'w-8 h-8', lg: 'w-12 h-12' }
   return (
-    <div className={`${sizes[size]} rounded-full border-2 border-[rgba(255,255,255,0.08)] border-t-[#5E6AD2] animate-spin`} />
+    <div className={`${sizes[size]} rounded-full border-2 border-surface-border border-t-brand animate-spin`} />
   )
 }
 
 // ─── CardHeader Component ─────────────────────────────────────────────────────
 export function CardHeader({ children, className = '' }) {
   return (
-    <div className={`pb-3 border-b border-[rgba(255,255,255,0.1)] ${className}`}>
+    <div className={`pb-3 border-b border-surface-border ${className}`}>
       {children}
     </div>
   )
@@ -148,7 +148,7 @@ export function CardHeader({ children, className = '' }) {
 // ─── CardTitle Component ──────────────────────────────────────────────────────
 export function CardTitle({ children, className = '' }) {
   return (
-    <h3 className={`text-lg font-semibold text-[#E0E0E2] ${className}`}>
+    <h3 className={`text-lg font-semibold text-ink ${className}`}>
       {children}
     </h3>
   )
@@ -157,7 +157,7 @@ export function CardTitle({ children, className = '' }) {
 // ─── CardDescription Component ────────────────────────────────────────────────
 export function CardDescription({ children, className = '' }) {
   return (
-    <p className={`text-sm text-[#8A8A8F] mt-1 ${className}`}>
+    <p className={`text-sm text-ink-muted mt-1 ${className}`}>
       {children}
     </p>
   )
@@ -173,11 +173,6 @@ export function CardContent({ children, className = '' }) {
 }
 
 // ─── Tooltip Component ────────────────────────────────────────────────────────
-// Usage: <Tooltip text="Penjelasan..."><Button>...</Button></Tooltip>
-// Props:
-//   text      — string konten tooltip
-//   position  — 'top' | 'bottom' | 'left' | 'right' (default: 'top')
-//   delay     — delay muncul dalam ms (default: 300)
 export function Tooltip({ children, text, position = 'top', delay = 300, multiline = false }) {
   const [visible, setVisible] = useState(false)
   const timerRef = useRef(null)
@@ -200,10 +195,10 @@ export function Tooltip({ children, text, position = 'top', delay = 300, multili
   }
 
   const arrowClasses = {
-    top:    'top-full left-1/2 -translate-x-1/2 border-l-transparent border-r-transparent border-b-transparent border-t-[#2A2A2E]',
-    bottom: 'bottom-full left-1/2 -translate-x-1/2 border-l-transparent border-r-transparent border-t-transparent border-b-[#2A2A2E]',
-    left:   'left-full top-1/2 -translate-y-1/2 border-t-transparent border-b-transparent border-r-transparent border-l-[#2A2A2E]',
-    right:  'right-full top-1/2 -translate-y-1/2 border-t-transparent border-b-transparent border-l-transparent border-r-[#2A2A2E]',
+    top:    'top-full left-1/2 -translate-x-1/2 border-l-transparent border-r-transparent border-b-transparent border-t-[#1A2A2C]',
+    bottom: 'bottom-full left-1/2 -translate-x-1/2 border-l-transparent border-r-transparent border-t-transparent border-b-[#1A2A2C]',
+    left:   'left-full top-1/2 -translate-y-1/2 border-t-transparent border-b-transparent border-r-transparent border-l-[#1A2A2C]',
+    right:  'right-full top-1/2 -translate-y-1/2 border-t-transparent border-b-transparent border-l-transparent border-r-[#1A2A2C]',
   }
 
   return (
@@ -218,7 +213,7 @@ export function Tooltip({ children, text, position = 'top', delay = 300, multili
       {visible && (
         <span
           role="tooltip"
-          className={`tooltip-popup absolute z-50 px-2.5 py-1.5 rounded-md text-xs font-medium bg-[#2A2A2E] text-[#E0E0E2] border border-[rgba(255,255,255,0.1)] shadow-lg pointer-events-none animate-fade-in ${multiline ? 'max-w-[260px] whitespace-pre-line text-left leading-relaxed' : 'whitespace-nowrap'} ${posClasses[position] ?? posClasses.top}`}
+          className={`tooltip-popup absolute z-50 px-2.5 py-1.5 rounded-md text-xs font-medium bg-[#1A2A2C] text-white border border-white/10 shadow-lg pointer-events-none animate-fade-in ${multiline ? 'max-w-[260px] whitespace-pre-line text-left leading-relaxed' : 'whitespace-nowrap'} ${posClasses[position] ?? posClasses.top}`}
         >
           {text}
           <span className={`absolute w-0 h-0 border-4 ${arrowClasses[position] ?? arrowClasses.top}`} />
@@ -227,4 +222,3 @@ export function Tooltip({ children, text, position = 'top', delay = 300, multili
     </span>
   )
 }
-

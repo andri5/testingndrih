@@ -92,14 +92,14 @@ export default function UserMenuAssignment({ user, onClose, onSaved }) {
         <button
           type="button"
           onClick={selectDefaults}
-          className="text-xs px-2.5 py-1 rounded border border-[#2D2D2F] text-[#A0A0A4] hover:border-[#5E6AD2] hover:text-[#5E6AD2]"
+          className="text-xs px-2.5 py-1 rounded border border-[#2D2D2F] text-[#A0A0A4] hover:border-[#0F766E] hover:text-[#0F766E]"
         >
           Default USER set
         </button>
         <button
           type="button"
           onClick={selectAll}
-          className="text-xs px-2.5 py-1 rounded border border-[#2D2D2F] text-[#A0A0A4] hover:border-[#5E6AD2] hover:text-[#5E6AD2]"
+          className="text-xs px-2.5 py-1 rounded border border-[#2D2D2F] text-[#A0A0A4] hover:border-[#0F766E] hover:text-[#0F766E]"
         >
           Select all
         </button>
@@ -112,13 +112,13 @@ export default function UserMenuAssignment({ user, onClose, onSaved }) {
             {mainMenus.map((m) => (
               <label
                 key={m.key}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[#2D2D2F] bg-[#0F0E11] cursor-pointer hover:border-[#5E6AD2]/40"
+                className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[#2D2D2F] bg-[#0F0E11] cursor-pointer hover:border-[#0F766E]/40"
               >
                 <input
                   type="checkbox"
                   checked={selected.includes(m.key)}
                   onChange={() => toggle(m.key)}
-                  className="rounded border-[#2D2D2F] bg-[#0F0E11] text-[#5E6AD2] focus:ring-[#5E6AD2]"
+                  className="rounded border-[#2D2D2F] bg-[#0F0E11] text-[#0F766E] focus:ring-[#0F766E]"
                 />
                 <span className="text-sm text-[#E0E0E2]">{m.labelEn}</span>
               </label>
@@ -132,13 +132,13 @@ export default function UserMenuAssignment({ user, onClose, onSaved }) {
             {toolMenus.map((m) => (
               <label
                 key={m.key}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[#2D2D2F] bg-[#0F0E11] cursor-pointer hover:border-[#5E6AD2]/40"
+                className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[#2D2D2F] bg-[#0F0E11] cursor-pointer hover:border-[#0F766E]/40"
               >
                 <input
                   type="checkbox"
                   checked={selected.includes(m.key)}
                   onChange={() => toggle(m.key)}
-                  className="rounded border-[#2D2D2F] bg-[#0F0E11] text-[#5E6AD2] focus:ring-[#5E6AD2]"
+                  className="rounded border-[#2D2D2F] bg-[#0F0E11] text-[#0F766E] focus:ring-[#0F766E]"
                 />
                 <span className="text-sm text-[#E0E0E2]">{m.labelEn}</span>
               </label>
@@ -167,7 +167,7 @@ export function MenuAssignButton({ user, onClick, disabled }) {
       title="Assign menus"
       disabled={disabled}
       onClick={onClick}
-      className="p-1.5 rounded text-[#8A8A8F] hover:text-[#5E6AD2] hover:bg-[#5E6AD2]/15 transition-colors disabled:opacity-50"
+      className="p-1.5 rounded text-[#8A8A8F] hover:text-[#0F766E] hover:bg-[#0F766E]/15 transition-colors disabled:opacity-50"
     >
       <LayoutGrid size={14} />
     </button>

@@ -51,7 +51,7 @@ export default function OnboardingChecklist() {
             <li key={item.key} className="flex items-center gap-2 text-sm">
               <button
                 type="button"
-                className="text-[#5E6AD2]"
+                className="text-[#0F766E]"
                 onClick={() => setState((s) => ({ ...s, [item.key]: !s[item.key] }))}
               >
                 {checked ? <CheckCircle2 size={16} className="text-emerald-400" /> : <Circle size={16} />}

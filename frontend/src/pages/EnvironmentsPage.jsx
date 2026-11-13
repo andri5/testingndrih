@@ -6,7 +6,7 @@ import { useSettingsStore } from '../store/settingsStore'
 import toast from 'react-hot-toast'
 import { Layers, Plus, Trash2, Key, Star } from 'lucide-react'
 
-const inputCls = 'w-full px-3 py-2 bg-[#0F0E11] border border-[#2D2D2F] rounded-lg text-[#E0E0E2] text-sm focus:outline-none focus:border-[#5E6AD2]'
+const inputCls = 'w-full px-3 py-2 bg-[#0F0E11] border border-[#2D2D2F] rounded-lg text-[#E0E0E2] text-sm focus:outline-none focus:border-[#0F766E]'
 
 const i18n = {
     title: 'Environments',
@@ -153,7 +153,7 @@ export default function EnvironmentsPage() {
       <div className="space-y-6">
         <div>
           <h1 className="text-xl font-semibold text-[#E0E0E2] flex items-center gap-2">
-            <Layers size={22} className="text-[#5E6AD2]" />
+            <Layers size={22} className="text-[#0F766E]" />
             {t.title}
           </h1>
           <p className="text-sm text-[#666] mt-0.5">{t.subtitle}</p>
@@ -177,7 +177,7 @@ export default function EnvironmentsPage() {
                       onClick={() => selectEnv(env.id)}
                       className={`w-full text-left px-3 py-2 rounded-lg border transition ${
                         selectedId === env.id
-                          ? 'border-[#5E6AD2] bg-[#5E6AD2]/10'
+                          ? 'border-[#0F766E] bg-[#0F766E]/10'
                           : 'border-[#2D2D2F] hover:border-[#444]'
                       }`}
                     >
@@ -222,7 +222,7 @@ export default function EnvironmentsPage() {
                   <div>
                     <h2 className="text-lg font-semibold text-[#E0E0E2]">{selected.name}</h2>
                     {selected.description && <p className="text-sm text-[#8A8A8F] mt-1">{selected.description}</p>}
-                    {selected.baseUrl && <p className="text-xs font-mono text-[#9BA3F0] mt-2">{selected.baseUrl}</p>}
+                    {selected.baseUrl && <p className="text-xs font-mono text-[#0F766E] mt-2">{selected.baseUrl}</p>}
                   </div>
                   <div className="flex gap-2">
                     {!selected.isDefault && (
@@ -268,7 +268,7 @@ export default function EnvironmentsPage() {
                 {preview?.variables && (
                   <Card>
                     <p className="text-xs font-semibold text-[#8A8A8F] uppercase mb-2">{t.preview}</p>
-                    <pre className="text-xs font-mono text-[#9BA3F0] overflow-x-auto">
+                    <pre className="text-xs font-mono text-[#0F766E] overflow-x-auto">
                       {JSON.stringify(preview.variables, null, 2)}
                     </pre>
                   </Card>

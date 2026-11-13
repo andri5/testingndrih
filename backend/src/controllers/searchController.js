@@ -13,7 +13,20 @@ import {
 export async function searchScenariosHandler(req, res, next) {
   try {
     const userId = req.user.id
-    const { query, orderBy = 'createdAt', orderDirection = 'desc', skip = '0', take = '20', startDate, endDate, favoritesOnly, tag } = req.query
+    const {
+      query,
+      orderBy = 'createdAt',
+      orderDirection = 'desc',
+      skip = '0',
+      take = '20',
+      startDate,
+      endDate,
+      favoritesOnly,
+      tag,
+      folderId,
+      unfiled,
+      includeDescendants,
+    } = req.query
 
     const options = {
       query: query || '',
@@ -25,6 +38,9 @@ export async function searchScenariosHandler(req, res, next) {
       endDate,
       favoritesOnly: favoritesOnly === 'true' || favoritesOnly === '1',
       tag: tag || null,
+      folderId: folderId || undefined,
+      unfiled: unfiled === 'true' || unfiled === '1',
+      includeDescendants: includeDescendants === 'true' || includeDescendants === '1',
     }
 
     const result = await searchScenarios(userId, options)

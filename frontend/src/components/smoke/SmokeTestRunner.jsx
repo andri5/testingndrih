@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import apiClient from '../services/api'
+import apiClient from '../../services/api'
 import { AlertCircle, CheckCircle, Zap, Clock, Play, RotateCcw } from 'lucide-react'
 
 const i18n = {

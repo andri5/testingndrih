@@ -80,7 +80,7 @@ export default function SmartSuggestionPanel({
     ID: 'bg-green-100 text-green-800 border-green-300',
     'Test ID': 'bg-green-100 text-green-800 border-green-300',
     Name: 'bg-blue-100 text-blue-800 border-blue-300',
-    'ARIA Label': 'bg-purple-100 text-purple-800 border-purple-300',
+    'ARIA Label': 'bg-teal-100 text-teal-800 border-teal-300',
     Placeholder: 'bg-blue-100 text-blue-800 border-blue-300',
     'Type + Name': 'bg-blue-100 text-blue-800 border-blue-300',
     'Tag + Text': 'bg-amber-100 text-amber-800 border-amber-300',
@@ -331,14 +331,14 @@ export default function SmartSuggestionPanel({
                               e.stopPropagation()
                               setShowAltSelectors(showAltSelectors === idx ? null : idx)
                             }}
-                            className="text-xs text-indigo-600 hover:text-indigo-800 underline"
+                            className="text-xs text-teal-700 hover:text-teal-800 underline"
                           >
                             {showAltSelectors === idx
                               ? 'Hide alternatives'
                               : `${s.allSelectors.length - 1} more alternative(s)`}
                           </button>
                           {showAltSelectors === idx && (
-                            <div className="mt-1 space-y-1 pl-2 border-l-2 border-indigo-200">
+                            <div className="mt-1 space-y-1 pl-2 border-l-2 border-teal-200">
                               {s.allSelectors.slice(1).map((alt, altIdx) => (
                                 <div key={altIdx} className="flex items-center gap-2">
                                   <code className="text-xs text-gray-700 bg-gray-50 px-1 rounded break-all">

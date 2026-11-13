@@ -87,7 +87,7 @@ export default function OpenIssuesWidget() {
                     <button
                       type="button"
                       onClick={() => navigate(`/scenarios/${issue.execution.scenario.id}`)}
-                      className="text-xs text-[#5E6AD2] hover:underline mt-1.5 font-medium"
+                      className="text-xs text-[#0F766E] hover:underline mt-1.5 font-medium"
                     >
                       View scenario →
                     </button>
@@ -97,7 +97,7 @@ export default function OpenIssuesWidget() {
                   value={issue.status}
                   disabled={updatingId === issue.id}
                   onChange={(e) => handleStatusChange(issue.id, e.target.value)}
-                  className="text-xs px-2 py-1 rounded border border-[#2D2D2F] bg-[#1A1A1C] text-[#E0E0E2] focus:outline-none focus:border-[#5E6AD2] disabled:opacity-50 shrink-0"
+                  className="text-xs px-2 py-1 rounded border border-[#2D2D2F] bg-[#1A1A1C] text-[#E0E0E2] focus:outline-none focus:border-[#0F766E] disabled:opacity-50 shrink-0"
                 >
                   {STATUS_OPTIONS.map((s) => (
                     <option key={s} value={s}>{s.replace('_', ' ')}</option>

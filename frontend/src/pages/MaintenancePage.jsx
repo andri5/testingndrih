@@ -57,9 +57,9 @@ export default function MaintenancePage() {
         <div className="flex justify-center mb-6">
           <div className="relative">
             <div className="w-16 h-16 rounded-2xl bg-[#161618] border border-[#2A2A2D] flex items-center justify-center">
-              <Icon size={32} className="text-[#5E6AD2]" />
+              <Icon size={32} className="text-[#0F766E]" />
             </div>
-            <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-lg bg-[#5E6AD2] flex items-center justify-center border-2 border-[#0F0E11]">
+            <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-lg bg-[#0F766E] flex items-center justify-center border-2 border-[#0F0E11]">
               <Coffee size={14} className="text-white" />
             </div>
           </div>
@@ -71,7 +71,7 @@ export default function MaintenancePage() {
         <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#161618] border border-[#2A2A2D] text-xs text-[#8B8B8E] mb-6">
           <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse" />
           {t.status}
-          {checking && <span className="text-[#5E6AD2] ml-1">· checking…</span>}
+          {checking && <span className="text-[#0F766E] ml-1">· checking…</span>}
         </div>
 
         {lastCheck && (
@@ -84,7 +84,7 @@ export default function MaintenancePage() {
           type="button"
           onClick={tryReconnect}
           disabled={checking}
-          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-[#5E6AD2] text-sm font-medium text-white hover:bg-[#4F5BBF] transition-colors disabled:opacity-60"
+          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-[#0F766E] text-sm font-medium text-white hover:bg-[#0F766E] transition-colors disabled:opacity-60"
         >
           <RefreshCw size={15} className={checking ? 'animate-spin' : ''} />
           {checking ? 'Checking server…' : 'Try again'}

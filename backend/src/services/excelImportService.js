@@ -129,8 +129,9 @@ export async function parseExcelFile(buffer) {
 /**
  * Create scenarios and test steps from parsed data
  */
-export async function createScenariosFromParsedData(userId, parsedData) {
+export async function createScenariosFromParsedData(userId, parsedData, options = {}) {
   try {
+    const folderId = options.folderId || null
     const results = await prisma.$transaction(async (tx) => {
       const createdScenarios = []
 
@@ -141,7 +142,8 @@ export async function createScenariosFromParsedData(userId, parsedData) {
             description: scenarioData.description,
             url: scenarioData.url,
             userId,
-            steps: 0
+            steps: 0,
+            ...(folderId ? { folderId } : {}),
           }
         })
 

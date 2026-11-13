@@ -108,11 +108,11 @@ export default function StressTestPage() {
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
-            <Zap className="w-8 h-8 text-purple-500" />
+            <Zap className="w-8 h-8 text-teal-500" />
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{t.title}</h1>
             <a
               href="/help/stress-test"
-              className="ml-auto px-3 py-1 rounded-lg bg-purple-500 hover:bg-purple-600 text-white text-sm font-medium transition-colors"
+              className="ml-auto px-3 py-1 rounded-lg bg-teal-500 hover:bg-teal-600 text-white text-sm font-medium transition-colors"
               title="View Help Guide"
             >
               ? Help
@@ -175,7 +175,7 @@ export default function StressTestPage() {
             <div className="bg-[#0F0E11] dark:bg-[#0F0E11] html.theme-light:bg-[#F5F5F7] rounded-lg p-4 max-h-64 overflow-y-auto">
               {loading ? (
                 <div className="flex items-center justify-center py-8">
-                  <Loader className="w-6 h-6 text-purple-500 animate-spin" />
+                  <Loader className="w-6 h-6 text-teal-500 animate-spin" />
                 </div>
               ) : scenarios.length === 0 ? (
                 <p className="text-center text-[#8A8A8F] dark:text-[#8A8A8F] html.theme-light:text-[#666] py-8">{t.noScenarios}</p>
@@ -187,8 +187,8 @@ export default function StressTestPage() {
                       onClick={() => setSelectedScenario(scenario)}
                       className={`w-full p-3 rounded-lg text-left transition-colors ${
                         selectedScenario?.id === scenario.id
-                          ? 'bg-purple-600 dark:bg-purple-600 html.theme-light:bg-[#EEF0FF] border-2 border-purple-500 dark:border-purple-500 html.theme-light:border-purple-300 text-[#E0E0E2] dark:text-white html.theme-light:text-[#1A1A1C]'
-                          : 'bg-[#1A1A1C] dark:bg-[#1A1A1C] html.theme-light:bg-white border border-[#2D2D2F] dark:border-[#2D2D2F] html.theme-light:border-[#DDDDE0] text-[#8A8A8F] dark:text-gray-300 html.theme-light:text-[#666] hover:border-purple-500 dark:hover:border-purple-500 html.theme-light:hover:border-purple-300 hover:text-[#E0E0E2] dark:hover:text-white html.theme-light:hover:text-[#1A1A1C]'
+                          ? 'bg-teal-600 dark:bg-teal-600 html.theme-light:bg-brand-soft border-2 border-teal-500 dark:border-teal-500 html.theme-light:border-teal-300 text-[#E0E0E2] dark:text-white html.theme-light:text-[#1A1A1C]'
+                          : 'bg-[#1A1A1C] dark:bg-[#1A1A1C] html.theme-light:bg-white border border-[#2D2D2F] dark:border-[#2D2D2F] html.theme-light:border-[#DDDDE0] text-[#8A8A8F] dark:text-gray-300 html.theme-light:text-[#666] hover:border-teal-500 dark:hover:border-teal-500 html.theme-light:hover:border-teal-300 hover:text-[#E0E0E2] dark:hover:text-white html.theme-light:hover:text-[#1A1A1C]'
                       }`}
                     >
                       <h3 className="font-semibold">{scenario.name}</h3>
@@ -223,7 +223,7 @@ export default function StressTestPage() {
           onClick={handleRunAllStressTests}
           disabled={loading || scenarios.length === 0}
           title={t.runAllTooltip}
-          className="p-3 bg-purple-500 text-white rounded-lg shadow hover:shadow-lg hover:bg-purple-600 transition-all disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2"
+          className="p-3 bg-teal-500 text-white rounded-lg shadow hover:shadow-lg hover:bg-teal-600 transition-all disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2"
         >
           <Play className="w-5 h-5 fill-current" />
           <span className="font-semibold">{t.runAll}</span>

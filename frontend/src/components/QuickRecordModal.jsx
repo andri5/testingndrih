@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Button, Spinner } from './ui'
 import { scenarioAPI } from '../services/api'
 
-export function QuickRecordModal({ onClose, onCreated }) {
+export function QuickRecordModal({ onClose, onCreated, folderId = null }) {
   const [url, setUrl] = useState('')
   const [customName, setCustomName] = useState('')
   const [isCreating, setIsCreating] = useState(false)
@@ -29,7 +29,12 @@ export function QuickRecordModal({ onClose, onCreated }) {
 
     try {
       const name = customName.trim() || generateName()
-      const res = await scenarioAPI.create(name, 'Quick record session', finalUrl)
+      const res = await scenarioAPI.create(
+        name,
+        'Quick record session',
+        finalUrl,
+        folderId ? { folderId } : {}
+      )
       const scenario = res.data.scenario || res.data
       onCreated(scenario, finalUrl)
     } catch (err) {
@@ -66,7 +71,7 @@ export function QuickRecordModal({ onClose, onCreated }) {
               onChange={(e) => setUrl(e.target.value)}
               placeholder="https://example.com"
               autoFocus
-              className="w-full bg-[#141316] border border-[rgba(255,255,255,0.1)] rounded-lg px-3 py-2.5 text-sm text-[#E0E0E2] placeholder-[#555] focus:outline-none focus:ring-2 focus:ring-[#5E6AD2] focus:border-transparent"
+              className="w-full bg-[#141316] border border-[rgba(255,255,255,0.1)] rounded-lg px-3 py-2.5 text-sm text-[#E0E0E2] placeholder-[#555] focus:outline-none focus:ring-2 focus:ring-[#0F766E] focus:border-transparent"
             />
           </div>
 
@@ -79,7 +84,7 @@ export function QuickRecordModal({ onClose, onCreated }) {
               value={customName}
               onChange={(e) => setCustomName(e.target.value)}
               placeholder={`Recording ${new Date().toLocaleDateString('en-GB')} ...`}
-              className="w-full bg-[#141316] border border-[rgba(255,255,255,0.1)] rounded-lg px-3 py-2.5 text-sm text-[#E0E0E2] placeholder-[#555] focus:outline-none focus:ring-2 focus:ring-[#5E6AD2] focus:border-transparent"
+              className="w-full bg-[#141316] border border-[rgba(255,255,255,0.1)] rounded-lg px-3 py-2.5 text-sm text-[#E0E0E2] placeholder-[#555] focus:outline-none focus:ring-2 focus:ring-[#0F766E] focus:border-transparent"
             />
           </div>
 

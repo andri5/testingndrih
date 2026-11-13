@@ -126,7 +126,7 @@ export default function AnalyticsPage() {
     return (
       <Layout>
         <div className="flex justify-center py-20">
-          <div className="w-10 h-10 rounded-full border-2 border-[rgba(255,255,255,0.08)] border-t-[#5E6AD2] animate-spin" />
+          <div className="w-10 h-10 rounded-full border-2 border-[rgba(255,255,255,0.08)] border-t-[#0F766E] animate-spin" />
         </div>
       </Layout>
     )
@@ -139,7 +139,7 @@ export default function AnalyticsPage() {
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
             <h1 className="text-2xl font-bold text-[#E0E0E2] flex items-center gap-2">
-              <TrendingUp size={24} className="text-[#9BA3F0]" />
+              <TrendingUp size={24} className="text-[#0F766E]" />
               {t.title}
             </h1>
             <p className="text-[#8A8A8F] mt-1">{t.subtitle}</p>
@@ -214,11 +214,11 @@ export default function AnalyticsPage() {
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-xs text-[#8A8A8F] font-medium uppercase tracking-wider">{t.totalScenarios}</p>
-                  <p className="text-3xl font-bold text-[#9BA3F0] mt-2">{summary.totalScenarios}</p>
+                  <p className="text-3xl font-bold text-[#0F766E] mt-2">{summary.totalScenarios}</p>
                   <p className="text-xs text-[#8A8A8F] mt-2">{t.underTest}</p>
                 </div>
-                <div className="w-10 h-10 rounded-lg bg-[#5E6AD2]/10 flex items-center justify-center">
-                  <Activity size={18} className="text-[#9BA3F0]" />
+                <div className="w-10 h-10 rounded-lg bg-[#0F766E]/10 flex items-center justify-center">
+                  <Activity size={18} className="text-[#0F766E]" />
                 </div>
               </div>
             </div>
@@ -233,7 +233,7 @@ export default function AnalyticsPage() {
               onClick={() => setDayRange(days)}
               className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                 dayRange === days
-                  ? 'bg-[#5E6AD2] text-white'
+                  ? 'bg-[#0F766E] text-white'
                   : 'bg-[rgba(255,255,255,0.04)] hover:bg-[rgba(255,255,255,0.08)] text-[#8A8A8F]'
               }`}
             >
@@ -247,7 +247,7 @@ export default function AnalyticsPage() {
           {/* Pass/Fail Trend Chart */}
           <div className="linear-card p-6">
             <h3 className="text-lg font-bold text-[#E0E0E2] mb-4 flex items-center gap-2">
-              <TrendingUp size={18} className="text-[#9BA3F0]" />
+              <TrendingUp size={18} className="text-[#0F766E]" />
               {t.passFail}
             </h3>
             {trendData && trendData.length > 0 ? (
@@ -294,7 +294,7 @@ export default function AnalyticsPage() {
                     }}
                     labelStyle={{ color: '#E0E0E2' }}
                   />
-                  <Area type="monotone" dataKey="count" fill="#9BA3F0" stroke="#5E6AD2" name={t.count} />
+                  <Area type="monotone" dataKey="count" fill="#0F766E" stroke="#0F766E" name={t.count} />
                 </AreaChart>
               </ResponsiveContainer>
             ) : (

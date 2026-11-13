@@ -12,7 +12,7 @@ import LandingFeedbackAdmin from '../components/landing/LandingFeedbackAdmin'
 import { useAuthStore } from '../store/authStore'
 import { useSettingsStore } from '../store/settingsStore'
 
-const inputCls = 'w-full px-3 py-2 bg-[#0F0E11] border border-[#2D2D2F] rounded-lg text-[#E0E0E2] text-sm placeholder-[#666] focus:outline-none focus:border-[#5E6AD2] transition'
+const inputCls = 'w-full px-3 py-2 bg-[#0F0E11] border border-[#2D2D2F] rounded-lg text-[#E0E0E2] text-sm placeholder-[#666] focus:outline-none focus:border-[#0F766E] transition'
 const labelCls = 'block text-sm font-medium text-[#A0A0A4] mb-1.5'
 const sectionTitleCls = 'text-sm font-semibold text-[#E0E0E2] uppercase tracking-wider mb-4'
 const cardCls = 'bg-[#1A1A1C] border border-[#2D2D2F] rounded-xl p-6'
@@ -148,7 +148,7 @@ export default function SettingsPage() {
                   onClick={() => setActiveTab(tab.id)}
                   className={`w-full text-left px-3 py-2 rounded-md text-sm transition ${
                     activeTab === tab.id
-                      ? 'bg-[#5E6AD2]/15 text-[#5E6AD2] font-medium'
+                      ? 'bg-[#0F766E]/15 text-[#0F766E] font-medium'
                       : 'text-[#A0A0A4] hover:text-[#E0E0E2] hover:bg-[#1A1A1C]'
                   }`}
                 >
@@ -223,7 +223,7 @@ export default function SettingsPage() {
                       <span
                         className={`inline-flex px-2.5 py-1 rounded text-xs font-semibold border ${
                           user?.role === 'ADMIN'
-                            ? 'bg-[#5E6AD2]/15 text-[#5E6AD2] border-[#5E6AD2]/25'
+                            ? 'bg-[#0F766E]/15 text-[#0F766E] border-[#0F766E]/25'
                             : 'bg-[#2D2D2F] text-[#A0A0A4] border-[#3D3D3F]'
                         }`}
                       >
@@ -274,7 +274,7 @@ export default function SettingsPage() {
                       <button
                         onClick={() => setAutoScreenshot(!autoScreenshot)}
                         className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-                          autoScreenshot ? 'bg-[#5E6AD2]' : 'bg-[#2D2D2F]'
+                          autoScreenshot ? 'bg-[#0F766E]' : 'bg-[#2D2D2F]'
                         }`}
                       >
                         <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
@@ -284,7 +284,7 @@ export default function SettingsPage() {
                     </div>
 
                     <p className="text-xs text-[#555] flex items-center gap-1.5">
-                      <span className="inline-block w-1.5 h-1.5 bg-[#5E6AD2] rounded-full"></span>
+                      <span className="inline-block w-1.5 h-1.5 bg-[#0F766E] rounded-full"></span>
                       Auto-saved
                     </p>
                   </div>
@@ -347,7 +347,7 @@ export default function SettingsPage() {
                     <p className="text-xs font-semibold text-[#A0A0A4] uppercase tracking-wider">Supported Step Types</p>
                     <div className="flex flex-wrap gap-2">
                       {['NAVIGATE', 'CLICK', 'FILL', 'WAIT', 'ASSERTION', 'SCREENSHOT', 'API_CALL'].map(t => (
-                        <span key={t} className="px-2 py-1 bg-[#5E6AD2]/15 text-[#5E6AD2] rounded text-xs font-mono border border-[#5E6AD2]/20">{t}</span>
+                        <span key={t} className="px-2 py-1 bg-[#0F766E]/15 text-[#0F766E] rounded text-xs font-mono border border-[#0F766E]/20">{t}</span>
                       ))}
                     </div>
                   </div>

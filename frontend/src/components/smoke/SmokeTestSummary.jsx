@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react'
-import apiClient from '../services/api'
-import { AlertCircle, CheckCircle2, Clock, TrendingUp } from 'lucide-react'
+import apiClient from '../../services/api'
+import { AlertCircle, CheckCircle2, Clock, TrendingUp } from 'lucide-react'
 
-const i18n = { 
+const i18n = {
+ 
     totalTests: 'Total Tests', 
     passRate: 'Pass Rate', 
     avgDuration: 'Avg Duration',
@@ -15,7 +16,8 @@ const i18n = {
 export default function SmokeTestSummary() {
   const [summary, setSummary] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState(null)  const t = i18n
+  const [error, setError] = useState(null)
+  const t = i18n
 
   useEffect(() => {
     loadSummary()

@@ -94,7 +94,7 @@ export default function TestStepList({
           type="checkbox"
           checked={selectedStepIds.size === steps.length && steps.length > 0}
           onChange={onToggleSelectAll}
-          className="w-4 h-4 rounded border-[#2D2D2F] text-[#5E6AD2] focus:ring-[#5E6AD2] cursor-pointer"
+          className="w-4 h-4 rounded border-[#2D2D2F] text-[#0F766E] focus:ring-[#0F766E] cursor-pointer"
         />
         <span className="text-sm text-[#888]">
           {selectedStepIds.size === 0
@@ -135,7 +135,7 @@ export default function TestStepList({
                             : stepResult?.status === 'FAILED'
                             ? 'border-red-700/30 bg-red-900/20'
                             : selectedStepIds.has(step.id)
-                            ? 'border-[#5E6AD2]/50 bg-[#1A1A2E]'
+                            ? 'border-[#0F766E]/50 bg-[#1A1A2E]'
                             : 'border-[#2D2D2F] hover:bg-[#1A1A1C]'
                         }`}
                       >
@@ -150,7 +150,7 @@ export default function TestStepList({
                             type="checkbox"
                             checked={selectedStepIds.has(step.id)}
                             onChange={() => onToggleSelection(step.id)}
-                            className="w-4 h-4 flex-shrink-0 rounded border-[#2D2D2F] text-[#5E6AD2] focus:ring-[#5E6AD2] cursor-pointer"
+                            className="w-4 h-4 flex-shrink-0 rounded border-[#2D2D2F] text-[#0F766E] focus:ring-[#0F766E] cursor-pointer"
                           />
 
                           {/* Step Number & Status */}
@@ -168,7 +168,7 @@ export default function TestStepList({
                                 ▶
                               </div>
                             ) : (
-                              <div className="w-8 h-8 bg-[#5E6AD2]/15 text-[#5E6AD2] rounded-full flex items-center justify-center font-bold text-sm">
+                              <div className="w-8 h-8 bg-[#0F766E]/15 text-[#0F766E] rounded-full flex items-center justify-center font-bold text-sm">
                                 {index + 1}
                               </div>
                             )}

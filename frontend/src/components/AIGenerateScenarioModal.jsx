@@ -5,7 +5,7 @@ import ExportFormatButton from './ExportFormatButton'
 import { aiAPI, scenarioAPI } from '../services/api'
 import { useAiEnabled, formatAiQuotaMessage, invalidateAiStatusCache } from '../hooks/useAiEnabled'
 
-export default function AIGenerateScenarioModal({ onClose, onCreated }) {
+export default function AIGenerateScenarioModal({ onClose, onCreated, folderId = null }) {
   const { configured, canUse, quota, remaining, loading: statusLoading, refresh } = useAiEnabled()
   const [prompt, setPrompt] = useState('')
   const [url, setUrl] = useState('')
@@ -44,7 +44,8 @@ export default function AIGenerateScenarioModal({ onClose, onCreated }) {
       const created = await scenarioAPI.create(
         preview.name,
         preview.description || '',
-        preview.url
+        preview.url,
+        folderId ? { folderId } : {}
       )
       const scenario = created.data?.scenario || created.data
 
@@ -86,7 +87,7 @@ export default function AIGenerateScenarioModal({ onClose, onCreated }) {
           AI is not configured. Set di <code className="text-xs bg-[#141316] px-1 rounded">backend/.env</code>:
           <br />
           <code className="text-xs">AI_ENABLED=true</code> + API key gratis dari{' '}
-          <a href="https://console.groq.com/keys" target="_blank" rel="noopener noreferrer" className="text-[#9BA3F0] underline">
+          <a href="https://console.groq.com/keys" target="_blank" rel="noopener noreferrer" className="text-[#0F766E] underline">
             Groq
           </a>{' '}
           (<code className="text-xs">gsk_...</code>), lalu restart backend.
@@ -107,7 +108,7 @@ export default function AIGenerateScenarioModal({ onClose, onCreated }) {
       {quota && (
         <p className={`text-xs mb-4 px-3 py-2 rounded-lg border ${
           quota.canUse
-            ? 'border-[#5E6AD2]/30 bg-[#5E6AD2]/10 text-[#9BA3F0]'
+            ? 'border-[#0F766E]/30 bg-[#0F766E]/10 text-[#0F766E]'
             : 'border-amber-500/40 bg-amber-500/10 text-amber-200'
         }`}>
           {formatAiQuotaMessage(quota)}
@@ -122,7 +123,7 @@ export default function AIGenerateScenarioModal({ onClose, onCreated }) {
             onChange={(e) => setPrompt(e.target.value)}
             rows={4}
             placeholder="e.g. Login with valid credentials and verify dashboard loads"
-            className="w-full rounded-lg border border-[rgba(255,255,255,0.12)] bg-[#141316] text-[#E0E0E2] px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#5E6AD2]"
+            className="w-full rounded-lg border border-[rgba(255,255,255,0.12)] bg-[#141316] text-[#E0E0E2] px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0F766E]"
             disabled={generating || creating}
           />
         </div>
@@ -198,7 +199,7 @@ function ModalShell({ onClose, title, children }) {
       >
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <Sparkles size={18} className="text-[#9BA3F0]" />
+            <Sparkles size={18} className="text-[#0F766E]" />
             <h3 className="text-lg font-semibold text-[#E0E0E2]">{title}</h3>
           </div>
           <button onClick={onClose} className="text-[#666] hover:text-[#E0E0E2]">

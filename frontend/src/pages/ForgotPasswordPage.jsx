@@ -107,14 +107,14 @@ export default function ForgotPasswordPage() {
           <div className="flex flex-col gap-2">
             <Link
               to="/login"
-              className="w-full py-2.5 px-4 rounded-md font-medium text-sm text-white bg-[#5E6AD2] hover:bg-[#6B7AE8] transition-colors duration-150 inline-block"
+              className="w-full py-2.5 px-4 rounded-md font-medium text-sm text-white bg-[#0F766E] hover:bg-[#0D9488] transition-colors duration-150 inline-block"
             >
               {t.backToLogin}
             </Link>
             <button
               type="button"
               onClick={handleTryAgain}
-              className="text-xs font-semibold text-[#9BA3F0] hover:text-[#5E6AD2] transition-all underline"
+              className="text-xs font-semibold text-[#0F766E] hover:text-[#0F766E] transition-all underline"
             >
               {t.tryAgain}
             </button>
@@ -128,8 +128,8 @@ export default function ForgotPasswordPage() {
     <AuthShell t={t}>
       <div className="auth-card bg-[#161618] border border-[rgba(255,255,255,0.08)] rounded-xl p-6">
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 rounded-lg bg-[#5E6AD2]/20 flex items-center justify-center">
-            <Mail size={20} className="text-[#5E6AD2]" />
+          <div className="w-10 h-10 rounded-lg bg-[#0F766E]/20 flex items-center justify-center">
+            <Mail size={20} className="text-[#0F766E]" />
           </div>
           <div>
             <h2 className="text-xl font-semibold text-[#E0E0E2]">{t.title}</h2>
@@ -154,7 +154,7 @@ export default function ForgotPasswordPage() {
               placeholder={t.emailPlaceholder}
               disabled={loading}
               autoComplete="email"
-              className="auth-input w-full px-3 py-2 bg-[#0F0E11] border border-[rgba(255,255,255,0.1)] rounded-md focus:ring-1 focus:ring-[#5E6AD2] focus:border-[#5E6AD2] outline-none transition-all text-[#E0E0E2] placeholder-[#4A4A52] text-sm disabled:opacity-50"
+              className="auth-input w-full px-3 py-2 bg-[#0F0E11] border border-[rgba(255,255,255,0.1)] rounded-md focus:ring-1 focus:ring-[#0F766E] focus:border-[#0F766E] outline-none transition-all text-[#E0E0E2] placeholder-[#4A4A52] text-sm disabled:opacity-50"
             />
           </div>
 
@@ -167,7 +167,7 @@ export default function ForgotPasswordPage() {
               {accountNotFound && (
                 <Link
                   to="/register"
-                  className="inline-block mt-2 text-xs font-semibold text-[#9BA3F0] hover:text-[#5E6AD2] underline"
+                  className="inline-block mt-2 text-xs font-semibold text-[#0F766E] hover:text-[#0F766E] underline"
                 >
                   {t.createAccount}
                 </Link>
@@ -178,7 +178,7 @@ export default function ForgotPasswordPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-2 px-4 rounded-md font-medium text-sm text-white bg-[#5E6AD2] hover:bg-[#6B7AE8] transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-[#5E6AD2] focus:ring-offset-2 focus:ring-offset-[#161618] disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-2 px-4 rounded-md font-medium text-sm text-white bg-[#0F766E] hover:bg-[#0D9488] transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-[#0F766E] focus:ring-offset-2 focus:ring-offset-[#161618] disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? (
               <span className="flex items-center justify-center gap-2">
@@ -195,7 +195,7 @@ export default function ForgotPasswordPage() {
           <span className="text-xs text-[#8A8A8F]">{t.noAccount}</span>
           <Link
             to="/login"
-            className="text-xs font-semibold text-[#9BA3F0] hover:text-[#5E6AD2] underline cursor-pointer hover:underline-offset-2 transition-all"
+            className="text-xs font-semibold text-[#0F766E] hover:text-[#0F766E] underline cursor-pointer hover:underline-offset-2 transition-all"
           >
             {t.noAccountLink}
           </Link>

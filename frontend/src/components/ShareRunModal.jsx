@@ -85,7 +85,7 @@ export default function ShareRunModal({ executionId, open, onClose }) {
         <div className="flex items-start justify-between gap-3 mb-4">
           <div>
             <h3 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
-              <Link2 size={18} className="text-[#5E6AD2]" />
+              <Link2 size={18} className="text-[#0F766E]" />
               Share run
             </h3>
             <p className="text-sm text-slate-500 mt-1">
@@ -115,7 +115,7 @@ export default function ShareRunModal({ executionId, open, onClose }) {
             type="button"
             onClick={handleCreate}
             disabled={creating}
-            className="px-3 py-2 rounded-md bg-[#5E6AD2] text-white text-sm font-medium hover:bg-[#4f5bc0] disabled:opacity-60"
+            className="px-3 py-2 rounded-md bg-[#0F766E] text-white text-sm font-medium hover:bg-[#4f5bc0] disabled:opacity-60"
           >
             {creating ? 'Creating…' : 'Create link'}
           </button>

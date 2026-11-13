@@ -20,7 +20,7 @@ export default function LandingNotFoundPage({ lang: langProp }) {
       <main className="flex-1 flex items-center justify-center px-4 sm:px-6 pt-24 pb-16">
         <div className="lp-container-prose w-full text-center lp-animate-in">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl lp-card mb-6">
-            <FileQuestion size={32} className="text-[#5E6AD2]" />
+            <FileQuestion size={32} className="text-[#0F766E]" />
           </div>
 
           <p className="text-6xl font-bold lp-gradient-text mb-2 tracking-tight">404</p>
@@ -47,11 +47,11 @@ export default function LandingNotFoundPage({ lang: langProp }) {
 
           <p className="mt-8 text-sm lp-subtle">
             {lang === 'en' ? 'Or' : 'Atau'}{' '}
-            <Link to="/login" className="text-[#5E6AD2] font-medium hover:underline">
+            <Link to="/login" className="text-[#0F766E] font-medium hover:underline">
               {t.notFoundLogin}
             </Link>
             {' · '}
-            <Link to="/register" className="text-[#5E6AD2] font-medium hover:underline inline-flex items-center gap-1">
+            <Link to="/register" className="text-[#0F766E] font-medium hover:underline inline-flex items-center gap-1">
               {t.notFoundRegister}
               <ArrowRight size={14} />
             </Link>

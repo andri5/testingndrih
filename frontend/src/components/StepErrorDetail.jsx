@@ -170,9 +170,9 @@ export default function StepErrorDetail({
           <AIInsightPanel errorDetail={detail} />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <section className="rounded-xl border border-[#5E6AD2]/25 bg-[#EEF0FF]/70 p-4 shadow-sm">
+            <section className="rounded-xl border border-[#0F766E]/25 bg-[#EEF0FF]/70 p-4 shadow-sm">
               <div className="flex items-center gap-2 mb-3">
-                <span className="w-7 h-7 rounded-lg bg-[#5E6AD2]/15 text-[#5E6AD2] flex items-center justify-center">
+                <span className="w-7 h-7 rounded-lg bg-[#0F766E]/15 text-[#0F766E] flex items-center justify-center">
                   <Code2 size={14} />
                 </span>
                 <p className="font-semibold text-sm text-gray-900">Step Payload</p>

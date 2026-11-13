@@ -85,6 +85,7 @@ model User {
   resetTokenExpiry DateTime?
 
   scenarios        Scenario[]
+  scenarioFolders  ScenarioFolder[]
   executions       Execution[]
   executionLogs    ExecutionLog[]
   testChains       TestChain[]
@@ -198,6 +199,25 @@ model NotificationSettings {
   @@map("notification_settings")
 }
 
+model ScenarioFolder {
+  id        String   @id @default(cuid())
+  name      String
+  parentId  String?
+  userId    String
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  parent    ScenarioFolder?  @relation("FolderTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children  ScenarioFolder[] @relation("FolderTree")
+  scenarios Scenario[]
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, parentId])
+  @@index([userId, sortOrder])
+  @@map("scenario_folders")
+}
+
 model Scenario {
   id          String   @id @default(cuid())
   name        String
@@ -209,11 +229,14 @@ model Scenario {
   isSecurity  Boolean  @default(false) // Mark scenario as security test
   isFavorite  Boolean  @default(false)
   tags        String[] @default([])
+  folderId    String?
+  sortOrder   Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   userId      String
 
-  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  folder        ScenarioFolder?  @relation(fields: [folderId], references: [id], onDelete: SetNull)
   testSteps     TestStep[]
   executions    Execution[]
   apiTests      ApiTest[]
@@ -226,6 +249,8 @@ model Scenario {
   agentJobs AgentJob[]
 
   @@index([userId])
+  @@index([userId, folderId])
+  @@index([folderId, sortOrder])
   @@index([isStress])
   @@index([isSecurity])
   @@map("scenarios")

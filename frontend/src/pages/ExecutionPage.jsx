@@ -231,7 +231,7 @@ export default function ExecutionPage() {
               </label>
               <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg min-h-[42px] flex items-center">
                 {isRunning ? (
-                  <div className="flex items-center gap-2 text-[#5E6AD2] text-sm font-medium">
+                  <div className="flex items-center gap-2 text-[#0F766E] text-sm font-medium">
                     <Spinner size="sm" />
                     <span>Running...</span>
                   </div>
@@ -274,8 +274,8 @@ export default function ExecutionPage() {
           <div className="grid grid-cols-1 xs:grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             <div className="linear-card p-5">
               <div className="flex items-center gap-4">
-                <div className="w-11 h-11 rounded-xl bg-[#5E6AD2]/10 flex items-center justify-center shrink-0">
-                  <PlayCircle size={18} className="text-[#9BA3F0]" />
+                <div className="w-11 h-11 rounded-xl bg-[#0F766E]/10 flex items-center justify-center shrink-0">
+                  <PlayCircle size={18} className="text-[#0F766E]" />
                 </div>
                 <div>
                   <p className="text-2xl font-bold text-[#E0E0E2] leading-none">{stats.total || 0}</p>
@@ -363,8 +363,8 @@ export default function ExecutionPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-3 p-3 rounded-xl bg-[#161618] border border-[#2A2A2D]">
-                    <div className="w-8 h-8 rounded-lg bg-[#5E6AD2]/10 flex items-center justify-center shrink-0">
-                      <ClipboardList size={15} className="text-[#9BA3F0]" />
+                    <div className="w-8 h-8 rounded-lg bg-[#0F766E]/10 flex items-center justify-center shrink-0">
+                      <ClipboardList size={15} className="text-[#0F766E]" />
                     </div>
                     <div>
                       <p className="text-xl font-bold text-[#E0E0E2] leading-none">{currentExecution.totalSteps || 0}</p>
@@ -419,7 +419,7 @@ export default function ExecutionPage() {
                 {currentExecution.stepResults && currentExecution.stepResults.length > 0 && (
                   <div className="mt-4">
                     <div className="flex items-center gap-2 mb-3">
-                      <ListTree size={18} className="text-[#9BA3F0]" />
+                      <ListTree size={18} className="text-[#0F766E]" />
                       <h3 className="font-semibold text-gray-900">
                         Detail Per-Step ({currentExecution.stepResults.length})
                       </h3>
@@ -516,7 +516,7 @@ export default function ExecutionPage() {
                     <tr
                       key={execution.id}
                       className={`border-b border-[#2D2D2F] hover:bg-[#1A1A1C] transition ${
-                        compareIds.includes(execution.id) ? 'bg-[#5E6AD2]/5' : ''
+                        compareIds.includes(execution.id) ? 'bg-[#0F766E]/5' : ''
                       }`}
                     >
                       <td className="py-3 px-2 text-center">
@@ -524,7 +524,7 @@ export default function ExecutionPage() {
                           type="checkbox"
                           checked={compareIds.includes(execution.id)}
                           onChange={() => toggleCompareSelection(execution.id)}
-                          className="w-4 h-4 rounded border-[rgba(255,255,255,0.2)] bg-[#141316] accent-[#5E6AD2] cursor-pointer"
+                          className="w-4 h-4 rounded border-[rgba(255,255,255,0.2)] bg-[#141316] accent-[#0F766E] cursor-pointer"
                           title="Select for comparison"
                         />
                       </td>
@@ -650,7 +650,7 @@ export default function ExecutionPage() {
                   href={screenshotModal.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-[#5E6AD2] hover:text-[#6B7AE8] text-sm font-medium mr-4"
+                  className="text-[#0F766E] hover:text-[#0D9488] text-sm font-medium mr-4"
                 >
                   Buka di tab baru ↗
                 </a>

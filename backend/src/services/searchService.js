@@ -15,6 +15,9 @@ export async function searchScenarios(userId, options = {}) {
     endDate = null,
     favoritesOnly = false,
     tag = null,
+    folderId = undefined,
+    unfiled = false,
+    includeDescendants = false,
   } = options
 
   try {
@@ -31,6 +34,34 @@ export async function searchScenarios(userId, options = {}) {
 
     if (favoritesOnly) where.isFavorite = true
     if (tag) where.tags = { has: tag }
+
+    if (unfiled) {
+      where.folderId = null
+    } else if (folderId) {
+      if (includeDescendants) {
+        const folders = await prisma.scenarioFolder.findMany({
+          where: { userId },
+          select: { id: true, parentId: true },
+        })
+        const children = new Map()
+        for (const f of folders) {
+          const key = f.parentId || '__root__'
+          if (!children.has(key)) children.set(key, [])
+          children.get(key).push(f.id)
+        }
+        const ids = [folderId]
+        const walk = (id) => {
+          for (const childId of children.get(id) || []) {
+            ids.push(childId)
+            walk(childId)
+          }
+        }
+        walk(folderId)
+        where.folderId = { in: ids }
+      } else {
+        where.folderId = folderId
+      }
+    }
 
     // Add date filtering if provided
     if (startDate || endDate) {
@@ -60,8 +91,11 @@ export async function searchScenarios(userId, options = {}) {
         steps: true,
         isFavorite: true,
         tags: true,
+        folderId: true,
+        sortOrder: true,
         createdAt: true,
         updatedAt: true,
+        folder: { select: { id: true, name: true } },
         _count: {
           select: { executions: true, testSteps: true },
         },

@@ -183,10 +183,10 @@ export default function DashboardPage() {
       <div className="space-y-6 animate-fade-in">
         {/* Welcome */}
         <div>
-          <h1 className="text-xl font-semibold text-[#E0E0E2]">
-            {t.welcome}, <span className="text-[#9BA3F0]">{user?.name || 'User'}</span>
+          <h1 className="text-xl font-semibold text-ink">
+            {t.welcome}, <span className="text-brand">{user?.name || 'User'}</span>
           </h1>
-          <p className="text-[#8A8A8F] mt-1 text-sm">
+          <p className="text-ink-muted mt-1 text-sm">
             {t.hereIs}
           </p>
         </div>
@@ -195,7 +195,7 @@ export default function DashboardPage() {
 
         {loading ? (
           <div className="flex justify-center py-16">
-            <div className="w-10 h-10 rounded-full border-2 border-[rgba(255,255,255,0.08)] border-t-[#5E6AD2] animate-spin" />
+            <div className="w-10 h-10 rounded-full border-2 border-surface-border border-t-brand animate-spin" />
           </div>
         ) : (
           <>
@@ -204,11 +204,11 @@ export default function DashboardPage() {
               <div className="linear-card stat-violet p-5">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs text-[#8A8A8F] font-medium uppercase tracking-wider">{t.testScenarios}</p>
-                    <p className="text-3xl font-bold text-[#E0E0E2] mt-1">{stats.scenarios}</p>
+                    <p className="text-xs text-ink-muted font-medium uppercase tracking-wider">{t.testScenarios}</p>
+                    <p className="text-3xl font-bold text-ink mt-1">{stats.scenarios}</p>
                   </div>
-                  <div className="w-10 h-10 rounded-lg bg-[#5E6AD2]/10 flex items-center justify-center">
-                    <ClipboardList size={18} className="text-[#9BA3F0]" />
+                  <div className="w-10 h-10 rounded-lg bg-brand-soft flex items-center justify-center">
+                    <ClipboardList size={18} className="text-brand" />
                   </div>
                 </div>
               </div>
@@ -216,11 +216,11 @@ export default function DashboardPage() {
               <div className="linear-card stat-cyan p-5">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs text-[#8A8A8F] font-medium uppercase tracking-wider">{t.totalExecutions}</p>
-                    <p className="text-3xl font-bold text-[#E0E0E2] mt-1">{stats.executions}</p>
+                    <p className="text-xs text-ink-muted font-medium uppercase tracking-wider">{t.totalExecutions}</p>
+                    <p className="text-3xl font-bold text-ink mt-1">{stats.executions}</p>
                   </div>
-                  <div className="w-10 h-10 rounded-lg bg-[#4EC9B0]/10 flex items-center justify-center">
-                    <PlayCircle size={18} className="text-[#4EC9B0]" />
+                  <div className="w-10 h-10 rounded-lg bg-teal-50 flex items-center justify-center">
+                    <PlayCircle size={18} className="text-teal-600" />
                   </div>
                 </div>
               </div>
@@ -228,11 +228,11 @@ export default function DashboardPage() {
               <div className="linear-card stat-green p-5">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs text-[#8A8A8F] font-medium uppercase tracking-wider">{t.successRate}</p>
-                    <p className="text-3xl font-bold text-[#E0E0E2] mt-1">{stats.successRate}%</p>
+                    <p className="text-xs text-ink-muted font-medium uppercase tracking-wider">{t.successRate}</p>
+                    <p className="text-3xl font-bold text-ink mt-1">{stats.successRate}%</p>
                   </div>
-                  <div className="w-10 h-10 rounded-lg bg-[#34D399]/10 flex items-center justify-center">
-                    <CheckCircle2 size={18} className="text-[#34D399]" />
+                  <div className="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center">
+                    <CheckCircle2 size={18} className="text-emerald-600" />
                   </div>
                 </div>
               </div>
@@ -240,11 +240,11 @@ export default function DashboardPage() {
               <div className="linear-card stat-amber p-5">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs text-[#8A8A8F] font-medium uppercase tracking-wider">{t.avgDuration}</p>
-                    <p className="text-3xl font-bold text-[#E0E0E2] mt-1">{formatDuration(stats.avgDuration)}</p>
+                    <p className="text-xs text-ink-muted font-medium uppercase tracking-wider">{t.avgDuration}</p>
+                    <p className="text-3xl font-bold text-ink mt-1">{formatDuration(stats.avgDuration)}</p>
                   </div>
-                  <div className="w-10 h-10 rounded-lg bg-[#FBBF24]/10 flex items-center justify-center">
-                    <Clock size={18} className="text-[#FBBF24]" />
+                  <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center">
+                    <Clock size={18} className="text-amber-500" />
                   </div>
                 </div>
               </div>
@@ -280,7 +280,7 @@ export default function DashboardPage() {
 
             {/* Quick Actions — filtered by role (USER vs ADMIN) */}
             <div className="linear-card p-5">
-              <h2 className="text-sm font-semibold text-[#E0E0E2] mb-4">{t.quickActions}</h2>
+              <h2 className="text-sm font-semibold text-ink mb-4">{t.quickActions}</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3">
                 {quickActions.map((action) => {
                   const Icon = action.icon
@@ -295,9 +295,9 @@ export default function DashboardPage() {
                         <div className={`w-8 h-8 rounded-lg ${action.iconBg} flex items-center justify-center`}>
                           <Icon size={15} className={action.iconColor} />
                         </div>
-                        <p className="font-medium text-[#E0E0E2] text-sm">{t[action.titleKey]}</p>
+                        <p className="font-medium text-ink text-sm">{t[action.titleKey]}</p>
                       </div>
-                      <p className="text-xs text-[#8A8A8F]">{t[action.descKey]}</p>
+                      <p className="text-xs text-ink-muted">{t[action.descKey]}</p>
                     </button>
                   )
                 })}
@@ -306,15 +306,15 @@ export default function DashboardPage() {
 
             {/* Analytics Section */}
             {analytics && (
-              <div className="linear-card p-6 border-l-2 border-l-[#9BA3F0]">
+              <div className="linear-card p-6 border-l-2 border-l-brand">
                 <div className="flex items-center justify-between mb-5">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-[#5E6AD2]/10 flex items-center justify-center">
-                      <TrendingUp size={18} className="text-[#9BA3F0]" />
+                    <div className="w-10 h-10 rounded-lg bg-brand-soft flex items-center justify-center">
+                      <TrendingUp size={18} className="text-brand" />
                     </div>
                     <div>
-                      <h2 className="text-sm font-semibold text-[#E0E0E2]">{t.analyticsSummary}</h2>
-                      <p className="text-xs text-[#8A8A8F] mt-0.5">{t.last7Days}: {analytics.last7Days?.passRate || 0}% {t.passRate}</p>
+                      <h2 className="text-sm font-semibold text-ink">{t.analyticsSummary}</h2>
+                      <p className="text-xs text-ink-muted mt-0.5">{t.last7Days}: {analytics.last7Days?.passRate || 0}% {t.passRate}</p>
                     </div>
                   </div>
                   <div className="flex gap-2">
@@ -337,20 +337,20 @@ export default function DashboardPage() {
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div>
-                    <p className="text-xs text-[#8A8A8F] mb-1">Total Executions</p>
-                    <p className="text-2xl font-bold text-[#E0E0E2]">{analytics.totalExecutions}</p>
+                    <p className="text-xs text-ink-muted mb-1">Total Executions</p>
+                    <p className="text-2xl font-bold text-ink">{analytics.totalExecutions}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-[#8A8A8F] mb-1">Pass Rate</p>
-                    <p className="text-2xl font-bold text-[#34D399]">{analytics.passRate}%</p>
+                    <p className="text-xs text-ink-muted mb-1">Pass Rate</p>
+                    <p className="text-2xl font-bold text-emerald-600">{analytics.passRate}%</p>
                   </div>
                   <div>
-                    <p className="text-xs text-[#8A8A8F] mb-1">Avg Duration</p>
-                    <p className="text-2xl font-bold text-[#FBBF24]">{formatDuration(analytics.avgDuration)}</p>
+                    <p className="text-xs text-ink-muted mb-1">Avg Duration</p>
+                    <p className="text-2xl font-bold text-amber-500">{formatDuration(analytics.avgDuration)}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-[#8A8A8F] mb-1">Total Scenarios</p>
-                    <p className="text-2xl font-bold text-[#4EC9B0]">{analytics.totalScenarios}</p>
+                    <p className="text-xs text-ink-muted mb-1">Total Scenarios</p>
+                    <p className="text-2xl font-bold text-teal-600">{analytics.totalScenarios}</p>
                   </div>
                 </div>
               </div>
@@ -361,22 +361,22 @@ export default function DashboardPage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
               {/* Recent Scenarios */}
               <div className="linear-card p-5">
-                <h2 className="text-sm font-semibold text-[#E0E0E2] mb-4">{t.recentScenarios}</h2>
+                <h2 className="text-sm font-semibold text-ink mb-4">{t.recentScenarios}</h2>
                 {recentScenarios.length === 0 ? (
-                  <p className="text-center py-6 text-[#8A8A8F] text-sm">{t.noScenariosYet}</p>
+                  <p className="text-center py-6 text-ink-muted text-sm">{t.noScenariosYet}</p>
                 ) : (
                   <div className="space-y-2">
                     {recentScenarios.map(s => (
                       <div
                         key={s.id}
                         onClick={() => navigate(`/scenarios/${s.id}`)}
-                        className="flex items-center justify-between p-3 rounded-md bg-[rgba(255,255,255,0.02)] hover:bg-[rgba(255,255,255,0.04)] cursor-pointer transition-all border border-transparent hover:border-[rgba(255,255,255,0.08)]"
+                        className="flex items-center justify-between p-3 rounded-md bg-surface-muted hover:bg-brand-soft/40 cursor-pointer transition-all border border-transparent hover:border-surface-border"
                       >
                         <div className="min-w-0">
-                          <p className="font-medium text-[#E0E0E2] text-sm truncate">{s.name}</p>
-                          <p className="text-xs text-[#8A8A8F] mt-0.5">{formatDate(s.updatedAt || s.createdAt)}</p>
+                          <p className="font-medium text-ink text-sm truncate">{s.name}</p>
+                          <p className="text-xs text-ink-muted mt-0.5">{formatDate(s.updatedAt || s.createdAt)}</p>
                         </div>
-                        <span className="text-xs text-[#8A8A8F] ml-3 shrink-0 bg-[rgba(255,255,255,0.04)] px-2 py-0.5 rounded">
+                        <span className="text-xs text-ink-muted ml-3 shrink-0 bg-white border border-surface-border px-2 py-0.5 rounded">
                           {s._count?.testSteps ?? s.testSteps?.length ?? s.steps ?? 0} {t.steps}
                         </span>
                       </div>
@@ -387,19 +387,19 @@ export default function DashboardPage() {
 
               {/* Recent Executions */}
               <div className="linear-card p-5">
-                <h2 className="text-sm font-semibold text-[#E0E0E2] mb-4">{t.recentExecutions}</h2>
+                <h2 className="text-sm font-semibold text-ink mb-4">{t.recentExecutions}</h2>
                 {recentExecutions.length === 0 ? (
-                  <p className="text-center py-6 text-[#8A8A8F] text-sm">{t.noExecutionsYet}</p>
+                  <p className="text-center py-6 text-ink-muted text-sm">{t.noExecutionsYet}</p>
                 ) : (
                   <div className="space-y-2">
                     {recentExecutions.map(e => (
                       <div
                         key={e.id}
                         onClick={() => navigate('/execution')}
-                        className="flex items-center justify-between p-3 rounded-md bg-[rgba(255,255,255,0.02)] hover:bg-[rgba(255,255,255,0.04)] cursor-pointer transition-all border border-transparent hover:border-[rgba(255,255,255,0.08)]"
+                        className="flex items-center justify-between p-3 rounded-md bg-surface-muted hover:bg-brand-soft/40 cursor-pointer transition-all border border-transparent hover:border-surface-border"
                       >
                         <div className="min-w-0">
-                          <p className="font-medium text-[#E0E0E2] text-sm truncate">{e.scenario?.name || 'Scenario'}</p>
+                          <p className="font-medium text-ink text-sm truncate">{e.scenario?.name || 'Scenario'}</p>
                           <div className="flex items-center gap-2 mt-1">
                             <p className="text-xs text-[#8A8A8F]">{formatDate(e.startTime)}</p>
                             {e.browser && (

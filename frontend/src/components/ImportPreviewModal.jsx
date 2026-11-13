@@ -45,7 +45,7 @@ export function ImportPreviewModal({ data, isLoading, onConfirm, onCancel }) {
         {/* Header */}
         <div className={`flex items-center justify-between px-6 py-4 border-b ${borderClass}`}>
           <div className="flex items-center gap-2">
-            <FileUp size={20} className="text-[#5E6AD2]" />
+            <FileUp size={20} className="text-[#0F766E]" />
             <div className="flex items-center gap-2">
               <h2 className={`text-lg font-semibold ${textPrimaryClass}`}>Preview Import</h2>
               <Tooltip text="Review parsed data before creating scenarios. Edit any fields as needed." position="right">

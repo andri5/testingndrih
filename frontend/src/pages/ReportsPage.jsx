@@ -231,8 +231,8 @@ export default function ReportsPage() {
               <div className="grid grid-cols-1 xs:grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                 <div className="linear-card p-5">
                   <div className="flex items-center gap-4">
-                    <div className="w-11 h-11 rounded-xl bg-[#5E6AD2]/10 flex items-center justify-center shrink-0">
-                      <PlayCircle size={18} className="text-[#9BA3F0]" />
+                    <div className="w-11 h-11 rounded-xl bg-[#0F766E]/10 flex items-center justify-center shrink-0">
+                      <PlayCircle size={18} className="text-[#0F766E]" />
                     </div>
                     <div>
                       <p className="text-2xl font-bold text-[#E0E0E2] leading-none">{stats.total}</p>
@@ -322,7 +322,7 @@ export default function ReportsPage() {
                           <p className="text-xs text-[#888]">{s.description || '-'}</p>
                         </div>
                       </div>
-                      <span className="text-sm font-semibold text-[#5E6AD2]">
+                      <span className="text-sm font-semibold text-[#0F766E]">
                         {s._count?.executions ?? s.executionCount ?? 0} runs
                       </span>
                     </div>
@@ -354,7 +354,7 @@ export default function ReportsPage() {
                           <tr key={e.id} className="border-b border-[#2D2D2F] hover:bg-[#1A1A1C]">
                             <td className="py-3 px-2">
                               <span
-                                className="text-[#5E6AD2] hover:underline cursor-pointer"
+                                className="text-[#0F766E] hover:underline cursor-pointer"
                                 onClick={() => navigate(`/scenarios/${e.scenarioId}`)}
                               >
                                 {e.scenario?.name || 'Unknown'}

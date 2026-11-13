@@ -72,7 +72,7 @@ export function ExecuteScenarioButton({ scenarioId, scenarioName, onExecutionSta
                 value={browser}
                 onChange={e => setBrowser(e.target.value)}
                 className={`text-sm rounded px-2 py-1 focus:outline-none focus:ring-1 ${
-                  'border border-gray-300 text-gray-900 focus:ring-indigo-500'
+                  'border border-gray-300 text-gray-900 focus:ring-teal-500'
                 }`}
               >
                 <option value="chromium">Chromium</option>
@@ -108,7 +108,7 @@ export function ExecuteScenarioButton({ scenarioId, scenarioName, onExecutionSta
                 checked={headless}
                 onChange={e => setHeadless(e.target.checked)}
                 className={`mb-1.5 h-4 w-4 rounded ${
-                  'border-gray-300 text-indigo-600'
+                  'border-gray-300 text-teal-700'
                 }`}
               />
             </div>

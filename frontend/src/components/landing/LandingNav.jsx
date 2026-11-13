@@ -50,7 +50,7 @@ function NavLink({ href, active, children }) {
   )
 }
 
-export default function LandingNav({ lang, t }) {
+export default function LandingNav({ lang, t, variant = 'dark' }) {
   const { pathname } = useLocation()
   const home = publicHomePath(lang)
   const about = publicAboutPath(lang)
@@ -58,6 +58,7 @@ export default function LandingNav({ lang, t }) {
   const onHome = !onAbout
   const activeSection = useNavScrollSpy()
   const [scrolled, setScrolled] = useState(false)
+  const isLight = variant === 'light'
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12)
@@ -81,7 +82,7 @@ export default function LandingNav({ lang, t }) {
   ]
 
   return (
-    <header className={`lp-nav ${scrolled ? 'lp-nav--scrolled' : ''}`}>
+    <header className={`lp-nav absolute inset-x-0 top-0 z-30 ${isLight ? 'lp-nav--light' : ''} ${scrolled ? 'lp-nav--scrolled' : ''}`}>
       <div className="lp-nav-shell">
         <Link to={home} className="lp-nav-brand">
           <BrandLogo size="sm" className="lp-nav-brand__logo" title="Test Sambil Ngopi" />

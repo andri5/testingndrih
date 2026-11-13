@@ -10,6 +10,7 @@ import {
   listScenarioTagsHandler,
   toggleFavoriteHandler,
   updateTagsHandler,
+  moveScenariosHandler,
 } from '../controllers/scenarioController.js'
 import { authenticateToken } from '../middleware/auth.js'
 import testStepRoutes from './testStepRoutes.js'
@@ -30,6 +31,12 @@ router.post('/', createScenarioHandler)
  * Get all scenarios for authenticated user
  */
 router.get('/', getScenarioListHandler)
+
+/**
+ * POST /api/scenarios/move
+ * Move scenarios between folders
+ */
+router.post('/move', moveScenariosHandler)
 
 /**
  * GET /api/scenarios/tags

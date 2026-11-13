@@ -1,4 +1,8 @@
 import { prisma } from '../lib/prisma.js'
+import {
+  assertFolderBelongsToUser,
+  collectDescendantIds,
+} from './scenarioFolderService.js'
 
 export function withLiveStepCount(scenario) {
   const count = scenario._count?.testSteps ?? scenario.steps ?? 0
@@ -10,7 +14,7 @@ export function withLiveStepCount(scenario) {
  * Create a new scenario
  */
 export async function createScenario(userId, data) {
-  const { name, description, url } = data
+  const { name, description, url, folderId = null, tags } = data
 
   // Validation
   if (!name || !url) {
@@ -21,14 +25,25 @@ export async function createScenario(userId, data) {
     throw new Error('URL must start with http:// or https://')
   }
 
+  if (folderId) {
+    await assertFolderBelongsToUser(folderId, userId)
+  }
+
   try {
+    const siblingCount = await prisma.scenario.count({
+      where: { userId, folderId: folderId || null },
+    })
+
     const scenario = await prisma.scenario.create({
       data: {
         name,
         description: description || '',
         url,
         userId,
-        steps: 0
+        steps: 0,
+        folderId: folderId || null,
+        sortOrder: siblingCount,
+        ...(tags !== undefined ? { tags: normalizeTags(tags) } : {}),
       }
     })
 
@@ -49,6 +64,9 @@ export async function getUserScenarios(userId, options = {}) {
     orderDirection = 'desc',
     favoritesOnly = false,
     tag = null,
+    folderId = undefined,
+    unfiled = false,
+    includeDescendants = false,
   } = options
 
   try {
@@ -56,14 +74,30 @@ export async function getUserScenarios(userId, options = {}) {
     if (favoritesOnly) where.isFavorite = true
     if (tag) where.tags = { has: tag }
 
+    if (unfiled) {
+      where.folderId = null
+    } else if (folderId) {
+      if (includeDescendants) {
+        const descendantIds = await collectDescendantIds(folderId, userId)
+        where.folderId = { in: [folderId, ...descendantIds] }
+      } else {
+        where.folderId = folderId
+      }
+    }
+
+    const orderClause =
+      folderId || unfiled
+        ? [{ sortOrder: 'asc' }, { name: 'asc' }]
+        : [
+            { isFavorite: 'desc' },
+            { [orderBy]: orderDirection },
+          ]
+
     const scenarios = await prisma.scenario.findMany({
       where,
       skip,
       take,
-      orderBy: [
-        { isFavorite: 'desc' },
-        { [orderBy]: orderDirection },
-      ],
+      orderBy: orderClause,
       select: {
         id: true,
         name: true,
@@ -72,15 +106,31 @@ export async function getUserScenarios(userId, options = {}) {
         steps: true,
         isFavorite: true,
         tags: true,
+        folderId: true,
+        sortOrder: true,
         createdAt: true,
         updatedAt: true,
+        folder: { select: { id: true, name: true } },
         _count: { select: { testSteps: true } },
+        executions: {
+          orderBy: { startTime: 'desc' },
+          take: 1,
+          select: { id: true, status: true, startTime: true },
+        },
       },
     })
 
     const total = await prisma.scenario.count({ where })
 
-    return { scenarios: scenarios.map(withLiveStepCount), total }
+    return {
+      scenarios: scenarios.map((s) => {
+        const mapped = withLiveStepCount(s)
+        const last = s.executions?.[0] || null
+        const { executions, ...rest } = mapped
+        return { ...rest, lastResult: last }
+      }),
+      total,
+    }
   } catch (error) {
     throw new Error(`Failed to fetch scenarios: ${error.message}`)
   }
@@ -96,7 +146,8 @@ export async function getScenarioById(scenarioId, userId) {
       include: {
         testSteps: {
           orderBy: { stepNumber: 'asc' }
-        }
+        },
+        folder: { select: { id: true, name: true, parentId: true } },
       }
     })
 
@@ -119,7 +170,7 @@ export async function getScenarioById(scenarioId, userId) {
  * Update a scenario
  */
 export async function updateScenario(scenarioId, userId, data) {
-  const { name, description, url, tags } = data
+  const { name, description, url, tags, folderId, sortOrder } = data
 
   try {
     // Verify ownership first
@@ -140,6 +191,10 @@ export async function updateScenario(scenarioId, userId, data) {
       throw new Error('URL must start with http:// or https://')
     }
 
+    if (folderId !== undefined && folderId !== null) {
+      await assertFolderBelongsToUser(folderId, userId)
+    }
+
     const updated = await prisma.scenario.update({
       where: { id: scenarioId },
       data: {
@@ -147,6 +202,8 @@ export async function updateScenario(scenarioId, userId, data) {
         ...(description !== undefined && { description }),
         ...(url && { url }),
         ...(tags !== undefined && { tags: normalizeTags(tags) }),
+        ...(folderId !== undefined && { folderId: folderId || null }),
+        ...(sortOrder !== undefined && { sortOrder: Number(sortOrder) || 0 }),
       }
     })
 
@@ -154,6 +211,48 @@ export async function updateScenario(scenarioId, userId, data) {
   } catch (error) {
     throw new Error(`Failed to update scenario: ${error.message}`)
   }
+}
+
+/**
+ * Move one or more scenarios into a folder (or unfiled)
+ */
+export async function moveScenarios(userId, { ids = [], folderId = null, sortOrders = null }) {
+  if (!Array.isArray(ids) || ids.length === 0) {
+    throw new Error('ids array is required')
+  }
+
+  if (folderId) {
+    await assertFolderBelongsToUser(folderId, userId)
+  }
+
+  const owned = await prisma.scenario.findMany({
+    where: { userId, id: { in: ids } },
+    select: { id: true },
+  })
+  if (owned.length !== ids.length) {
+    throw new Error('One or more scenarios were not found or unauthorized')
+  }
+
+  const orderMap = new Map()
+  if (Array.isArray(sortOrders)) {
+    for (const row of sortOrders) {
+      if (row?.id != null) orderMap.set(row.id, Number(row.sortOrder) || 0)
+    }
+  }
+
+  await prisma.$transaction(
+    ids.map((id, index) =>
+      prisma.scenario.update({
+        where: { id },
+        data: {
+          folderId: folderId || null,
+          sortOrder: orderMap.has(id) ? orderMap.get(id) : index,
+        },
+      })
+    )
+  )
+
+  return { moved: ids.length, folderId: folderId || null }
 }
 
 function normalizeTags(tags) {
@@ -250,7 +349,7 @@ export async function duplicateScenario(scenarioId, userId) {
       throw new Error('Unauthorized: Cannot duplicate this scenario')
     }
 
-    // Create new scenario
+    // Create new scenario (same folder as original)
     const newScenario = await prisma.scenario.create({
       data: {
         name: `${original.name} (Copy)`,
@@ -260,6 +359,8 @@ export async function duplicateScenario(scenarioId, userId) {
         steps: original.steps,
         tags: original.tags || [],
         isFavorite: false,
+        folderId: original.folderId || null,
+        sortOrder: original.sortOrder ?? 0,
       }
     })
 

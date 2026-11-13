@@ -6,7 +6,7 @@ import { Copy, Key, Bell } from 'lucide-react'
 
 const cardCls = 'bg-[#1A1A1C] border border-[#2D2D2F] rounded-xl p-6'
 const labelCls = 'block text-sm font-medium text-[#A0A0A4] mb-1.5'
-const inputCls = 'w-full px-3 py-2 bg-[#0F0E11] border border-[#2D2D2F] rounded-lg text-[#E0E0E2] text-sm focus:outline-none focus:border-[#5E6AD2]'
+const inputCls = 'w-full px-3 py-2 bg-[#0F0E11] border border-[#2D2D2F] rounded-lg text-[#E0E0E2] text-sm focus:outline-none focus:border-[#0F766E]'
 
 const labels = {
   notifications: 'Notifications',
@@ -142,7 +142,7 @@ export default function IntegrationsSettings() {
           />
         )}
         {newToken && (
-          <div className="flex items-center gap-2 mb-4 p-3 bg-[#0F0E11] rounded-lg font-mono text-xs text-[#9BA3F0] break-all">
+          <div className="flex items-center gap-2 mb-4 p-3 bg-[#0F0E11] rounded-lg font-mono text-xs text-[#0F766E] break-all">
             {newToken}
             <button type="button" onClick={() => { navigator.clipboard.writeText(newToken); toast.success('Copied') }}>
               <Copy size={14} />
@@ -158,7 +158,7 @@ export default function IntegrationsSettings() {
           ))}
         </ul>
         <p className="text-xs text-[#8A8A8F] mb-2">{t.ciExample}</p>
-        <pre className="p-3 bg-[#0F0E11] rounded-lg text-xs text-[#9BA3F0] overflow-x-auto">{ciExample}</pre>
+        <pre className="p-3 bg-[#0F0E11] rounded-lg text-xs text-[#0F766E] overflow-x-auto">{ciExample}</pre>
       </div>
     </div>
   )

@@ -1,26 +1,27 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ChevronDown, HelpCircle, Plus, PenLine, Zap, LayoutTemplate, FileSpreadsheet, Sparkles } from 'lucide-react'
+import { ChevronDown, HelpCircle, Plus, PenLine, Zap, LayoutTemplate, FileSpreadsheet, Sparkles, FolderInput } from 'lucide-react'
 import Layout from '../components/Layout'
 import { Card, Button, Alert, Spinner } from '../components/ui'
 import ExportFormatButton, { SoftIconBadge } from '../components/ExportFormatButton'
 import { useAiEnabled } from '../hooks/useAiEnabled'
 import { ScenarioForm } from '../components/ScenarioForm'
 import { ScenarioSearch } from '../components/ScenarioSearch'
-import { ScenariosList } from '../components/ScenariosList'
+import ScenarioRepositoryTable, { flattenFolderOptions } from '../components/ScenarioRepositoryTable'
 import { TemplatePickerModal } from '../components/TemplatePickerModal'
 import { QuickRecordModal } from '../components/QuickRecordModal'
 import { ImportPreviewModal } from '../components/ImportPreviewModal'
 import AIGenerateScenarioModal from '../components/AIGenerateScenarioModal'
 import { Tooltip } from '../components/ui'
 import { useScenarioStore } from '../store/scenarioStore'
+import { useFolderStore } from '../store/folderStore'
 import { executionAPI } from '../services/api'
 import { useAuthStore } from '../store/authStore'
 
 const i18n = {
-    title: 'Test Scenarios',
-    subtitle: 'Create and manage your test scenarios',
-    createScenarioBtn: 'Create Scenario',
+    title: 'Test Repository',
+    subtitle: 'Organize scenarios in folders — create, move, and run from one place',
+    createScenarioBtn: 'Create',
     selectedCount: (n) => `${n} scenario${n !== 1 ? 's' : ''} selected`,
     runningBulk: 'Running executions sequentially (headless)...',
     close: 'Close',
@@ -85,10 +86,26 @@ export default function ScenariosPage() {
     updateScenarioTags,
     setFavoritesOnly,
     setFilterTag,
+    moveScenarios,
   } = useScenarioStore()
+  const selectedFolderKey = useFolderStore((s) => s.selectedKey)
+  const folderTree = useFolderStore((s) => s.tree)
+  const fetchFolders = useFolderStore((s) => s.fetchFolders)
+  const activeFolderId =
+    selectedFolderKey === 'all' || selectedFolderKey === 'unfiled' ? null : selectedFolderKey
+  const folderOptions = useMemo(() => flattenFolderOptions(folderTree), [folderTree])
   const isAdmin = useAuthStore((state) => state.user)?.role === 'ADMIN'
   const { configured: aiConfigured } = useAiEnabled()
   const t = i18n
+  const pageSize = pagination.take || 50
+
+  const refreshList = useCallback(
+    (search = '') => {
+      fetchScenarios(0, pageSize, search, { favoritesOnly, tag: filterTag })
+      fetchFolders()
+    },
+    [fetchScenarios, fetchFolders, pageSize, favoritesOnly, filterTag]
+  )
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -101,19 +118,19 @@ export default function ScenariosPage() {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  // Load scenarios on mount
+  // Load scenarios when folder / filters change
   useEffect(() => {
-    fetchScenarios()
+    fetchScenarios(0, pageSize, '', { favoritesOnly, tag: filterTag })
     fetchTags()
-  }, [])
+  }, [selectedFolderKey])
 
   const handleSearch = (query) => {
     if (searchTimeout) clearTimeout(searchTimeout)
     const timeout = setTimeout(() => {
       if (query.trim()) {
-        fetchScenarios(0, 10, query)
+        fetchScenarios(0, pageSize, query)
       } else {
-        fetchScenarios(0, 10)
+        fetchScenarios(0, pageSize)
       }
     }, 300)
     setSearchTimeout(timeout)
@@ -121,12 +138,78 @@ export default function ScenariosPage() {
 
   const handleFavoritesChange = (value) => {
     setFavoritesOnly(value)
-    fetchScenarios(0, pagination.take || 10, '', { favoritesOnly: value, tag: filterTag })
+    fetchScenarios(0, pageSize, '', { favoritesOnly: value, tag: filterTag })
   }
 
   const handleTagFilterChange = (tag) => {
     setFilterTag(tag)
-    fetchScenarios(0, pagination.take || 10, '', { favoritesOnly, tag })
+    fetchScenarios(0, pageSize, '', { favoritesOnly, tag })
+  }
+
+  const handleFolderDrop = async () => {
+    // Layout already moved via API; refresh filtered list for active folder
+    await fetchScenarios(0, pageSize, '', { favoritesOnly, tag: filterTag })
+  }
+
+  const handleMoveRequest = async (scenarioId, folderId) => {
+    try {
+      await moveScenarios([scenarioId], folderId)
+    } catch (err) {
+      alert(err.message || 'Failed to move scenario')
+    }
+  }
+
+  const handleReorder = async (draggedId, targetId) => {
+    if (selectedFolderKey === 'all') return
+    const dragged = scenarios.find((s) => s.id === draggedId)
+    const target = scenarios.find((s) => s.id === targetId)
+    if (!dragged || !target) return
+    const folderId = target.folderId ?? null
+    if ((dragged.folderId ?? null) !== folderId) {
+      // Different folders in descendant view — treat as move into target's folder at that position
+      const siblings = scenarios.filter((s) => (s.folderId ?? null) === folderId && s.id !== draggedId)
+      const to = siblings.findIndex((s) => s.id === targetId)
+      const ids = siblings.map((s) => s.id)
+      if (to >= 0) ids.splice(to, 0, draggedId)
+      else ids.push(draggedId)
+      const sortOrders = ids.map((id, index) => ({ id, sortOrder: index }))
+      try {
+        await moveScenarios(ids, folderId, sortOrders)
+      } catch (err) {
+        alert(err.message || 'Failed to reorder')
+      }
+      return
+    }
+    const siblings = scenarios.filter((s) => (s.folderId ?? null) === folderId)
+    const ids = siblings.map((s) => s.id)
+    const from = ids.indexOf(draggedId)
+    const to = ids.indexOf(targetId)
+    if (from < 0 || to < 0 || from === to) return
+    ids.splice(from, 1)
+    ids.splice(to, 0, draggedId)
+    const sortOrders = ids.map((id, index) => ({ id, sortOrder: index }))
+    try {
+      await moveScenarios(ids, folderId, sortOrders)
+    } catch (err) {
+      alert(err.message || 'Failed to reorder')
+    }
+  }
+
+  const handleBulkMove = async () => {
+    if (selectedIds.size === 0) return
+    const choice = window.prompt(
+      'Move selected to folder ID (leave empty for No folder). Or pick from: ' +
+        folderOptions.map((f) => `${f.label}=${f.id}`).slice(0, 8).join(', '),
+      activeFolderId || ''
+    )
+    if (choice === null) return
+    const folderId = choice.trim() === '' ? null : choice.trim()
+    try {
+      await moveScenarios([...selectedIds], folderId)
+      setSelectedIds(new Set())
+    } catch (err) {
+      alert(err.message || 'Failed to move scenarios')
+    }
   }
 
   const handleToggleFavorite = async (scenarioId) => {
@@ -153,7 +236,7 @@ export default function ScenariosPage() {
 
   const handleFilterChange = async (filter) => {
     if (filter === 'recent') {
-      fetchScenarios(0, 10)
+      fetchScenarios(0, pageSize)
     } else if (filter === 'active') {
       try {
         const response = await fetch('/api/scenarios/stats', {
@@ -168,8 +251,11 @@ export default function ScenariosPage() {
 
   const handleCreateScenario = async (formData) => {
     try {
-      await createScenario(formData.name, formData.description, formData.url)
+      await createScenario(formData.name, formData.description, formData.url, {
+        folderId: activeFolderId || undefined,
+      })
       setShowCreateForm(false)
+      refreshList()
     } catch (error) {}
   }
 
@@ -190,16 +276,21 @@ export default function ScenariosPage() {
     setShowCreateForm(false)
   }
 
-  const handleDeleteScenario = async (scenarioId) => {
+  const handleDeleteScenario = async (scenarioOrId) => {
+    const scenarioId = typeof scenarioOrId === 'object' ? scenarioOrId.id : scenarioOrId
+    if (!window.confirm('Delete this scenario?')) return
     try {
       await deleteScenario(scenarioId)
       setSelectedIds(prev => { const n = new Set(prev); n.delete(scenarioId); return n })
+      fetchFolders()
     } catch (error) {}
   }
 
-  const handleDuplicateScenario = async (scenarioId) => {
+  const handleDuplicateScenario = async (scenarioOrId) => {
+    const scenarioId = typeof scenarioOrId === 'object' ? scenarioOrId.id : scenarioOrId
     try {
       await duplicateScenario(scenarioId)
+      fetchFolders()
     } catch (error) {}
   }
 
@@ -224,8 +315,7 @@ export default function ScenariosPage() {
         throw new Error(error.message || 'Failed to mark scenario')
       }
 
-      // Refresh scenarios list
-      fetchScenarios()
+      refreshList()
     } catch (error) {
       alert(`Error: ${error.message}`)
     }
@@ -252,8 +342,7 @@ export default function ScenariosPage() {
         throw new Error(error.message || 'Failed to mark scenario')
       }
 
-      // Refresh scenarios list
-      fetchScenarios()
+      refreshList()
     } catch (error) {
       alert(`Error: ${error.message}`)
     }
@@ -280,8 +369,7 @@ export default function ScenariosPage() {
         throw new Error(error.message || 'Failed to mark scenario')
       }
 
-      // Refresh scenarios list
-      fetchScenarios()
+      refreshList()
     } catch (error) {
       alert(`Error: ${error.message}`)
     }
@@ -295,13 +383,13 @@ export default function ScenariosPage() {
   // ── Template Library ────────────────────────────────────────────────────────
   const handleTemplateCreated = (scenario) => {
     setShowTemplatePicker(false)
-    fetchScenarios()
+    refreshList()
     navigate(`/scenarios/${scenario.id}`)
   }
 
   const handleAIGenerated = (scenario) => {
     setShowAIGenerate(false)
-    fetchScenarios()
+    refreshList()
     fetchTags()
     navigate(`/scenarios/${scenario.id}`)
   }
@@ -309,7 +397,7 @@ export default function ScenariosPage() {
   // ── Quick Record ────────────────────────────────────────────────────────────
   const handleQuickRecordCreated = (scenario) => {
     setShowQuickRecord(false)
-    fetchScenarios()
+    refreshList()
     // Navigate to detail page — recording panel will be visible there
     navigate(`/scenarios/${scenario.id}?autoRecord=1`)
   }
@@ -354,7 +442,10 @@ export default function ScenariosPage() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('authToken')}`
         },
-        body: JSON.stringify(editedData)
+        body: JSON.stringify({
+          ...editedData,
+          folderId: activeFolderId || null,
+        })
       })
 
       if (!response.ok) {
@@ -365,7 +456,7 @@ export default function ScenariosPage() {
       const result = await response.json()
       setShowImportModal(false)
       setImportPreviewData(null)
-      fetchScenarios() // Refresh list
+      refreshList()
       alert(`Success! Created ${result.scenarios.length} scenario(s)`)
     } catch (error) {
       alert(`Error: ${error.message}`)
@@ -420,9 +511,20 @@ export default function ScenariosPage() {
     })
   }
 
-  const handleSelectAll = (ids) => {
-    setSelectedIds(new Set(ids))
+  const handleSelectAll = () => {
+    if (scenarios.length > 0 && scenarios.every((s) => selectedIds.has(s.id))) {
+      setSelectedIds(new Set())
+    } else {
+      setSelectedIds(new Set(scenarios.map((s) => s.id)))
+    }
   }
+
+  const folderLabel =
+    selectedFolderKey === 'all'
+      ? 'All scenarios'
+      : selectedFolderKey === 'unfiled'
+        ? 'No folder'
+        : folderOptions.find((f) => f.id === selectedFolderKey)?.label || 'Folder'
 
   // ── Bulk Execute ─────────────────────────────────────────────────────────────
   const handleBulkExecute = async () => {
@@ -454,13 +556,16 @@ export default function ScenariosPage() {
   }
 
   return (
-    <Layout>
-      <div className="space-y-6">
+    <Layout onFolderSelectionChange={() => refreshList()} onFolderDrop={handleFolderDrop}>
+      <div className="space-y-5">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-[#E0E0E2]">{t.title}</h1>
-            <p className="text-[#A0A0A4] mt-1">{t.subtitle}</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-ink-subtle mb-1">
+              Repository · {folderLabel}
+            </p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-ink">{t.title}</h1>
+            <p className="text-ink-muted mt-1">{t.subtitle}</p>
           </div>
           {!showCreateForm && !editingScenario && (
             <div className="flex flex-wrap gap-2 self-start" ref={menuRef}>
@@ -651,7 +756,7 @@ export default function ScenariosPage() {
             </div>
             {!editingScenario && (
               <p className="text-sm text-[#8A8A8F] mb-4 -mt-2">
-                Manual form below — or use <strong className="text-[#9BA3F0]">Generate with AI</strong> to draft steps from a short description.
+                Manual form below — or use <strong className="text-[#0F766E]">Generate with AI</strong> to draft steps from a short description.
               </p>
             )}
             <ScenarioForm
@@ -664,7 +769,7 @@ export default function ScenariosPage() {
 
         {/* Bulk Execute Panel */}
         {!showCreateForm && !editingScenario && selectedIds.size > 0 && (
-          <div className="bg-[#5E6AD2]/10 border border-[#5E6AD2]/30 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center gap-4">
+          <div className="bg-[#0F766E]/10 border border-[#0F766E]/30 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center gap-4">
             <div className="flex-1">
               <p className="text-sm font-semibold text-[#E0E0E2]">
                 {t.selectedCount(selectedIds.size)}
@@ -687,13 +792,13 @@ export default function ScenariosPage() {
                     <span className={
                       r.status === 'passed' ? 'text-green-400' :
                       r.status === 'failed' ? 'text-red-400' :
-                      r.status === 'running' ? 'text-[#5E6AD2]' :
+                      r.status === 'running' ? 'text-[#0F766E]' :
                       'text-[#8A8A8F]'
                     }>{r.name.length > 20 ? r.name.slice(0, 20) + '…' : r.name}</span>
                     {r.executionId && (
                       <button
                         onClick={() => navigate(`/scenarios/${r.id}`)}
-                        className="text-[#5E6AD2] hover:underline ml-1"
+                        className="text-[#0F766E] hover:underline ml-1"
                       >↗</button>
                     )}
                   </div>
@@ -703,14 +808,20 @@ export default function ScenariosPage() {
 
             <div className="flex gap-2 shrink-0">
               {bulkExecuteStatus !== 'running' && (
-                <Button
-                  variant="primary"
-                  size="sm"
-                  onClick={handleBulkExecute}
-                  disabled={bulkExecuteStatus === 'running'}
-                >
-                  ▶ Run Selected ({selectedIds.size})
-                </Button>
+                <>
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    onClick={handleBulkExecute}
+                    disabled={bulkExecuteStatus === 'running'}
+                  >
+                    ▶ Run Selected ({selectedIds.size})
+                  </Button>
+                  <Button variant="secondary" size="sm" onClick={handleBulkMove}>
+                    <FolderInput size={14} className="inline mr-1" />
+                    Move…
+                  </Button>
+                </>
               )}
               <Button variant="ghost" size="sm" onClick={clearBulkState}>
                 {bulkExecuteStatus === 'done' ? t.close : t.cancel}
@@ -735,70 +846,31 @@ export default function ScenariosPage() {
           </Card>
         )}
 
-        {/* Scenarios List */}
+        {/* Repository table */}
         {!showCreateForm && !editingScenario && (
-          <ScenariosList
-            scenarios={scenarios}
-            onEdit={handleEditScenario}
-            onDelete={handleDeleteScenario}
-            onDuplicate={handleDuplicateScenario}
-            onView={handleViewScenario}
-            onMarkSmoke={isAdmin ? handleMarkSmoke : undefined}
-            onMarkStress={isAdmin ? handleMarkStress : undefined}
-            onMarkSecurity={isAdmin ? handleMarkSecurity : undefined}
-            onToggleFavorite={handleToggleFavorite}
-            onEditTags={handleEditTags}
-            isLoading={isLoading}
-            hasMore={pagination.hasMore}
-            onLoadMore={handleLoadMore}
-            selectedIds={selectedIds}
-            onToggleSelect={handleToggleSelect}
-            onSelectAll={handleSelectAll}
-            bulkSelectEnabled={true}
-          />
-        )}
-
-        {/* Stats */}
-        {!showCreateForm && !editingScenario && scenarios.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-            <div className="linear-card p-5">
-              <div className="flex items-center gap-4">
-                <div className="w-11 h-11 rounded-xl bg-[#5E6AD2]/10 flex items-center justify-center shrink-0">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9BA3F0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-[#E0E0E2] leading-none">{scenarios.length}</p>
-                  <p className="text-xs text-[#8A8A8F] mt-1.5 font-medium uppercase tracking-wider">Total Scenarios</p>
-                </div>
+          <>
+            <ScenarioRepositoryTable
+              scenarios={scenarios}
+              selectedIds={selectedIds}
+              onToggleSelect={handleToggleSelect}
+              onToggleSelectAll={handleSelectAll}
+              onOpen={handleViewScenario}
+              onDuplicate={handleDuplicateScenario}
+              onDelete={handleDeleteScenario}
+              onToggleFavorite={handleToggleFavorite}
+              onMoveRequest={handleMoveRequest}
+              onReorder={selectedFolderKey === 'all' ? undefined : handleReorder}
+              folderOptions={folderOptions}
+              isLoading={isLoading}
+            />
+            {pagination.hasMore && (
+              <div className="flex justify-center">
+                <Button variant="secondary" size="sm" onClick={handleLoadMore} disabled={isLoading}>
+                  Load more
+                </Button>
               </div>
-            </div>
-            <div className="linear-card p-5">
-              <div className="flex items-center gap-4">
-                <div className="w-11 h-11 rounded-xl bg-[#34D399]/10 flex items-center justify-center shrink-0">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#34D399" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-[#E0E0E2] leading-none">
-                    {scenarios.reduce((sum, s) => sum + (s.stepCount || 0), 0)}
-                  </p>
-                  <p className="text-xs text-[#8A8A8F] mt-1.5 font-medium uppercase tracking-wider">Total Test Steps</p>
-                </div>
-              </div>
-            </div>
-            <div className="linear-card p-5">
-              <div className="flex items-center gap-4">
-                <div className="w-11 h-11 rounded-xl bg-[#FBBF24]/10 flex items-center justify-center shrink-0">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FBBF24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-[#E0E0E2] leading-none">
-                    {new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
-                  </p>
-                  <p className="text-xs text-[#8A8A8F] mt-1.5 font-medium uppercase tracking-wider">Last Updated</p>
-                </div>
-              </div>
-            </div>
-          </div>
+            )}
+          </>
         )}
       </div>
 
@@ -807,18 +879,21 @@ export default function ScenariosPage() {
         <TemplatePickerModal
           onClose={() => setShowTemplatePicker(false)}
           onCreated={handleTemplateCreated}
+          folderId={activeFolderId}
         />
       )}
       {isAdmin && showQuickRecord && (
         <QuickRecordModal
           onClose={() => setShowQuickRecord(false)}
           onCreated={handleQuickRecordCreated}
+          folderId={activeFolderId}
         />
       )}
       {showAIGenerate && (
         <AIGenerateScenarioModal
           onClose={() => setShowAIGenerate(false)}
           onCreated={handleAIGenerated}
+          folderId={activeFolderId}
         />
       )}
       {showImportModal && importPreviewData && (

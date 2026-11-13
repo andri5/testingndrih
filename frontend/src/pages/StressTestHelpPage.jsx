@@ -19,7 +19,7 @@ export default function StressTestHelpPage() {
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
-            <Gauge className="w-10 h-10 text-purple-500" />
+            <Gauge className="w-10 h-10 text-teal-500" />
             <h1 className="text-4xl font-bold text-[#E0E0E2]">
               {t.title}
             </h1>
@@ -31,14 +31,14 @@ export default function StressTestHelpPage() {
 
         {/* What is Stress Test */}
         <div className="bg-[#1A1A1C] rounded-lg p-6 mb-6 border border-[#2D2D2F]">
-          <h2 className="text-2xl font-bold text-purple-500 mb-4">{t.whatIs}</h2>
+          <h2 className="text-2xl font-bold text-teal-500 mb-4">{t.whatIs}</h2>
           <p className="text-[#E0E0E2] leading-relaxed mb-4">
             {t.whatIsDesc}
           </p>
           <div className="grid md:grid-cols-2 gap-4">
             {t.whatIsTips.map((tip, idx) => (
               <div key={idx} className="flex gap-3 bg-[#2D2D2F] p-3 rounded">
-                <span className="text-purple-400 font-bold text-xl">•</span>
+                <span className="text-teal-400 font-bold text-xl">•</span>
                 <span className="text-[#A0A0A4]">{tip}</span>
               </div>
             ))}
@@ -47,10 +47,10 @@ export default function StressTestHelpPage() {
 
         {/* Load Profiles */}
         <div className="bg-[#1A1A1C] rounded-lg p-6 mb-6 border border-[#2D2D2F]">
-          <h2 className="text-2xl font-bold text-purple-500 mb-6">{t.profiles}</h2>
+          <h2 className="text-2xl font-bold text-teal-500 mb-6">{t.profiles}</h2>
           <div className="grid md:grid-cols-2 gap-4">
             {t.profileDetails.map((profile, idx) => (
-              <div key={idx} className="bg-[#2D2D2F] p-4 rounded border-l-4 border-purple-500">
+              <div key={idx} className="bg-[#2D2D2F] p-4 rounded border-l-4 border-teal-500">
                 <h3 className="font-bold text-[#E0E0E2] mb-2">{profile.name}</h3>
                 <p className="text-sm text-[#A0A0A4] mb-2">{profile.users}</p>
                 <p className="text-sm text-[#A0A0A4]">{profile.time}</p>
@@ -61,12 +61,12 @@ export default function StressTestHelpPage() {
 
         {/* Step by Step */}
         <div className="bg-[#1A1A1C] rounded-lg p-6 mb-6 border border-[#2D2D2F]">
-          <h2 className="text-2xl font-bold text-purple-500 mb-6">{t.stepByStep}</h2>
+          <h2 className="text-2xl font-bold text-teal-500 mb-6">{t.stepByStep}</h2>
           <div className="space-y-3">
             {t.steps.map((step, idx) => (
-              <div key={idx} className="border-l-4 border-purple-500 pl-4 py-2 bg-[#0F0E11] p-4 rounded-r">
+              <div key={idx} className="border-l-4 border-teal-500 pl-4 py-2 bg-[#0F0E11] p-4 rounded-r">
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="bg-purple-500 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm">
+                  <div className="bg-teal-500 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm">
                     {step.number}
                   </div>
                   <h3 className="font-semibold text-[#E0E0E2]">
@@ -83,11 +83,11 @@ export default function StressTestHelpPage() {
 
         {/* Understanding Metrics */}
         <div className="bg-[#1A1A1C] rounded-lg p-6 mb-6 border border-[#2D2D2F]">
-          <h2 className="text-2xl font-bold text-purple-500 mb-6">{t.metrics}</h2>
+          <h2 className="text-2xl font-bold text-teal-500 mb-6">{t.metrics}</h2>
           <div className="space-y-3">
             {t.metricDetails.map((metric, idx) => (
               <div key={idx} className="bg-[#2D2D2F] p-4 rounded">
-                <h3 className="font-semibold text-purple-400 mb-2">{metric.label}</h3>
+                <h3 className="font-semibold text-teal-400 mb-2">{metric.label}</h3>
                 <p className="text-[#A0A0A4] text-sm">
                   {metric.description}
                 </p>
@@ -126,7 +126,7 @@ export default function StressTestHelpPage() {
                     ❓ {issue.problem}
                   </span>
                   {expandedSections[`issue-${idx}`] ? (
-                    <ChevronUp className="w-5 h-5 text-purple-400" />
+                    <ChevronUp className="w-5 h-5 text-teal-400" />
                   ) : (
                     <ChevronDown className="w-5 h-5 text-[#8A8A8F]" />
                   )}

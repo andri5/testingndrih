@@ -163,7 +163,7 @@ export default function VisualRegressionPage() {
       <div className="space-y-6">
         <div>
           <h1 className="text-xl font-semibold text-[#E0E0E2] flex items-center gap-2">
-            <Image size={22} className="text-[#5E6AD2]" />
+            <Image size={22} className="text-[#0F766E]" />
             {t.title}
           </h1>
           <p className="text-sm text-[#666] mt-0.5">{t.subtitle}</p>

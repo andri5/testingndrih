@@ -101,23 +101,26 @@ export const userAPI = {
 
 export const scenarioAPI = {
   // Scenario CRUD
-  create: (name, description, url) =>
-    apiClient.post('/scenarios', { name, description, url }),
+  create: (name, description, url, extra = {}) =>
+    apiClient.post('/scenarios', { name, description, url, ...extra }),
   
-  getAll: (skip = 0, take = 10) =>
-    apiClient.get('/scenarios', { params: { skip, take } }),
+  getAll: (skip = 0, take = 50, params = {}) =>
+    apiClient.get('/scenarios', { params: { skip, take, ...params } }),
   
   getById: (id) =>
     apiClient.get(`/scenarios/${id}`),
   
-  update: (id, name, description, url) =>
-    apiClient.put(`/scenarios/${id}`, { name, description, url }),
+  update: (id, name, description, url, extra = {}) =>
+    apiClient.put(`/scenarios/${id}`, { name, description, url, ...extra }),
   
   delete: (id) =>
     apiClient.delete(`/scenarios/${id}`),
   
   duplicate: (id) =>
     apiClient.post(`/scenarios/${id}/duplicate`),
+
+  move: (ids, folderId = null, sortOrders = null) =>
+    apiClient.post('/scenarios/move', { ids, folderId, sortOrders }),
   
   getStats: () =>
     apiClient.get('/scenarios/stats'),
@@ -177,6 +180,14 @@ export const scenarioAPI = {
   
   deleteTemplate: (id) =>
     apiClient.delete(`/files/templates/${id}`),
+}
+
+export const scenarioFolderAPI = {
+  list: () => apiClient.get('/scenario-folders'),
+  create: (name, parentId = null) =>
+    apiClient.post('/scenario-folders', { name, parentId }),
+  update: (id, data) => apiClient.patch(`/scenario-folders/${id}`, data),
+  delete: (id) => apiClient.delete(`/scenario-folders/${id}`),
 }
 
 export const executionAPI = {

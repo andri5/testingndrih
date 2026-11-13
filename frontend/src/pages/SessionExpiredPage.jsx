@@ -40,7 +40,7 @@ export default function SessionExpiredPage() {
         {/* Sign in button */}
         <button
           onClick={() => navigate('/login')}
-          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-[#5E6AD2] text-sm font-medium text-white hover:bg-[#4F5BBF] transition-colors"
+          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-[#0F766E] text-sm font-medium text-white hover:bg-[#0F766E] transition-colors"
         >
           <LogIn size={15} />
           {t.signInAgain}

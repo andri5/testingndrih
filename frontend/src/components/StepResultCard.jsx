@@ -2,13 +2,13 @@ import { CheckCircle2, XCircle, Clock, ImageIcon, Wrench } from 'lucide-react'
 import StepErrorDetail from './StepErrorDetail'
 
 const TYPE_COLORS = {
-  NAVIGATE: 'bg-[#5E6AD2]/15 text-[#5E6AD2] border border-[#5E6AD2]/20',
+  NAVIGATE: 'bg-[#0F766E]/15 text-[#0F766E] border border-[#0F766E]/20',
   CLICK: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
   FILL: 'bg-amber-50 text-amber-800 border border-amber-200',
   WAIT: 'bg-violet-50 text-violet-700 border border-violet-200',
-  ASSERTION: 'bg-purple-50 text-purple-700 border border-purple-200',
+  ASSERTION: 'bg-teal-50 text-teal-700 border border-teal-200',
   SCREENSHOT: 'bg-pink-50 text-pink-700 border border-pink-200',
-  default: 'bg-[#EEF0FF] text-[#5E6AD2] border border-[#5E6AD2]/20',
+  default: 'bg-[#EEF0FF] text-[#0F766E] border border-[#0F766E]/20',
 }
 
 function formatDuration(ms) {
@@ -135,7 +135,7 @@ export default function StepResultCard({
           <button
             type="button"
             onClick={onScreenshotClick}
-            className="group/img relative flex-shrink-0 rounded-lg overflow-hidden border-2 border-gray-200 hover:border-[#5E6AD2]/50 transition-all hover:scale-[1.02] hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#5E6AD2]/40"
+            className="group/img relative flex-shrink-0 rounded-lg overflow-hidden border-2 border-gray-200 hover:border-[#0F766E]/50 transition-all hover:scale-[1.02] hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#0F766E]/40"
             title="View screenshot"
           >
             <img
@@ -143,7 +143,7 @@ export default function StepResultCard({
               alt={`Screenshot step ${stepNumber}`}
               className="w-28 h-[4.5rem] object-cover"
             />
-            <span className="absolute inset-0 bg-[#5E6AD2]/30 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center">
+            <span className="absolute inset-0 bg-[#0F766E]/30 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center">
               <ImageIcon size={18} className="text-white drop-shadow-md" />
             </span>
           </button>

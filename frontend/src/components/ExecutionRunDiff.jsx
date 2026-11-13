@@ -88,7 +88,7 @@ export default function ExecutionRunDiff({ executionA, executionB, onClose }) {
       >
         <div className="flex items-center justify-between p-4 border-b border-[#2D2D2F] shrink-0">
           <div className="flex items-center gap-2">
-            <GitCompare size={18} className="text-[#9BA3F0]" />
+            <GitCompare size={18} className="text-[#0F766E]" />
             <h3 className="text-lg font-semibold text-[#E0E0E2]">Compare Runs</h3>
             {!loading && (
               <Badge variant={diffCount > 0 ? 'warning' : 'success'}>

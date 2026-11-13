@@ -9,6 +9,7 @@ import {
   toggleScenarioFavorite,
   updateScenarioTags,
   listScenarioTags,
+  moveScenarios,
 } from '../services/scenarioService.js'
 
 /**
@@ -17,10 +18,10 @@ import {
  */
 export async function createScenarioHandler(req, res, next) {
   try {
-    const { name, description, url } = req.body
+    const { name, description, url, folderId, tags } = req.body
     const userId = req.user.id
 
-    const scenario = await createScenario(userId, { name, description, url })
+    const scenario = await createScenario(userId, { name, description, url, folderId, tags })
 
     res.status(201).json({
       success: true,
@@ -40,14 +41,18 @@ export async function getScenarioListHandler(req, res, next) {
   try {
     const userId = req.user.id
     const skip = parseInt(req.query.skip) || 0
-    const take = parseInt(req.query.take) || 20
+    const take = parseInt(req.query.take) || 50
     const orderBy = req.query.orderBy || 'createdAt'
     const orderDirection = req.query.orderDirection || 'desc'
     const favoritesOnly = req.query.favoritesOnly === 'true' || req.query.favoritesOnly === '1'
     const tag = req.query.tag || null
+    const folderId = req.query.folderId || undefined
+    const unfiled = req.query.unfiled === 'true' || req.query.unfiled === '1'
+    const includeDescendants =
+      req.query.includeDescendants === 'true' || req.query.includeDescendants === '1'
 
     // Validate pagination
-    if (skip < 0 || take < 1 || take > 100) {
+    if (skip < 0 || take < 1 || take > 500) {
       return res.status(400).json({
         success: false,
         message: 'Invalid pagination parameters'
@@ -61,6 +66,9 @@ export async function getScenarioListHandler(req, res, next) {
       orderDirection,
       favoritesOnly,
       tag,
+      folderId,
+      unfiled,
+      includeDescendants,
     })
 
     res.json({
@@ -73,6 +81,19 @@ export async function getScenarioListHandler(req, res, next) {
         hasMore: skip + take < total
       }
     })
+  } catch (error) {
+    next(error)
+  }
+}
+
+/**
+ * POST /api/scenarios/move
+ */
+export async function moveScenariosHandler(req, res, next) {
+  try {
+    const { ids, folderId = null, sortOrders } = req.body
+    const result = await moveScenarios(req.user.id, { ids, folderId, sortOrders })
+    res.json({ success: true, ...result })
   } catch (error) {
     next(error)
   }
@@ -106,9 +127,16 @@ export async function updateScenarioHandler(req, res, next) {
   try {
     const { id } = req.params
     const userId = req.user.id
-    const { name, description, url, tags } = req.body
+    const { name, description, url, tags, folderId, sortOrder } = req.body
 
-    const scenario = await updateScenario(id, userId, { name, description, url, tags })
+    const scenario = await updateScenario(id, userId, {
+      name,
+      description,
+      url,
+      tags,
+      folderId,
+      sortOrder,
+    })
 
     res.json({
       success: true,

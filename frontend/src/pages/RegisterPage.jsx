@@ -7,7 +7,7 @@ import { useTurnstileSiteKey } from '../hooks/useTurnstileSiteKey'
 import { validateEmail, validateFullName, NAME_MAX_LENGTH } from '../utils/validation'
 import AuthPageHeader from '../components/AuthPageHeader'
 
-const translations = {
+const translations = {
     createAccount: 'Create your account',
     fullName: 'Full Name',
     fullNamePlaceholder: 'John Doe',
@@ -96,7 +96,7 @@ export default function RegisterPage() {
     const passed = passwordRules.filter((r) => r.test(password)).length
     if (passed <= 2) return { score: passed, label: t.passwordStrengthWeak,        color: 'bg-[#F87171]' }
     if (passed <= 4) return { score: passed, label: t.passwordStrengthFair,        color: 'bg-[#FBBF24]' }
-    if (passed <= 5) return { score: passed, label: t.passwordStrengthStrong,      color: 'bg-[#5E6AD2]' }
+    if (passed <= 5) return { score: passed, label: t.passwordStrengthStrong,      color: 'bg-[#0F766E]' }
     return             { score: passed, label: t.passwordStrengthVeryStrong, color: 'bg-[#34D399]' }
   }
 
@@ -128,17 +128,17 @@ export default function RegisterPage() {
     }
   }
 
-  const inputCls = 'auth-input w-full px-3 py-2 bg-[#0F0E11] border border-[rgba(255,255,255,0.1)] rounded-md focus:ring-1 focus:ring-[#5E6AD2] focus:border-[#5E6AD2] outline-none transition-all text-[#E0E0E2] placeholder-[#4A4A52] text-sm disabled:opacity-50'
-  const labelCls = 'block text-xs font-medium text-[#8A8A8F] mb-1.5 uppercase tracking-wider'
+  const inputCls = 'auth-input w-full px-3 py-2 bg-white border border-surface-border rounded-md focus:ring-1 focus:ring-brand focus:border-brand outline-none transition-all text-ink placeholder-ink-subtle text-sm disabled:opacity-50'
+  const labelCls = 'block text-xs font-medium text-ink-muted mb-1.5 uppercase tracking-wider'
 
   return (
-    <div className="auth-page-bg min-h-screen bg-[#0F0E11] flex items-center justify-center px-4 py-10">
+    <div className="auth-page-bg min-h-screen bg-surface-muted flex items-center justify-center px-4 py-10">
       <div className="w-full max-w-sm animate-slide-up">
         <AuthPageHeader subtitle={t.createAccount} />
 
-        <div className="auth-card bg-[#161618] border border-[rgba(255,255,255,0.08)] rounded-xl p-6">
+        <div className="auth-card bg-white border border-surface-border rounded-xl p-6 shadow-sm">
           {(localError || error) && (
-            <div className="mb-4 p-3 rounded-md bg-[#1F0F0F] border border-[#F87171]/30 text-[#F87171] text-sm flex items-center gap-2">
+            <div className="mb-4 p-3 rounded-md bg-red-50 border border-red-200 text-red-700 text-sm flex items-center gap-2">
               <AlertCircle size={15} className="shrink-0" />{localError || error}
             </div>
           )}
@@ -155,21 +155,21 @@ export default function RegisterPage() {
               <label htmlFor="password" className={labelCls}>{t.password}</label>
               <div className="relative">
                 <input id="password" type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" disabled={isLoading} maxLength={64} className={inputCls + ' pr-10'} />
-                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 flex items-center pr-3 text-[#4A4A52] hover:text-[#8A8A8F] transition-colors" tabIndex={-1}>
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 flex items-center pr-3 text-ink-subtle hover:text-ink-muted transition-colors" tabIndex={-1}>
                   {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
                 </button>
               </div>
               {password && (
                 <div className="mt-2 space-y-1.5">
                   <div className="flex items-center gap-2">
-                    <div className="flex-1 h-1.5 bg-[rgba(255,255,255,0.08)] rounded-full overflow-hidden">
+                    <div className="flex-1 h-1.5 bg-surface-muted rounded-full overflow-hidden">
                       <div className={"h-full rounded-full transition-all duration-300 " + strength.color} style={{ width: ((strength.score / passwordRules.length) * 100) + "%" }} />
                     </div>
-                    <span className="text-[10px] font-medium text-[#8A8A8F]">{strength.label}</span>
+                    <span className="text-[10px] font-medium text-ink-muted">{strength.label}</span>
                   </div>
                   <ul className="space-y-0.5">
                     {passwordRules.map((rule, i) => (
-                      <li key={i} className={"text-[11px] flex items-center gap-1.5 " + (rule.test(password) ? 'text-[#34D399]' : 'text-[#4A4A52]')}>
+                      <li key={i} className={"text-[11px] flex items-center gap-1.5 " + (rule.test(password) ? 'text-emerald-600' : 'text-ink-subtle')}>
                         {rule.test(password)
                           ? <svg className="w-3 h-3 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
                           : <svg className="w-3 h-3 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" /></svg>
@@ -185,12 +185,12 @@ export default function RegisterPage() {
               <label htmlFor="confirmPassword" className={labelCls}>{t.confirmPassword}</label>
               <div className="relative">
                 <input id="confirmPassword" type={showConfirmPassword ? 'text' : 'password'} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" disabled={isLoading} maxLength={64} className={inputCls + ' pr-10'} />
-                <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute inset-y-0 right-0 flex items-center pr-3 text-[#4A4A52] hover:text-[#8A8A8F] transition-colors" tabIndex={-1}>
+                <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute inset-y-0 right-0 flex items-center pr-3 text-ink-subtle hover:text-ink-muted transition-colors" tabIndex={-1}>
                   {showConfirmPassword ? <EyeOff size={15} /> : <Eye size={15} />}
                 </button>
               </div>
               {confirmPassword && password !== confirmPassword && (
-                <p className="mt-1 text-xs text-[#F87171]">{t.passwordsDoNotMatch}</p>
+                <p className="mt-1 text-xs text-red-600">{t.passwordsDoNotMatch}</p>
               )}
             </div>
             {turnstileSiteKey && (
@@ -202,16 +202,16 @@ export default function RegisterPage() {
                 onError={() => setCaptchaToken('')}
               />
             )}
-            <button type="submit" disabled={isLoading} className="w-full py-2 px-4 rounded-md font-medium text-sm text-white bg-[#5E6AD2] hover:bg-[#6B7AE8] transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-[#5E6AD2] focus:ring-offset-2 focus:ring-offset-[#161618] disabled:opacity-50 disabled:cursor-not-allowed">
+            <button type="submit" disabled={isLoading} className="w-full py-2 px-4 rounded-md font-medium text-sm text-white bg-brand hover:bg-brand-hover transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 focus:ring-offset-white disabled:opacity-50 disabled:cursor-not-allowed">
               {isLoading ? <span className="flex items-center justify-center gap-2"><Loader2 size={15} className="animate-spin" />{t.creatingAccount}</span> : t.createAccountBtn}
             </button>
           </form>
-          <div className="mt-5 pt-5 border-t border-[rgba(255,255,255,0.06)] text-center">
-            <span className="text-xs text-[#8A8A8F]">{t.alreadyHaveAccount}</span>
-            <Link to="/login" className="text-xs text-[#9BA3F0] hover:text-[#5E6AD2] font-medium transition-colors">{t.signIn}</Link>
+          <div className="mt-5 pt-5 border-t border-surface-border text-center">
+            <span className="text-xs text-ink-muted">{t.alreadyHaveAccount}</span>
+            <Link to="/login" className="text-xs text-brand hover:text-brand-hover font-medium transition-colors">{t.signIn}</Link>
           </div>
         </div>
-        <p className="text-center text-xs text-[#4A4A52] mt-5">{t.copyright} &copy; {new Date().getFullYear()}</p>
+        <p className="text-center text-xs text-ink-subtle mt-5">{t.copyright} &copy; {new Date().getFullYear()}</p>
       </div>
     </div>
   )

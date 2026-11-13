@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import apiClient from '../services/api'
+import apiClient from '../../services/api'
 import { Clock, RefreshCw } from 'lucide-react'
 
 const i18n = { recentTests: 'Recent Tests', noTests: 'No tests yet', profile: 'Profile', status: 'Status', duration: 'Duration' 
@@ -117,7 +117,7 @@ export default function StressTestHistory({ scenario }) {
 
       <button
         onClick={loadHistory}
-        className="w-full py-2 text-sm text-purple-500 html.theme-light:text-purple-600 hover:text-purple-400 html.theme-light:hover:text-purple-700 rounded transition-colors font-medium"
+        className="w-full py-2 text-sm text-teal-500 html.theme-light:text-teal-600 hover:text-teal-400 html.theme-light:hover:text-teal-700 rounded transition-colors font-medium"
       >
         Refresh
       </button>

@@ -222,7 +222,7 @@ export default function UserManagement() {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-2 py-1.5 bg-[#0F0E11] border border-[#2D2D2F] rounded text-[#E0E0E2] text-xs focus:outline-none focus:border-[#5E6AD2]"
+            className="px-2 py-1.5 bg-[#0F0E11] border border-[#2D2D2F] rounded text-[#E0E0E2] text-xs focus:outline-none focus:border-[#0F766E]"
           >
             <option value="all">All users</option>
             <option value="active">Active only</option>
@@ -268,18 +268,18 @@ export default function UserManagement() {
               return (
                 <tr
                   key={u.id}
-                  className={`border-b border-[#2D2D2F] last:border-0 transition-colors hover:bg-[#5E6AD2]/10 ${!isActive ? 'opacity-70' : ''}`}
+                  className={`border-b border-[#2D2D2F] last:border-0 transition-colors hover:bg-[#0F766E]/10 ${!isActive ? 'opacity-70' : ''}`}
                 >
                   <td className="px-4 py-3 text-[#E0E0E2]">{u.name || '—'}</td>
                   <td className="px-4 py-3 text-[#A0A0A4]">
                     {u.email}
                     {isPrimaryAdmin && (
-                      <span className="ml-2 text-xs text-[#5E6AD2]">(primary admin)</span>
+                      <span className="ml-2 text-xs text-[#0F766E]">(primary admin)</span>
                     )}
                   </td>
                   <td className="px-4 py-3">
                     {isPrimaryAdmin ? (
-                      <span className="inline-flex px-2 py-1 rounded text-xs font-semibold bg-[#5E6AD2]/15 text-[#5E6AD2] border border-[#5E6AD2]/25">
+                      <span className="inline-flex px-2 py-1 rounded text-xs font-semibold bg-[#0F766E]/15 text-[#0F766E] border border-[#0F766E]/25">
                         ADMIN
                       </span>
                     ) : (
@@ -287,7 +287,7 @@ export default function UserManagement() {
                         value={u.role}
                         disabled={updatingId === u.id || (isSelf && u.role === 'ADMIN')}
                         onChange={(e) => handleRoleChange(u.id, e.target.value)}
-                        className="px-2 py-1 bg-[#0F0E11] border border-[#2D2D2F] rounded text-[#E0E0E2] text-xs focus:outline-none focus:border-[#5E6AD2] disabled:opacity-50"
+                        className="px-2 py-1 bg-[#0F0E11] border border-[#2D2D2F] rounded text-[#E0E0E2] text-xs focus:outline-none focus:border-[#0F766E] disabled:opacity-50"
                       >
                         <option value="USER">USER</option>
                         <option value="ADMIN">ADMIN</option>
@@ -309,7 +309,7 @@ export default function UserManagement() {
                         {isActive ? 'Active' : 'Inactive'}
                       </button>
                     ) : (
-                      <span className="inline-flex px-2 py-1 rounded text-xs font-semibold bg-[#5E6AD2]/15 text-[#5E6AD2] border border-[#5E6AD2]/25">
+                      <span className="inline-flex px-2 py-1 rounded text-xs font-semibold bg-[#0F766E]/15 text-[#0F766E] border border-[#0F766E]/25">
                         Active
                       </span>
                     )}
@@ -325,7 +325,7 @@ export default function UserManagement() {
                         type="button"
                         title="View"
                         onClick={() => openView(u)}
-                        className="p-1.5 rounded text-[#8A8A8F] hover:text-[#5E6AD2] hover:bg-[#5E6AD2]/15 transition-colors"
+                        className="p-1.5 rounded text-[#8A8A8F] hover:text-[#0F766E] hover:bg-[#0F766E]/15 transition-colors"
                       >
                         <Eye size={14} />
                       </button>
@@ -333,7 +333,7 @@ export default function UserManagement() {
                         type="button"
                         title="Edit"
                         onClick={() => openEdit(u)}
-                        className="p-1.5 rounded text-[#8A8A8F] hover:text-[#5E6AD2] hover:bg-[#5E6AD2]/15 transition-colors"
+                        className="p-1.5 rounded text-[#8A8A8F] hover:text-[#0F766E] hover:bg-[#0F766E]/15 transition-colors"
                       >
                         <Pencil size={14} />
                       </button>
@@ -421,7 +421,7 @@ export default function UserManagement() {
                   onChange={(e) =>
                     setFormData((p) => ({ ...p, isActive: e.target.checked }))
                   }
-                  className="rounded border-[#2D2D2F] bg-[#0F0E11] text-[#5E6AD2] focus:ring-[#5E6AD2]"
+                  className="rounded border-[#2D2D2F] bg-[#0F0E11] text-[#0F766E] focus:ring-[#0F766E]"
                 />
                 Account is active (user can sign in)
               </label>

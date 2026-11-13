@@ -1,5 +1,7 @@
 import { create } from 'zustand'
 import apiClient from '../services/api'
+import { scenarioAPI } from '../services/api'
+import { useFolderStore } from './folderStore'
 
 export const useScenarioStore = create((set, get) => ({
   // State
@@ -15,26 +17,33 @@ export const useScenarioStore = create((set, get) => ({
   pagination: {
     total: 0,
     skip: 0,
-    take: 10,
+    take: 50,
     hasMore: false
   },
 
   // Actions
-  fetchScenarios: async (skip = 0, take = 10, search = '', filters = {}) => {
+  fetchScenarios: async (skip = 0, take = 50, search = '', filters = {}) => {
     set({ isLoading: true, error: null })
     try {
       const { favoritesOnly, tag } = {
         favoritesOnly: filters.favoritesOnly ?? get().favoritesOnly,
         tag: filters.tag ?? get().filterTag,
       }
-      const filterParams = {}
+      const folderParams =
+        filters.folderParams !== undefined
+          ? filters.folderParams
+          : useFolderStore.getState().listParams()
+
+      const filterParams = { ...folderParams }
       if (favoritesOnly) filterParams.favoritesOnly = 'true'
       if (tag) filterParams.tag = tag
 
       const params = { skip, take, ...filterParams }
       
       if (search) {
-        const response = await apiClient.get('/search', { params: { query: search, skip, take, ...filterParams } })
+        const response = await apiClient.get('/search', {
+          params: { query: search, skip, take, ...filterParams },
+        })
         const { scenarios, total, hasMore } = response.data
         set({ 
           scenarios: scenarios || [], 
@@ -45,7 +54,12 @@ export const useScenarioStore = create((set, get) => ({
         const response = await apiClient.get('/scenarios', { params })
         set({ 
           scenarios: response.data.scenarios || [], 
-          pagination: response.data.pagination,
+          pagination: response.data.pagination || {
+            skip,
+            take,
+            total: response.data.total || 0,
+            hasMore: false,
+          },
           isLoading: false 
         })
       }
@@ -53,6 +67,12 @@ export const useScenarioStore = create((set, get) => ({
       const errorMessage = error.response?.data?.message || 'Failed to fetch scenarios'
       set({ error: errorMessage, isLoading: false })
     }
+  },
+
+  moveScenarios: async (ids, folderId = null, sortOrders = null) => {
+    await scenarioAPI.move(ids, folderId, sortOrders)
+    await useFolderStore.getState().fetchFolders()
+    await get().fetchScenarios(0, get().pagination.take || 50)
   },
 
   fetchTags: async () => {
@@ -97,10 +117,20 @@ export const useScenarioStore = create((set, get) => ({
     }
   },
 
-  createScenario: async (name, description, url) => {
+  createScenario: async (name, description, url, extra = {}) => {
     set({ isLoading: true, error: null })
     try {
-      const response = await apiClient.post('/scenarios', { name, description, url })
+      const folderId =
+        extra.folderId !== undefined
+          ? extra.folderId
+          : useFolderStore.getState().activeFolderIdForCreate()
+      const response = await apiClient.post('/scenarios', {
+        name,
+        description,
+        url,
+        ...extra,
+        ...(folderId ? { folderId } : {}),
+      })
       const newScenario = response.data.scenario || response.data
       
       const { scenarios } = get()
@@ -108,6 +138,7 @@ export const useScenarioStore = create((set, get) => ({
         scenarios: [newScenario, ...scenarios], 
         isLoading: false 
       })
+      await useFolderStore.getState().fetchFolders()
       return newScenario
     } catch (error) {
       const errorMessage = error.response?.data?.message || 'Failed to create scenario'
@@ -147,6 +178,7 @@ export const useScenarioStore = create((set, get) => ({
         selectedScenario: null,
         isLoading: false 
       })
+      await useFolderStore.getState().fetchFolders()
     } catch (error) {
       const errorMessage = error.response?.data?.message || 'Failed to delete scenario'
       set({ error: errorMessage, isLoading: false })

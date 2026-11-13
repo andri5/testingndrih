@@ -103,25 +103,22 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="auth-page-bg min-h-screen bg-[#0F0E11] flex items-center justify-center px-4">
+    <div className="auth-page-bg min-h-screen bg-surface-muted flex items-center justify-center px-4">
       <div className="w-full max-w-sm animate-slide-up">
 
         <AuthPageHeader subtitle={t.title} />
 
-        {/* Card */}
-        <div className="auth-card bg-[#161618] border border-[rgba(255,255,255,0.08)] rounded-xl p-6">
+        <div className="auth-card bg-white border border-surface-border rounded-xl p-6 shadow-sm">
 
-          {/* Success */}
           {successMessage && (
-            <div className="mb-4 p-3 rounded-md bg-[#0F1F17] border border-[#34D399]/30 text-[#34D399] text-sm flex items-center gap-2">
+            <div className="mb-4 p-3 rounded-md bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm flex items-center gap-2">
               <CheckCircle2 size={15} className="shrink-0" />
               {successMessage}
             </div>
           )}
 
-          {/* Error */}
           {(localError || error) && (
-            <div className="mb-4 p-3 rounded-md bg-[#1F0F0F] border border-[#F87171]/30 text-[#F87171] text-sm">
+            <div className="mb-4 p-3 rounded-md bg-red-50 border border-red-200 text-red-700 text-sm">
               <div className="flex items-center gap-2">
                 <AlertCircle size={15} className="shrink-0" />
                 {localError || error}
@@ -129,7 +126,7 @@ export default function LoginPage() {
               {accountNotFound && (
                 <Link
                   to="/register"
-                  className="inline-block mt-2 text-xs font-semibold text-[#9BA3F0] hover:text-[#5E6AD2] underline"
+                  className="inline-block mt-2 text-xs font-semibold text-brand hover:text-brand-hover underline"
                 >
                   {t.createAccount}
                 </Link>
@@ -138,9 +135,8 @@ export default function LoginPage() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Email */}
             <div>
-              <label htmlFor="email" className="block text-xs font-medium text-[#8A8A8F] mb-1.5 uppercase tracking-wider">
+              <label htmlFor="email" className="block text-xs font-medium text-ink-muted mb-1.5 uppercase tracking-wider">
                 {t.emailLabel}
               </label>
               <input
@@ -150,13 +146,12 @@ export default function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder={t.emailPlaceholder}
                 disabled={isLoading}
-                className="auth-input w-full px-3 py-2 bg-[#0F0E11] border border-[rgba(255,255,255,0.1)] rounded-md focus:ring-1 focus:ring-[#5E6AD2] focus:border-[#5E6AD2] outline-none transition-all text-[#E0E0E2] placeholder-[#4A4A52] text-sm disabled:opacity-50"
+                className="auth-input w-full px-3 py-2 bg-white border border-surface-border rounded-md focus:ring-1 focus:ring-brand focus:border-brand outline-none transition-all text-ink placeholder-ink-subtle text-sm disabled:opacity-50"
               />
             </div>
 
-            {/* Password */}
             <div>
-              <label htmlFor="password" className="block text-xs font-medium text-[#8A8A8F] mb-1.5 uppercase tracking-wider">
+              <label htmlFor="password" className="block text-xs font-medium text-ink-muted mb-1.5 uppercase tracking-wider">
                 {t.passwordLabel}
               </label>
               <div className="relative">
@@ -167,12 +162,12 @@ export default function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder={t.passwordPlaceholder}
                   disabled={isLoading}
-                  className="auth-input w-full px-3 py-2 pr-10 bg-[#0F0E11] border border-[rgba(255,255,255,0.1)] rounded-md focus:ring-1 focus:ring-[#5E6AD2] focus:border-[#5E6AD2] outline-none transition-all text-[#E0E0E2] placeholder-[#4A4A52] text-sm disabled:opacity-50"
+                  className="auth-input w-full px-3 py-2 pr-10 bg-white border border-surface-border rounded-md focus:ring-1 focus:ring-brand focus:border-brand outline-none transition-all text-ink placeholder-ink-subtle text-sm disabled:opacity-50"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-[#4A4A52] hover:text-[#8A8A8F] transition-colors"
+                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-ink-subtle hover:text-ink-muted transition-colors"
                   tabIndex={-1}
                 >
                   {showPassword ? (
@@ -194,11 +189,10 @@ export default function LoginPage() {
               />
             )}
 
-            {/* Submit */}
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-2 px-4 rounded-md font-medium text-sm text-white bg-[#5E6AD2] hover:bg-[#6B7AE8] transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-[#5E6AD2] focus:ring-offset-2 focus:ring-offset-[#161618] disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-2 px-4 rounded-md font-medium text-sm text-white bg-brand hover:bg-brand-hover transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 focus:ring-offset-white disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? (
                 <span className="flex items-center justify-center gap-2">
@@ -209,12 +203,12 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <div className="mt-5 pt-5 border-t border-[rgba(255,255,255,0.06)] space-y-3">
+          <div className="mt-5 pt-5 border-t border-surface-border space-y-3">
             <div className="text-center">
-              <span className="text-xs text-[#8A8A8F]">{t.noAccount}</span>
+              <span className="text-xs text-ink-muted">{t.noAccount}</span>
               <Link
                 to="/register"
-                className="text-xs font-semibold text-[#9BA3F0] hover:text-[#5E6AD2] underline cursor-pointer hover:underline-offset-2 transition-all"
+                className="text-xs font-semibold text-brand hover:text-brand-hover underline cursor-pointer hover:underline-offset-2 transition-all"
               >
                 {t.createOne}
               </Link>
@@ -222,7 +216,7 @@ export default function LoginPage() {
             <div className="text-center">
               <Link
                 to="/forgot-password"
-                className="text-xs font-semibold text-[#9BA3F0] hover:text-[#5E6AD2] underline cursor-pointer hover:underline-offset-2 transition-all"
+                className="text-xs font-semibold text-brand hover:text-brand-hover underline cursor-pointer hover:underline-offset-2 transition-all"
               >
                 {t.forgotPassword}
               </Link>
@@ -230,8 +224,8 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <p className="text-center text-xs text-[#4A4A52] mt-5">
-          <Link to="/" className="text-[#8A8A8F] hover:text-[#9BA3F0] transition mr-3">
+        <p className="text-center text-xs text-ink-subtle mt-5">
+          <Link to="/" className="text-ink-muted hover:text-brand transition mr-3">
             ← Home
           </Link>
           {t.copyright} &copy; {new Date().getFullYear()}

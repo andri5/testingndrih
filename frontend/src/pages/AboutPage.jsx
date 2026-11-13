@@ -28,11 +28,13 @@ export default function AboutPage({ lang: langProp }) {
     <div className="landing-page min-h-screen overflow-x-hidden">
       <div className="pointer-events-none fixed inset-0 lp-glow" aria-hidden />
 
-      <LandingNav lang={lang} t={nav} />
+      <div className="relative min-h-[4.5rem]">
+        <LandingNav lang={lang} t={nav} variant="light" />
+      </div>
 
-      <section className="lp-section pt-36 sm:pt-40 pb-8 sm:pb-12">
+      <section className="lp-section pt-28 sm:pt-32 pb-8 sm:pb-12">
         <div className="lp-container-narrow text-center lp-animate-in px-0">
-          <p className="inline-flex items-center gap-2 text-xs font-semibold lp-badge rounded-full px-3 py-1.5 mb-5 sm:mb-6">
+          <p className="inline-flex items-center gap-2 text-xs font-semibold rounded-full px-3 py-1.5 mb-5 sm:mb-6 bg-brand-soft text-brand border border-teal-200">
             <Target size={14} />
             {t.badge}
           </p>
@@ -110,7 +112,7 @@ export default function AboutPage({ lang: langProp }) {
                 }`}
                 style={{ '--card-index': i }}
               >
-                <CheckCircle2 size={18} className="text-indigo-500 shrink-0 mt-0.5" />
+                <CheckCircle2 size={18} className="text-teal-600 shrink-0 mt-0.5" />
                 <span className="lp-muted">{value}</span>
               </li>
             ))}

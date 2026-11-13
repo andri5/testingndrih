@@ -110,7 +110,7 @@ export function ScenariosList({
             type="checkbox"
             checked={allSelected}
             onChange={() => onSelectAll(allSelected ? [] : scenarios.map(s => s.id))}
-            className="w-4 h-4 rounded border-[rgba(255,255,255,0.2)] bg-[#141316] accent-[#5E6AD2] cursor-pointer"
+            className="w-4 h-4 rounded border-[rgba(255,255,255,0.2)] bg-[#141316] accent-[#0F766E] cursor-pointer"
           />
           <span className="text-xs text-[#8A8A8F]">
             {allSelected ? 'Deselect all' : `Select all (${scenarios.length})`}
@@ -123,7 +123,7 @@ export function ScenariosList({
         return (
           <Card
             key={scenario.id}
-            className={`hover:shadow-lg transition ${isSelected ? 'ring-1 ring-[#5E6AD2]/60 bg-[#5E6AD2]/5' : ''}`}
+            className={`hover:shadow-lg transition ${isSelected ? 'ring-1 ring-[#0F766E]/60 bg-[#0F766E]/5' : ''}`}
           >
             <div className="flex items-start gap-3">
               {/* Checkbox */}
@@ -133,7 +133,7 @@ export function ScenariosList({
                     type="checkbox"
                     checked={isSelected}
                     onChange={() => onToggleSelect(scenario.id)}
-                    className="w-4 h-4 rounded border-[rgba(255,255,255,0.2)] bg-[#141316] accent-[#5E6AD2] cursor-pointer"
+                    className="w-4 h-4 rounded border-[rgba(255,255,255,0.2)] bg-[#141316] accent-[#0F766E] cursor-pointer"
                   />
                 </div>
               )}
@@ -170,7 +170,7 @@ export function ScenariosList({
                     {(scenario.tags || []).map((tag) => (
                       <span
                         key={tag}
-                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#5E6AD2]/15 text-[#9BA3F0] text-xs font-medium"
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#0F766E]/15 text-[#0F766E] text-xs font-medium"
                       >
                         <Tag size={10} />
                         {tag}

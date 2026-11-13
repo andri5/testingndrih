@@ -39,7 +39,7 @@ export default function SiteAnalytics() {
       label: 'Total page views',
       value: analytics?.totalViews ?? 0,
       icon: Eye,
-      color: 'text-[#5E6AD2]',
+      color: 'text-[#0F766E]',
     },
     {
       label: 'Unique visitors',
@@ -67,7 +67,7 @@ export default function SiteAnalytics() {
           <select
             value={days}
             onChange={(e) => setDays(Number(e.target.value))}
-            className="px-2 py-1.5 bg-[#0F0E11] border border-[#2D2D2F] rounded text-[#E0E0E2] text-xs focus:outline-none focus:border-[#5E6AD2]"
+            className="px-2 py-1.5 bg-[#0F0E11] border border-[#2D2D2F] rounded text-[#E0E0E2] text-xs focus:outline-none focus:border-[#0F766E]"
           >
             <option value={7}>Last 7 days</option>
             <option value={30}>Last 30 days</option>
@@ -77,7 +77,7 @@ export default function SiteAnalytics() {
             type="button"
             onClick={load}
             disabled={loading}
-            className="p-1.5 rounded text-[#8A8A8F] hover:text-[#5E6AD2] hover:bg-[#5E6AD2]/15 transition-colors disabled:opacity-50"
+            className="p-1.5 rounded text-[#8A8A8F] hover:text-[#0F766E] hover:bg-[#0F766E]/15 transition-colors disabled:opacity-50"
             title="Refresh"
           >
             <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />

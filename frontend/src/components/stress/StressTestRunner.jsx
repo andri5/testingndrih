@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import apiClient from '../services/api'
+import apiClient from '../../services/api'
 import StressTestMetrics from './StressTestMetrics'
 import { Play, RotateCcw, Zap } from 'lucide-react'
 
@@ -71,8 +71,8 @@ export default function StressTestRunner({ scenario, onTestComplete }) {
               disabled={isRunning}
               className={`p-3 rounded-lg text-left transition-all shadow-sm hover:shadow ${
                 stressProfile === profile.key
-                  ? 'bg-purple-500 text-white border-2 border-purple-600 shadow dark:bg-purple-700 dark:border-purple-500'
-                  : 'bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 hover:border-purple-300 dark:hover:border-purple-600'
+                  ? 'bg-teal-500 text-white border-2 border-teal-600 shadow dark:bg-teal-700 dark:border-teal-500'
+                  : 'bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 hover:border-teal-300 dark:hover:border-teal-600'
               } disabled:opacity-50`}
             >
               <div className="font-semibold text-sm truncate dark:text-white">{profile.label}</div>
@@ -133,7 +133,7 @@ export default function StressTestRunner({ scenario, onTestComplete }) {
         <button
           onClick={handleStartTest}
           disabled={isRunning}
-          className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-purple-500 dark:bg-purple-700 text-white rounded-lg font-semibold shadow hover:shadow-md hover:bg-purple-600 dark:hover:bg-purple-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-teal-500 dark:bg-teal-700 text-white rounded-lg font-semibold shadow hover:shadow-md hover:bg-teal-600 dark:hover:bg-teal-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Play className="w-4 h-4" />
           {isRunning ? t.running : t.start}

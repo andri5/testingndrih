@@ -16,7 +16,9 @@ export default function PricingPage() {
   return (
     <div className="landing-page min-h-screen overflow-x-hidden">
       <div className="pointer-events-none fixed inset-0 lp-glow" aria-hidden />
-      <LandingNav t={tNav} lang={lang} />
+      <div className="relative">
+        <LandingNav t={tNav} lang={lang} variant="light" />
+      </div>
 
       <section className="relative pt-36 pb-20 px-4 sm:px-6">
         <div className="max-w-5xl mx-auto text-center mb-12">
@@ -28,19 +30,19 @@ export default function PricingPage() {
           {t.plans.map((plan) => (
             <div
               key={plan.name}
-              className={`rounded-2xl border p-6 text-left bg-white/90 shadow-sm ${
-                plan.highlight ? 'border-indigo-400 ring-2 ring-indigo-100' : 'border-slate-200'
+              className={`rounded-2xl border p-6 text-left bg-white shadow-sm ${
+                plan.highlight ? 'border-teal-400 ring-2 ring-teal-100' : 'border-surface-border'
               }`}
             >
               {plan.badge && (
-                <span className="inline-block text-[11px] font-bold uppercase tracking-wide text-indigo-600 mb-2">
+                <span className="inline-block text-[11px] font-bold uppercase tracking-wide text-brand mb-2">
                   {plan.badge}
                 </span>
               )}
               <h2 className="text-xl font-bold lp-hero-title">{plan.name}</h2>
-              <p className="mt-1 text-3xl font-bold text-slate-900">
+              <p className="mt-1 text-3xl font-bold text-ink">
                 {plan.price}
-                <span className="text-sm font-medium text-slate-500"> {plan.period}</span>
+                <span className="text-sm font-medium text-ink-muted"> {plan.period}</span>
               </p>
               <p className="mt-3 text-sm lp-muted">{plan.desc}</p>
               <ul className="mt-5 space-y-2">

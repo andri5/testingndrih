@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import apiClient from '../services/api'
+import apiClient from '../../services/api'
 import { AlertCircle, Zap, Gauge, TrendingUp, BarChart3 } from 'lucide-react'
 
 const i18n = { 
@@ -53,8 +53,8 @@ export default function StressTestSummary() {
     <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-6 border border-gray-200 dark:border-gray-800">
       <div className="mb-6">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-            <Zap className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+          <div className="w-10 h-10 rounded-lg bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center">
+            <Zap className="w-6 h-6 text-teal-600 dark:text-teal-400" />
           </div>
           <div>
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Stress Test Summary</h3>
@@ -80,10 +80,10 @@ export default function StressTestSummary() {
           title={t.passRateDesc}
         >
           <div className="flex items-center gap-2 mb-2">
-            <Gauge className="w-4 h-4 text-purple-500" />
+            <Gauge className="w-4 h-4 text-teal-500" />
             <p className="text-sm text-gray-600 dark:text-gray-400">{t.passRate}</p>
           </div>
-          <p className="text-3xl font-bold text-purple-600 dark:text-purple-400">{summary.passRate}%</p>
+          <p className="text-3xl font-bold text-teal-600 dark:text-teal-400">{summary.passRate}%</p>
         </div>
 
         <div 
@@ -102,7 +102,7 @@ export default function StressTestSummary() {
           title={t.avgThroughputDesc}
         >
           <div className="flex items-center gap-2 mb-2">
-            <Zap className="w-4 h-4 text-purple-500" />
+            <Zap className="w-4 h-4 text-teal-500" />
             <p className="text-sm text-gray-600 dark:text-gray-400">{t.avgThroughput}</p>
           </div>
           <p className="text-3xl font-bold text-gray-900 dark:text-white">{summary.avgThroughput || 0}</p>
@@ -111,7 +111,7 @@ export default function StressTestSummary() {
 
       <button
         onClick={loadSummary}
-        className="mt-4 text-sm text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 font-medium"
+        className="mt-4 text-sm text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 font-medium"
       >
         ↻ Refresh
       </button>

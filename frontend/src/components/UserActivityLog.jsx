@@ -39,7 +39,7 @@ function formatWhen(date) {
 
 function typeBadge(type) {
   const colors = {
-    EXECUTION: 'bg-[#5E6AD2]/15 text-[#9BA3F0] border-[#5E6AD2]/25',
+    EXECUTION: 'bg-[#0F766E]/15 text-[#0F766E] border-[#0F766E]/25',
     SCENARIO_CREATED: 'bg-[#3DAF7A]/15 text-[#34D399] border-[#3DAF7A]/25',
     SCENARIO_UPDATED: 'bg-[#3A9E9E]/15 text-[#5EEAD4] border-[#3A9E9E]/25',
     CHAIN_EXECUTION: 'bg-[#A78BFA]/15 text-[#C4B5FD] border-[#A78BFA]/25',
@@ -136,7 +136,7 @@ export default function UserActivityLog() {
               users.map((u) => (
                 <tr
                   key={u.id}
-                  className="border-b border-[#2D2D2F] last:border-0 transition-colors hover:bg-[#5E6AD2]/10"
+                  className="border-b border-[#2D2D2F] last:border-0 transition-colors hover:bg-[#0F766E]/10"
                 >
                   <td className="px-4 py-3">
                     <p className="text-[#E0E0E2]">{u.name || '—'}</p>

@@ -117,7 +117,7 @@ export default function TurnstileWidget({ siteKey, onVerify, onExpire, onError, 
           <button
             type="button"
             onClick={handleRetry}
-            className="text-xs text-[#9BA3F0] hover:text-[#5E6AD2] underline"
+            className="text-xs text-[#0F766E] hover:text-[#0F766E] underline"
           >
             Retry captcha
           </button>

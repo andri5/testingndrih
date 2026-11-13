@@ -44,7 +44,7 @@ export default function SharedRunPage() {
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 text-slate-900">
       <header className="border-b border-slate-200 bg-white/80 backdrop-blur sticky top-0 z-10">
         <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
-          <Link to="/" className="font-semibold text-[#5E6AD2] hover:underline">
+          <Link to="/" className="font-semibold text-[#0F766E] hover:underline">
             Test Sambil Ngopi
           </Link>
           <span className="text-xs text-slate-500">Shared run (read-only)</span>
@@ -63,7 +63,7 @@ export default function SharedRunPage() {
             <Alert type="error" message={error} />
             <p className="text-sm text-slate-600 mt-3">
               Ask the owner for a new share link, or{' '}
-              <Link to="/login" className="text-[#5E6AD2] hover:underline">
+              <Link to="/login" className="text-[#0F766E] hover:underline">
                 sign in
               </Link>{' '}
               to view your own runs.

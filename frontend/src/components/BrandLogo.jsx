@@ -19,7 +19,7 @@ function CoffeeCup({ stroke = 'currentColor' }) {
 }
 
 /**
- * @param {'app'|'mark'} variant — app: indigo tile + white cup; mark: cup only (inherits color)
+ * @param {'app'|'mark'} variant — app: teal tile + white cup; mark: cup only (inherits color)
  * @param {number|'xs'|'sm'|'md'|'lg'|'xl'} size — px or preset
  */
 export default function BrandLogo({ variant = 'app', size = 'md', className = '', title }) {
@@ -38,7 +38,7 @@ export default function BrandLogo({ variant = 'app', size = 'md', className = ''
       role={title ? 'img' : undefined}
     >
       {title ? <title>{title}</title> : null}
-      {variant === 'app' ? <rect width="32" height="32" rx="7" fill="#5E6AD2" /> : null}
+      {variant === 'app' ? <rect width="32" height="32" rx="8" fill="#0F766E" /> : null}
       <CoffeeCup stroke={variant === 'app' ? '#fff' : 'currentColor'} />
     </svg>
   )

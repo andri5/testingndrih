@@ -52,7 +52,7 @@ const TEMPLATES = [
     description: 'Navigasi ke website, lakukan pencarian, ambil screenshot hasilnya.',
     icon: '🧭',
     tag: 'Navigation',
-    tagColor: 'bg-purple-500/10 text-purple-400',
+    tagColor: 'bg-teal-500/10 text-teal-400',
     url: 'https://www.wikipedia.org',
     steps: [
       { stepNumber: 1, type: 'NAVIGATE', description: 'Open Wikipedia', selector: '', value: 'https://www.wikipedia.org' },
@@ -83,7 +83,7 @@ const TEMPLATES = [
   },
 ]
 
-export function TemplatePickerModal({ onClose, onCreated }) {
+export function TemplatePickerModal({ onClose, onCreated, folderId = null }) {
   const [loading, setLoading] = useState(null) // template id being created
   const [error, setError] = useState(null)
 
@@ -95,7 +95,8 @@ export function TemplatePickerModal({ onClose, onCreated }) {
       const scenarioRes = await scenarioAPI.create(
         template.name,
         template.description,
-        template.url
+        template.url,
+        folderId ? { folderId } : {}
       )
       const scenario = scenarioRes.data.scenario || scenarioRes.data
 
@@ -170,7 +171,7 @@ export function TemplatePickerModal({ onClose, onCreated }) {
                 {template.steps.slice(0, 3).map((step) => (
                   <div key={step.stepNumber} className="flex items-center gap-2 text-xs text-[#666]">
                     <span className="w-4 h-4 rounded bg-[rgba(255,255,255,0.05)] flex items-center justify-center text-[10px] shrink-0">{step.stepNumber}</span>
-                    <span className="text-[#5E6AD2] font-medium shrink-0">{step.type}</span>
+                    <span className="text-[#0F766E] font-medium shrink-0">{step.type}</span>
                     <span className="truncate">{step.description}</span>
                   </div>
                 ))}

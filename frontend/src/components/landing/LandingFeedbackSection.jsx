@@ -57,7 +57,7 @@ export default function LandingFeedbackSection({ t, lang: langProp }) {
             <button
               type="button"
               onClick={() => setDone(false)}
-              className="mt-5 text-sm font-medium text-indigo-600 hover:text-indigo-700"
+              className="mt-5 text-sm font-medium text-teal-700 hover:text-teal-800"
             >
               {t.feedbackSendAnother}
             </button>

@@ -1209,12 +1209,25 @@ export default function ScenarioDetailPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
           <div className="min-w-0">
-            <button
-              onClick={() => navigate('/scenarios')}
-              className="text-[#5E6AD2] hover:text-[#6B7AE8] text-sm font-medium mb-2 flex items-center gap-1"
-            >
-              {t.backToScenarios}
-            </button>
+            <nav className="flex flex-wrap items-center gap-1.5 text-sm text-ink-muted mb-2">
+              <button
+                type="button"
+                onClick={() => navigate('/scenarios')}
+                className="text-brand hover:text-brand-hover font-medium"
+              >
+                Repository
+              </button>
+              <span className="text-ink-subtle">/</span>
+              <button
+                type="button"
+                onClick={() => navigate('/scenarios')}
+                className="hover:text-brand font-medium truncate max-w-[180px]"
+              >
+                {scenario.folder?.name || 'No folder'}
+              </button>
+              <span className="text-ink-subtle">/</span>
+              <span className="text-ink font-medium truncate max-w-[220px]">{scenario.name}</span>
+            </nav>
             <h1 className="text-2xl sm:text-3xl font-bold text-[#E0E0E2] break-words">{scenario.name}</h1>
             {scenario.description && (
               <p className="text-[#A0A0A4] mt-1">{scenario.description}</p>
@@ -1404,7 +1417,7 @@ export default function ScenarioDetailPage() {
                       value={recordingUrl}
                       onChange={(e) => setRecordingUrl(e.target.value)}
                       placeholder="https://example.com"
-                      className="w-full px-3 py-2 bg-[#161618] border border-[#2D2D2F] text-[#E0E0E2] placeholder-[#4A4A52] rounded-lg focus:ring-1 focus:ring-[#5E6AD2] focus:outline-none"
+                      className="w-full px-3 py-2 bg-[#161618] border border-[#2D2D2F] text-[#E0E0E2] placeholder-[#4A4A52] rounded-lg focus:ring-1 focus:ring-[#0F766E] focus:outline-none"
                     />
                   </div>
                   <ExportFormatButton
@@ -1445,7 +1458,7 @@ export default function ScenarioDetailPage() {
                       onClick={() => setRecordingModeChoice('client-direct')}
                       className={`text-left rounded-lg border p-3 transition ${
                         recordingModeChoice === 'client-direct'
-                          ? 'border-[#5E6AD2] bg-[#5E6AD2]/10'
+                          ? 'border-[#0F766E] bg-[#0F766E]/10'
                           : 'border-[#2D2D2F] bg-[#161618] hover:border-[#3f3f46]'
                       }`}
                     >
@@ -1471,7 +1484,7 @@ export default function ScenarioDetailPage() {
                         targetKind === 'internal'
                           ? 'border-[#2D2D2F] bg-[#121214] opacity-50 cursor-not-allowed'
                           : recordingModeChoice === 'proxy'
-                            ? 'border-[#5E6AD2] bg-[#5E6AD2]/10'
+                            ? 'border-[#0F766E] bg-[#0F766E]/10'
                             : 'border-[#2D2D2F] bg-[#161618] hover:border-[#3f3f46]'
                       }`}
                     >
@@ -1523,7 +1536,7 @@ export default function ScenarioDetailPage() {
                         key={idx}
                         className="flex items-center gap-2 px-3 py-2 bg-[#161618] rounded text-sm border border-[#2D2D2F]"
                       >
-                        <span className="flex-shrink-0 w-6 h-6 bg-[#5E6AD2]/15 text-[#5E6AD2] rounded-full flex items-center justify-center text-xs font-bold">
+                        <span className="flex-shrink-0 w-6 h-6 bg-[#0F766E]/15 text-[#0F766E] rounded-full flex items-center justify-center text-xs font-bold">
                           {idx + 1}
                         </span>
                         <Badge variant="primary">{config.icon} {config.label}</Badge>
@@ -1612,8 +1625,8 @@ export default function ScenarioDetailPage() {
                   'border-gray-100'
                 }`}>
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-[#5E6AD2]/15 flex items-center justify-center">
-                      <span className="text-[#5E6AD2] text-sm">{editingStep ? '✏️' : '+'}</span>
+                    <div className="w-8 h-8 rounded-lg bg-[#0F766E]/15 flex items-center justify-center">
+                      <span className="text-[#0F766E] text-sm">{editingStep ? '✏️' : '+'}</span>
                     </div>
                     <h3 className={`text-lg font-semibold ${
                       'text-gray-900'
@@ -1645,7 +1658,7 @@ export default function ScenarioDetailPage() {
                       <select
                         value={stepForm.type}
                         onChange={(e) => setStepForm({ ...stepForm, type: e.target.value })}
-                        className={`w-full px-3 py-2 rounded-lg border focus:ring-1 focus:ring-[#5E6AD2] focus:outline-none transition-colors ${
+                        className={`w-full px-3 py-2 rounded-lg border focus:ring-1 focus:ring-[#0F766E] focus:outline-none transition-colors ${
                           'bg-white border-gray-300 text-gray-900'
                         }`}
                       >
@@ -1670,7 +1683,7 @@ export default function ScenarioDetailPage() {
                         onChange={(e) => setStepForm({ ...stepForm, description: e.target.value })}
                         placeholder={t.stepDescriptionPlaceholder}
                         autoFocus
-                        className={`w-full px-3 py-2 rounded-lg border focus:ring-1 focus:ring-[#5E6AD2] focus:outline-none transition-colors ${
+                        className={`w-full px-3 py-2 rounded-lg border focus:ring-1 focus:ring-[#0F766E] focus:outline-none transition-colors ${
                           'bg-white border-gray-300 text-gray-900 placeholder-gray-400'
                         }`}
                       />
@@ -1686,7 +1699,7 @@ export default function ScenarioDetailPage() {
                           <Tooltip text={t.selectorHelpTooltip} position="right" multiline>
                             <HelpCircle
                               size={14}
-                              className="text-gray-400 hover:text-[#5E6AD2] cursor-help shrink-0"
+                              className="text-gray-400 hover:text-[#0F766E] cursor-help shrink-0"
                               aria-label="How to find a selector"
                             />
                           </Tooltip>
@@ -1696,7 +1709,7 @@ export default function ScenarioDetailPage() {
                           value={stepForm.selector}
                           onChange={(e) => setStepForm({ ...stepForm, selector: e.target.value })}
                           placeholder={getStepTypeConfig(stepForm.type).placeholder.selector}
-                          className={`w-full px-3 py-2 rounded-lg border focus:ring-1 focus:ring-[#5E6AD2] focus:outline-none transition-colors ${
+                          className={`w-full px-3 py-2 rounded-lg border focus:ring-1 focus:ring-[#0F766E] focus:outline-none transition-colors ${
                             'bg-white border-gray-300 text-gray-900 placeholder-gray-400'
                           }`}
                         />
@@ -1717,7 +1730,7 @@ export default function ScenarioDetailPage() {
                           value={stepForm.value}
                           onChange={(e) => setStepForm({ ...stepForm, value: e.target.value })}
                           placeholder={getStepTypeConfig(stepForm.type).placeholder.value}
-                          className={`w-full px-3 py-2 rounded-lg border focus:ring-1 focus:ring-[#5E6AD2] focus:outline-none transition-colors ${
+                          className={`w-full px-3 py-2 rounded-lg border focus:ring-1 focus:ring-[#0F766E] focus:outline-none transition-colors ${
                             'bg-white border-gray-300 text-gray-900 placeholder-gray-400'
                           }`}
                         />
@@ -1737,7 +1750,7 @@ export default function ScenarioDetailPage() {
                           onChange={(e) => setStepForm({ ...stepForm, metadata: e.target.value })}
                           placeholder={getStepTypeConfig(stepForm.type).placeholder.metadata}
                           rows={3}
-                          className={`w-full px-3 py-2 rounded-lg border focus:ring-1 focus:ring-[#5E6AD2] focus:outline-none font-mono text-sm transition-colors ${
+                          className={`w-full px-3 py-2 rounded-lg border focus:ring-1 focus:ring-[#0F766E] focus:outline-none font-mono text-sm transition-colors ${
                             'bg-white border-gray-300 text-gray-900 placeholder-gray-400'
                           }`}
                         />
@@ -1961,7 +1974,7 @@ export default function ScenarioDetailPage() {
                   href={screenshotModal.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-[#5E6AD2] hover:text-[#6B7AE8] text-sm font-medium mr-4"
+                  className="text-[#0F766E] hover:text-[#0D9488] text-sm font-medium mr-4"
                 >
                   Buka di tab baru ↗
                 </a>

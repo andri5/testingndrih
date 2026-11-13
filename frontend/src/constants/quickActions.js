@@ -23,8 +23,8 @@ export const QUICK_ACTIONS = [
     descKey: 'startRecording',
     path: '/scenarios',
     icon: Plus,
-    iconBg: 'bg-[#5E6AD2]/10',
-    iconColor: 'text-[#9BA3F0]',
+    iconBg: 'bg-[#0F766E]/10',
+    iconColor: 'text-[#0F766E]',
   },
   {
     id: 'run-execution',
@@ -43,8 +43,8 @@ export const QUICK_ACTIONS = [
     descKey: 'detailedMetrics',
     path: '/analytics',
     icon: TrendingUp,
-    iconBg: 'bg-[#9BA3F0]/10',
-    iconColor: 'text-[#9BA3F0]',
+    iconBg: 'bg-[#0F766E]/10',
+    iconColor: 'text-[#0F766E]',
   },
   // Admin — Tools (same as sidebar workspace section)
   {
@@ -64,8 +64,8 @@ export const QUICK_ACTIONS = [
     descKey: 'environmentsDesc',
     path: '/environments',
     icon: Layers,
-    iconBg: 'bg-[#5E6AD2]/10',
-    iconColor: 'text-[#9BA3F0]',
+    iconBg: 'bg-[#0F766E]/10',
+    iconColor: 'text-[#0F766E]',
   },
   {
     id: 'scheduler',
@@ -74,8 +74,8 @@ export const QUICK_ACTIONS = [
     descKey: 'schedulerDesc',
     path: '/scheduler',
     icon: Clock,
-    iconBg: 'bg-[#5E6AD2]/10',
-    iconColor: 'text-[#9BA3F0]',
+    iconBg: 'bg-[#0F766E]/10',
+    iconColor: 'text-[#0F766E]',
   },
   {
     id: 'parallel',
@@ -124,8 +124,8 @@ export const QUICK_ACTIONS = [
     descKey: 'browserMatrixDesc',
     path: '/browser-matrix',
     icon: Globe,
-    iconBg: 'bg-[#9BA3F0]/10',
-    iconColor: 'text-[#9BA3F0]',
+    iconBg: 'bg-[#0F766E]/10',
+    iconColor: 'text-[#0F766E]',
   },
 ]
 

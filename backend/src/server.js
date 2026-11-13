@@ -9,6 +9,7 @@ import { fileURLToPath } from 'url'
 import swaggerUi from 'swagger-ui-express'
 import authRoutes from './routes/authRoutes.js'
 import scenarioRoutes from './routes/scenarioRoutes.js'
+import scenarioFolderRoutes from './routes/scenarioFolderRoutes.js'
 import searchRoutes from './routes/searchRoutes.js'
 import stepTypeRoutes from './routes/stepTypeRoutes.js'
 import fileRoutes from './routes/fileRoutes.js'
@@ -59,6 +60,10 @@ cspDirectives['img-src'] = ["'self'", 'data:', 'https://challenges.cloudflare.co
 cspDirectives['worker-src'] = ["'self'", 'blob:']
 cspDirectives['style-src'] = [...(cspDirectives['style-src'] || ["'self'"]), 'https://fonts.googleapis.com']
 cspDirectives['font-src'] = [...(cspDirectives['font-src'] || ["'self'"]), 'https://fonts.gstatic.com']
+
+if (process.env.FRONTEND_URL === 'http://43.133.135.215:3000') {
+  cspDirectives['upgrade-insecure-requests'] = null
+}
 
 app.use(
   helmet({
@@ -128,6 +133,7 @@ app.get('/health', (req, res) => {
 // Routes
 app.use('/api/auth', authRoutes)
 app.use('/api/scenarios', scenarioRoutes)
+app.use('/api/scenario-folders', scenarioFolderRoutes)
 app.use('/api/search', searchRoutes)
 app.use('/api/step-types', stepTypeRoutes)
 app.use('/api/files', fileRoutes)

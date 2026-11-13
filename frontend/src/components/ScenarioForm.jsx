@@ -110,7 +110,7 @@ export function ScenarioForm({ onSubmit, initialScenario = null, isLoading = fal
           onChange={handleChange}
           disabled={isLoading}
           rows="3"
-          className="w-full px-4 py-2 bg-[#161618] border border-[rgba(255,255,255,0.1)] text-[#E0E0E2] placeholder-[#4A4A52] rounded-lg focus:ring-1 focus:ring-[#5E6AD2] focus:border-[#5E6AD2] outline-none transition"
+          className="w-full px-4 py-2 bg-[#161618] border border-[rgba(255,255,255,0.1)] text-[#E0E0E2] placeholder-[#4A4A52] rounded-lg focus:ring-1 focus:ring-[#0F766E] focus:border-[#0F766E] outline-none transition"
         />
       </div>
 

@@ -45,14 +45,14 @@ export default function ServerErrorPage() {
         <div className="flex flex-col gap-3">
           <button
             onClick={() => window.location.reload()}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border border-[#2A2A2D] bg-[#161618] text-sm font-medium text-[#E0E0E2] hover:border-[#5E6AD2] transition-colors"
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border border-[#2A2A2D] bg-[#161618] text-sm font-medium text-[#E0E0E2] hover:border-[#0F766E] transition-colors"
           >
             <RefreshCw size={15} />
             {t.tryAgain}
           </button>
           <button
             onClick={() => navigate('/dashboard')}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-[#5E6AD2] text-sm font-medium text-white hover:bg-[#4F5BBF] transition-colors"
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-[#0F766E] text-sm font-medium text-white hover:bg-[#0F766E] transition-colors"
           >
             <Home size={15} />
             {t.backToDashboard}

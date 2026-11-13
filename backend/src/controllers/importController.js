@@ -43,7 +43,7 @@ export async function previewExcelHandler(req, res, next) {
 export async function confirmImportHandler(req, res, next) {
   try {
     const userId = req.user.id
-    const { scenarios } = req.body
+    const { scenarios, folderId = null } = req.body
 
     if (!scenarios || !Array.isArray(scenarios)) {
       return res.status(400).json({
@@ -53,7 +53,7 @@ export async function confirmImportHandler(req, res, next) {
     }
 
     // Create scenarios and steps
-    const result = await createScenariosFromParsedData(userId, { scenarios })
+    const result = await createScenariosFromParsedData(userId, { scenarios }, { folderId })
 
     res.status(201).json({
       success: true,
