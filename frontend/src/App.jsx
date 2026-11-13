@@ -8,12 +8,14 @@ import RegisterPage from './pages/RegisterPage'
 import ForgotPasswordPage from './pages/ForgotPasswordPage'
 import ResetPasswordPage from './pages/ResetPasswordPage'
 import SharedRunPage from './pages/SharedRunPage'
+import SharedBugPage from './pages/SharedBugPage'
 import DashboardPage from './pages/DashboardPage'
 import AnalyticsPage from './pages/AnalyticsPage'
 import ScenariosPage from './pages/ScenariosPage'
 import ScenarioDetailPage from './pages/ScenarioDetailPage'
 import ExecutionPage from './pages/ExecutionPage'
 import ReportsPage from './pages/ReportsPage'
+import IssuesPage from './pages/IssuesPage'
 import SettingsPage from './pages/SettingsPage'
 import ChainsPage from './pages/ChainsPage'
 import ChainBuilderPage from './pages/ChainBuilderPage'
@@ -144,6 +146,7 @@ export default function App() {
           element={token ? <Navigate to="/dashboard" /> : <ResetPasswordPage />}
         />
         <Route path="/share/runs/:token" element={<SharedRunPage />} />
+        <Route path="/share/bugs/:token" element={<SharedBugPage />} />
 
         {/* Protected Routes */}
         <Route
@@ -212,7 +215,14 @@ export default function App() {
         <Route path="/stress-test" element={<AdminRoute><StressTestPage /></AdminRoute>} />
         <Route path="/security-test" element={<AdminRoute><SecurityTestPage /></AdminRoute>} />
         <Route path="/api-testing" element={<AdminRoute><ApiTestingPage /></AdminRoute>} />
-        <Route path="/issues" element={<Navigate to="/dashboard" replace />} />
+        <Route
+          path="/issues"
+          element={
+            <ProtectedRoute>
+              <IssuesPage />
+            </ProtectedRoute>
+          }
+        />
         <Route path="/environments" element={<ProtectedRoute><EnvironmentsPage /></ProtectedRoute>} />
         <Route path="/visual-regression" element={<AdminRoute><VisualRegressionPage /></AdminRoute>} />
 

@@ -147,6 +147,32 @@ export const executionController = {
   },
 
   /**
+   * Export execution history as Excel (.xlsx)
+   * GET /api/executions/export/excel
+   */
+  async exportExcelReport(req, res) {
+    try {
+      const userId = req.user.id
+      const { scenarioId, limit = '1000' } = req.query
+      const { buildExecutionReportWorkbook } = await import('../services/reportExportService.js')
+      const buffer = await buildExecutionReportWorkbook(userId, {
+        scenarioId: scenarioId || null,
+        limit: parseInt(limit, 10) || 1000,
+      })
+      const filename = `execution-report-${Date.now()}.xlsx`
+      res.setHeader(
+        'Content-Type',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      )
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`)
+      res.status(200).send(Buffer.from(buffer))
+    } catch (error) {
+      console.error('Excel export error:', error)
+      res.status(400).json({ success: false, message: error.message || 'Excel export failed' })
+    }
+  },
+
+  /**
    * Get execution history
    * GET /api/executions
    */

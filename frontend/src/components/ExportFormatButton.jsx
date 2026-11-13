@@ -3,6 +3,7 @@ import { Download } from 'lucide-react'
 export const SOFT_VARIANT_STYLES = {
   json: 'bg-[#0F766E]/10 hover:bg-[#0F766E]/20 text-[#0F766E] html.theme-light:text-[#0F766E]',
   csv: 'bg-[#4EC9B0]/10 hover:bg-[#4EC9B0]/20 text-[#4EC9B0]',
+  excel: 'bg-[#16A34A]/10 hover:bg-[#16A34A]/20 text-[#16A34A]',
   html: 'bg-[#FBBF24]/10 hover:bg-[#FBBF24]/20 text-[#FBBF24] html.theme-light:text-[#B45309]',
   pdf: 'bg-[#F87171]/10 hover:bg-[#F87171]/20 text-[#F87171] html.theme-light:text-[#DC2626]',
   primary: 'bg-[#0F766E]/10 hover:bg-[#0F766E]/20 text-[#0F766E] html.theme-light:text-[#0F766E]',

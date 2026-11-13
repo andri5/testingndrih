@@ -103,6 +103,7 @@ executionRoutes.get('/', executionController.getExecutionHistory)
  *         description: Aggregated stats (total, passed, failed, successRate)
  */
 executionRoutes.get('/stats/summary', executionController.getExecutionStats)
+executionRoutes.get('/export/excel', executionController.exportExcelReport)
 
 /**
  * @swagger

@@ -106,7 +106,7 @@ export default function StepErrorDetail({
                 <span className="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center">
                   <Lightbulb size={16} />
                 </span>
-                <p className="font-semibold text-amber-950 text-sm">Fix Suggestions</p>
+                <p className="font-semibold text-amber-950 text-sm">Saran Perbaikan</p>
               </div>
               <span className="text-[11px] font-semibold text-amber-800 bg-amber-100 px-2.5 py-1 rounded-full border border-amber-200">
                 {suggestions.length} insight{suggestions.length !== 1 ? 's' : ''}
@@ -117,7 +117,7 @@ export default function StepErrorDetail({
               {diagnosis && (
                 <div className="rounded-lg border border-amber-200 border-l-4 border-l-amber-500 bg-amber-50/70 px-3 py-2.5">
                   <p className="text-[10px] font-bold uppercase tracking-wider text-amber-700 mb-1">
-                    Likely root cause
+                    Penyebab utama
                   </p>
                   <p className="text-sm text-gray-800 leading-relaxed">{diagnosis}</p>
                 </div>

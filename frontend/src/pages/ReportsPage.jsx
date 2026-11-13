@@ -10,7 +10,7 @@ import { PlayCircle, CheckCircle2, XCircle, TrendingUp } from 'lucide-react'
 const i18n = {
     title: '📈 Reports',
     subtitle: 'Execution reports and analytics',
-    exportCSV: 'Export CSV',
+    exportExcel: 'Export Excel',
     loadError: 'Failed to load report data',
     trendTitle: '📊 Pass/Fail Trend (last 14 days)',
     passed: 'Passed',
@@ -177,30 +177,21 @@ export default function ReportsPage() {
 
   const totalPages = Math.ceil(total / LIMIT)
 
-  const handleExportCSV = (scenarioId) => {
-    // Download CSV via API
-    executionAPI.getHistory(scenarioId, 1000, 0).then(res => {
-      const execs = res.data.executions || []
-      const csvRows = [
-        ['Scenario', 'Status', 'Duration (ms)', 'Passed Steps', 'Failed Steps', 'Start Time', 'End Time'].join(','),
-        ...execs.map(e => [
-          `"${(e.scenario?.name || '').replace(/"/g, '""')}"`,
-          e.status,
-          e.duration || 0,
-          e.passedSteps || 0,
-          e.failedSteps || 0,
-          e.startTime || '',
-          e.endTime || ''
-        ].join(','))
-      ]
-      const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' })
+  const handleExportExcel = async (scenarioId) => {
+    try {
+      const res = await executionAPI.exportExcel(scenarioId, 1000)
+      const blob = new Blob([res.data], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      })
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = 'execution-report.csv'
+      a.download = `execution-report-${Date.now()}.xlsx`
       a.click()
       URL.revokeObjectURL(url)
-    })
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to export Excel')
+    }
   }
 
   return (
@@ -212,11 +203,11 @@ export default function ReportsPage() {
             <p className="text-[#A0A0A4] mt-1">{t.subtitle}</p>
           </div>
           <ExportFormatButton
-            format="csv"
-            onClick={() => handleExportCSV(null)}
+            format="excel"
+            onClick={() => handleExportExcel(null)}
             className="self-start sm:self-auto"
           >
-            {t.exportCSV}
+            {t.exportExcel}
           </ExportFormatButton>
         </div>
 

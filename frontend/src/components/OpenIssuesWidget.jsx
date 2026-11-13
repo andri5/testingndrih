@@ -55,11 +55,20 @@ export default function OpenIssuesWidget() {
           <AlertTriangle size={16} className="text-amber-500" />
           Open Issues
         </h2>
-        {!loading && issues.length > 0 && (
-          <span className="text-xs font-semibold text-amber-800 bg-amber-100 border border-amber-200 px-2 py-0.5 rounded-full">
-            {issues.length} open
-          </span>
-        )}
+        <div className="flex items-center gap-2">
+          {!loading && issues.length > 0 && (
+            <span className="text-xs font-semibold text-amber-800 bg-amber-100 border border-amber-200 px-2 py-0.5 rounded-full">
+              {issues.length} open
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={() => navigate('/issues')}
+            className="text-xs font-medium text-[#0F766E] hover:underline"
+          >
+            Kelola bugs →
+          </button>
+        </div>
       </div>
 
       {loading ? (

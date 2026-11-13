@@ -10,7 +10,7 @@ import StepResultCard, { StepResultsSummary } from '../components/StepResultCard
 import { ExecuteScenarioButton } from '../components/ExecuteScenarioButton'
 import SoftSelect from '../components/SoftSelect'
 import ExecutionRunDiff from '../components/ExecutionRunDiff'
-import { PlayCircle, CheckCircle2, XCircle, TrendingUp, ClipboardList, Clock, Eye, ListTree, GitCompare, Link2 } from 'lucide-react'
+import { PlayCircle, CheckCircle2, XCircle, TrendingUp, ClipboardList, Clock, ListTree, GitCompare, Link2 } from 'lucide-react'
 import ShareRunModal from '../components/ShareRunModal'
 
 const i18n = {
@@ -32,7 +32,6 @@ const i18n = {
     passed: 'PASSED',
     failed: 'FAILED',
     successRate: 'SUCCESS RATE',
-    view: 'View',
     exportHTML: 'Export HTML',
     exportPDF: 'Export PDF',
     share: 'Share',
@@ -62,7 +61,6 @@ export default function ExecutionPage() {
     pagination,
     fetchExecutions,
     fetchExecutionStats,
-    getExecutionDetails,
     clearError,
     executeScenario
   } = useExecutionStore()
@@ -86,14 +84,6 @@ export default function ExecutionPage() {
       return () => clearTimeout(timer)
     }
   }, [isRunning, currentExecution])
-
-  const handleViewDetails = async (executionId) => {
-    try {
-      await getExecutionDetails(executionId)
-    } catch (err) {
-      console.error('Failed to load execution details')
-    }
-  }
 
   const handleExportReport = async (executionId, format) => {
     try {
@@ -555,14 +545,6 @@ export default function ExecutionPage() {
                       </td>
                       <td className="py-3 px-4 text-center">
                         <div className="flex items-center justify-center gap-1.5 flex-wrap">
-                          <ExportFormatButton
-                            format="primary"
-                            icon={Eye}
-                            onClick={() => handleViewDetails(execution.id)}
-                            title="View execution details"
-                          >
-                            {t.view}
-                          </ExportFormatButton>
                           <ExportFormatButton
                             format="html"
                             onClick={() => handleExportReport(execution.id, 'html')}

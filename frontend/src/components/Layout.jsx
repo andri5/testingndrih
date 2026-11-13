@@ -15,7 +15,9 @@ import {
   LayoutDashboard,
   ClipboardList,
   PlayCircle,
-  BarChart2,
+  FileBarChart2,
+  PieChart,
+  Bug,
   Link2,
   Settings,
   LogOut,
@@ -114,8 +116,9 @@ export default function Layout({ children, showFolderPane = false, onFolderSelec
     { key: 'scenarios', name: 'Scenarios', path: '/scenarios', icon: ClipboardList },
     { key: 'execution', name: 'Execution', path: '/execution', icon: PlayCircle },
     { key: 'environments', name: 'Environments', path: '/environments', icon: Layers },
-    { key: 'reports', name: 'Reports', path: '/reports', icon: BarChart2 },
-    { key: 'analytics', name: 'Analytics', path: '/analytics', icon: BarChart2 },
+    { key: 'reports', name: 'Reports', path: '/reports', icon: FileBarChart2 },
+    { key: 'analytics', name: 'Analytics', path: '/analytics', icon: PieChart },
+    { key: 'issues', name: 'Bugs', path: '/issues', icon: Bug },
   ].filter((item) => allowedMenuKeys.has(item.key))
 
   const toolItems = [

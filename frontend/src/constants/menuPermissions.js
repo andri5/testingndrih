@@ -7,6 +7,7 @@ export const MENU_DEFINITIONS = [
   { key: 'environments', path: '/environments', group: 'main', labelId: 'Environment', labelEn: 'Environments' },
   { key: 'reports', path: '/reports', group: 'main', labelId: 'Laporan', labelEn: 'Reports' },
   { key: 'analytics', path: '/analytics', group: 'main', labelId: 'Analytics', labelEn: 'Analytics' },
+  { key: 'issues', path: '/issues', group: 'main', labelId: 'Bugs', labelEn: 'Bugs' },
   { key: 'visual-regression', path: '/visual-regression', group: 'tools', labelId: 'Visual Regression', labelEn: 'Visual Regression' },
   { key: 'chains', path: '/chains', group: 'tools', labelId: 'Chains', labelEn: 'Chains' },
   { key: 'api-testing', path: '/api-testing', group: 'tools', labelId: 'API Testing', labelEn: 'API Testing' },
@@ -27,6 +28,7 @@ export const DEFAULT_USER_MENU_KEYS = [
   'environments',
   'reports',
   'analytics',
+  'issues',
 ]
 
 const PATH_BY_KEY = Object.fromEntries(MENU_DEFINITIONS.map((m) => [m.key, m.path]))

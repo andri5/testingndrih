@@ -101,6 +101,8 @@ model User {
   visualComparisons      VisualComparison[]
   agentJobs              AgentJob[]
   executionShareLinks    ExecutionShareLink[]
+  issueShareLinks        IssueShareLink[]
+  issues                 Issue[]
 
   @@map("users")
 }
@@ -247,6 +249,7 @@ model Scenario {
   visualBaselines VisualBaseline[]
   visualComparisons VisualComparison[]
   agentJobs AgentJob[]
+  issues Issue[]
 
   @@index([userId])
   @@index([userId, folderId])
@@ -390,6 +393,25 @@ model ExecutionShareLink {
   @@map("execution_share_links")
 }
 
+model IssueShareLink {
+  id              String    @id @default(cuid())
+  tokenHash       String    @unique
+  prefix          String
+  expiresAt       DateTime?
+  revokedAt       DateTime?
+  lastAccessedAt  DateTime?
+  createdAt       DateTime  @default(now())
+  issueId         String
+  createdByUserId String
+
+  issue     Issue @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  createdBy User  @relation(fields: [createdByUserId], references: [id], onDelete: Cascade)
+
+  @@index([issueId])
+  @@index([createdByUserId])
+  @@map("issue_share_links")
+}
+
 /// Hybrid local-agent queue (P2) — durable jobs for private/VPN targets
 model AgentJob {
   id           String         @id @default(cuid())
@@ -485,20 +507,48 @@ model ApiTestResult {
 }
 
 model Issue {
-  id        String          @id @default(cuid())
-  title     String
+  id          String          @id @default(cuid())
+  title       String
   description String?
-  status    IssueStatus     @default(OPEN)
-  severity  IssueSeverity   @default(MEDIUM)
-  stepNumber Int?
-  createdAt DateTime        @default(now())
-  updatedAt DateTime        @updatedAt
-  executionId String
+  status      IssueStatus     @default(OPEN)
+  severity    IssueSeverity   @default(MEDIUM)
+  stepNumber  Int?
+  /// AUTO = created from failed run; MANUAL = logged by QA
+  source      String          @default("AUTO")
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  executionId String?
+  scenarioId  String?
+  userId      String?
 
-  execution Execution @relation(fields: [executionId], references: [id], onDelete: Cascade)
+  execution Execution? @relation(fields: [executionId], references: [id], onDelete: Cascade)
+  scenario  Scenario?  @relation(fields: [scenarioId], references: [id], onDelete: SetNull)
+  user      User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
+  shareLinks  IssueShareLink[]
+  attachments IssueAttachment[]
 
   @@index([executionId])
+  @@index([scenarioId])
+  @@index([userId])
+  @@index([status])
   @@map("issues")
+}
+
+model IssueAttachment {
+  id           String   @id @default(cuid())
+  filename     String
+  originalName String
+  mimeType     String
+  size         Int
+  url          String
+  createdAt    DateTime @default(now())
+  issueId      String
+  uploadedById String?
+
+  issue Issue @relation(fields: [issueId], references: [id], onDelete: Cascade)
+
+  @@index([issueId])
+  @@map("issue_attachments")
 }
 
 model ExecutionLog {

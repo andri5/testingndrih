@@ -227,6 +227,17 @@ export const executionAPI = {
     return apiClient.get('/executions/stats/summary', { params })
   },
 
+  // Export execution history as Excel (.xlsx)
+  exportExcel: (scenarioId = null, limit = 1000) => {
+    const params = { limit }
+    if (scenarioId) params.scenarioId = scenarioId
+    return apiClient.get('/executions/export/excel', {
+      params,
+      responseType: 'blob',
+      timeout: 60000,
+    })
+  },
+
   // Get available browsers for cross-browser testing
   getBrowsers: () =>
     apiClient.get('/executions/browsers'),
@@ -352,7 +363,21 @@ export const environmentAPI = {
 export const issueAPI = {
   list: (params = {}) => apiClient.get('/issues', { params }),
   getById: (issueId) => apiClient.get(`/issues/${issueId}`),
-  update: (issueId, data) => apiClient.patch(`/issues/${issueId}`, data)
+  create: (data) => apiClient.post('/issues', data),
+  update: (issueId, data) => apiClient.patch(`/issues/${issueId}`, data),
+  uploadAttachments: (issueId, files) => {
+    const form = new FormData()
+    ;[...files].forEach((f) => form.append('files', f))
+    return apiClient.post(`/issues/${issueId}/attachments`, form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: 60000,
+    })
+  },
+  deleteAttachment: (issueId, attachmentId) =>
+    apiClient.delete(`/issues/${issueId}/attachments/${attachmentId}`),
+  createShare: (issueId, data = {}) => apiClient.post(`/issues/${issueId}/share`, data),
+  listShares: (issueId) => apiClient.get(`/issues/${issueId}/shares`),
+  revokeShare: (issueId, shareId) => apiClient.delete(`/issues/${issueId}/shares/${shareId}`),
 }
 
 export const notificationAPI = {

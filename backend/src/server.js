@@ -177,6 +177,10 @@ const __dirname = path.dirname(__filename)
 app.use('/api/screenshots', express.static(path.resolve(__dirname, '../uploads/screenshots')))
 app.use('/api/visual', express.static(path.resolve(__dirname, '../uploads/visual')))
 app.use('/api/videos', express.static(path.resolve(__dirname, '../uploads/videos')))
+app.use(
+  '/api/issue-attachments',
+  express.static(path.resolve(__dirname, '../uploads/issue-attachments'))
+)
 
 // ── Combined-mode: serve built React frontend (Docker) ─────────────────────
 // When the container includes a /app/public/index.html (built frontend),
