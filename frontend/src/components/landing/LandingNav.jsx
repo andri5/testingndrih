@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { LogIn } from 'lucide-react'
+import { LogIn, Menu, X } from 'lucide-react'
 import BrandLogo from '../BrandLogo'
 import useNavScrollSpy from '../../hooks/useNavScrollSpy'
 import {
@@ -35,16 +35,16 @@ export function LangSwitch({ lang }) {
   )
 }
 
-function NavLink({ href, active, children }) {
+function NavLink({ href, active, children, className = 'lp-nav-link', onClick }) {
   if (href.includes('#')) {
     return (
-      <a href={href} className={`lp-nav-link ${active ? 'lp-nav-link--active' : ''}`}>
+      <a href={href} className={`${className} ${active ? `${className}--active` : ''}`} onClick={onClick}>
         {children}
       </a>
     )
   }
   return (
-    <Link to={href} className={`lp-nav-link ${active ? 'lp-nav-link--active' : ''}`}>
+    <Link to={href} className={`${className} ${active ? `${className}--active` : ''}`} onClick={onClick}>
       {children}
     </Link>
   )
@@ -58,6 +58,7 @@ export default function LandingNav({ lang, t, variant = 'dark' }) {
   const onHome = !onAbout
   const activeSection = useNavScrollSpy()
   const [scrolled, setScrolled] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
   const isLight = variant === 'light'
 
   useEffect(() => {
@@ -66,6 +67,24 @@ export default function LandingNav({ lang, t, variant = 'dark' }) {
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
+
+  useEffect(() => {
+    setMenuOpen(false)
+  }, [pathname])
+
+  useEffect(() => {
+    if (!menuOpen) return undefined
+    const onKey = (e) => {
+      if (e.key === 'Escape') setMenuOpen(false)
+    }
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.body.style.overflow = prevOverflow
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [menuOpen])
 
   const centerLinks = [
     ...(onHome
@@ -81,10 +100,12 @@ export default function LandingNav({ lang, t, variant = 'dark' }) {
       : []),
   ]
 
+  const closeMenu = () => setMenuOpen(false)
+
   return (
     <header className={`lp-nav absolute inset-x-0 top-0 z-30 ${isLight ? 'lp-nav--light' : ''} ${scrolled ? 'lp-nav--scrolled' : ''}`}>
       <div className="lp-nav-shell">
-        <Link to={home} className="lp-nav-brand">
+        <Link to={home} className="lp-nav-brand" onClick={closeMenu}>
           <BrandLogo size="sm" className="lp-nav-brand__logo" title="Test Sambil Ngopi" />
           <span className="lp-nav-brand__text">
             <span className="lp-nav-brand__name hidden min-[420px]:block">Test Sambil Ngopi</span>
@@ -107,8 +128,44 @@ export default function LandingNav({ lang, t, variant = 'dark' }) {
             <LogIn size={15} />
             <span className="hidden sm:inline">{t.navLogin}</span>
           </Link>
+          <button
+            type="button"
+            className="lp-nav-menu-btn"
+            aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+            aria-expanded={menuOpen}
+            onClick={() => setMenuOpen((v) => !v)}
+          >
+            {menuOpen ? <X size={18} /> : <Menu size={18} />}
+          </button>
         </div>
       </div>
+
+      {menuOpen && (
+        <>
+          <button type="button" className="lp-nav-mobile-backdrop" aria-label="Close menu" onClick={closeMenu} />
+          <nav className="lp-nav-mobile" aria-label="Mobile navigation">
+            {centerLinks.map((item) => (
+              <NavLink
+                key={`m-${item.href}`}
+                href={item.href}
+                active={item.active}
+                className="lp-nav-mobile-link"
+                onClick={closeMenu}
+              >
+                {item.label}
+              </NavLink>
+            ))}
+            <div className="lp-nav-mobile-actions">
+              <Link to="/login" className="lp-nav-mobile-secondary" onClick={closeMenu}>
+                {t.navLogin}
+              </Link>
+              <Link to="/register" className="lp-btn-primary lp-nav-mobile-cta" onClick={closeMenu}>
+                {t.navCta}
+              </Link>
+            </div>
+          </nav>
+        </>
+      )}
     </header>
   )
 }

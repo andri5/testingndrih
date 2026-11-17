@@ -41,7 +41,7 @@ export default function SoftSelect({
         aria-haspopup="listbox"
         aria-expanded={open}
         onClick={() => setOpen((prev) => !prev)}
-        className="inline-flex items-center justify-between gap-2 w-full min-w-[200px] px-3 py-2 rounded-lg text-sm font-medium transition-colors border border-gray-200 bg-white text-gray-900 shadow-sm hover:border-[#0F766E]/35 focus:outline-none focus:ring-2 focus:ring-[#0F766E]/25 focus:border-[#0F766E]/40 disabled:opacity-50 disabled:cursor-not-allowed"
+        className="inline-flex items-center justify-between gap-2 w-full min-w-0 sm:min-w-[200px] px-3 py-2 rounded-lg text-sm font-medium transition-colors border border-gray-200 bg-white text-gray-900 shadow-sm hover:border-[#0F766E]/35 focus:outline-none focus:ring-2 focus:ring-[#0F766E]/25 focus:border-[#0F766E]/40 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <span className={`truncate ${!value ? 'text-gray-500 font-normal' : ''}`}>
           {selected?.label ?? placeholder}
@@ -55,7 +55,7 @@ export default function SoftSelect({
       {open && (
         <ul
           role="listbox"
-          className="absolute z-50 mt-1 w-full min-w-[200px] rounded-lg border border-gray-200 bg-white shadow-lg py-1 overflow-hidden"
+          className="absolute z-50 mt-1 w-full min-w-0 sm:min-w-[200px] rounded-lg border border-gray-200 bg-white shadow-lg py-1 overflow-hidden"
         >
           {options.map((opt) => {
             const isSelected = value === opt.value

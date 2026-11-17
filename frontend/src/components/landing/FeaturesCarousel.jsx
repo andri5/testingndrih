@@ -64,7 +64,7 @@ export default function FeaturesCarousel({ features, icons, iconClasses }) {
           <ChevronLeft size={20} />
         </button>
 
-        <div className="overflow-hidden mx-10 sm:mx-12">
+        <div className="overflow-hidden mx-8 sm:mx-12">
           <div
             className="flex transition-transform duration-500 ease-out"
             style={{

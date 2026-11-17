@@ -139,94 +139,97 @@ export default function TestStepList({
                             : 'border-[#2D2D2F] hover:bg-[#1A1A1C]'
                         }`}
                       >
-                        <div className="flex items-center gap-3">
-                          {/* Drag Handle */}
-                          <div className="flex-shrink-0 text-[#555] cursor-grab active:cursor-grabbing text-lg">
-                            ⋮⋮
-                          </div>
-
-                          {/* Checkbox */}
-                          <input
-                            type="checkbox"
-                            checked={selectedStepIds.has(step.id)}
-                            onChange={() => onToggleSelection(step.id)}
-                            className="w-4 h-4 flex-shrink-0 rounded border-[#2D2D2F] text-[#0F766E] focus:ring-[#0F766E] cursor-pointer"
-                          />
-
-                          {/* Step Number & Status */}
-                          <div className="flex-shrink-0">
-                            {stepResult?.status === 'PASSED' ? (
-                              <div className="w-8 h-8 bg-green-500/15 text-green-400 rounded-full flex items-center justify-center font-bold text-sm">
-                                ✓
-                              </div>
-                            ) : stepResult?.status === 'FAILED' ? (
-                              <div className="w-8 h-8 bg-red-500/15 text-red-400 rounded-full flex items-center justify-center font-bold text-sm">
-                                ✗
-                              </div>
-                            ) : isCurrentStep ? (
-                              <div className="w-8 h-8 bg-yellow-500/20 text-yellow-400 rounded-full flex items-center justify-center font-bold text-sm animate-pulse">
-                                ▶
-                              </div>
-                            ) : (
-                              <div className="w-8 h-8 bg-[#0F766E]/15 text-[#0F766E] rounded-full flex items-center justify-center font-bold text-sm">
-                                {index + 1}
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Step Type Badge */}
-                          <div className="flex-shrink-0">
-                            <Badge variant="primary">
-                              {config.icon} {config.label}
-                            </Badge>
-                          </div>
-
-                          {/* Step Description & Toggle */}
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 cursor-pointer" onClick={() => toggleDetail(step.id)}>
-                              <p className="font-medium text-[#E0E0E2] truncate">{step.description}</p>
-                              <span className={`flex-shrink-0 text-[#555] transition ${isExpanded ? 'rotate-180' : ''}`}>
-                                ▼
-                              </span>
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                          <div className="flex items-center gap-3 min-w-0 flex-1">
+                            {/* Drag Handle */}
+                            <div className="flex-shrink-0 text-[#555] cursor-grab active:cursor-grabbing text-lg">
+                              ⋮⋮
                             </div>
 
-                            {/* Expanded Details */}
-                            {isExpanded && (
-                              <div className="mt-2 pt-2 border-t border-[#2D2D2F] space-y-1">
-                                {step.selector && (
-                                  <div className="text-xs text-[#888]">
-                                    <span className="font-medium">Selector:</span>
-                                    <code className="block bg-[#0F0E11] px-2 py-1 rounded mt-0.5 text-[#A0A0A4] break-all">
-                                      {step.selector}
-                                    </code>
-                                  </div>
-                                )}
-                                {step.value && (
-                                  <div className="text-xs text-[#888]">
-                                    <span className="font-medium">Value:</span>
-                                    <code className="block bg-[#0F0E11] px-2 py-1 rounded mt-0.5 text-[#A0A0A4] break-all">
-                                      {step.value}
-                                    </code>
-                                  </div>
-                                )}
-                                {step.metadata && (
-                                  <div className="text-xs text-[#888]">
-                                    <span className="font-medium">Metadata:</span>
-                                    <code className="block bg-[#0F0E11] px-2 py-1 rounded mt-0.5 text-[#A0A0A4] text-xs font-mono break-all">
-                                      {step.metadata}
-                                    </code>
-                                  </div>
-                                )}
+                            {/* Checkbox */}
+                            <input
+                              type="checkbox"
+                              checked={selectedStepIds.has(step.id)}
+                              onChange={() => onToggleSelection(step.id)}
+                              className="w-4 h-4 flex-shrink-0 rounded border-[#2D2D2F] text-[#0F766E] focus:ring-[#0F766E] cursor-pointer"
+                            />
+
+                            {/* Step Number & Status */}
+                            <div className="flex-shrink-0">
+                              {stepResult?.status === 'PASSED' ? (
+                                <div className="w-8 h-8 bg-green-500/15 text-green-400 rounded-full flex items-center justify-center font-bold text-sm">
+                                  ✓
+                                </div>
+                              ) : stepResult?.status === 'FAILED' ? (
+                                <div className="w-8 h-8 bg-red-500/15 text-red-400 rounded-full flex items-center justify-center font-bold text-sm">
+                                  ✗
+                                </div>
+                              ) : isCurrentStep ? (
+                                <div className="w-8 h-8 bg-yellow-500/20 text-yellow-400 rounded-full flex items-center justify-center font-bold text-sm animate-pulse">
+                                  ▶
+                                </div>
+                              ) : (
+                                <div className="w-8 h-8 bg-[#0F766E]/15 text-[#0F766E] rounded-full flex items-center justify-center font-bold text-sm">
+                                  {index + 1}
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Step Type Badge */}
+                            <div className="flex-shrink-0">
+                              <Badge variant="primary">
+                                {config.icon} {config.label}
+                              </Badge>
+                            </div>
+
+                            {/* Step Description & Toggle */}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 cursor-pointer" onClick={() => toggleDetail(step.id)}>
+                                <p className="font-medium text-[#E0E0E2] truncate">{step.description}</p>
+                                <span className={`flex-shrink-0 text-[#555] transition ${isExpanded ? 'rotate-180' : ''}`}>
+                                  ▼
+                                </span>
                               </div>
-                            )}
+
+                              {/* Expanded Details */}
+                              {isExpanded && (
+                                <div className="mt-2 pt-2 border-t border-[#2D2D2F] space-y-1">
+                                  {step.selector && (
+                                    <div className="text-xs text-[#888]">
+                                      <span className="font-medium">Selector:</span>
+                                      <code className="block bg-[#0F0E11] px-2 py-1 rounded mt-0.5 text-[#A0A0A4] break-all">
+                                        {step.selector}
+                                      </code>
+                                    </div>
+                                  )}
+                                  {step.value && (
+                                    <div className="text-xs text-[#888]">
+                                      <span className="font-medium">Value:</span>
+                                      <code className="block bg-[#0F0E11] px-2 py-1 rounded mt-0.5 text-[#A0A0A4] break-all">
+                                        {step.value}
+                                      </code>
+                                    </div>
+                                  )}
+                                  {step.metadata && (
+                                    <div className="text-xs text-[#888]">
+                                      <span className="font-medium">Metadata:</span>
+                                      <code className="block bg-[#0F0E11] px-2 py-1 rounded mt-0.5 text-[#A0A0A4] text-xs font-mono break-all">
+                                        {step.metadata}
+                                      </code>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
                           </div>
 
                           {/* Action Buttons */}
-                          <div className="flex gap-1 flex-shrink-0">
+                          <div className="flex gap-2 flex-shrink-0 w-full sm:w-auto pl-11 sm:pl-0">
                             <ExportFormatButton
                               format="primary"
                               icon={Pencil}
                               onClick={() => onEditStep(step)}
+                              className="flex-1 sm:flex-none justify-center"
                             >
                               Edit
                             </ExportFormatButton>
@@ -235,6 +238,7 @@ export default function TestStepList({
                               icon={Trash2}
                               onClick={() => onDeleteStep(step.id)}
                               disabled={isDeletingBulk}
+                              className="flex-1 sm:flex-none justify-center"
                             >
                               Hapus
                             </ExportFormatButton>

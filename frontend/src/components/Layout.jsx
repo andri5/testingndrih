@@ -32,7 +32,22 @@ import {
   Layers,
   Image,
   Wrench,
+  PanelLeftClose,
+  PanelLeftOpen,
+  ChevronDown,
 } from 'lucide-react'
+
+const SIDEBAR_EXPANDED_KEY = 'tsn.sidebarExpanded'
+
+function readSidebarExpanded() {
+  try {
+    const raw = localStorage.getItem(SIDEBAR_EXPANDED_KEY)
+    if (raw === null) return false
+    return raw === 'true'
+  } catch {
+    return false
+  }
+}
 
 export default function Layout({ children, showFolderPane = false, onFolderSelectionChange, onFolderDrop }) {
   const navigate = useNavigate()
@@ -42,6 +57,7 @@ export default function Layout({ children, showFolderPane = false, onFolderSelec
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const [helpOpen, setHelpOpen] = useState(false)
   const [toolsOpen, setToolsOpen] = useState(false)
+  const [sidebarExpanded, setSidebarExpanded] = useState(readSidebarExpanded)
   const [profilePicture, setProfilePicture] = useState(null)
   const [mobileFoldersOpen, setMobileFoldersOpen] = useState(false)
   const userMenuRef = useRef(null)
@@ -92,6 +108,14 @@ export default function Layout({ children, showFolderPane = false, onFolderSelec
     setMobileFoldersOpen(false)
   }, [location.pathname])
 
+  useEffect(() => {
+    try {
+      localStorage.setItem(SIDEBAR_EXPANDED_KEY, String(sidebarExpanded))
+    } catch {
+      /* ignore */
+    }
+  }, [sidebarExpanded])
+
   const handleLogout = () => {
     logout()
     navigate('/login')
@@ -110,6 +134,8 @@ export default function Layout({ children, showFolderPane = false, onFolderSelec
     }
     onFolderDrop?.(payload)
   }
+
+  const toggleSidebar = () => setSidebarExpanded((v) => !v)
 
   const mainItems = [
     { key: 'dashboard', name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
@@ -136,90 +162,182 @@ export default function Layout({ children, showFolderPane = false, onFolderSelec
   const pageTitle =
     [...mainItems, ...toolItems].find((m) => location.pathname.startsWith(m.path))?.name ?? ''
 
+  const toolsActive = toolItems.some((t) => location.pathname.startsWith(t.path))
+
   const RailLink = ({ item }) => {
     const Icon = item.icon
     const isActive = location.pathname === item.path || location.pathname.startsWith(item.path + '/')
     return (
       <Link
         to={item.path}
-        title={item.name}
-        className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${
-          isActive ? 'bg-brand text-white shadow-sm' : 'text-ink-muted hover:bg-white hover:text-ink'
-        }`}
+        title={sidebarExpanded ? undefined : item.name}
+        className={[
+          'rounded-lg flex items-center transition-colors',
+          sidebarExpanded
+            ? 'w-full h-10 px-2.5 gap-2.5 justify-start'
+            : 'w-10 h-10 justify-center',
+          isActive
+            ? 'bg-brand text-white shadow-sm'
+            : 'text-white/70 hover:bg-white/10 hover:text-white',
+        ].join(' ')}
       >
-        <Icon size={18} />
+        <Icon size={18} className="shrink-0" />
+        {sidebarExpanded && (
+          <span className="text-sm font-medium truncate">{item.name}</span>
+        )}
       </Link>
     )
   }
 
   return (
     <div className="flex h-screen bg-surface-muted overflow-hidden">
-      {/* Icon rail */}
-      <aside className="w-14 shrink-0 flex flex-col items-center py-3 gap-1 bg-[#0E2F30] text-white z-30">
-        <Link to="/dashboard" className="mb-2" title="Test Sambil Ngopi">
-          <BrandLogo size="xs" />
-        </Link>
+      {/* Sidebar rail */}
+      <aside
+        className={[
+          'shrink-0 flex flex-col py-3 gap-1 bg-[#0E2F30] text-white z-30 transition-[width] duration-200 ease-out',
+          sidebarExpanded ? 'w-52 px-2' : 'w-14 items-center',
+        ].join(' ')}
+      >
+        <div className={[
+          'flex items-center mb-2',
+          sidebarExpanded ? 'justify-between px-1' : 'flex-col gap-1',
+        ].join(' ')}>
+          <Link
+            to="/dashboard"
+            title="Test Sambil Ngopi"
+            className={['flex items-center gap-2 min-w-0', sidebarExpanded ? '' : ''].join(' ')}
+          >
+            <BrandLogo size="xs" />
+            {sidebarExpanded && (
+              <span className="text-xs font-semibold tracking-wide truncate text-white/90">
+                Test Sambil Ngopi
+              </span>
+            )}
+          </Link>
+          <button
+            type="button"
+            title={sidebarExpanded ? 'Collapse sidebar' : 'Expand sidebar'}
+            aria-label={sidebarExpanded ? 'Collapse sidebar' : 'Expand sidebar'}
+            aria-expanded={sidebarExpanded}
+            onClick={toggleSidebar}
+            className="w-8 h-8 rounded-md flex items-center justify-center text-white/60 hover:bg-white/10 hover:text-white shrink-0"
+          >
+            {sidebarExpanded ? <PanelLeftClose size={16} /> : <PanelLeftOpen size={16} />}
+          </button>
+        </div>
 
-        <nav className="flex-1 flex flex-col items-center gap-1 overflow-y-auto py-1 w-full px-2">
+        <nav className={[
+          'flex-1 flex flex-col gap-1 overflow-y-auto py-1 w-full',
+          sidebarExpanded ? '' : 'items-center px-2',
+        ].join(' ')}>
           {mainItems.map((item) => (
             <RailLink key={item.path} item={item} />
           ))}
 
           {toolItems.length > 0 && (
-            <div className="relative mt-1" ref={toolsRef}>
+            <div className={['relative mt-1', sidebarExpanded ? 'w-full' : ''].join(' ')} ref={toolsRef}>
               <button
                 type="button"
-                title="Tools"
+                title={sidebarExpanded ? undefined : 'Tools'}
                 onClick={() => setToolsOpen((v) => !v)}
-                className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${
-                  toolItems.some((t) => location.pathname.startsWith(t.path))
+                className={[
+                  'rounded-lg flex items-center transition-colors',
+                  sidebarExpanded
+                    ? 'w-full h-10 px-2.5 gap-2.5 justify-start'
+                    : 'w-10 h-10 justify-center',
+                  toolsActive
                     ? 'bg-brand text-white'
-                    : 'text-white/70 hover:bg-white/10 hover:text-white'
-                }`}
+                    : 'text-white/70 hover:bg-white/10 hover:text-white',
+                ].join(' ')}
               >
-                <Wrench size={18} />
+                <Wrench size={18} className="shrink-0" />
+                {sidebarExpanded && (
+                  <>
+                    <span className="text-sm font-medium flex-1 text-left truncate">Tools</span>
+                    <ChevronDown
+                      size={14}
+                      className={`shrink-0 opacity-70 transition-transform ${toolsOpen ? 'rotate-180' : ''}`}
+                    />
+                  </>
+                )}
               </button>
               {toolsOpen && (
-                <div className="absolute left-12 top-0 w-52 rounded-lg border border-surface-border bg-white shadow-xl py-1 z-50">
-                  {toolItems.map((item) => {
-                    const Icon = item.icon
-                    return (
-                      <Link
-                        key={item.path}
-                        to={item.path}
-                        onClick={() => setToolsOpen(false)}
-                        className="flex items-center gap-2 px-3 py-2 text-sm text-ink-muted hover:bg-surface-muted hover:text-ink"
-                      >
-                        <Icon size={14} />
-                        {item.name}
-                      </Link>
-                    )
-                  })}
-                </div>
+                sidebarExpanded ? (
+                  <div className="mt-1 ml-2 pl-2 border-l border-white/15 space-y-0.5 max-h-[min(50vh,18rem)] overflow-y-auto">
+                    {toolItems.map((item) => {
+                      const Icon = item.icon
+                      const isActive =
+                        location.pathname === item.path || location.pathname.startsWith(item.path + '/')
+                      return (
+                        <Link
+                          key={item.path}
+                          to={item.path}
+                          onClick={() => setToolsOpen(false)}
+                          className={[
+                            'flex items-center gap-2 px-2.5 py-2 rounded-md text-sm transition-colors',
+                            isActive
+                              ? 'bg-brand/80 text-white'
+                              : 'text-white/65 hover:bg-white/10 hover:text-white',
+                          ].join(' ')}
+                        >
+                          <Icon size={14} className="shrink-0" />
+                          <span className="truncate">{item.name}</span>
+                        </Link>
+                      )
+                    })}
+                  </div>
+                ) : (
+                  <div className="absolute left-12 top-0 w-52 max-h-[min(70vh,24rem)] overflow-y-auto rounded-lg border border-surface-border bg-white shadow-xl py-1 z-50">
+                    {toolItems.map((item) => {
+                      const Icon = item.icon
+                      return (
+                        <Link
+                          key={item.path}
+                          to={item.path}
+                          onClick={() => setToolsOpen(false)}
+                          className="flex items-center gap-2 px-3 py-2 text-sm text-ink-muted hover:bg-surface-muted hover:text-ink"
+                        >
+                          <Icon size={14} />
+                          {item.name}
+                        </Link>
+                      )
+                    })}
+                  </div>
+                )
               )}
             </div>
           )}
         </nav>
 
-        <div className="flex flex-col items-center gap-1 px-2 pb-1">
+        <div className={[
+          'flex flex-col gap-1 pb-1',
+          sidebarExpanded ? '' : 'items-center px-2',
+        ].join(' ')}>
           <button
             type="button"
-            title="How to use"
+            title={sidebarExpanded ? undefined : 'How to use'}
             onClick={() => setHelpOpen(true)}
-            className="w-10 h-10 rounded-lg flex items-center justify-center text-white/70 hover:bg-white/10 hover:text-white"
+            className={[
+              'rounded-lg flex items-center transition-colors text-white/70 hover:bg-white/10 hover:text-white',
+              sidebarExpanded ? 'w-full h-10 px-2.5 gap-2.5' : 'w-10 h-10 justify-center',
+            ].join(' ')}
           >
-            <HelpCircle size={18} />
+            <HelpCircle size={18} className="shrink-0" />
+            {sidebarExpanded && <span className="text-sm font-medium">How to use</span>}
           </button>
           <Link
             to="/settings"
-            title="Settings"
-            className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+            title={sidebarExpanded ? undefined : 'Settings'}
+            className={[
+              'rounded-lg flex items-center transition-colors',
+              sidebarExpanded ? 'w-full h-10 px-2.5 gap-2.5' : 'w-10 h-10 justify-center',
               location.pathname.startsWith('/settings')
                 ? 'bg-brand text-white'
-                : 'text-white/70 hover:bg-white/10 hover:text-white'
-            }`}
+                : 'text-white/70 hover:bg-white/10 hover:text-white',
+            ].join(' ')}
           >
-            <Settings size={18} />
+            <Settings size={18} className="shrink-0" />
+            {sidebarExpanded && <span className="text-sm font-medium">Settings</span>}
           </Link>
         </div>
       </aside>
@@ -236,9 +354,10 @@ export default function Layout({ children, showFolderPane = false, onFolderSelec
           <aside
             className={[
               'w-64 shrink-0 z-40 bg-surface-sidebar',
-              'fixed inset-y-0 left-14 lg:static lg:translate-x-0',
+              'fixed inset-y-0 lg:static lg:translate-x-0',
+              sidebarExpanded ? 'left-52' : 'left-14',
               mobileFoldersOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
-              'transition-transform duration-200',
+              'transition-[transform,left] duration-200',
             ].join(' ')}
           >
             <ScenarioFolderTree

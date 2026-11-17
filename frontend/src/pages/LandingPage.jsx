@@ -43,8 +43,8 @@ function HeroMockup({ t }) {
         <span className="w-2.5 h-2.5 rounded-full bg-emerald-400/80" />
         <span className="ml-2 text-[10px] sm:text-xs text-teal-100/50 font-mono truncate">testsambilngopi.my.id/dashboard</span>
       </div>
-      <div className="lp-hero-preview__body grid grid-cols-[4.5rem_1fr] sm:grid-cols-[5.5rem_1fr] min-h-[220px] sm:min-h-[260px] bg-white">
-        <div className="bg-[#f7fafa] border-r border-[#d5e0e0] p-2 space-y-1.5 hidden xs:block sm:block">
+      <div className="lp-hero-preview__body grid grid-cols-1 sm:grid-cols-[5.5rem_1fr] min-h-[220px] sm:min-h-[260px] bg-white">
+        <div className="bg-[#f7fafa] border-r border-[#d5e0e0] p-2 space-y-1.5 hidden sm:block">
           {['Dashboard', 'Scenarios', 'Runs'].map((item, i) => (
             <div
               key={item}

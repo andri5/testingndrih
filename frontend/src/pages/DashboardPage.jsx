@@ -307,17 +307,17 @@ export default function DashboardPage() {
             {/* Analytics Section */}
             {analytics && (
               <div className="linear-card p-6 border-l-2 border-l-brand">
-                <div className="flex items-center justify-between mb-5">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-brand-soft flex items-center justify-center">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-5">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-10 h-10 rounded-lg bg-brand-soft flex items-center justify-center shrink-0">
                       <TrendingUp size={18} className="text-brand" />
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <h2 className="text-sm font-semibold text-ink">{t.analyticsSummary}</h2>
                       <p className="text-xs text-ink-muted mt-0.5">{t.last7Days}: {analytics.last7Days?.passRate || 0}% {t.passRate}</p>
                     </div>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     <ExportFormatButton
                       format="json"
                       onClick={() => handleExport('json')}

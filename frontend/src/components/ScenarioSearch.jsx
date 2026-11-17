@@ -65,12 +65,13 @@ export function ScenarioSearch({
         )}
       </div>
 
-      <div className="flex gap-3 flex-wrap items-center">
+      <div className="grid grid-cols-1 sm:flex sm:flex-wrap gap-3 items-stretch sm:items-center">
         <SoftSelect
           value={filterType}
           onChange={handleFilterChange}
           options={FILTER_OPTIONS}
           disabled={isLoading}
+          className="w-full sm:w-auto"
         />
 
         {onFavoritesChange && (
@@ -79,7 +80,7 @@ export function ScenarioSearch({
             icon={Star}
             onClick={() => onFavoritesChange(!favoritesOnly)}
             disabled={isLoading}
-            className={favoritesOnly ? '[&_svg]:fill-current' : ''}
+            className={`w-full sm:w-auto justify-center ${favoritesOnly ? '[&_svg]:fill-current' : ''}`}
           >
             Favorites
           </ExportFormatButton>
@@ -92,6 +93,7 @@ export function ScenarioSearch({
             options={tagOptions}
             disabled={isLoading}
             placeholder="Filter by tag"
+            className="w-full sm:w-auto"
           />
         )}
       </div>

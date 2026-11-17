@@ -487,13 +487,13 @@ export default function ExecutionPage() {
                     <th className="text-left py-3 px-4 font-semibold text-[#A0A0A4]">
                       {t.status}
                     </th>
-                    <th className="text-center py-3 px-4 font-semibold text-[#A0A0A4]">
+                    <th className="text-center py-3 px-4 font-semibold text-[#A0A0A4] hidden sm:table-cell">
                       {t.steps}
                     </th>
-                    <th className="text-center py-3 px-4 font-semibold text-[#A0A0A4]">
+                    <th className="text-center py-3 px-4 font-semibold text-[#A0A0A4] hidden md:table-cell">
                       {t.duration}
                     </th>
-                    <th className="text-left py-3 px-4 font-semibold text-[#A0A0A4]">
+                    <th className="text-left py-3 px-4 font-semibold text-[#A0A0A4] hidden lg:table-cell">
                       {t.date}
                     </th>
                     <th className="text-center py-3 px-4 font-semibold text-[#A0A0A4]">
@@ -518,7 +518,7 @@ export default function ExecutionPage() {
                           title="Select for comparison"
                         />
                       </td>
-                      <td className="py-3 px-4 text-[#E0E0E2]">
+                      <td className="py-3 px-4 text-[#E0E0E2] max-w-[140px] sm:max-w-none truncate">
                         {execution.scenario?.name}
                       </td>
                       <td className="py-3 px-4">
@@ -526,7 +526,7 @@ export default function ExecutionPage() {
                           {getStatusIcon(execution.status)} {execution.status}
                         </Badge>
                       </td>
-                      <td className="py-3 px-4 text-center text-sm">
+                      <td className="py-3 px-4 text-center text-sm hidden sm:table-cell">
                         <span className="text-green-600 font-semibold">
                           {execution.passedSteps}
                         </span>
@@ -535,12 +535,12 @@ export default function ExecutionPage() {
                           {execution.failedSteps}
                         </span>
                       </td>
-                      <td className="py-3 px-4 text-center text-sm text-[#A0A0A4]">
+                      <td className="py-3 px-4 text-center text-sm text-[#A0A0A4] hidden md:table-cell">
                         {execution.duration
                           ? `${(execution.duration / 1000).toFixed(2)}s`
                           : '−'}
                       </td>
-                      <td className="py-3 px-4 text-sm text-[#A0A0A4]">
+                      <td className="py-3 px-4 text-sm text-[#A0A0A4] hidden lg:table-cell">
                         {new Date(execution.createdAt).toLocaleString()}
                       </td>
                       <td className="py-3 px-4 text-center">

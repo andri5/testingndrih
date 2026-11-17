@@ -766,7 +766,7 @@ export default function ScenariosPage() {
               </div>
             )}
 
-            <div className="flex gap-2 shrink-0">
+            <div className="flex flex-wrap gap-2 w-full sm:w-auto">
               {bulkExecuteStatus !== 'running' && (
                 <>
                   <Button
@@ -774,6 +774,7 @@ export default function ScenariosPage() {
                     size="sm"
                     onClick={handleBulkExecute}
                     disabled={bulkExecuteStatus === 'running'}
+                    className="flex-1 sm:flex-none"
                   >
                     ▶ Run Selected ({selectedIds.size})
                   </Button>
