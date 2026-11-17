@@ -1,5 +1,18 @@
 import { useState, useEffect } from 'react'
-import { X, ClipboardList, PlayCircle, Link2, Clock, Zap, ChevronRight, Flame, Gauge, Lock } from 'lucide-react'
+import {
+  X,
+  ClipboardList,
+  PlayCircle,
+  Link2,
+  Clock,
+  Zap,
+  ChevronRight,
+  Flame,
+  Gauge,
+  Lock,
+  Bug,
+  PanelLeft,
+} from 'lucide-react'
 import { useAuthStore } from '../store/authStore'
 
 const ADMIN_HELP_TAB_IDS = new Set(['chain', 'smoke', 'stress', 'security', 'tools'])
@@ -10,15 +23,71 @@ const content = {
     subtitle: 'Get started with Test Sambil Ngopi',
     tabs: [
       {
+        id: 'nav',
+        label: 'Navigation',
+        icon: <PanelLeft size={14} />,
+        steps: [
+          {
+            num: 1,
+            title: 'Sidebar expand / collapse',
+            desc: 'Use the panel button at the top of the left sidebar to expand (icons + labels) or collapse (icons only). Your preference is saved in this browser.',
+            adminOnly: false,
+          },
+          {
+            num: 2,
+            title: 'Main menu & Tools',
+            desc: 'Dashboard, Scenarios, Execution, Environments, Reports, Analytics, and Bugs are in the main list. Extra admin tools live under Tools (wrench icon).',
+            adminOnly: false,
+          },
+          {
+            num: 3,
+            title: 'Folders (Scenarios)',
+            desc: 'On Scenarios, open Folders on mobile or use the folder pane on desktop to organize scenarios. Drag a scenario onto a folder to move it.',
+            adminOnly: false,
+          },
+          {
+            num: 4,
+            title: 'How to use anytime',
+            desc: 'Open this guide anytime from the help icon (or “How to use”) at the bottom of the sidebar.',
+            adminOnly: false,
+          },
+        ],
+      },
+      {
         id: 'scenario',
         label: 'Scenarios',
         icon: <ClipboardList size={14} />,
         steps: [
-          { num: 1, title: 'Create a Scenario', desc: 'Go to Scenarios → click "+ Create Scenario" dropdown. Choose "Create Manual" to fill in name, URL, and description manually.', adminOnly: false },
-          { num: 2, title: 'Add Test Steps', desc: 'Open a scenario → click "+ Add Step". Choose step type: click, fill, navigate, wait, assert, etc.', adminOnly: false },
-          { num: 3, title: 'Use Quick Record', desc: 'Click "+ Create Scenario" → "Quick Record" → enter URL → browser actions are recorded automatically as steps.', adminOnly: true },
-          { num: 4, title: 'Use Templates', desc: 'Click "+ Create Scenario" → "Templates" to load a pre-built scenario (Login, E-Commerce, Navigation, Form).', adminOnly: false },
-          { num: 5, title: 'Import / Clone', desc: 'Import Excel: Click "+ Create Scenario" → "Import Excel" (Ctrl+Click to view template). Clone: Hover a scenario card → use Clone to duplicate.', adminOnly: false },
+          {
+            num: 1,
+            title: 'Create a Scenario',
+            desc: 'Go to Scenarios → Create. Choose Create Manual (name, URL, description), Templates, or Import Excel. Ctrl/Cmd+Click Import Excel to download the template.',
+            adminOnly: false,
+          },
+          {
+            num: 2,
+            title: 'Add or edit steps',
+            desc: 'Open a scenario → Add Step. Types include navigate, click, fill, wait, assert, screenshot, and more. Edit or delete steps from the step list.',
+            adminOnly: false,
+          },
+          {
+            num: 3,
+            title: 'Quick Record',
+            desc: 'Create → Quick Record → enter URL → interact in the target window. Live steps appear in the modal; Stop & Save when done.',
+            adminOnly: true,
+          },
+          {
+            num: 4,
+            title: 'Record on scenario page',
+            desc: 'Open an existing scenario → Record to capture steps on the real site (works well for public URLs; internal/VPN from your own PC).',
+            adminOnly: false,
+          },
+          {
+            num: 5,
+            title: 'Organize',
+            desc: 'Use folders, tags, favorites, search, and Move… / bulk actions. On mobile, use the ⋯ menu on each row for Open, Edit, Duplicate, Move, Delete.',
+            adminOnly: false,
+          },
         ],
       },
       {
@@ -26,10 +95,58 @@ const content = {
         label: 'Execution',
         icon: <PlayCircle size={14} />,
         steps: [
-          { num: 1, title: 'Run a Scenario', desc: 'Open a scenario → click "Run". A Browser Runner window opens and shows the live Playwright page.' },
-          { num: 2, title: 'Watch & Control', desc: 'In Browser Runner use Pause / Resume / Stop while the test runs. Step list updates on the side.' },
-          { num: 3, title: 'View History', desc: 'Go to Execution page to see all past runs, filter by status, and download reports.' },
-          { num: 4, title: 'Bulk Execute', desc: 'On the Scenarios page, select multiple scenarios → click "Run Selected" to execute in batch.' },
+          {
+            num: 1,
+            title: 'Run a Scenario',
+            desc: 'Open a scenario → Run. Browser Runner shows the live Playwright page. Use Pause / Resume / Stop while it runs.',
+          },
+          {
+            num: 2,
+            title: 'Public vs internal URLs',
+            desc: 'Cloud Run works for public URLs. For LAN/VPN staging (e.g. 10.x), use a local backend on the same network or Queue local agent on a VPN PC (Settings → API Tokens).',
+          },
+          {
+            num: 3,
+            title: 'History & compare',
+            desc: 'Execution page lists past runs. Filter by status, open reports, and select two runs to compare side by side.',
+          },
+          {
+            num: 4,
+            title: 'Bulk Execute',
+            desc: 'On Scenarios, select multiple rows → Run Selected to execute sequentially (headless). Use Move… for bulk folder moves.',
+          },
+          {
+            num: 5,
+            title: 'Failed steps',
+            desc: 'Failed steps show diagnosis tips and DOM-based locator suggestions. Apply a suggested selector and retry when available.',
+          },
+        ],
+      },
+      {
+        id: 'bugs',
+        label: 'Bugs',
+        icon: <Bug size={14} />,
+        steps: [
+          {
+            num: 1,
+            title: 'Auto bugs from failed runs',
+            desc: 'When a run fails, issues can be created automatically and linked to the scenario/execution (with step screenshots when available).',
+          },
+          {
+            num: 2,
+            title: 'Manual bugs',
+            desc: 'On Bugs, create a manual issue for findings even when a run passed. Attach images or files to document the problem.',
+          },
+          {
+            num: 3,
+            title: 'Share with developers',
+            desc: 'Open a bug → Share to create a public link (no login). The shared page includes details, screenshots, and attachments.',
+          },
+          {
+            num: 4,
+            title: 'Track status',
+            desc: 'Update status (Open / In progress / Resolved) and filter the bug list so QA and developers stay aligned.',
+          },
         ],
       },
       {
@@ -37,10 +154,10 @@ const content = {
         label: 'Chains',
         icon: <Link2 size={14} />,
         steps: [
-          { num: 1, title: 'Create a Chain', desc: 'Go to Chains → click "+ New Chain". A chain groups multiple scenarios into one sequential run.' },
-          { num: 2, title: 'Add Scenarios', desc: 'Open a chain → add scenarios as steps. Set order with the up/down arrows.' },
-          { num: 3, title: 'Configure Steps', desc: 'Click Edit on a chain step to set wait time, retry count, and stop-on-fail behavior.' },
-          { num: 4, title: 'Execute Chain', desc: 'Click "Execute Chain" to run all scenarios in order. View results per scenario.' },
+          { num: 1, title: 'Create a Chain', desc: 'Go to Chains → New Chain. A chain groups multiple scenarios into one sequential run.' },
+          { num: 2, title: 'Add Scenarios', desc: 'Open a chain → add scenarios as steps. Reorder with the up/down controls.' },
+          { num: 3, title: 'Configure Steps', desc: 'Edit a chain step to set wait time, retry count, and stop-on-fail.' },
+          { num: 4, title: 'Execute Chain', desc: 'Execute Chain runs all scenarios in order. Review results per scenario in history.' },
         ],
       },
       {
@@ -48,11 +165,10 @@ const content = {
         label: 'Smoke Test',
         icon: <Flame size={14} />,
         steps: [
-          { num: 1, title: 'Mark for Smoke Testing', desc: 'Go to Scenarios → select scenarios you want to test → mark them for smoke testing. These become quick validation tests.' },
-          { num: 2, title: 'View Summary', desc: 'Smoke Test page shows total tests, pass rate, and average execution duration. Real-time metrics update after each run.' },
-          { num: 3, title: 'Run Single Test', desc: 'Select a scenario from the list → click "Run" to execute that smoke test and see live results.' },
-          { num: 4, title: 'Run All Tests', desc: 'Click the "Run All Smoke Tests" button to execute all marked scenarios at once.' },
-          { num: 5, title: 'View History', desc: 'Check test history on the right sidebar. View past runs, results, timestamps, and detailed logs.' },
+          { num: 1, title: 'Mark for Smoke Testing', desc: 'Mark scenarios for smoke testing so they act as quick validation checks.' },
+          { num: 2, title: 'View Summary', desc: 'Smoke Test shows totals, pass rate, and average duration. Metrics update after each run.' },
+          { num: 3, title: 'Run Single or All', desc: 'Run one smoke scenario, or Run All Smoke Tests to execute every marked scenario.' },
+          { num: 4, title: 'View History', desc: 'Check history for past runs, timestamps, and detailed logs.' },
         ],
       },
       {
@@ -60,11 +176,10 @@ const content = {
         label: 'Stress Test',
         icon: <Gauge size={14} />,
         steps: [
-          { num: 1, title: 'Mark for Stress Testing', desc: 'Go to Scenarios → select scenarios → mark them for stress testing. These measure system performance under load.' },
-          { num: 2, title: 'Choose Load Profile', desc: 'Stress Test supports 4 profiles: Light (2x3), Medium (5x5), Heavy (10x10), Extreme (20x20) concurrent users.' },
-          { num: 3, title: 'View Performance Metrics', desc: 'Summary shows total tests, pass rate, average response time (ms), and throughput (executions/sec).' },
-          { num: 4, title: 'Run Single Scenario', desc: 'Select a scenario → click "Run" to stress test that scenario with the default light profile.' },
-          { num: 5, title: 'Run All Scenarios', desc: 'Click the "Run All" button with play icon to run stress tests on all scenarios with light profile.' },
+          { num: 1, title: 'Mark for Stress Testing', desc: 'Mark scenarios for stress testing to measure performance under load.' },
+          { num: 2, title: 'Choose Load Profile', desc: 'Profiles: Light (2×3), Medium (5×5), Heavy (10×10), Extreme (20×20) concurrent users.' },
+          { num: 3, title: 'Metrics', desc: 'Summary shows pass rate, average response time (ms), and throughput (executions/sec).' },
+          { num: 4, title: 'Run', desc: 'Run a single scenario or Run All with the selected profile.' },
         ],
       },
       {
@@ -72,11 +187,9 @@ const content = {
         label: 'Security Test',
         icon: <Lock size={14} />,
         steps: [
-          { num: 1, title: 'Mark for Security Testing', desc: 'Go to Scenarios → mark scenarios for security testing to scan for vulnerabilities.' },
-          { num: 2, title: 'Choose Scan Type', desc: '3 scan types available: Full Scan (comprehensive), Quick Scan (fast), Custom (select specific checks).' },
-          { num: 3, title: 'View Vulnerability Summary', desc: 'Shows total scans, avg risk score, count of critical/high/medium+low severity vulnerabilities.' },
-          { num: 4, title: 'Start a Scan', desc: 'Select a scenario → choose scan type → click "Start Security Scan". View findings as they are discovered.' },
-          { num: 5, title: 'Review Findings', desc: 'Filter findings by severity. Each finding shows vulnerability type, location, CVSS score, and remediation steps.' },
+          { num: 1, title: 'Mark for Security Testing', desc: 'Mark scenarios for security scans to look for common web vulnerabilities.' },
+          { num: 2, title: 'Choose Scan Type', desc: 'Full Scan, Quick Scan, or Custom (pick specific checks).' },
+          { num: 3, title: 'Review Findings', desc: 'Filter by severity. Each finding shows type, location, risk, and remediation hints.' },
         ],
       },
       {
@@ -84,11 +197,12 @@ const content = {
         label: 'Tools',
         icon: <Zap size={14} />,
         steps: [
-          { num: 1, title: 'Scheduler', desc: 'Go to Scheduler → set a cron schedule to run a scenario automatically at a specific time.' },
-          { num: 2, title: 'Parallel Execution', desc: 'Run multiple scenarios simultaneously. Useful for regression testing across many tests.' },
-          { num: 3, title: 'Browser Matrix', desc: 'Test one scenario across Chrome, Firefox, and Safari at the same time to catch browser-specific bugs.' },
-          { num: 4, title: 'Analytics', desc: 'View pass/fail trends, execution time charts, and most-failed steps on the Analytics page.' },
-          { num: 5, title: 'Reports', desc: 'Download test results as PDF or CSV from the Reports page for sharing with your team.' },
+          { num: 1, title: 'Scheduler', desc: 'Scheduler → set a cron schedule to run a scenario automatically.' },
+          { num: 2, title: 'Parallel Execution', desc: 'Run multiple scenarios at once — useful for broader regression suites.' },
+          { num: 3, title: 'Browser Matrix', desc: 'Run one scenario across Chromium, Firefox, and WebKit to catch browser-specific issues.' },
+          { num: 4, title: 'Analytics', desc: 'Analytics shows pass/fail distribution (pie) and related execution insights.' },
+          { num: 5, title: 'Reports', desc: 'Reports → export results as Excel (and other formats where available) for sharing with the team.' },
+          { num: 6, title: 'Environments', desc: 'Define variables per environment (dev/staging/prod) and use {{var}} substitution in steps.' },
         ],
       },
       {
@@ -96,9 +210,11 @@ const content = {
         label: 'Tips',
         icon: <Clock size={14} />,
         steps: [
-          { num: 1, title: 'Tooltips', desc: 'Hover any action button (View, Edit, Clone, Delete) to see a quick description of what it does.' },
-          { num: 2, title: 'Headless Mode', desc: 'Enable Headless in browser selector for faster execution without opening a visible browser window.' },
-          { num: 3, title: 'Export Reports', desc: 'Use Export buttons on Smoke/Stress/Security pages to download test results as PDF or Excel for analysis.' },
+          { num: 1, title: 'Tooltips', desc: 'Hover action buttons (or long-press on some mobile UIs) for a short description.' },
+          { num: 2, title: 'Headless Mode', desc: 'Enable Headless in the browser selector for faster runs without a visible window.' },
+          { num: 3, title: 'Export', desc: 'Use Export on Dashboard, Reports, Smoke/Stress/Security where available (JSON, CSV, Excel, PDF depending on the page).' },
+          { num: 4, title: 'Mobile layout', desc: 'On phones, use the hamburger on the marketing site and ⋯ menus / stacked actions inside the app. Expand the sidebar when you need labels.' },
+          { num: 5, title: 'Internal staging', desc: 'If Run fails with a private network error, switch to local backend or Queue local agent while FortiClient/VPN is connected.' },
         ],
       },
     ],
@@ -111,42 +227,42 @@ export default function HelpModal({ onClose }) {
   const visibleTabs = isAdmin
     ? c.tabs
     : c.tabs.filter((tab) => !ADMIN_HELP_TAB_IDS.has(tab.id))
-  const [activeTab, setActiveTab] = useState('scenario')
+  const [activeTab, setActiveTab] = useState('nav')
 
   useEffect(() => {
     if (!visibleTabs.some((tab) => tab.id === activeTab)) {
-      setActiveTab(visibleTabs[0]?.id ?? 'scenario')
+      setActiveTab(visibleTabs[0]?.id ?? 'nav')
     }
   }, [activeTab, visibleTabs])
 
-  const activeTabData = visibleTabs.find(t => t.id === activeTab) ?? visibleTabs[0]
+  const activeTabData = visibleTabs.find((t) => t.id === activeTab) ?? visibleTabs[0]
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4" onClick={onClose}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
       <div
-        className="relative w-full max-w-xl rounded-xl shadow-2xl overflow-hidden help-modal"
-        onClick={e => e.stopPropagation()}
+        className="relative w-full max-w-xl max-h-[90dvh] flex flex-col rounded-xl shadow-2xl overflow-hidden help-modal"
+        onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
-        <div className="flex items-start justify-between px-5 pt-5 pb-4 help-modal-header">
-          <div>
+        <div className="flex items-start justify-between px-4 sm:px-5 pt-5 pb-4 help-modal-header shrink-0">
+          <div className="min-w-0 pr-2">
             <h2 className="text-base font-semibold help-modal-title">{c.title}</h2>
             <p className="text-xs help-modal-subtitle mt-0.5">{c.subtitle}</p>
           </div>
           <button
+            type="button"
             onClick={onClose}
-            className="w-7 h-7 flex items-center justify-center rounded-md help-modal-close transition-colors"
+            className="w-7 h-7 flex items-center justify-center rounded-md help-modal-close transition-colors shrink-0"
           >
             <X size={15} />
           </button>
         </div>
 
-        {/* Tabs */}
-        <div className="flex gap-1 px-5 pb-0 pt-1 help-modal-tabs-bar overflow-x-auto">
-          {visibleTabs.map(tab => (
+        <div className="flex gap-1 px-4 sm:px-5 pb-0 pt-1 help-modal-tabs-bar overflow-x-auto shrink-0">
+          {visibleTabs.map((tab) => (
             <button
               key={tab.id}
+              type="button"
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition-all
                 ${activeTab === tab.id ? 'help-tab-active' : 'help-tab-inactive'}`}
@@ -157,31 +273,30 @@ export default function HelpModal({ onClose }) {
           ))}
         </div>
 
-        {/* Steps */}
-        <div className="px-5 py-4 space-y-3 max-h-80 overflow-y-auto help-modal-body">
+        <div className="px-4 sm:px-5 py-4 space-y-3 overflow-y-auto flex-1 min-h-0 help-modal-body">
           {(activeTabData?.steps || [])
             .filter((step) => isAdmin || !step.adminOnly)
             .map((step, idx) => (
-            <div key={step.num} className="flex gap-3">
-              <div className="shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold help-step-num">
-                {idx + 1}
+              <div key={step.num} className="flex gap-3">
+                <div className="shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold help-step-num">
+                  {idx + 1}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium help-step-title leading-snug">{step.title}</p>
+                  <p className="text-xs help-step-desc mt-0.5 leading-relaxed">{step.desc}</p>
+                </div>
               </div>
-              <div className="min-w-0">
-                <p className="text-sm font-medium help-step-title leading-snug">{step.title}</p>
-                <p className="text-xs help-step-desc mt-0.5 leading-relaxed">{step.desc}</p>
-              </div>
-            </div>
-          ))}
+            ))}
         </div>
 
-        {/* Footer */}
-        <div className="px-5 py-3 flex items-center justify-between help-modal-footer">
-          <p className="text-[11px] help-footer-text">
-            Hover buttons for quick inline tooltips.
+        <div className="px-4 sm:px-5 py-3 flex items-center justify-between gap-3 help-modal-footer shrink-0">
+          <p className="text-[11px] help-footer-text min-w-0">
+            Tip: expand the sidebar when you need menu labels.
           </p>
           <button
+            type="button"
             onClick={onClose}
-            className="flex items-center gap-1 text-xs font-medium help-footer-btn transition-colors"
+            className="flex items-center gap-1 text-xs font-medium help-footer-btn transition-colors shrink-0"
           >
             Got it
             <ChevronRight size={12} />

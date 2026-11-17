@@ -32,6 +32,11 @@ export const welcomeSplashContent = {
       title: 'Run the right way',
       desc: 'Public URLs: Run in the cloud. Internal/VPN staging: local backend or Queue local agent.',
     },
+    {
+      emoji: '4',
+      title: 'Find your way around',
+      desc: 'Expand/collapse the left sidebar for labels. Open How to use anytime from the sidebar help icon.',
+    },
   ],
   ctaPrimary: 'Create my first scenario',
   ctaSecondary: 'Explore dashboard',
