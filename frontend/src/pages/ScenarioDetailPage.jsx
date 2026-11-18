@@ -80,82 +80,80 @@ const i18n = {
     scenarioNotFound: 'Scenario not found',
     backToScenarios: '← Back to Scenarios',
     running: 'Running...',
-    runScenario: 'Run Scenario',
+    runScenario: 'Jalankan',
+    runOnThisPc: 'Jalankan di PC ini',
     liveRunIsolatedHint:
-      'Live run memakai browser terisolasi (seperti Incognito: tanpa cookie/storage dari run sebelumnya).',
+      'Run memakai browser bersih (tanpa cookie dari run sebelumnya).',
     stopRecording: 'Stop',
-    recordingActive: 'Recording Active...',
-    recordingMode: 'Recording Mode',
-    startRecordingHint:
-      'Pilih mode rekam di bawah. “Situs asli” menampilkan halaman seperti browser biasa (disarankan). Proxy lebih cepat tanpa inject, tapi tampilan SPA sering rusak.',
-    urlTarget: 'Target URL',
-    openingBrowser: 'Opening Browser...',
-    startRecording: '🔴 Start Recording',
-    recordingOverviewDirectTitle: 'Situs asli (disarankan)',
+    recordingActive: 'Sedang merekam…',
+    recordingMode: 'Rekam skenario',
+    startRecordingHint: 'Masukkan URL, lalu Rekam. Interaksi di tab target akan jadi step.',
+    urlTarget: 'URL target',
+    openingBrowser: 'Membuka browser…',
+    startRecording: 'Rekam',
+    recordingOverviewDirectTitle: 'Situs asli (default)',
     recordingOverviewDirectBody:
-      'Buka website real di tab baru, lalu pasang recorder (salin script inline → Console). Tampilan & selector mirip saat Play.',
+      'Buka website asli di tab baru. Cocok untuk hampir semua kasus, termasuk target internal.',
     recordingOverviewDirectCsp:
-      'Situs dengan keamanan ketat: salin script INLINE dari halaman panduan. Di Console Chrome, jika muncul “allow pasting”, ketik allow pasting dulu lalu Enter. Jangan tutup tab panduan (jembatan step).',
+      'Kalau situs memblokir recorder otomatis: ikuti tombol di halaman panduan (salin script → Console).',
     recordingOverviewProxyTitle: 'Lewat proxy app',
     recordingOverviewProxyBody:
-      'Satu tab di domain Test Sambil Ngopi. Tidak perlu inject manual, tetapi gambar/layout Next.js sering tidak lengkap.',
+      'Satu tab di domain aplikasi. Lebih cepat, tapi tampilan beberapa situs bisa kurang lengkap.',
     recordingOverviewProxyWarn:
-      'Peringatan: tampilan proxy bisa berbeda dari web asli → risiko selector rapuh saat Play.',
-    recordingOverviewInternalBadge: 'Jaringan internal / VPN',
-    recordingOverviewPublicBadge: 'Situs publik',
+      'Tampilan proxy bisa berbeda dari web asli → selector kadang rapuh saat Play.',
     recordingOverviewInternalLock:
-      'Target terdeteksi internal/VPN. Proxy server tidak bisa dipakai — mode dikunci ke situs asli.',
-    recordingOverviewProbing: 'Mendeteksi jenis target…',
-    recordingOverviewSelectMode: 'Mode rekam',
-    stepsRecorded: (c) => `${c} step${c !== 1 ? 's' : ''} recorded`,
-    interactionHint: '— interact in the recording tab...',
-    waitingForInteraction: 'Waiting for interactions... Click, fill forms, or navigate in the recording tab.',
-    saving: 'Saving...',
-    saveSteps: (c) => `💾 Save ${c} Steps`,
-    discard: 'Discard',
-    deleting: 'Deleting...',
-    deleteSelectedSteps: (c) => `Delete ${c}`,
-    copySteps: 'Copy',
-    copySelectedSteps: (c) => `Copy ${c}`,
-    deleteSteps: 'Delete',
-    copying: 'Copying...',
-    stepsCopied: (c) => `${c} step${c !== 1 ? 's' : ''} copied`,
-    copyStepsError: 'Failed to copy steps',
-    addStep: 'Add Step',
+      'Target internal: mode dikunci ke situs asli (proxy cloud tidak dipakai).',
+    recordingOverviewSelectMode: 'Mode rekam lanjutan',
+    recordingAdvanced: 'Advanced',
+    recordingAdvancedHide: 'Sembunyikan advanced',
+    stepsRecorded: (c) => `${c} step${c !== 1 ? 's' : ''} terekam`,
+    interactionHint: '— interaksi di tab target…',
+    waitingForInteraction: 'Menunggu interaksi di tab rekaman…',
+    saving: 'Menyimpan…',
+    saveSteps: (c) => `Simpan ${c} step`,
+    discard: 'Buang',
+    deleting: 'Menghapus…',
+    deleteSelectedSteps: (c) => `Hapus ${c}`,
+    copySteps: 'Salin',
+    copySelectedSteps: (c) => `Salin ${c}`,
+    deleteSteps: 'Hapus',
+    copying: 'Menyalin…',
+    stepsCopied: (c) => `${c} step disalin`,
+    copyStepsError: 'Gagal menyalin step',
+    addStep: 'Tambah Step',
     editStep: 'Edit Step',
-    addNewStep: 'Add New Step',
-    stepDescriptionPlaceholder: 'Step description',
-    saveStepBtn: 'Save Step',
+    addNewStep: 'Tambah Step Baru',
+    stepDescriptionPlaceholder: 'Deskripsi step',
+    saveStepBtn: 'Simpan Step',
     updateStepBtn: 'Update Step',
-    cancel: 'Cancel',
-    executionResults: 'Execution Results',
-    shareRun: 'Share',
-    shareRunHint: 'Create a read-only link for this run',
-    passed: 'Passed',
-    failed: 'Failed',
-    duration: 'Duration',
-    fixing: 'Fixing...',
-    autoRetryError: 'Auto-retry failed',
+    cancel: 'Batal',
+    executionResults: 'Hasil eksekusi',
+    shareRun: 'Bagikan',
+    shareRunHint: 'Buat link baca-saja untuk run ini',
+    passed: 'Lulus',
+    failed: 'Gagal',
+    duration: 'Durasi',
+    fixing: 'Memperbaiki…',
+    autoRetryError: 'Auto-retry gagal',
     hints: {
-      NAVIGATE: '💡 Enter the target URL in the Value field',
-      CLICK: '💡 Enter the CSS selector or XPath of the element to click',
-      FILL: '💡 Enter the CSS selector or XPath of the input and the text to type',
-      SCREENSHOT: '💡 Will take a screenshot of the current page',
-      WAIT: '💡 Enter wait time in milliseconds (e.g., 1000 = 1 second)',
-      ASSERTION: '💡 Verify element exists on page, with optional text check',
-      API_CALL: '💡 Enter the endpoint URL and configuration in metadata (JSON)',
+      NAVIGATE: '💡 Isi URL di field Value',
+      CLICK: '💡 Isi CSS selector atau XPath elemen yang diklik',
+      FILL: '💡 Isi selector input dan teks yang diketik',
+      SCREENSHOT: '💡 Ambil screenshot halaman saat ini',
+      WAIT: '💡 Isi waktu tunggu dalam ms (1000 = 1 detik)',
+      ASSERTION: '💡 Pastikan elemen ada di halaman, opsional cek teks',
+      API_CALL: '💡 Isi endpoint URL dan metadata (JSON)',
     },
-    goBackToScenarios: 'Back to Scenarios',
+    goBackToScenarios: 'Kembali ke Scenarios',
     fieldType: 'Type',
     fieldDescription: 'Description',
     fieldSelector: 'Selector',
-    selectorHelpTooltip: 'How to find a selector:\n1. Right-click the element → Inspect\n2. Has id? Use #id (e.g. #search)\n3. Or right-click the HTML tag → Copy → Copy XPath',
-    selectorHelpShort: 'Tip: Inspect the element in your browser, then use #id or Copy XPath.',
+    selectorHelpTooltip: 'Cara dapat selector:\n1. Klik kanan elemen → Inspect\n2. Ada id? Pakai #id\n3. Atau Copy → Copy XPath',
+    selectorHelpShort: 'Tip: Inspect elemen di browser, lalu pakai #id atau Copy XPath.',
     fieldValue: 'Value',
     fieldMetadata: 'Metadata (JSON)',
-    required: 'required',
-    closeDialog: 'Close dialog',
-  
+    required: 'wajib',
+    closeDialog: 'Tutup',
 }
 
 const STEP_TYPES = [
@@ -223,6 +221,7 @@ export default function ScenarioDetailPage() {
   const [isSavingRecording, setIsSavingRecording] = useState(false)
   const [showRecordingPanel, setShowRecordingPanel] = useState(false)
   const [recordingModeChoice, setRecordingModeChoice] = useState('client-direct')
+  const [showRecordAdvanced, setShowRecordAdvanced] = useState(false)
   const [targetKind, setTargetKind] = useState(null) // 'public' | 'internal' | null
   const [targetInfoMessage, setTargetInfoMessage] = useState('')
   const [targetAddresses, setTargetAddresses] = useState([])
@@ -704,14 +703,25 @@ export default function ScenarioDetailPage() {
     }
   }
 
+  const needsLocalRun = targetKind === 'internal' && executionBlocked
+  const agentBusy = agentJob?.status === 'QUEUED' || agentJob?.status === 'CLAIMED'
+
+  const handlePrimaryRun = async () => {
+    if (needsLocalRun) {
+      await handleQueueLocalAgent()
+      return
+    }
+    await handleExecute()
+  }
+
   const handleExecute = async () => {
     if (steps.length === 0) {
       setError(t.addStepFirst)
       return
     }
 
-    // P0: hard-block when server reports cloud Run cannot reach private targets
-    if (targetKind === 'internal' && executionBlocked) {
+    // Cloud cannot reach private targets — primary CTA should use local agent instead
+    if (needsLocalRun) {
       setError(t.runBlockedInternal)
       return
     }
@@ -1274,26 +1284,27 @@ export default function ScenarioDetailPage() {
 
             <ExportFormatButton
               format="csv"
-              icon={isExecuting ? Loader2 : Play}
-              onClick={handleExecute}
-              disabled={isExecuting || steps.length === 0 || isRecording || (targetKind === 'internal' && executionBlocked)}
-              className={isExecuting ? '[&_svg]:animate-spin' : ''}
+              icon={isExecuting || isQueueingAgent ? Loader2 : (needsLocalRun ? Zap : Play)}
+              onClick={handlePrimaryRun}
+              disabled={
+                isExecuting ||
+                isQueueingAgent ||
+                steps.length === 0 ||
+                isRecording ||
+                (needsLocalRun && agentBusy)
+              }
+              className={isExecuting || isQueueingAgent ? '[&_svg]:animate-spin' : ''}
             >
-              {isExecuting ? t.running : t.runScenario}
+              {isExecuting || isQueueingAgent
+                ? t.running
+                : needsLocalRun
+                  ? t.runOnThisPc
+                  : t.runScenario}
             </ExportFormatButton>
-            {targetKind === 'internal' && (
-              <ExportFormatButton
-                format="json"
-                icon={isQueueingAgent ? Loader2 : Zap}
-                onClick={handleQueueLocalAgent}
-                disabled={steps.length === 0 || isRecording || isExecuting || isQueueingAgent || agentJob?.status === 'QUEUED' || agentJob?.status === 'CLAIMED'}
-                className={isQueueingAgent ? '[&_svg]:animate-spin' : ''}
-              >
-                {t.queueLocalAgent}
-              </ExportFormatButton>
-            )}
-            <p className="text-xs text-[#888] basis-full max-w-xs sm:text-right">
-              {t.liveRunIsolatedHint}
+            <p className="text-xs text-ink-muted basis-full max-w-sm sm:text-right">
+              {needsLocalRun
+                ? 'Butuh PC di VPN/LAN yang sama (local agent).'
+                : t.liveRunIsolatedHint}
             </p>
           </div>
         </div>
@@ -1301,6 +1312,7 @@ export default function ScenarioDetailPage() {
         {(targetKind || isProbingTarget) && (
           <div className="w-full max-w-4xl">
             <TargetKindBanner
+              variant="compact"
               targetKind={targetKind}
               executionBlocked={executionBlocked}
               isProbing={isProbingTarget}
@@ -1389,21 +1401,21 @@ export default function ScenarioDetailPage() {
         {showRecordingPanel && (
           <Card>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-[#E0E0E2] flex items-center gap-2">
+              <h2 className="text-xl font-bold text-ink flex items-center gap-2">
                 {isRecording && <span className="inline-block w-3 h-3 bg-red-500 rounded-full animate-pulse" />}
-                🎬 {isRecording ? t.recordingActive : t.recordingMode}
+                {isRecording ? t.recordingActive : t.recordingMode}
               </h2>
               {!isRecording && recordingSteps.length === 0 && (
                 <button
                   onClick={() => setShowRecordingPanel(false)}
-                  className="text-[#666] hover:text-[#E0E0E2] text-xl leading-none"
+                  className="text-ink-muted hover:text-ink text-xl leading-none"
                 >
                   ✕
                 </button>
               )}
             </div>
 
-            {/* Start recording controls */}
+            {/* Start recording controls — simple primary path */}
             {!isRecording && recordingSteps.length === 0 && (
               <div className="space-y-4">
                 <p className="text-ink-muted text-sm leading-relaxed">
@@ -1427,86 +1439,99 @@ export default function ScenarioDetailPage() {
                     disabled={isStartingRecording}
                     className={isStartingRecording ? '[&_svg]:animate-spin' : ''}
                   >
-                    {isStartingRecording ? t.openingBrowser : 'Start Recording'}
+                    {isStartingRecording ? t.openingBrowser : t.startRecording}
                   </ExportFormatButton>
                 </div>
 
+                {(targetKind || isProbingTarget) && (
+                  <TargetKindBanner
+                    variant="compact"
+                    targetKind={targetKind}
+                    executionBlocked={executionBlocked}
+                    isProbing={isProbingTarget}
+                    message={targetInfoMessage}
+                    addresses={targetAddresses}
+                    url={(recordingUrl.trim() || scenario?.url || '').trim()}
+                    labels={defaultTargetKindLabels}
+                  />
+                )}
+
                 <div>
-                  {(targetKind || isProbingTarget) && (
-                    <div className="mb-3 w-full max-w-full overflow-hidden">
-                      <TargetKindBanner
-                        targetKind={targetKind}
-                        executionBlocked={executionBlocked}
-                        isProbing={isProbingTarget}
-                        message={targetInfoMessage}
-                        addresses={targetAddresses}
-                        url={(recordingUrl.trim() || scenario?.url || '').trim()}
-                        labels={defaultTargetKindLabels}
-                      />
+                  <button
+                    type="button"
+                    onClick={() => setShowRecordAdvanced((v) => !v)}
+                    className="text-xs font-semibold text-ink-muted hover:text-ink inline-flex items-center gap-1"
+                  >
+                    <ChevronDown
+                      size={14}
+                      className={`transition-transform ${showRecordAdvanced ? 'rotate-180' : ''}`}
+                    />
+                    {showRecordAdvanced ? t.recordingAdvancedHide : t.recordingAdvanced}
+                  </button>
+
+                  {showRecordAdvanced && (
+                    <div className="mt-3 space-y-3 rounded-lg border border-surface-border bg-surface-muted/40 p-3">
+                      {targetKind === 'internal' && (
+                        <p className="text-xs font-medium text-amber-900 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 leading-relaxed">
+                          {t.recordingOverviewInternalLock}
+                        </p>
+                      )}
+                      <p className="text-xs font-medium text-ink-muted">{t.recordingOverviewSelectMode}</p>
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <button
+                          type="button"
+                          onClick={() => setRecordingModeChoice('client-direct')}
+                          className={`text-left rounded-lg border p-3 transition ${
+                            recordingModeChoice === 'client-direct'
+                              ? 'border-brand bg-brand-soft'
+                              : 'border-surface-border bg-white hover:border-brand/40'
+                          }`}
+                        >
+                          <div className="text-sm font-semibold text-ink mb-1">
+                            {t.recordingOverviewDirectTitle}
+                          </div>
+                          <p className="text-xs text-ink-muted leading-relaxed">
+                            {t.recordingOverviewDirectBody}
+                          </p>
+                          <p className="text-xs text-teal-800 mt-2 leading-relaxed font-medium">
+                            {t.recordingOverviewDirectCsp}
+                          </p>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (targetKind === 'internal') return
+                            setRecordingModeChoice('proxy')
+                          }}
+                          disabled={targetKind === 'internal'}
+                          className={`text-left rounded-lg border p-3 transition ${
+                            targetKind === 'internal'
+                              ? 'border-surface-border bg-surface-muted cursor-not-allowed'
+                              : recordingModeChoice === 'proxy'
+                                ? 'border-brand bg-brand-soft'
+                                : 'border-surface-border bg-white hover:border-brand/40'
+                          }`}
+                        >
+                          <div className={`text-sm font-semibold mb-1 ${
+                            targetKind === 'internal' ? 'text-ink-muted' : 'text-ink'
+                          }`}>
+                            {t.recordingOverviewProxyTitle}
+                          </div>
+                          <p className={`text-xs leading-relaxed ${
+                            targetKind === 'internal' ? 'text-ink-subtle' : 'text-ink-muted'
+                          }`}>
+                            {t.recordingOverviewProxyBody}
+                          </p>
+                          <p className={`text-xs mt-2 leading-relaxed font-medium ${
+                            targetKind === 'internal' ? 'text-amber-800/80' : 'text-amber-900'
+                          }`}>
+                            {t.recordingOverviewProxyWarn}
+                          </p>
+                        </button>
+                      </div>
                     </div>
                   )}
-                  {targetKind === 'internal' && (
-                    <p className="text-xs font-medium text-amber-900 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-3 leading-relaxed">
-                      {t.recordingOverviewInternalLock}
-                    </p>
-                  )}
-                  <div className="flex flex-wrap items-center gap-2 mb-2">
-                    <span className="text-sm font-medium text-ink-muted">{t.recordingOverviewSelectMode}</span>
-                  </div>
-
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <button
-                      type="button"
-                      onClick={() => setRecordingModeChoice('client-direct')}
-                      className={`text-left rounded-lg border p-3 transition ${
-                        recordingModeChoice === 'client-direct'
-                          ? 'border-brand bg-brand-soft'
-                          : 'border-surface-border bg-white hover:border-brand/40'
-                      }`}
-                    >
-                      <div className="text-sm font-semibold text-ink mb-1">
-                        {t.recordingOverviewDirectTitle}
-                      </div>
-                      <p className="text-xs text-ink-muted leading-relaxed">
-                        {t.recordingOverviewDirectBody}
-                      </p>
-                      <p className="text-xs text-teal-800 mt-2 leading-relaxed font-medium">
-                        {t.recordingOverviewDirectCsp}
-                      </p>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (targetKind === 'internal') return
-                        setRecordingModeChoice('proxy')
-                      }}
-                      disabled={targetKind === 'internal'}
-                      className={`text-left rounded-lg border p-3 transition ${
-                        targetKind === 'internal'
-                          ? 'border-surface-border bg-surface-muted cursor-not-allowed'
-                          : recordingModeChoice === 'proxy'
-                            ? 'border-brand bg-brand-soft'
-                            : 'border-surface-border bg-white hover:border-brand/40'
-                      }`}
-                    >
-                      <div className={`text-sm font-semibold mb-1 ${
-                        targetKind === 'internal' ? 'text-ink-muted' : 'text-ink'
-                      }`}>
-                        {t.recordingOverviewProxyTitle}
-                      </div>
-                      <p className={`text-xs leading-relaxed ${
-                        targetKind === 'internal' ? 'text-ink-subtle' : 'text-ink-muted'
-                      }`}>
-                        {t.recordingOverviewProxyBody}
-                      </p>
-                      <p className={`text-xs mt-2 leading-relaxed font-medium ${
-                        targetKind === 'internal' ? 'text-amber-800/80' : 'text-amber-900'
-                      }`}>
-                        {t.recordingOverviewProxyWarn}
-                      </p>
-                    </button>
-                  </div>
                 </div>
               </div>
             )}

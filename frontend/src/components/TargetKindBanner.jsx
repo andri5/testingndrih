@@ -13,12 +13,13 @@ export default function TargetKindBanner({
   addresses = [],
   url = '',
   labels = {},
+  variant = 'full', // 'full' | 'compact'
 }) {
   const [expanded, setExpanded] = useState(false)
 
   if (isProbing) {
     return (
-      <div className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 flex items-center gap-2">
+      <div className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 flex items-center gap-2">
         <span className="inline-block w-3.5 h-3.5 rounded-full border-2 border-slate-500 border-t-transparent animate-spin shrink-0" />
         <span>{labels.probing || 'Mendeteksi jenis URL target…'}</span>
       </div>
@@ -35,6 +36,39 @@ export default function TargetKindBanner({
     ? 'bg-amber-600 text-white'
     : 'bg-emerald-600 text-white'
   const Icon = isInternal ? ShieldAlert : Globe
+  const oneLiner = isInternal
+    ? (labels.compactInternal ||
+      'Target internal — rekam di browser PC Anda; jalankan lewat PC di jaringan yang sama.')
+    : (labels.compactPublic ||
+      'Target publik — rekam & jalankan langsung dari cloud.')
+
+  if (variant === 'compact' && !expanded) {
+    return (
+      <div className={`w-full max-w-full rounded-lg border px-3 py-2.5 flex flex-wrap items-center gap-2 justify-between ${shell}`}>
+        <div className="flex flex-wrap items-center gap-2 min-w-0">
+          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold uppercase tracking-wide ${badge}`}>
+            <Icon size={12} />
+            {isInternal ? labels.badgeInternal || 'Internal' : labels.badgePublic || 'Publik'}
+          </span>
+          <p className={`text-xs font-medium leading-snug ${isInternal ? 'text-amber-950' : 'text-emerald-950'}`}>
+            {oneLiner}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setExpanded(true)}
+          className={`shrink-0 inline-flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-md border whitespace-nowrap ${
+            isInternal
+              ? 'border-amber-300 text-amber-900 bg-white/80 hover:bg-amber-100'
+              : 'border-emerald-300 text-emerald-900 bg-white/80 hover:bg-emerald-100'
+          }`}
+        >
+          <Info size={12} />
+          {labels.showDetails || 'Pelajari lebih lanjut'}
+        </button>
+      </div>
+    )
+  }
 
   return (
     <div className={`w-full max-w-full box-border rounded-xl border-2 ${shell} px-4 py-3.5 shadow-sm`}>
@@ -50,12 +84,12 @@ export default function TargetKindBanner({
           <div className="min-w-0 flex-1 overflow-hidden">
             <div className="flex flex-wrap items-center gap-2 mb-1.5">
               <span className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-bold uppercase tracking-wide ${badge}`}>
-                {isInternal ? labels.badgeInternal || 'Internal / VPN' : labels.badgePublic || 'Publik (external)'}
+                {isInternal ? labels.badgeInternal || 'Internal' : labels.badgePublic || 'Publik'}
               </span>
               {isInternal && executionBlocked && (
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-semibold bg-red-100 text-red-800 border border-red-200">
                   <XCircle size={12} />
-                  {labels.cloudRunBlocked || 'Cloud Run diblokir'}
+                  {labels.cloudRunBlocked || 'Cloud Run tidak tersedia'}
                 </span>
               )}
               {!isInternal && (
@@ -96,7 +130,7 @@ export default function TargetKindBanner({
         >
           <Info size={13} />
           <span className="hidden sm:inline">
-            {expanded ? labels.hideDetails || 'Sembunyikan' : labels.showDetails || 'Penjelasan lengkap'}
+            {expanded ? labels.hideDetails || 'Sembunyikan' : labels.showDetails || 'Pelajari lebih lanjut'}
           </span>
           {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
         </button>
@@ -163,20 +197,23 @@ export default function TargetKindBanner({
 }
 
 export const defaultTargetKindLabels = {
-  probing: 'Mendeteksi jenis URL target (publik vs internal)…',
-  badgePublic: 'Publik (external)',
-  badgeInternal: 'Internal / VPN',
+  probing: 'Mendeteksi jenis URL target…',
+  badgePublic: 'Publik',
+  badgeInternal: 'Internal',
   cloudRunOk: 'Cloud Run tersedia',
-  cloudRunBlocked: 'Cloud Run diblokir',
+  cloudRunBlocked: 'Cloud Run tidak tersedia',
+  compactPublic: 'Target publik — rekam & jalankan langsung dari cloud.',
+  compactInternal:
+    'Target internal — rekam di browser PC Anda; jalankan lewat PC di jaringan yang sama.',
   summaryPublic:
-    'URL eksternal yang bisa dijangkau dari internet — server cloud Test Sambil Ngopi bisa Record (proxy) & Run ke sini.',
+    'URL eksternal yang bisa dijangkau dari internet — server cloud Test Sambil Ngopi bisa Record & Run ke sini.',
   summaryInternal:
     'URL berada di LAN/VPN (mis. 10.x, 192.168.x, 172.16–31.x, localhost). Server cloud TIDAK bisa membuka halaman ini dari VPS publik.',
-  showDetails: 'Penjelasan lengkap',
+  showDetails: 'Pelajari lebih lanjut',
   hideDetails: 'Sembunyikan',
   detailsTitle: 'Apa bedanya Publik vs Internal?',
-  publicTitle: 'Publik (external)',
-  internalTitle: 'Internal / VPN',
+  publicTitle: 'Publik',
+  internalTitle: 'Internal',
   publicBullets: [
     'DNS resolve ke IP publik di internet (bukan rentang privat RFC1918).',
     'Record & Run dari production (testsambilngopi.my.id) biasanya berhasil.',
