@@ -3,13 +3,13 @@
  */
 
 import React, { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { chainAPI, scenarioAPI } from '../services/api'
 import { Tooltip } from '../components/ui'
 import { Plus, Trash2, ChevronUp, ChevronDown, Save, X } from 'lucide-react'
 
-const i18n = {
+const i18n = {
     createChain: 'Create Chain',
     editChain: 'Edit Chain',
     loadingChain: 'Loading chain...',
@@ -32,7 +32,7 @@ const i18n = {
   
 }
 
-const chainTooltipI18n = {
+const chainTooltipI18n = {
     moveUp:    'Move step up',
     moveDown:  'Move step down',
     editStep:  'Edit step config (wait, retry, stop on fail)',
@@ -44,7 +44,7 @@ export default function ChainBuilderPage() {
   const navigate = useNavigate()
   const { chainId } = useParams()
   const isNew = chainId === 'new'  const ct = chainTooltipI18n
-  const t = i18n
+  const t = i18n
   const [chain, setChain] = useState({
     name: '',
     description: '',
@@ -179,13 +179,13 @@ export default function ChainBuilderPage() {
     <Layout>
       <div className="max-w-4xl mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <h1 className={`text-3xl font-bold ${'text-gray-900'}`}>
+        <div className="flex items-start justify-between gap-3 mb-6 sm:mb-8">
+          <h1 className={`text-2xl sm:text-3xl font-bold min-w-0 break-words ${'text-gray-900'}`}>
             {isNew ? 'Create Chain' : 'Edit Chain'}
           </h1>
           <button
             onClick={() => navigate('/chains')}
-            className={`p-2 rounded-lg transition ${'hover:bg-gray-100 text-gray-500 hover:text-gray-900'}`}
+            className={`p-2 rounded-lg transition shrink-0 ${'hover:bg-gray-100 text-gray-500 hover:text-gray-900'}`}
           >
             <X size={24} />
           </button>
@@ -316,7 +316,7 @@ export default function ChainBuilderPage() {
                         />
                       )}
 
-                      <div className={`grid grid-cols-3 gap-2 mt-3 text-xs ${'text-gray-500'}`}>
+                      <div className={`grid grid-cols-1 sm:grid-cols-3 gap-2 mt-3 text-xs ${'text-gray-500'}`}>
                         <div>Wait: {step.waitTime}ms</div>
                         <div>Retry: {step.retryCount}x</div>
                         <div>Stop on fail: {step.stopOnFail ? 'Yes' : 'No'}</div>
@@ -337,18 +337,18 @@ export default function ChainBuilderPage() {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex gap-3">
+        <div className="flex flex-col sm:flex-row gap-3">
           <button
             onClick={handleSave}
             disabled={saving}
-            className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-lg font-medium transition"
+            className="inline-flex items-center justify-center gap-2 px-4 sm:px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-lg font-medium transition w-full sm:w-auto"
           >
             <Save size={20} />
             {isNew ? 'Create Chain' : 'Save Changes'}
           </button>
           <button
             onClick={() => navigate('/chains')}
-            className={`px-6 py-3 rounded-lg font-medium transition ${'bg-gray-200 hover:bg-gray-300 text-gray-700'}`}
+            className={`px-4 sm:px-6 py-3 rounded-lg font-medium transition w-full sm:w-auto ${'bg-gray-200 hover:bg-gray-300 text-gray-700'}`}
           >
             Cancel
           </button>
@@ -366,11 +366,11 @@ function AddStepForm({ scenarios, onAddStep }) {
       <label className="block text-sm font-medium text-slate-300 mb-2">
         Add Step
       </label>
-      <div className="flex gap-2">
+      <div className="flex flex-col sm:flex-row gap-2">
         <select
           value={selectedScenario}
           onChange={(e) => setSelectedScenario(e.target.value)}
-          className="flex-1 px-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+          className="flex-1 min-w-0 px-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
         >
           <option value="">Select a scenario...</option>
           {scenarios.map((s) => (
@@ -382,7 +382,7 @@ function AddStepForm({ scenarios, onAddStep }) {
         <button
           onClick={() => onAddStep(selectedScenario)}
           disabled={!selectedScenario}
-          className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white rounded-lg font-medium transition"
+          className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white rounded-lg font-medium transition w-full sm:w-auto shrink-0"
         >
           <Plus size={18} />
           Add

@@ -10,15 +10,14 @@ import {
   Gauge,
   Shield,
 } from 'lucide-react'
+import { resolveUserMenuPaths } from './menuPermissions'
 
 /**
- * Dashboard quick actions — filtered by user role (ADMIN | USER).
- * Admin-only items mirror the Tools section in the sidebar.
+ * Dashboard quick actions — filtered by the menus the user can actually open.
  */
 export const QUICK_ACTIONS = [
   {
     id: 'create-scenario',
-    roles: ['ADMIN', 'USER'],
     titleKey: 'createScenario',
     descKey: 'startRecording',
     path: '/scenarios',
@@ -28,7 +27,6 @@ export const QUICK_ACTIONS = [
   },
   {
     id: 'run-execution',
-    roles: ['ADMIN', 'USER'],
     titleKey: 'runExecution',
     descKey: 'executeScenario',
     path: '/execution',
@@ -38,7 +36,6 @@ export const QUICK_ACTIONS = [
   },
   {
     id: 'view-analytics',
-    roles: ['ADMIN', 'USER'],
     titleKey: 'viewAnalytics',
     descKey: 'detailedMetrics',
     path: '/analytics',
@@ -46,10 +43,8 @@ export const QUICK_ACTIONS = [
     iconBg: 'bg-[#0F766E]/10',
     iconColor: 'text-[#0F766E]',
   },
-  // Admin — Tools (same as sidebar workspace section)
   {
     id: 'api-testing',
-    roles: ['ADMIN'],
     titleKey: 'apiTesting',
     descKey: 'apiTestingDesc',
     path: '/api-testing',
@@ -59,7 +54,6 @@ export const QUICK_ACTIONS = [
   },
   {
     id: 'environments',
-    roles: ['ADMIN', 'USER'],
     titleKey: 'environments',
     descKey: 'environmentsDesc',
     path: '/environments',
@@ -69,7 +63,6 @@ export const QUICK_ACTIONS = [
   },
   {
     id: 'scheduler',
-    roles: ['ADMIN'],
     titleKey: 'scheduler',
     descKey: 'schedulerDesc',
     path: '/scheduler',
@@ -79,7 +72,6 @@ export const QUICK_ACTIONS = [
   },
   {
     id: 'parallel',
-    roles: ['ADMIN'],
     titleKey: 'parallel',
     descKey: 'parallelDesc',
     path: '/parallel',
@@ -89,7 +81,6 @@ export const QUICK_ACTIONS = [
   },
   {
     id: 'smoke-test',
-    roles: ['ADMIN'],
     titleKey: 'smokeTest',
     descKey: 'smokeTestDesc',
     path: '/smoke-test',
@@ -99,7 +90,6 @@ export const QUICK_ACTIONS = [
   },
   {
     id: 'stress-test',
-    roles: ['ADMIN'],
     titleKey: 'stressTest',
     descKey: 'stressTestDesc',
     path: '/stress-test',
@@ -109,7 +99,6 @@ export const QUICK_ACTIONS = [
   },
   {
     id: 'security-test',
-    roles: ['ADMIN'],
     titleKey: 'securityTest',
     descKey: 'securityTestDesc',
     path: '/security-test',
@@ -119,7 +108,6 @@ export const QUICK_ACTIONS = [
   },
   {
     id: 'browser-matrix',
-    roles: ['ADMIN'],
     titleKey: 'browserMatrix',
     descKey: 'browserMatrixDesc',
     path: '/browser-matrix',
@@ -129,7 +117,12 @@ export const QUICK_ACTIONS = [
   },
 ]
 
-export function getQuickActionsForRole(role) {
-  const effectiveRole = role === 'ADMIN' ? 'ADMIN' : 'USER'
-  return QUICK_ACTIONS.filter((action) => action.roles.includes(effectiveRole))
+export function getQuickActionsForRole(userOrRole) {
+  const user =
+    typeof userOrRole === 'string' || !userOrRole
+      ? { role: userOrRole || 'USER' }
+      : userOrRole
+  if (user.role === 'ADMIN') return QUICK_ACTIONS
+  const allowed = new Set(resolveUserMenuPaths(user))
+  return QUICK_ACTIONS.filter((action) => allowed.has(action.path))
 }

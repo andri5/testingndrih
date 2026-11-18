@@ -1,9 +1,9 @@
 import React, { useState } from 'react'
 import apiClient from '../../services/api'
 import StressTestMetrics from './StressTestMetrics'
-import { Play, RotateCcw, Zap } from 'lucide-react'
+import { Play, RotateCcw, Zap } from 'lucide-react'
 
-const i18n = {
+const i18n = {
     selectLoadProfile: 'Select Load Profile',
     light: 'Light',
     medium: 'Medium',
@@ -99,7 +99,7 @@ export default function StressTestRunner({ scenario, onTestComplete }) {
             </span>
           </div>
 
-          <div className="grid grid-cols-3 gap-3 mb-4 text-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4 text-sm">
             <div>
               <div className="text-gray-600 dark:text-gray-300">Executions</div>
               <div className="font-semibold dark:text-white">{result.totalExecutions}</div>

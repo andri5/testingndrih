@@ -6,6 +6,7 @@ import { Alert } from '../components/ui'
 import ExportFormatButton from '../components/ExportFormatButton'
 import IntegrationsSettings from '../components/IntegrationsSettings'
 import UserManagement from '../components/UserManagement'
+import AdminMenuAccess from '../components/AdminMenuAccess'
 import UserActivityLog from '../components/UserActivityLog'
 import SiteAnalytics from '../components/SiteAnalytics'
 import LandingFeedbackAdmin from '../components/landing/LandingFeedbackAdmin'
@@ -46,6 +47,9 @@ const i18n = {
     users: 'Users',
     userManagement: 'USER MANAGEMENT',
     userManagementDesc: 'View, add, edit, and delete registered users',
+    menus: 'Menus',
+    menuAccess: 'USER MENU ACCESS',
+    menuAccessDesc: 'Enable or disable sidebar menus for USER accounts',
     userActivity: 'User Activity',
     userActivityDesc: 'Monitor what USER accounts are doing and their latest actions',
     webAnalytics: 'Web Analytics',
@@ -78,6 +82,7 @@ export default function SettingsPage() {
     ...(isAdmin ? [
       { id: 'integrations', label: t.integrations },
       { id: 'users', label: t.users },
+      { id: 'menus', label: t.menus },
       { id: 'activity', label: t.userActivity },
       { id: 'web', label: t.webAnalytics },
     ] : []),
@@ -85,7 +90,7 @@ export default function SettingsPage() {
   ]
 
   useEffect(() => {
-    if (!isAdmin && ['integrations', 'users', 'activity', 'web'].includes(activeTab)) {
+    if (!isAdmin && ['integrations', 'users', 'menus', 'activity', 'web'].includes(activeTab)) {
       setActiveTab('profile')
     }
   }, [isAdmin, activeTab])
@@ -170,8 +175,8 @@ export default function SettingsPage() {
                     {/* Profile Picture Section */}
                     <div>
                       <label className={labelCls}>{t.profilePicture}</label>
-                      <div className="flex items-center gap-4">
-                        <div className="w-24 h-24 rounded-lg flex items-center justify-center border-2 border-dashed border-[#2D2D2F] bg-[#0F0E11] overflow-hidden">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                        <div className="w-24 h-24 rounded-lg flex items-center justify-center border-2 border-dashed border-[#2D2D2F] bg-[#0F0E11] overflow-hidden shrink-0">
                           {profilePicture ? (
                             <img 
                               src={profilePicture} 
@@ -227,7 +232,7 @@ export default function SettingsPage() {
                             : 'bg-[#2D2D2F] text-[#A0A0A4] border-[#3D3D3F]'
                         }`}
                       >
-                        {user?.role || 'USER'}
+                        {user?.role === 'USER' ? 'TESTER' : user?.role || 'USER'}
                       </span>
                     </div>
 
@@ -301,6 +306,14 @@ export default function SettingsPage() {
                 <p className={sectionTitleCls}>{t.userManagement}</p>
                 <p className="text-sm text-[#666] mb-4">{t.userManagementDesc}</p>
                 <UserManagement />
+              </div>
+            )}
+
+            {activeTab === 'menus' && isAdmin && (
+              <div className={cardCls}>
+                <p className={sectionTitleCls}>{t.menuAccess}</p>
+                <p className="text-sm text-[#666] mb-4">{t.menuAccessDesc}</p>
+                <AdminMenuAccess />
               </div>
             )}
 

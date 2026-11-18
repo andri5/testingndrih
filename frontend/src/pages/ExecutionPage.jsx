@@ -549,21 +549,26 @@ export default function ExecutionPage() {
                             format="html"
                             onClick={() => handleExportReport(execution.id, 'html')}
                             title="Download HTML report"
+                            className="!px-2 sm:!px-3"
                           >
-                            {t.exportHTML}
+                            <span className="sm:hidden">HTML</span>
+                            <span className="hidden sm:inline">{t.exportHTML}</span>
                           </ExportFormatButton>
                           <ExportFormatButton
                             format="pdf"
                             onClick={() => handleExportReport(execution.id, 'pdf')}
                             title="Download PDF report"
+                            className="!px-2 sm:!px-3"
                           >
-                            {t.exportPDF}
+                            <span className="sm:hidden">PDF</span>
+                            <span className="hidden sm:inline">{t.exportPDF}</span>
                           </ExportFormatButton>
                           <ExportFormatButton
                             format="json"
                             icon={Link2}
                             onClick={() => setShareExecutionId(execution.id)}
                             title="Share run link"
+                            className="!px-2 sm:!px-3"
                           >
                             {t.share}
                           </ExportFormatButton>

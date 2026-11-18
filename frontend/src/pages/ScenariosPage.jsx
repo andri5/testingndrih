@@ -715,7 +715,7 @@ export default function ScenariosPage() {
               </p>
             ) : (
               <p className="text-sm text-[#8A8A8F] mb-4 -mt-2">
-                Manual form below — or use <strong className="text-[#0F766E]">Generate with AI</strong> to draft steps from a short description.
+                Isi nama skenario. URL boleh dikosongkan dulu — bisa ditambah nanti atau lewat Record.
               </p>
             )}
 

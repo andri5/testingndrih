@@ -52,7 +52,7 @@ export default function SharedBugPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 text-slate-900">
       <header className="border-b border-slate-200 bg-white/80 backdrop-blur sticky top-0 z-10">
-        <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
+        <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between gap-2 min-w-0">
           <Link to="/" className="font-semibold text-[#0F766E] hover:underline">
             Test Sambil Ngopi
           </Link>

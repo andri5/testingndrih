@@ -3,12 +3,12 @@
  */
 
 import React, { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { chainAPI } from '../services/api'
 import { Play, ChevronDown, ChevronUp, Clock, Check, X, Loader } from 'lucide-react'
 
-const i18n = {
+const i18n = {
     loadingChain: 'Loading chain...',
     chainNotFound: 'Chain not found',
     backToChains: 'Back to Chains',
@@ -21,7 +21,7 @@ const i18n = {
 
 export default function ChainExecutorPage() {
   const navigate = useNavigate()
-  const { chainId } = useParams()  const t = i18n
+  const { chainId } = useParams()  const t = i18n
   const [chain, setChain] = useState(null)
   const [loading, setLoading] = useState(true)
   const [executing, setExecuting] = useState(false)
@@ -107,14 +107,14 @@ export default function ChainExecutorPage() {
     <Layout>
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className={`text-3xl font-bold mb-2 ${'text-gray-900'}`}>{chain.name}</h1>
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6 sm:mb-8">
+          <div className="min-w-0">
+            <h1 className={`text-2xl sm:text-3xl font-bold mb-2 break-words ${'text-gray-900'}`}>{chain.name}</h1>
             <p className={'text-gray-600'}>{chain.description}</p>
           </div>
           <button
             onClick={() => navigate('/chains')}
-            className={`px-6 py-3 rounded-lg font-medium transition ${'bg-gray-200 hover:bg-gray-300 text-gray-700'}`}
+            className={`px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg font-medium transition w-full sm:w-auto shrink-0 ${'bg-gray-200 hover:bg-gray-300 text-gray-700'}`}
           >
             {t.back}
           </button>

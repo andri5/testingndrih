@@ -36,13 +36,47 @@ function Modal({ title, children, onClose }) {
 
 export default function UserMenuAssignment({ user, onClose, onSaved }) {
   const [selected, setSelected] = useState([])
+  const [enabledCatalog, setEnabledCatalog] = useState([...DEFAULT_USER_MENU_KEYS])
+  const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
 
   useEffect(() => {
-    if (!user) return
-    const keys = resolveUserMenuKeys(user)
-    setSelected(keys)
+    let cancelled = false
+    ;(async () => {
+      setLoading(true)
+      try {
+        const res = await userAPI.getMenuDefaults()
+        const catalog = res.data.menus?.length
+          ? res.data.menus
+          : [...DEFAULT_USER_MENU_KEYS]
+        if (cancelled) return
+        setEnabledCatalog(catalog)
+        if (user) {
+          const keys = resolveUserMenuKeys({
+            ...user,
+            enabledUserMenus: catalog,
+          })
+          setSelected(keys)
+        }
+      } catch {
+        if (cancelled) return
+        setEnabledCatalog([...DEFAULT_USER_MENU_KEYS])
+        if (user) {
+          setSelected(
+            resolveUserMenuKeys({
+              ...user,
+              enabledUserMenus: DEFAULT_USER_MENU_KEYS,
+            })
+          )
+        }
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
   }, [user])
 
   const toggle = (key) => {
@@ -51,9 +85,10 @@ export default function UserMenuAssignment({ user, onClose, onSaved }) {
     )
   }
 
-  const selectDefaults = () => setSelected([...DEFAULT_USER_MENU_KEYS])
+  const selectDefaults = () =>
+    setSelected(DEFAULT_USER_MENU_KEYS.filter((k) => enabledCatalog.includes(k)))
 
-  const selectAll = () => setSelected(MENU_DEFINITIONS.map((m) => m.key))
+  const selectAll = () => setSelected([...enabledCatalog])
 
   const handleSave = async () => {
     if (selected.length === 0) {
@@ -73,13 +108,15 @@ export default function UserMenuAssignment({ user, onClose, onSaved }) {
     }
   }
 
-  const mainMenus = MENU_DEFINITIONS.filter((m) => m.group === 'main')
-  const toolMenus = MENU_DEFINITIONS.filter((m) => m.group === 'tools')
+  const available = MENU_DEFINITIONS.filter((m) => enabledCatalog.includes(m.key))
+  const mainMenus = available.filter((m) => m.group === 'main')
+  const toolMenus = available.filter((m) => m.group === 'tools')
 
   return (
     <Modal title={`Assign menus — ${user?.email}`} onClose={onClose}>
       <p className="text-sm text-[#A0A0A4] mb-4">
-        Choose which sidebar menus this user can access. Settings remains available to all users.
+        Choose which sidebar menus this user can access. Only menus enabled in Settings → Menus are listed.
+        Settings remains available to all users.
       </p>
 
       {error && (
@@ -88,70 +125,88 @@ export default function UserMenuAssignment({ user, onClose, onSaved }) {
         </p>
       )}
 
-      <div className="flex flex-wrap gap-2 mb-4">
-        <button
-          type="button"
-          onClick={selectDefaults}
-          className="text-xs px-2.5 py-1 rounded border border-[#2D2D2F] text-[#A0A0A4] hover:border-[#0F766E] hover:text-[#0F766E]"
-        >
-          Default USER set
-        </button>
-        <button
-          type="button"
-          onClick={selectAll}
-          className="text-xs px-2.5 py-1 rounded border border-[#2D2D2F] text-[#A0A0A4] hover:border-[#0F766E] hover:text-[#0F766E]"
-        >
-          Select all
-        </button>
-      </div>
-
-      <div className="space-y-4">
-        <div>
-          <p className="text-xs font-semibold text-[#666] uppercase tracking-wider mb-2">Main</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {mainMenus.map((m) => (
-              <label
-                key={m.key}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[#2D2D2F] bg-[#0F0E11] cursor-pointer hover:border-[#0F766E]/40"
-              >
-                <input
-                  type="checkbox"
-                  checked={selected.includes(m.key)}
-                  onChange={() => toggle(m.key)}
-                  className="rounded border-[#2D2D2F] bg-[#0F0E11] text-[#0F766E] focus:ring-[#0F766E]"
-                />
-                <span className="text-sm text-[#E0E0E2]">{m.labelEn}</span>
-              </label>
-            ))}
-          </div>
+      {loading ? (
+        <div className="flex justify-center py-8">
+          <Spinner />
         </div>
-
-        <div>
-          <p className="text-xs font-semibold text-[#666] uppercase tracking-wider mb-2">Tools</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {toolMenus.map((m) => (
-              <label
-                key={m.key}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[#2D2D2F] bg-[#0F0E11] cursor-pointer hover:border-[#0F766E]/40"
-              >
-                <input
-                  type="checkbox"
-                  checked={selected.includes(m.key)}
-                  onChange={() => toggle(m.key)}
-                  className="rounded border-[#2D2D2F] bg-[#0F0E11] text-[#0F766E] focus:ring-[#0F766E]"
-                />
-                <span className="text-sm text-[#E0E0E2]">{m.labelEn}</span>
-              </label>
-            ))}
+      ) : (
+        <>
+          <div className="flex flex-wrap gap-2 mb-4">
+            <button
+              type="button"
+              onClick={selectDefaults}
+              className="text-xs px-2.5 py-1 rounded border border-[#2D2D2F] text-[#A0A0A4] hover:border-[#0F766E] hover:text-[#0F766E]"
+            >
+              Default USER set
+            </button>
+            <button
+              type="button"
+              onClick={selectAll}
+              className="text-xs px-2.5 py-1 rounded border border-[#2D2D2F] text-[#A0A0A4] hover:border-[#0F766E] hover:text-[#0F766E]"
+            >
+              Select all enabled
+            </button>
           </div>
-        </div>
-      </div>
+
+          <div className="space-y-4">
+            {mainMenus.length > 0 && (
+              <div>
+                <p className="text-xs font-semibold text-[#666] uppercase tracking-wider mb-2">Main</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {mainMenus.map((m) => (
+                    <label
+                      key={m.key}
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[#2D2D2F] bg-[#0F0E11] cursor-pointer hover:border-[#0F766E]/40"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selected.includes(m.key)}
+                        onChange={() => toggle(m.key)}
+                        className="rounded border-[#2D2D2F] bg-[#0F0E11] text-[#0F766E] focus:ring-[#0F766E]"
+                      />
+                      <span className="text-sm text-[#E0E0E2]">{m.labelEn}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {toolMenus.length > 0 && (
+              <div>
+                <p className="text-xs font-semibold text-[#666] uppercase tracking-wider mb-2">Tools</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {toolMenus.map((m) => (
+                    <label
+                      key={m.key}
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[#2D2D2F] bg-[#0F0E11] cursor-pointer hover:border-[#0F766E]/40"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selected.includes(m.key)}
+                        onChange={() => toggle(m.key)}
+                        className="rounded border-[#2D2D2F] bg-[#0F0E11] text-[#0F766E] focus:ring-[#0F766E]"
+                      />
+                      <span className="text-sm text-[#E0E0E2]">{m.labelEn}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {available.length === 0 && (
+              <p className="text-sm text-amber-400/90">
+                No menus are enabled globally. Open Settings → Menus first.
+              </p>
+            )}
+          </div>
+        </>
+      )}
 
       <div className="flex justify-end gap-2 mt-6 pt-4 border-t border-[#2D2D2F]">
         <Button variant="secondary" onClick={onClose}>
           Cancel
         </Button>
-        <Button onClick={handleSave} disabled={saving}>
+        <Button onClick={handleSave} disabled={saving || loading}>
           {saving ? <Spinner size="sm" /> : 'Save menus'}
         </Button>
       </div>

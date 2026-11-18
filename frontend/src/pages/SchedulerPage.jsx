@@ -29,7 +29,7 @@ export default function SchedulerPage() {
     daysOfWeek: []
   })
 
-  const i18n = {
+  const i18n = {
       title: 'Test Scheduler',
       description: 'Schedule automated test execution at specific times',
       newSchedule: 'New Schedule',
@@ -281,7 +281,7 @@ export default function SchedulerPage() {
             {schedules.map(schedule => (
               <Card key={schedule.id} className={`border ${'border-gray-200 bg-white'}`}>
                 <CardContent className="p-6">
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                     <div>
                       <p className={`text-xs font-medium ${'text-gray-500'}`}>
                         Scenario
@@ -316,7 +316,7 @@ export default function SchedulerPage() {
                     </div>
                   </div>
 
-                  <div className="flex gap-2 justify-end">
+                  <div className="flex flex-wrap gap-2 justify-end">
                     <Button
                       onClick={() => handleTestNow(schedule.id)}
                       className={`${'bg-green-100 hover:bg-green-200 text-green-900'}`}

@@ -11,6 +11,8 @@ import {
   updateUserMenus,
   getUserActivitySummary,
   getUserActivityLog,
+  getMenuDefaults,
+  updateMenuDefaults,
 } from '../controllers/userController.js'
 
 const router = Router()
@@ -19,6 +21,8 @@ router.use(...adminAuth)
 
 router.get('/', listUsers)
 router.get('/activity/summary', getUserActivitySummary)
+router.get('/menus/defaults', getMenuDefaults)
+router.put('/menus/defaults', updateMenuDefaults)
 router.post('/', createUser)
 router.get('/:userId/activity', getUserActivityLog)
 router.get('/:userId', getUser)

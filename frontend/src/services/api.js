@@ -97,6 +97,9 @@ export const userAPI = {
     apiClient.get(`/users/${userId}/activity`, { params: { limit } }),
   updateMenus: (userId, menus) =>
     apiClient.patch(`/users/${userId}/menus`, { menus }),
+  getMenuDefaults: () => apiClient.get('/users/menus/defaults'),
+  updateMenuDefaults: (menus, syncUsers = false) =>
+    apiClient.put('/users/menus/defaults', { menus, syncUsers }),
 }
 
 export const scenarioAPI = {

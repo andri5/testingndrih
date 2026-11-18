@@ -1556,7 +1556,7 @@ export default function ScenarioDetailPage() {
 
         {/* Test Steps */}
         <Card>
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
             <h2 className="text-xl font-bold text-[#E0E0E2]">Test Steps</h2>
             {!showStepForm && (
               <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Test step actions">
@@ -1828,32 +1828,32 @@ export default function ScenarioDetailPage() {
             </div>
 
             {/* Simple 2-Column Stats Row */}
-            <div className="flex flex-wrap gap-3 mb-4">
-              <div className={`flex-1 min-w-[200px] p-4 rounded-lg border ${'bg-green-50 border-green-200'}`}>
-                <div className="flex items-center justify-between">
-                  <div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+              <div className={`p-4 rounded-lg border min-w-0 ${'bg-green-50 border-green-200'}`}>
+                <div className="flex items-center justify-between gap-2">
+                  <div className="min-w-0">
                     <p className={`text-sm font-medium ${'text-green-600'}`}>{t.passed || 'Passed'}</p>
                     <p className={`text-2xl font-bold mt-1 ${'text-green-700'}`}>{executionResult.passedSteps || 0}</p>
                   </div>
-                  <CheckCircle2 size={24} className={`opacity-50 ${'text-green-600'}`} />
+                  <CheckCircle2 size={24} className={`opacity-50 shrink-0 ${'text-green-600'}`} />
                 </div>
               </div>
-              <div className={`flex-1 min-w-[200px] p-4 rounded-lg border ${'bg-red-50 border-red-200'}`}>
-                <div className="flex items-center justify-between">
-                  <div>
+              <div className={`p-4 rounded-lg border min-w-0 ${'bg-red-50 border-red-200'}`}>
+                <div className="flex items-center justify-between gap-2">
+                  <div className="min-w-0">
                     <p className={`text-sm font-medium ${'text-red-600'}`}>{t.failed || 'Failed'}</p>
                     <p className={`text-2xl font-bold mt-1 ${'text-red-700'}`}>{executionResult.failedSteps || 0}</p>
                   </div>
-                  <XCircle size={24} className={`opacity-50 ${'text-red-600'}`} />
+                  <XCircle size={24} className={`opacity-50 shrink-0 ${'text-red-600'}`} />
                 </div>
               </div>
-              <div className={`flex-1 min-w-[200px] p-4 rounded-lg border ${'bg-blue-50 border-blue-200'}`}>
-                <div className="flex items-center justify-between">
-                  <div>
+              <div className={`p-4 rounded-lg border min-w-0 ${'bg-blue-50 border-blue-200'}`}>
+                <div className="flex items-center justify-between gap-2">
+                  <div className="min-w-0">
                     <p className={`text-sm font-medium ${'text-blue-600'}`}>{t.duration || 'Duration'}</p>
                     <p className={`text-2xl font-bold mt-1 ${'text-blue-700'}`}>{executionResult.duration ? `${(executionResult.duration / 1000).toFixed(2)}s` : '−'}</p>
                   </div>
-                  <Clock size={24} className={`opacity-50 ${'text-blue-600'}`} />
+                  <Clock size={24} className={`opacity-50 shrink-0 ${'text-blue-600'}`} />
                 </div>
               </div>
             </div>

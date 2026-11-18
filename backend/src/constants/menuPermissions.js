@@ -38,16 +38,36 @@ export function isValidMenuKey(key) {
   return ALL_MENU_KEYS.includes(key)
 }
 
-export function resolveUserMenuKeys(user) {
-  if (!user) return []
-  if (user.role === 'ADMIN') return ALL_MENU_KEYS
-  const assigned = Array.isArray(user.menuPermissions) ? user.menuPermissions : []
-  if (assigned.length === 0) return DEFAULT_USER_MENU_KEYS
-  return assigned.filter((key) => isValidMenuKey(key))
+// Local fallbacks to avoid circular import with roles.js
+const ROLE_FALLBACK_BY_ROLE = {
+  LEAD: ALL_MENU_KEYS,
+  USER: DEFAULT_USER_MENU_KEYS,
+  VIEWER: ['dashboard', 'reports', 'analytics', 'issues'],
 }
 
-export function resolveUserMenuPaths(user) {
-  return resolveUserMenuKeys(user).map((key) => PATH_BY_KEY[key]).filter(Boolean)
+/**
+ * @param {object} user
+ * @param {string[]|null} [enabledMenus] global catalog allowed for non-admin roles
+ * @param {string[]|null} [rolePreset] recommended menus for the user's role
+ */
+export function resolveUserMenuKeys(user, enabledMenus = null, rolePreset = null) {
+  if (!user) return []
+  if (user.role === 'ADMIN') return ALL_MENU_KEYS
+  const catalog = Array.isArray(enabledMenus) && enabledMenus.length > 0
+    ? enabledMenus.filter((key) => isValidMenuKey(key))
+    : ALL_MENU_KEYS
+  const preset = Array.isArray(rolePreset) && rolePreset.length > 0
+    ? rolePreset.filter((key) => isValidMenuKey(key))
+    : (ROLE_FALLBACK_BY_ROLE[user.role] || DEFAULT_USER_MENU_KEYS)
+  const assigned = Array.isArray(user.menuPermissions) ? user.menuPermissions : []
+  const base = assigned.length === 0
+    ? preset
+    : assigned.filter((key) => isValidMenuKey(key))
+  return base.filter((key) => catalog.includes(key))
+}
+
+export function resolveUserMenuPaths(user, enabledMenus = null) {
+  return resolveUserMenuKeys(user, enabledMenus).map((key) => PATH_BY_KEY[key]).filter(Boolean)
 }
 
 export function pathToMenuKey(pathname) {

@@ -79,7 +79,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [exporting, setExporting] = useState(false)
   const [showWelcomeSplash, setShowWelcomeSplash] = useState(false)
-  const quickActions = getQuickActionsForRole(user?.role)
+  const quickActions = getQuickActionsForRole(user)
 
   useEffect(() => {
     loadDashboardData()

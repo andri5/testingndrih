@@ -41,7 +41,7 @@ export default function SecuritySummary() {
       <div className="bg-white dark:bg-[#1A1A1C] html.theme-light:bg-white rounded-lg shadow p-6 border border-[#E0E0E2] dark:border-[#2D2D2F] html.theme-light:border-[#DDDDE0]">
         <div className="space-y-4">
           <div className="h-6 bg-[#F5F5F7] dark:bg-[#2D2D2F] html.theme-light:bg-[#F5F5F7] rounded w-1/3 animate-pulse" />
-          <div className="grid grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
             {[1, 2, 3, 4, 5].map(i => (
               <div key={i} className="h-20 bg-[#F5F5F7] dark:bg-[#2D2D2F] html.theme-light:bg-[#F5F5F7] rounded animate-pulse" />
             ))}

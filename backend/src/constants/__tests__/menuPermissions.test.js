@@ -25,6 +25,37 @@ describe('menuPermissions', () => {
     ).toEqual(['dashboard', 'scenarios'])
   })
 
+  it('intersects assigned menus with global enabled catalog', () => {
+    expect(
+      resolveUserMenuKeys(
+        {
+          role: 'USER',
+          menuPermissions: ['dashboard', 'scenarios', 'chains'],
+        },
+        ['dashboard', 'scenarios']
+      )
+    ).toEqual(['dashboard', 'scenarios'])
+  })
+
+  it('intersects role preset with enabled catalog when user has no assignment', () => {
+    expect(
+      resolveUserMenuKeys({ role: 'USER', menuPermissions: [] }, [
+        'dashboard',
+        'chains',
+      ])
+    ).toEqual(['dashboard'])
+  })
+
+  it('uses role preset when provided and no assignment', () => {
+    expect(
+      resolveUserMenuKeys(
+        { role: 'VIEWER', menuPermissions: [] },
+        ['dashboard', 'reports', 'analytics', 'issues', 'scenarios'],
+        ['dashboard', 'reports', 'analytics', 'issues']
+      )
+    ).toEqual(['dashboard', 'reports', 'analytics', 'issues'])
+  })
+
   it('validates menu keys', () => {
     expect(validateMenuKeys(['dashboard']).valid).toBe(true)
     expect(validateMenuKeys([]).valid).toBe(false)

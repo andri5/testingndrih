@@ -1,6 +1,22 @@
 import { useState } from 'react'
 import { Button, Input, Alert } from './ui'
 
+function normalizeUrlInput(value) {
+  const trimmed = String(value || '').trim()
+  if (!trimmed) return ''
+  if (/^https?:\/\//i.test(trimmed)) return trimmed
+  return `https://${trimmed}`
+}
+
+function isValidUrl(string) {
+  try {
+    const parsed = new URL(string)
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:'
+  } catch {
+    return false
+  }
+}
+
 export function ScenarioForm({ onSubmit, initialScenario = null, isLoading = false }) {
   const [formData, setFormData] = useState({
     name: initialScenario?.name || '',
@@ -12,13 +28,12 @@ export function ScenarioForm({ onSubmit, initialScenario = null, isLoading = fal
 
   const handleChange = (e) => {
     const { name, value } = e.target
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       [name]: value
     }))
-    // Clear error for this field
     if (errors[name]) {
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
         [name]: ''
       }))
@@ -30,49 +45,49 @@ export function ScenarioForm({ onSubmit, initialScenario = null, isLoading = fal
     if (!formData.name.trim()) {
       newErrors.name = 'Scenario name is required'
     }
-    if (!formData.url.trim()) {
-      newErrors.url = 'URL is required'
-    } else if (!isValidUrl(formData.url)) {
-      newErrors.url = 'Please enter a valid URL'
+    const url = formData.url.trim()
+    if (url) {
+      const normalized = normalizeUrlInput(url)
+      if (!isValidUrl(normalized)) {
+        newErrors.url = 'Please enter a valid URL (e.g. https://example.com)'
+      }
     }
     return newErrors
-  }
-
-  const isValidUrl = (string) => {
-    try {
-      new URL(string)
-      return true
-    } catch (_) {
-      return false
-    }
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     const newErrors = validate()
-    
+
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors)
       setShowAlert(true)
       return
     }
 
+    const payload = {
+      ...formData,
+      name: formData.name.trim(),
+      url: normalizeUrlInput(formData.url),
+    }
+
     try {
-      await onSubmit(formData)
-      // Reset form on success
+      await onSubmit(payload)
       if (!initialScenario) {
         setFormData({ name: '', description: '', url: '' })
       }
-    } catch (error) {
+      setErrors({})
+      setShowAlert(false)
+    } catch {
       setShowAlert(true)
     }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4" noValidate>
       {showAlert && Object.keys(errors).length > 0 && (
-        <Alert 
-          type="error" 
+        <Alert
+          type="error"
           message="Please fix the errors below"
           onClose={() => setShowAlert(false)}
         />
@@ -86,13 +101,16 @@ export function ScenarioForm({ onSubmit, initialScenario = null, isLoading = fal
         onChange={handleChange}
         error={errors.name}
         disabled={isLoading}
+        required
       />
 
       <Input
-        label="URL to Test"
+        label="URL to Test (optional)"
         name="url"
-        type="url"
-        placeholder="https://example.com"
+        type="text"
+        inputMode="url"
+        autoComplete="url"
+        placeholder="https://example.com — can set later via Record"
         value={formData.url}
         onChange={handleChange}
         error={errors.url}
@@ -114,8 +132,8 @@ export function ScenarioForm({ onSubmit, initialScenario = null, isLoading = fal
         />
       </div>
 
-      <Button 
-        type="submit" 
+      <Button
+        type="submit"
         variant="primary"
         disabled={isLoading}
       >

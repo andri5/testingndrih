@@ -8,9 +8,24 @@ import { verifyTurnstileToken } from '../utils/turnstile.js'
 import { getFrontendUrl } from '../utils/frontendUrl.js'
 import { resolveRoleForEmail } from '../utils/roles.js'
 import { validatePassword } from '../utils/passwordValidation.js'
+import { getEnabledUserMenus } from '../services/appSettingService.js'
+import { resolveUserMenuKeys } from '../constants/menuPermissions.js'
+import { getRoleMenuPreset } from '../constants/roles.js'
 
 const AUTH_ERROR_CODES = {
   ACCOUNT_NOT_FOUND: 'ACCOUNT_NOT_FOUND',
+}
+
+async function toPublicUser(user) {
+  if (!user) return null
+  const enabledUserMenus = await getEnabledUserMenus()
+  const roleMenuPreset = getRoleMenuPreset(user.role)
+  return {
+    ...user,
+    enabledUserMenus,
+    roleMenuPreset,
+    menuPermissions: resolveUserMenuKeys(user, enabledUserMenus, roleMenuPreset),
+  }
 }
 
 const AUTH_MESSAGES = {
@@ -113,7 +128,7 @@ export async function registerUser(req, res, next) {
     res.status(201).json({
       success: true,
       message: 'User registered successfully',
-      user,
+      user: await toPublicUser(user),
       token
     })
   } catch (error) {
@@ -180,17 +195,20 @@ export async function loginUser(req, res, next) {
     // Sign token
     const token = signToken({ id: user.id, email: user.email, role: user.role })
 
+    const publicUser = await toPublicUser({
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      isActive: user.isActive,
+      menuPermissions: user.menuPermissions,
+      createdAt: user.createdAt,
+    })
+
     res.json({
       success: true,
       message: 'Login successful',
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role,
-        isActive: user.isActive,
-        createdAt: user.createdAt,
-      },
+      user: publicUser,
       token,
     })
   } catch (error) {
@@ -220,7 +238,7 @@ export async function getCurrentUser(req, res, next) {
 
     res.json({
       success: true,
-      user
+      user: await toPublicUser(user),
     })
   } catch (error) {
     next(error)

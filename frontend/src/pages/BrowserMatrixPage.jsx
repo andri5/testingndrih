@@ -22,7 +22,7 @@ export default function BrowserMatrixPage() {
   const [error, setError] = useState(null)
   const [success, setSuccess] = useState(null)
 
-  const i18n = {
+  const i18n = {
       title: 'Browser Matrix Testing',
       description: 'Test your scenarios across multiple browsers for compatibility',
       selectScenario: 'Select Scenario',
@@ -193,7 +193,7 @@ export default function BrowserMatrixPage() {
               <label className={`block text-sm font-medium mb-3 ${'text-gray-700'}`}>
                 {t.selectBrowsers}
               </label>
-              <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
                 {BROWSERS.map(browser => (
                   <label
                     key={browser.id}

@@ -7,6 +7,8 @@ import {
 } from '../utils/registerValidation.js'
 import { isPrimaryAdmin } from '../utils/roles.js'
 import { validateMenuKeys } from '../constants/menuPermissions.js'
+import { getEnabledUserMenus } from './appSettingService.js'
+import { getRoleMenuPreset, isAssignableRole } from '../constants/roles.js'
 
 const userSelect = {
   id: true,
@@ -38,10 +40,18 @@ function normalizeEmail(email) {
 
 function resolveAssignableRole(email, requestedRole) {
   if (isPrimaryAdmin(email)) return 'ADMIN'
-  if (!['ADMIN', 'USER'].includes(requestedRole)) {
-    throw Object.assign(new Error('Invalid role'), { status: 400 })
+  if (!isAssignableRole(requestedRole)) {
+    throw Object.assign(new Error('Invalid role. Use ADMIN, LEAD, USER, or VIEWER'), {
+      status: 400,
+    })
   }
   return requestedRole
+}
+
+async function menusForRole(role) {
+  if (role === 'ADMIN') return []
+  const enabled = await getEnabledUserMenus()
+  return getRoleMenuPreset(role).filter((key) => enabled.includes(key))
 }
 
 export async function listUsers() {
@@ -107,6 +117,7 @@ export async function createUser({
   }
 
   const hashedPassword = await hashPassword(password)
+  const menuPermissions = await menusForRole(finalRole)
 
   return prisma.user.create({
     data: {
@@ -115,6 +126,7 @@ export async function createUser({
       password: hashedPassword,
       role: finalRole,
       isActive: Boolean(isActive),
+      menuPermissions,
     },
     select: userSelect,
   })
@@ -186,8 +198,12 @@ export async function updateUser(actor, userId, payload) {
     }
 
     data.role = nextRole
+    if (nextRole !== target.role) {
+      data.menuPermissions = await menusForRole(nextRole)
+    }
   } else if (data.email && isPrimaryAdmin(data.email)) {
     data.role = 'ADMIN'
+    data.menuPermissions = []
   }
 
   if (password !== undefined && password !== '') {
@@ -250,9 +266,18 @@ export async function updateUserMenus(actor, userId, menus) {
     )
   }
 
+  const enabled = await getEnabledUserMenus()
+  const filtered = validation.keys.filter((key) => enabled.includes(key))
+  if (filtered.length === 0) {
+    throw Object.assign(
+      new Error('Selected menus are not enabled in the global catalog. Update Settings → Menus first.'),
+      { status: 400 }
+    )
+  }
+
   return prisma.user.update({
     where: { id: userId },
-    data: { menuPermissions: validation.keys },
+    data: { menuPermissions: filtered },
     select: userSelect,
   })
 }

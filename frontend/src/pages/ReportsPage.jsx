@@ -304,16 +304,16 @@ export default function ReportsPage() {
                     <div
                       key={s.id}
                       onClick={() => navigate(`/scenarios/${s.id}`)}
-                      className="flex items-center justify-between p-3 bg-[#161618] rounded-lg hover:bg-[#1A1A2E] cursor-pointer transition"
+                      className="flex items-center justify-between gap-3 p-3 bg-[#161618] rounded-lg hover:bg-[#1A1A2E] cursor-pointer transition"
                     >
-                      <div className="flex items-center gap-3">
-                        <span className="text-lg font-bold text-[#555] w-6">#{idx + 1}</span>
-                        <div>
-                          <p className="font-medium text-[#E0E0E2]">{s.name}</p>
-                          <p className="text-xs text-[#888]">{s.description || '-'}</p>
+                      <div className="flex items-center gap-3 min-w-0">
+                        <span className="text-lg font-bold text-[#555] w-6 shrink-0">#{idx + 1}</span>
+                        <div className="min-w-0">
+                          <p className="font-medium text-[#E0E0E2] truncate">{s.name}</p>
+                          <p className="text-xs text-[#888] truncate">{s.description || '-'}</p>
                         </div>
                       </div>
-                      <span className="text-sm font-semibold text-[#0F766E]">
+                      <span className="text-sm font-semibold text-[#0F766E] shrink-0">
                         {s._count?.executions ?? s.executionCount ?? 0} runs
                       </span>
                     </div>
@@ -335,30 +335,30 @@ export default function ReportsPage() {
                         <tr className="border-b border-[#2D2D2F]">
                           <th className="text-left py-3 px-2 font-semibold text-[#A0A0A4]">Scenario</th>
                           <th className="text-left py-3 px-2 font-semibold text-[#A0A0A4]">Status</th>
-                          <th className="text-left py-3 px-2 font-semibold text-[#A0A0A4]">Duration</th>
-                          <th className="text-left py-3 px-2 font-semibold text-[#A0A0A4]">Steps (P/F)</th>
-                          <th className="text-left py-3 px-2 font-semibold text-[#A0A0A4]">Date</th>
+                          <th className="text-left py-3 px-2 font-semibold text-[#A0A0A4] hidden sm:table-cell">Duration</th>
+                          <th className="text-left py-3 px-2 font-semibold text-[#A0A0A4] hidden md:table-cell">Steps (P/F)</th>
+                          <th className="text-left py-3 px-2 font-semibold text-[#A0A0A4] hidden lg:table-cell">Date</th>
                         </tr>
                       </thead>
                       <tbody>
                         {executions.map(e => (
                           <tr key={e.id} className="border-b border-[#2D2D2F] hover:bg-[#1A1A1C]">
-                            <td className="py-3 px-2">
+                            <td className="py-3 px-2 max-w-[140px] sm:max-w-none">
                               <span
-                                className="text-[#0F766E] hover:underline cursor-pointer"
+                                className="text-[#0F766E] hover:underline cursor-pointer truncate block"
                                 onClick={() => navigate(`/scenarios/${e.scenarioId}`)}
                               >
                                 {e.scenario?.name || 'Unknown'}
                               </span>
                             </td>
                             <td className="py-3 px-2">{getStatusBadge(e.status)}</td>
-                            <td className="py-3 px-2">{formatDuration(e.duration)}</td>
-                            <td className="py-3 px-2">
+                            <td className="py-3 px-2 hidden sm:table-cell">{formatDuration(e.duration)}</td>
+                            <td className="py-3 px-2 hidden md:table-cell">
                               <span className="text-green-600">{e.passedSteps || 0}</span>
                               {' / '}
                               <span className="text-red-600">{e.failedSteps || 0}</span>
                             </td>
-                            <td className="py-3 px-2 text-[#888]">{formatDate(e.startTime)}</td>
+                            <td className="py-3 px-2 text-[#888] hidden lg:table-cell">{formatDate(e.startTime)}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -367,7 +367,7 @@ export default function ReportsPage() {
 
                   {/* Pagination */}
                   {totalPages > 1 && (
-                    <div className="flex items-center justify-between mt-4 pt-4 border-t">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-4 pt-4 border-t">
                       <p className="text-sm text-[#888]">
                         Showing {page * LIMIT + 1}-{Math.min((page + 1) * LIMIT, total)} of {total}
                       </p>

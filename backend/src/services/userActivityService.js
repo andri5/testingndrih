@@ -138,7 +138,7 @@ export async function getUserActivitySummary() {
   const since = daysAgo(SUMMARY_DAYS)
 
   const users = await prisma.user.findMany({
-    where: { role: 'USER' },
+    where: { role: { in: ['LEAD', 'USER', 'VIEWER'] } },
     select: {
       id: true,
       email: true,
@@ -197,9 +197,9 @@ export async function getUserActivityLog(userId, limit = DEFAULT_LIMIT) {
     throw Object.assign(new Error('User not found'), { status: 404 })
   }
 
-  if (user.role !== 'USER') {
+  if (user.role === 'ADMIN') {
     throw Object.assign(
-      new Error('Activity logs are only available for USER role accounts'),
+      new Error('Activity logs are only available for non-admin accounts'),
       { status: 400 }
     )
   }

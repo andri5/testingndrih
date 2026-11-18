@@ -4,6 +4,7 @@ import { Alert, Button, Input, Spinner } from './ui'
 import { userAPI } from '../services/api'
 import { useAuthStore } from '../store/authStore'
 import UserMenuAssignment, { MenuAssignButton } from './UserMenuAssignment'
+import { ROLE_DEFINITIONS, roleLabel } from '../constants/roles'
 
 const emptyForm = {
   name: '',
@@ -243,10 +244,10 @@ export default function UserManagement() {
           <thead>
             <tr className="border-b border-[#2D2D2F] bg-[#0F0E11] text-left text-[#A0A0A4]">
               <th className="px-4 py-3 font-medium">Name</th>
-              <th className="px-4 py-3 font-medium">Email</th>
+              <th className="px-4 py-3 font-medium hidden sm:table-cell">Email</th>
               <th className="px-4 py-3 font-medium">Role</th>
-              <th className="px-4 py-3 font-medium">Status</th>
-              <th className="px-4 py-3 font-medium">Joined</th>
+              <th className="px-4 py-3 font-medium hidden md:table-cell">Status</th>
+              <th className="px-4 py-3 font-medium hidden lg:table-cell">Joined</th>
               <th className="px-4 py-3 font-medium text-right">Actions</th>
             </tr>
           </thead>
@@ -270,9 +271,9 @@ export default function UserManagement() {
                   key={u.id}
                   className={`border-b border-[#2D2D2F] last:border-0 transition-colors hover:bg-[#0F766E]/10 ${!isActive ? 'opacity-70' : ''}`}
                 >
-                  <td className="px-4 py-3 text-[#E0E0E2]">{u.name || '—'}</td>
-                  <td className="px-4 py-3 text-[#A0A0A4]">
-                    {u.email}
+                  <td className="px-4 py-3 text-[#E0E0E2] max-w-[120px] sm:max-w-none truncate">{u.name || '—'}</td>
+                  <td className="px-4 py-3 text-[#A0A0A4] hidden sm:table-cell">
+                    <span className="break-all">{u.email}</span>
                     {isPrimaryAdmin && (
                       <span className="ml-2 text-xs text-[#0F766E]">(primary admin)</span>
                     )}
@@ -287,14 +288,17 @@ export default function UserManagement() {
                         value={u.role}
                         disabled={updatingId === u.id || (isSelf && u.role === 'ADMIN')}
                         onChange={(e) => handleRoleChange(u.id, e.target.value)}
-                        className="px-2 py-1 bg-[#0F0E11] border border-[#2D2D2F] rounded text-[#E0E0E2] text-xs focus:outline-none focus:border-[#0F766E] disabled:opacity-50"
+                        className="px-2 py-1 bg-[#0F0E11] border border-[#2D2D2F] rounded text-[#E0E0E2] text-xs focus:outline-none focus:border-[#0F766E] disabled:opacity-50 max-w-full"
                       >
-                        <option value="USER">USER</option>
-                        <option value="ADMIN">ADMIN</option>
+                        {ROLE_DEFINITIONS.map((r) => (
+                          <option key={r.key} value={r.key}>
+                            {roleLabel(r.key)}
+                          </option>
+                        ))}
                       </select>
                     )}
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3 hidden md:table-cell">
                     {canToggleActive ? (
                       <button
                         type="button"
@@ -314,7 +318,7 @@ export default function UserManagement() {
                       </span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-[#666] text-xs">
+                  <td className="px-4 py-3 text-[#666] text-xs hidden lg:table-cell">
                     {u.createdAt
                       ? new Date(u.createdAt).toLocaleDateString('en-US')
                       : '—'}
@@ -405,9 +409,15 @@ export default function UserManagement() {
                   onChange={(e) => setFormData((p) => ({ ...p, role: e.target.value }))}
                   className="w-full px-3 py-2 bg-[#161618] border border-[rgba(255,255,255,0.1)] rounded-md text-[#E0E0E2] text-sm"
                 >
-                  <option value="USER">USER</option>
-                  <option value="ADMIN">ADMIN</option>
+                  {ROLE_DEFINITIONS.map((r) => (
+                    <option key={r.key} value={r.key}>
+                      {roleLabel(r.key)} — {r.description.slice(0, 48)}…
+                    </option>
+                  ))}
                 </select>
+                <p className="text-[11px] text-[#666] mt-1.5">
+                  {ROLE_DEFINITIONS.find((r) => r.key === formData.role)?.description}
+                </p>
               </div>
             )}
             {!(

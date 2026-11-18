@@ -8,7 +8,7 @@ import { Play, Plus, Trash2, Globe } from 'lucide-react'
 
 const METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD']
 
-const i18n = {
+const i18n = {
     title: 'API Testing',
     subtitle: 'HTTP request tests linked to scenarios',
     selectScenario: 'Select scenario',
@@ -203,11 +203,11 @@ export default function ApiTestingPage() {
               const last = test.results?.[0]
               return (
                 <Card key={test.id} className="flex flex-wrap items-center justify-between gap-4">
-                  <div>
-                    <p className="font-medium text-[#E0E0E2]">{test.name}</p>
-                    <p className="text-xs text-[#8A8A8F] mt-1">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-[#E0E0E2] truncate">{test.name}</p>
+                    <p className="text-xs text-[#8A8A8F] mt-1 break-all">
                       <Badge variant="primary">{test.method}</Badge>{' '}
-                      <span className="font-mono">{test.url}</span>
+                      <span className="font-mono break-all">{test.url}</span>
                     </p>
                     {last && (
                       <p className="text-xs mt-2 text-[#666]">

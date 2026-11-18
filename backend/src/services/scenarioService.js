@@ -13,17 +13,21 @@ export function withLiveStepCount(scenario) {
 /**
  * Create a new scenario
  */
+function normalizeScenarioUrl(url) {
+  const trimmed = String(url || '').trim()
+  if (!trimmed) return ''
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) return trimmed
+  return `https://${trimmed}`
+}
+
 export async function createScenario(userId, data) {
   const { name, description, url, folderId = null, tags } = data
 
-  // Validation
-  if (!name || !url) {
-    throw new Error('Name and URL are required')
+  if (!name?.trim()) {
+    throw new Error('Name is required')
   }
 
-  if (!url.startsWith('http://') && !url.startsWith('https://')) {
-    throw new Error('URL must start with http:// or https://')
-  }
+  const normalizedUrl = normalizeScenarioUrl(url)
 
   if (folderId) {
     await assertFolderBelongsToUser(folderId, userId)
@@ -36,9 +40,9 @@ export async function createScenario(userId, data) {
 
     const scenario = await prisma.scenario.create({
       data: {
-        name,
+        name: name.trim(),
         description: description || '',
-        url,
+        url: normalizedUrl,
         userId,
         steps: 0,
         folderId: folderId || null,
@@ -186,11 +190,6 @@ export async function updateScenario(scenarioId, userId, data) {
       throw new Error('Unauthorized: Cannot update this scenario')
     }
 
-    // Validate URL if provided
-    if (url && !url.startsWith('http://') && !url.startsWith('https://')) {
-      throw new Error('URL must start with http:// or https://')
-    }
-
     if (folderId !== undefined && folderId !== null) {
       await assertFolderBelongsToUser(folderId, userId)
     }
@@ -200,7 +199,7 @@ export async function updateScenario(scenarioId, userId, data) {
       data: {
         ...(name && { name }),
         ...(description !== undefined && { description }),
-        ...(url && { url }),
+        ...(url !== undefined && { url: normalizeScenarioUrl(url) }),
         ...(tags !== undefined && { tags: normalizeTags(tags) }),
         ...(folderId !== undefined && { folderId: folderId || null }),
         ...(sortOrder !== undefined && { sortOrder: Number(sortOrder) || 0 }),

@@ -43,7 +43,7 @@ export default function SharedRunPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 text-slate-900">
       <header className="border-b border-slate-200 bg-white/80 backdrop-blur sticky top-0 z-10">
-        <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
+        <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between gap-2">
           <Link to="/" className="font-semibold text-[#0F766E] hover:underline">
             Test Sambil Ngopi
           </Link>
@@ -91,15 +91,15 @@ export default function SharedRunPage() {
             </div>
 
             <div className="flex flex-wrap gap-3 mb-5">
-              <div className="flex-1 min-w-[140px] p-3 rounded-lg border bg-green-50 border-green-200">
+              <div className="flex-1 min-w-0 sm:min-w-[140px] p-3 rounded-lg border bg-green-50 border-green-200">
                 <p className="text-xs font-medium text-green-600">Passed</p>
                 <p className="text-xl font-bold text-green-700 mt-0.5">{execution.passedSteps || 0}</p>
               </div>
-              <div className="flex-1 min-w-[140px] p-3 rounded-lg border bg-red-50 border-red-200">
+              <div className="flex-1 min-w-0 sm:min-w-[140px] p-3 rounded-lg border bg-red-50 border-red-200">
                 <p className="text-xs font-medium text-red-600">Failed</p>
                 <p className="text-xl font-bold text-red-700 mt-0.5">{execution.failedSteps || 0}</p>
               </div>
-              <div className="flex-1 min-w-[140px] p-3 rounded-lg border bg-slate-50 border-slate-200">
+              <div className="flex-1 min-w-0 sm:min-w-[140px] p-3 rounded-lg border bg-slate-50 border-slate-200">
                 <p className="text-xs font-medium text-slate-600">Duration</p>
                 <p className="text-xl font-bold text-slate-800 mt-0.5">
                   {execution.duration != null ? `${(execution.duration / 1000).toFixed(2)}s` : '−'}

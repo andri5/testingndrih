@@ -18,7 +18,8 @@ describe('ScenarioService - Comprehensive Business Logic Testing', () => {
         userId: 'user-123',
         steps: 0
       }
-      
+
+      prisma.scenario.count.mockResolvedValue(0)
       prisma.scenario.create.mockResolvedValue(mockData)
 
       const result = await createScenario('user-123', {
@@ -30,35 +31,66 @@ describe('ScenarioService - Comprehensive Business Logic Testing', () => {
       expect(result.id).toBe('scenario-1')
       expect(result.name).toBe('Login Test')
       expect(prisma.scenario.create).toHaveBeenCalledWith({
-        data: {
+        data: expect.objectContaining({
           name: 'Login Test',
           description: 'Test login flow',
           url: 'https://example.com',
           userId: 'user-123',
           steps: 0
-        }
+        })
       })
     })
 
     it('should reject empty name', async () => {
       await expect(
         createScenario('user-123', { url: 'https://example.com' })
-      ).rejects.toThrow('Name and URL are required')
+      ).rejects.toThrow('Name is required')
     })
 
-    it('should reject empty URL', async () => {
-      await expect(
-        createScenario('user-123', { name: 'Test' })
-      ).rejects.toThrow('Name and URL are required')
+    it('should allow empty URL and store blank', async () => {
+      prisma.scenario.count.mockResolvedValue(0)
+      prisma.scenario.create.mockResolvedValue({
+        id: 'scenario-1',
+        name: 'Test',
+        url: '',
+        userId: 'user-123',
+        description: '',
+        steps: 0
+      })
+
+      const result = await createScenario('user-123', { name: 'Test' })
+
+      expect(result).toBeDefined()
+      expect(prisma.scenario.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          name: 'Test',
+          url: '',
+        })
+      })
     })
 
-    it('should reject invalid URL format', async () => {
-      await expect(
-        createScenario('user-123', { name: 'Test', url: 'invalid.com' })
-      ).rejects.toThrow('URL must start with http:// or https://')
+    it('should auto-prefix https for domain-only URL', async () => {
+      prisma.scenario.count.mockResolvedValue(0)
+      prisma.scenario.create.mockResolvedValue({
+        id: 'scenario-1',
+        name: 'Test',
+        url: 'https://invalid.com',
+        userId: 'user-123',
+        description: '',
+        steps: 0
+      })
+
+      await createScenario('user-123', { name: 'Test', url: 'invalid.com' })
+
+      expect(prisma.scenario.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          url: 'https://invalid.com',
+        })
+      })
     })
 
     it('should accept https URLs', async () => {
+      prisma.scenario.count.mockResolvedValue(0)
       prisma.scenario.create.mockResolvedValue({
         id: 'scenario-1',
         name: 'Test',
@@ -78,6 +110,7 @@ describe('ScenarioService - Comprehensive Business Logic Testing', () => {
     })
 
     it('should accept http URLs', async () => {
+      prisma.scenario.count.mockResolvedValue(0)
       prisma.scenario.create.mockResolvedValue({
         id: 'scenario-1',
         name: 'Test',
@@ -96,6 +129,7 @@ describe('ScenarioService - Comprehensive Business Logic Testing', () => {
     })
 
     it('should handle database errors gracefully', async () => {
+      prisma.scenario.count.mockResolvedValue(0)
       prisma.scenario.create.mockRejectedValue(new Error('Database error'))
 
       await expect(
@@ -239,15 +273,22 @@ describe('ScenarioService - Comprehensive Business Logic Testing', () => {
       expect(prisma.scenario.update).toHaveBeenCalled()
     })
 
-    it('should reject invalid URL format', async () => {
+    it('should auto-prefix https when updating domain-only URL', async () => {
       prisma.scenario.findUnique.mockResolvedValue({
         id: 'scenario-1',
         userId: 'user-123'
       })
+      prisma.scenario.update.mockResolvedValue({
+        id: 'scenario-1',
+        url: 'https://invalid.com'
+      })
 
-      await expect(
-        updateScenario('scenario-1', 'user-123', { url: 'invalid.com' })
-      ).rejects.toThrow('URL must start with http:// or https://')
+      await updateScenario('scenario-1', 'user-123', { url: 'invalid.com' })
+
+      expect(prisma.scenario.update).toHaveBeenCalledWith({
+        where: { id: 'scenario-1' },
+        data: expect.objectContaining({ url: 'https://invalid.com' }),
+      })
     })
 
     it('should throw error if scenario not found', async () => {

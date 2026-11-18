@@ -8,7 +8,7 @@ import { Layers, Plus, Trash2, Key, Star } from 'lucide-react'
 
 const inputCls = 'w-full px-3 py-2 bg-[#0F0E11] border border-[#2D2D2F] rounded-lg text-[#E0E0E2] text-sm focus:outline-none focus:border-[#0F766E]'
 
-const i18n = {
+const i18n = {
     title: 'Environments',
     subtitle: 'Manage profiles and variables for dev, staging, and production',
     hint: 'Use {{variableName}} in step URLs, selectors, and values — e.g. {{baseUrl}}/login',
@@ -251,13 +251,13 @@ export default function EnvironmentsPage() {
                   </form>
                   <ul className="space-y-2">
                     {(selected.variables || []).map((v) => (
-                      <li key={v.id} className="flex justify-between items-center py-2 border-b border-[#2D2D2F]/50">
-                        <div>
-                          <span className="font-mono text-sm text-[#E0E0E2]">{v.key}</span>
+                      <li key={v.id} className="flex justify-between items-start gap-3 py-2 border-b border-[#2D2D2F]/50">
+                        <div className="min-w-0 flex-1">
+                          <span className="font-mono text-sm text-[#E0E0E2] break-all">{v.key}</span>
                           {v.isSecret && <Badge variant="warning" className="ml-2">secret</Badge>}
-                          <p className="text-xs text-[#8A8A8F] mt-0.5 font-mono">{v.value}</p>
+                          <p className="text-xs text-[#8A8A8F] mt-0.5 font-mono break-all">{v.value}</p>
                         </div>
-                        <Button size="sm" variant="danger" onClick={() => handleDeleteVar(v.id)}>
+                        <Button size="sm" variant="danger" onClick={() => handleDeleteVar(v.id)} className="shrink-0">
                           <Trash2 size={12} />
                         </Button>
                       </li>

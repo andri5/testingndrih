@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import apiClient from '../../services/api'
-import { AlertCircle, Zap, Gauge, TrendingUp, BarChart3 } from 'lucide-react'
+import { AlertCircle, Zap, Gauge, TrendingUp, BarChart3 } from 'lucide-react'
 
 const i18n = { 
     totalTests: 'Total Tests', 
@@ -39,7 +39,7 @@ export default function StressTestSummary() {
       <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-6 border border-gray-200 dark:border-gray-800">
         <div className="space-y-4">
           <div className="h-6 bg-gray-200 dark:bg-gray-800 rounded w-1/3 animate-pulse" />
-          <div className="grid grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
             {[1, 2, 3, 4].map(i => (
               <div key={i} className="h-20 bg-gray-200 dark:bg-gray-800 rounded animate-pulse" />
             ))}

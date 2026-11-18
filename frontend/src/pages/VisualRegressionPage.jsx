@@ -184,11 +184,11 @@ export default function VisualRegressionPage() {
 
         {runError && <Alert type="error" message={runError} />}
 
-        <Card className="flex flex-wrap gap-4 items-end">
-          <div>
+        <Card className="flex flex-col sm:flex-row sm:flex-wrap gap-4 sm:items-end">
+          <div className="w-full sm:w-auto min-w-0">
             <label className="text-xs text-[#8A8A8F] block mb-1">{t.selectScenario}</label>
             <select
-              className="px-3 py-2 bg-[#0F0E11] border border-[#2D2D2F] rounded-lg text-sm text-[#E0E0E2] min-w-[200px]"
+              className="px-3 py-2 bg-[#0F0E11] border border-[#2D2D2F] rounded-lg text-sm text-[#E0E0E2] w-full sm:w-auto sm:min-w-[200px] max-w-full"
               value={scenarioId}
               onChange={(e) => setScenarioId(e.target.value)}
             >
@@ -242,7 +242,7 @@ export default function VisualRegressionPage() {
             {baselines.length === 0 ? (
               <p className="text-sm text-[#8A8A8F]">{t.noBaselines}</p>
             ) : (
-              <div className="grid grid-cols-2 gap-3 max-h-96 overflow-y-auto">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-96 overflow-y-auto">
                 {baselines.map((b) => (
                   <div key={b.id} className="border border-[#2D2D2F] rounded-lg p-2">
                     <p className="text-xs text-[#8A8A8F] mb-1">{t.step} {b.stepNumber} · {b.browser}</p>
@@ -269,7 +269,7 @@ export default function VisualRegressionPage() {
                         {c.status} {c.diffPercent != null ? `· ${c.diffPercent}%` : ''}
                       </Badge>
                     </div>
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                       {[
                         [t.baseline, c.baselineUrl],
                         [t.current, c.currentUrl],

@@ -33,12 +33,29 @@ export const DEFAULT_USER_MENU_KEYS = [
 
 const PATH_BY_KEY = Object.fromEntries(MENU_DEFINITIONS.map((m) => [m.key, m.path]))
 
+const ROLE_FALLBACK_BY_ROLE = {
+  LEAD: ALL_MENU_KEYS,
+  USER: DEFAULT_USER_MENU_KEYS,
+  VIEWER: ['dashboard', 'reports', 'analytics', 'issues'],
+}
+
+/**
+ * @param {object} user — may include enabledUserMenus / roleMenuPreset from /auth/me
+ */
 export function resolveUserMenuKeys(user) {
   if (!user) return []
   if (user.role === 'ADMIN') return ALL_MENU_KEYS
+  const catalog = Array.isArray(user.enabledUserMenus) && user.enabledUserMenus.length > 0
+    ? user.enabledUserMenus.filter((key) => ALL_MENU_KEYS.includes(key))
+    : ALL_MENU_KEYS
+  const preset = Array.isArray(user.roleMenuPreset) && user.roleMenuPreset.length > 0
+    ? user.roleMenuPreset.filter((key) => ALL_MENU_KEYS.includes(key))
+    : (ROLE_FALLBACK_BY_ROLE[user.role] || DEFAULT_USER_MENU_KEYS)
   const assigned = Array.isArray(user.menuPermissions) ? user.menuPermissions : []
-  if (assigned.length === 0) return DEFAULT_USER_MENU_KEYS
-  return assigned.filter((key) => ALL_MENU_KEYS.includes(key))
+  const base = assigned.length === 0
+    ? preset
+    : assigned.filter((key) => ALL_MENU_KEYS.includes(key))
+  return base.filter((key) => catalog.includes(key))
 }
 
 export function resolveUserMenuPaths(user) {

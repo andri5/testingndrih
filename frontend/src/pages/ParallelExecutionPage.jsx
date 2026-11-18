@@ -14,7 +14,7 @@ export default function ParallelExecutionPage() {
   const [error, setError] = useState(null)
   const [success, setSuccess] = useState(null)
 
-  const i18n = {
+  const i18n = {
       title: 'Parallel Test Execution',
       description: 'Execute multiple scenarios simultaneously for faster testing',
       selectScenarios: 'Select Scenarios',
@@ -166,7 +166,7 @@ export default function ParallelExecutionPage() {
               <p className={'text-gray-600'}>{t.noScenarios}</p>
             ) : (
               <>
-                <div className="flex gap-2 justify-between">
+                <div className="flex flex-wrap gap-2 justify-between">
                   <div className="flex gap-2">
                     <Button
                       size="sm"
