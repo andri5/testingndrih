@@ -13,7 +13,7 @@ import { ImportPreviewModal } from '../components/ImportPreviewModal'
 import { Tooltip } from '../components/ui'
 import { useScenarioStore } from '../store/scenarioStore'
 import { useFolderStore } from '../store/folderStore'
-import { executionAPI } from '../services/api'
+import { executionAPI, testRunAPI, scenarioAPI } from '../services/api'
 const i18n = {
     title: 'Test Repository',
     subtitle: 'Organize scenarios in folders — create, move, and run from one place',
@@ -198,6 +198,45 @@ export default function ScenariosPage() {
       setSelectedIds(new Set())
     } catch (err) {
       alert(err.message || 'Failed to move scenarios')
+    }
+  }
+
+  const handleCreateTestRun = async () => {
+    if (selectedIds.size === 0) return
+    const title = window.prompt(
+      'Judul Test Run (multi-case):',
+      `Run ${new Date().toLocaleDateString('id-ID')} (${selectedIds.size} cases)`
+    )
+    if (title === null) return
+    if (!title.trim()) {
+      alert('Judul wajib diisi')
+      return
+    }
+    try {
+      const res = await testRunAPI.create({
+        title: title.trim(),
+        scenarioIds: [...selectedIds],
+      })
+      setSelectedIds(new Set())
+      navigate(`/test-runs/${res.data.run.id}`)
+    } catch (err) {
+      alert(err.response?.data?.message || err.message || 'Gagal membuat Test Run')
+    }
+  }
+
+  const handleBulkAssignOwner = async () => {
+    if (selectedIds.size === 0) return
+    const ownerId = window.prompt(
+      'Set PIC / ownerId (user id) untuk case terpilih. Kosongkan untuk batal.'
+    )
+    if (ownerId === null || !ownerId.trim()) return
+    try {
+      await scenarioAPI.bulkAssignOwner([...selectedIds], ownerId.trim())
+      setSelectedIds(new Set())
+      refreshList()
+      alert('PIC diperbarui')
+    } catch (err) {
+      alert(err.response?.data?.message || err.message || 'Gagal assign PIC')
     }
   }
 
@@ -715,7 +754,7 @@ export default function ScenariosPage() {
               </p>
             ) : (
               <p className="text-sm text-[#8A8A8F] mb-4 -mt-2">
-                Isi nama skenario. URL boleh dikosongkan dulu — bisa ditambah nanti atau lewat Record.
+                Isi nama skenario. URL boleh dikosongkan dulu — steps bisa ditambah manual di detail.
               </p>
             )}
 
@@ -772,15 +811,27 @@ export default function ScenariosPage() {
                   <Button
                     variant="primary"
                     size="sm"
+                    onClick={handleCreateTestRun}
+                    disabled={bulkExecuteStatus === 'running'}
+                    className="flex-1 sm:flex-none"
+                  >
+                    Create Test Run ({selectedIds.size})
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="sm"
                     onClick={handleBulkExecute}
                     disabled={bulkExecuteStatus === 'running'}
                     className="flex-1 sm:flex-none"
                   >
-                    ▶ Run Selected ({selectedIds.size})
+                    ▶ Auto Run
                   </Button>
                   <Button variant="secondary" size="sm" onClick={handleBulkMove}>
                     <FolderInput size={14} className="inline mr-1" />
                     Move…
+                  </Button>
+                  <Button variant="secondary" size="sm" onClick={handleBulkAssignOwner}>
+                    Set PIC…
                   </Button>
                 </>
               )}

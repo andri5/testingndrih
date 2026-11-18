@@ -3,7 +3,7 @@
 Welcome to **Test Sambil Ngopi** documentation — guides for setup, development, testing, and production deployment.
 
 **Live:** [testsambilngopi.my.id](https://testsambilngopi.my.id)  
-**Last updated:** August 2026 · **Project version:** 1.19.x
+**Last updated:** November 2026 · **Project version:** 1.19.x+
 
 ---
 
@@ -19,6 +19,7 @@ Welcome to **Test Sambil Ngopi** documentation — guides for setup, development
 | [API_ENDPOINTS.md](./API_ENDPOINTS.md) | REST API reference |
 | [DEPLOYMENT.md](./DEPLOYMENT.md) | Dev → approve → deploy `.my.id` + Test Repository UI map |
 | [RUN_INTERNAL.md](./RUN_INTERNAL.md) | Public cloud vs internal staging Run (local / agent) |
+| [MANUAL_QA.md](./MANUAL_QA.md) | Manual Run, case Details/Attachments/Runs/History, Test Runs (Fase A–C) |
 | [../README.md](../README.md) | Main readme (quick start, features) |
 
 ---
@@ -71,13 +72,15 @@ Welcome to **Test Sambil Ngopi** documentation — guides for setup, development
 
 ## Key features
 
+- **Manual QA** — Manual checklist (Pass/Fail/Blocked/Skipped), case Details, Attachments, Runs/History tabs
+- **Test Runs** — multi-case cycles with PIC, progress, Close/Seal
 - **Record & playback** — client-direct / proxy recording, step editor, Playwright execution engine
 - **Test chains** — multi-scenario workflows
 - **Admin tools** — smoke, stress, security, API testing, visual regression
 - **Automation** — scheduler, parallel runs, browser matrix
 - **Platform** — environments, analytics, reports, issue tracker, CI API tokens
-- **Users** — role-based access (ADMIN / USER), activity log, welcome splash
-- **Resilience** — maintenance page, server health monitor, offline banner
+- **Users** — roles ADMIN / LEAD / USER / VIEWER with recommended menus, activity log
+- **Resilience** — maintenance page, server health monitor, offline banner, hideable Dashboard reminders
 
 ---
 

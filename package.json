@@ -21,6 +21,10 @@
     "generate-secrets": "node scripts/ops/generate-production-secrets.js",
     "push": "node scripts/ops/git-push-safe.js",
     "test:security": "npm run test:security --workspace=backend",
+    "agent": "node scripts/local-agent/run.mjs",
+    "agent:install-windows": "powershell -ExecutionPolicy Bypass -File scripts/local-agent/install-windows-task.ps1",
+    "agent:status-windows": "powershell -ExecutionPolicy Bypass -File scripts/local-agent/status-windows-task.ps1",
+    "agent:uninstall-windows": "powershell -ExecutionPolicy Bypass -File scripts/local-agent/uninstall-windows-task.ps1",
     "prepare": "husky install"
   },
   "workspaces": [

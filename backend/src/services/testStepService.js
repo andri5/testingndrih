@@ -4,7 +4,7 @@ import { prisma } from '../lib/prisma.js'
  * Create a test step for a scenario
  */
 export async function createTestStep(scenarioId, userId, data) {
-  const { stepNumber, type, description, selector, value, metadata } = data
+  const { stepNumber, type, description, selector, value, metadata, expectedResult } = data
 
   try {
     // Verify scenario belongs to user
@@ -43,6 +43,7 @@ export async function createTestStep(scenarioId, userId, data) {
               stepNumber: nextStepNumber,
               type,
               description,
+              expectedResult: expectedResult != null ? String(expectedResult) : null,
               selector: selector || null,
               value: value || null,
               metadata: metadata ? JSON.stringify(metadata) : null
@@ -166,7 +167,11 @@ export async function updateTestStep(stepId, userId, data) {
         description: data.description || step.description,
         selector: data.selector ?? step.selector,
         value: data.value ?? step.value,
-        metadata: data.metadata || step.metadata
+        metadata: data.metadata || step.metadata,
+        ...(data.expectedResult !== undefined && {
+          expectedResult:
+            data.expectedResult == null ? null : String(data.expectedResult),
+        }),
       }
     })
 

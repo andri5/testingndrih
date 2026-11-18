@@ -1,3 +1,15 @@
+# Unreleased
+
+### Features
+
+* **manual-qa:** Manual Run checklist, case Details/Attachments/Runs/History, multi-case Test Runs (Fase A–C)
+* **ui:** hide/show Dashboard reminders; Manual mode hides Record; Execution Mode Manual/Automated
+* **roles:** LEAD / USER / VIEWER menu presets including Test Runs; Viewer can see Scenarios + Test Runs
+
+### Docs
+
+* add `docs/MANUAL_QA.md`; update How to use help modal for QA flows
+
 # [1.19.0](https://github.com/andri5/testingndrih/compare/v1.18.0...v1.19.0) (2026-08-04)
 
 

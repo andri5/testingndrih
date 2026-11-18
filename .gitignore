@@ -9,6 +9,9 @@ pnpm-lock.yaml
 .env.*.local
 .env.test
 .env.production
+scripts/local-agent/agent.env
+scripts/local-agent/agent.log
+scripts/local-agent/run-windows.cmd
 
 # SSH / deploy keys
 deploy_key

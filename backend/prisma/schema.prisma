@@ -16,6 +16,8 @@ enum ExecutionStatus {
   RUNNING
   PASSED
   FAILED
+  BLOCKED
+  SKIPPED
 }
 
 enum StepType {
@@ -70,6 +72,19 @@ enum AgentJobStatus {
   CANCELLED
 }
 
+enum TestRunStatus {
+  OPEN
+  CLOSED
+}
+
+enum TestRunItemStatus {
+  NOT_RUN
+  PASSED
+  FAILED
+  BLOCKED
+  SKIPPED
+}
+
 model AppSetting {
   id        String   @id @default(cuid())
   key       String   @unique
@@ -96,7 +111,8 @@ model User {
   resetToken       String?   @unique
   resetTokenExpiry DateTime?
 
-  scenarios        Scenario[]
+  scenarios        Scenario[] @relation("ScenarioOwnerCreator")
+  ownedScenarios   Scenario[] @relation("ScenarioCaseOwner")
   scenarioFolders  ScenarioFolder[]
   executions       Execution[]
   executionLogs    ExecutionLog[]
@@ -115,6 +131,9 @@ model User {
   executionShareLinks    ExecutionShareLink[]
   issueShareLinks        IssueShareLink[]
   issues                 Issue[]
+  testRunsCreated        TestRun[]           @relation("TestRunCreator")
+  testRunAssignments     TestRunItem[]       @relation("TestRunItemAssignee")
+  scenarioAuditLogs      ScenarioAuditLog[]
 
   @@map("users")
 }
@@ -237,6 +256,12 @@ model Scenario {
   scenarioCode String?  @unique
   name         String
   description  String?
+  /// Testiny-style: what must be true before steps
+  precondition String?
+  /// LOW | MEDIUM | HIGH | CRITICAL
+  priority     String   @default("MEDIUM")
+  /// Functional | Regression | Smoke | Other
+  caseType     String?  @default("Functional")
   url          String
   steps        Int      @default(0) // count of test steps
   isSmoke      Boolean  @default(false) // Mark scenario as smoke test
@@ -248,9 +273,13 @@ model Scenario {
   sortOrder    Int      @default(0)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+  /// Creator / workspace owner
   userId       String
+  /// PIC who executes / owns the case (defaults to creator)
+  ownerId      String?
 
-  user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user          User             @relation("ScenarioOwnerCreator", fields: [userId], references: [id], onDelete: Cascade)
+  owner         User?            @relation("ScenarioCaseOwner", fields: [ownerId], references: [id], onDelete: SetNull)
   folder        ScenarioFolder?  @relation(fields: [folderId], references: [id], onDelete: SetNull)
   testSteps     TestStep[]
   executions    Execution[]
@@ -263,13 +292,98 @@ model Scenario {
   visualComparisons VisualComparison[]
   agentJobs AgentJob[]
   issues Issue[]
+  attachments ScenarioAttachment[]
+  testRunItems TestRunItem[]
+  auditLogs    ScenarioAuditLog[]
 
   @@index([userId])
+  @@index([ownerId])
   @@index([userId, folderId])
   @@index([folderId, sortOrder])
   @@index([isStress])
   @@index([isSecurity])
   @@map("scenarios")
+}
+
+/// Multi-case Test Run (Testiny-style) — container of case results
+model TestRun {
+  id          String        @id @default(cuid())
+  title       String
+  description String?
+  status      TestRunStatus @default(OPEN)
+  closedAt    DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  createdById String
+
+  createdBy User          @relation("TestRunCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  items     TestRunItem[]
+
+  @@index([createdById, status])
+  @@index([createdAt])
+  @@map("test_runs")
+}
+
+model TestRunItem {
+  id           String            @id @default(cuid())
+  status       TestRunItemStatus @default(NOT_RUN)
+  notes        String?
+  sortOrder    Int               @default(0)
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  testRunId    String
+  scenarioId   String
+  assigneeId   String?
+  /// Optional link to a Manual Execution for step-level checklist
+  executionId  String?
+
+  testRun  TestRun   @relation(fields: [testRunId], references: [id], onDelete: Cascade)
+  scenario Scenario  @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+  assignee User?     @relation("TestRunItemAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+
+  @@unique([testRunId, scenarioId])
+  @@index([testRunId])
+  @@index([scenarioId])
+  @@index([assigneeId])
+  @@index([status])
+  @@map("test_run_items")
+}
+
+/// Audit trail for test case field changes (History tab)
+model ScenarioAuditLog {
+  id         String   @id @default(cuid())
+  action     String
+  field      String?
+  oldValue   String?
+  newValue   String?
+  createdAt  DateTime @default(now())
+  scenarioId String
+  userId     String
+
+  scenario Scenario @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([scenarioId, createdAt])
+  @@index([userId])
+  @@map("scenario_audit_logs")
+}
+
+/// Files attached to a test case (Testiny Attachments tab)
+model ScenarioAttachment {
+  id           String   @id @default(cuid())
+  filename     String
+  originalName String
+  mimeType     String
+  size         Int
+  url          String
+  createdAt    DateTime @default(now())
+  scenarioId   String
+  uploadedById String?
+
+  scenario Scenario @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+
+  @@index([scenarioId])
+  @@map("scenario_attachments")
 }
 
 model VisualBaseline {
@@ -326,6 +440,8 @@ model TestStep {
   stepNumber Int
   type       StepType
   description String
+  /// What should happen after this step (manual / review)
+  expectedResult String?
   selector   String? // CSS selector or XPath for UI interactions
   value      String? // Input value or assertion text
   metadata   String? // JSON string for additional data

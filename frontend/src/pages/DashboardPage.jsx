@@ -34,7 +34,7 @@ const i18n = {
     failed: 'Failed',
     quickActions: 'Quick Actions',
     createScenario: 'Create Scenario',
-    startRecording: 'Start recording a new test',
+    startRecording: 'Create a new test case',
     runExecution: 'Run Execution',
     executeScenario: 'Execute a test scenario',
     viewAnalytics: 'View Analytics',

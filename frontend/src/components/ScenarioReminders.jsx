@@ -1,6 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { AlertTriangle, Coffee, PlayCircle, PenLine, X } from 'lucide-react'
+import {
+  AlertTriangle,
+  ChevronDown,
+  ChevronUp,
+  Coffee,
+  Eye,
+  EyeOff,
+  PlayCircle,
+  PenLine,
+  X,
+} from 'lucide-react'
 import { scenarioAPI } from '../services/api'
 import { useAuthStore } from '../store/authStore'
 import { useSettingsStore } from '../store/settingsStore'
@@ -18,6 +28,9 @@ const COPY = {
     ctaStuck: 'Lanjutin',
     ctaDraft: 'Isi step',
     dismiss: 'Nanti aja',
+    hide: 'Sembunyikan',
+    show: 'Tampilkan pengingat',
+    hiddenBar: (n) => `Pengingat (${n}) disembunyikan`,
   },
   formal: {
     title: 'You have unfinished scenarios',
@@ -30,6 +43,9 @@ const COPY = {
     ctaStuck: 'Open',
     ctaDraft: 'Add steps',
     dismiss: 'Dismiss today',
+    hide: 'Hide',
+    show: 'Show reminders',
+    hiddenBar: (n) => `Reminders (${n}) hidden`,
   },
 }
 
@@ -39,6 +55,10 @@ function todayKey() {
 
 function dismissStorageKey(userId) {
   return `reminderDismissed:${userId || 'anon'}:${todayKey()}`
+}
+
+function panelHiddenKey(userId) {
+  return `reminderPanelHidden:${userId || 'anon'}`
 }
 
 function readDismissed(userId) {
@@ -52,6 +72,18 @@ function readDismissed(userId) {
 
 function writeDismissed(userId, set) {
   localStorage.setItem(dismissStorageKey(userId), JSON.stringify([...set]))
+}
+
+function readPanelHidden(userId) {
+  try {
+    return localStorage.getItem(panelHiddenKey(userId)) === '1'
+  } catch {
+    return false
+  }
+}
+
+function writePanelHidden(userId, hidden) {
+  localStorage.setItem(panelHiddenKey(userId), hidden ? '1' : '0')
 }
 
 function typeIcon(type) {
@@ -71,6 +103,7 @@ export default function ScenarioReminders() {
   const [items, setItems] = useState([])
   const [counts, setCounts] = useState({ total: 0 })
   const [dismissed, setDismissed] = useState(() => readDismissed(user?.id))
+  const [panelHidden, setPanelHidden] = useState(() => readPanelHidden(user?.id))
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -92,6 +125,7 @@ export default function ScenarioReminders() {
 
   useEffect(() => {
     setDismissed(readDismissed(user?.id))
+    setPanelHidden(readPanelHidden(user?.id))
   }, [user?.id])
 
   const visible = useMemo(
@@ -111,6 +145,16 @@ export default function ScenarioReminders() {
     visible.forEach((item) => next.add(item.id))
     setDismissed(next)
     writeDismissed(user?.id, next)
+  }
+
+  const hidePanel = () => {
+    setPanelHidden(true)
+    writePanelHidden(user?.id, true)
+  }
+
+  const showPanel = () => {
+    setPanelHidden(false)
+    writePanelHidden(user?.id, false)
   }
 
   const go = (item) => {
@@ -133,6 +177,26 @@ export default function ScenarioReminders() {
     return null
   }
 
+  if (panelHidden) {
+    return (
+      <div className="linear-card px-4 py-3 border border-amber-200/70 bg-amber-50/50 flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-2 min-w-0 text-sm text-ink">
+          <EyeOff size={16} className="text-amber-700 shrink-0" />
+          <span className="font-medium truncate">{t.hiddenBar(visible.length)}</span>
+        </div>
+        <button
+          type="button"
+          onClick={showPanel}
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand hover:text-brand-hover px-2.5 py-1.5 rounded-lg bg-white border border-amber-200"
+        >
+          <Eye size={14} />
+          {t.show}
+          <ChevronDown size={14} />
+        </button>
+      </div>
+    )
+  }
+
   return (
     <div className="linear-card p-5 border border-amber-200/80 bg-gradient-to-br from-amber-50/80 to-orange-50/40">
       <div className="flex items-start justify-between gap-3 mb-3">
@@ -145,13 +209,25 @@ export default function ScenarioReminders() {
             <p className="text-sm text-ink-muted mt-0.5">{t.subtitle(visible.length)}</p>
           </div>
         </div>
-        <button
-          type="button"
-          onClick={dismissAll}
-          className="text-xs text-ink-muted hover:text-ink shrink-0"
-        >
-          {t.dismiss}
-        </button>
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            type="button"
+            onClick={hidePanel}
+            title={t.hide}
+            className="inline-flex items-center gap-1 text-xs text-ink-muted hover:text-ink px-2 py-1 rounded-md hover:bg-white/70"
+          >
+            <EyeOff size={13} />
+            {t.hide}
+            <ChevronUp size={13} />
+          </button>
+          <button
+            type="button"
+            onClick={dismissAll}
+            className="text-xs text-ink-muted hover:text-ink"
+          >
+            {t.dismiss}
+          </button>
+        </div>
       </div>
 
       <ul className="space-y-2">

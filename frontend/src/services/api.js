@@ -112,19 +112,36 @@ export const scenarioAPI = {
   
   getById: (id) =>
     apiClient.get(`/scenarios/${id}`),
-  
+
+  getRuns: (id, params = {}) =>
+    apiClient.get(`/scenarios/${id}/runs`, { params }),
+
+  listAttachments: (id) =>
+    apiClient.get(`/scenarios/${id}/attachments`),
+
+  uploadAttachments: (id, files) => {
+    const form = new FormData()
+    ;[...(files || [])].forEach((f) => form.append('files', f))
+    return apiClient.post(`/scenarios/${id}/attachments`, form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+  },
+
+  deleteAttachment: (id, attachmentId) =>
+    apiClient.delete(`/scenarios/${id}/attachments/${attachmentId}`),
+
   update: (id, name, description, url, extra = {}) =>
     apiClient.put(`/scenarios/${id}`, { name, description, url, ...extra }),
-  
+
   delete: (id) =>
     apiClient.delete(`/scenarios/${id}`),
-  
+
   duplicate: (id) =>
     apiClient.post(`/scenarios/${id}/duplicate`),
 
   move: (ids, folderId = null, sortOrders = null) =>
     apiClient.post('/scenarios/move', { ids, folderId, sortOrders }),
-  
+
   getStats: () =>
     apiClient.get('/scenarios/stats'),
 
@@ -137,6 +154,12 @@ export const scenarioAPI = {
 
   updateTags: (id, tags) => apiClient.patch(`/scenarios/${id}/tags`, { tags }),
 
+  getHistory: (id, params = {}) =>
+    apiClient.get(`/scenarios/${id}/history`, { params }),
+
+  bulkAssignOwner: (ids, ownerId) =>
+    apiClient.post('/scenarios/bulk-assign-owner', { ids, ownerId }),
+
   // Search
   search: (query, skip = 0, take = 10) =>
     apiClient.get('/search', { params: { q: query, skip, take } }),
@@ -148,8 +171,16 @@ export const scenarioAPI = {
   getSteps: (scenarioId, skip = 0, take = 10) =>
     apiClient.get(`/scenarios/${scenarioId}/steps`, { params: { skip, take } }),
   
-  createStep: (scenarioId, stepNumber, type, description, selector, value, metadata) =>
-    apiClient.post(`/scenarios/${scenarioId}/steps`, { stepNumber, type, description, selector, value, metadata }),
+  createStep: (scenarioId, stepNumber, type, description, selector, value, metadata, expectedResult) =>
+    apiClient.post(`/scenarios/${scenarioId}/steps`, {
+      stepNumber,
+      type,
+      description,
+      selector,
+      value,
+      metadata,
+      expectedResult,
+    }),
   
   updateStep: (scenarioId, stepId, step) =>
     apiClient.put(`/scenarios/${scenarioId}/steps/${stepId}`, step),
@@ -201,6 +232,22 @@ export const executionAPI = {
   executeScenario: (scenarioId, options = {}) =>
     apiClient.post(`/executions/scenarios/${scenarioId}`, options, { timeout: 300000 }),
 
+  /** Manual QA checklist — no Playwright / no private-network block */
+  startManualRun: (scenarioId) =>
+    apiClient.post(`/executions/manual/${scenarioId}/start`),
+
+  getActiveManualRun: (scenarioId) =>
+    apiClient.get(`/executions/manual/${scenarioId}/active`, { skipGlobalErrorRedirect: true }),
+
+  recordManualStep: (executionId, testStepId, payload) =>
+    apiClient.post(`/executions/manual/${executionId}/steps/${testStepId}`, payload),
+
+  finishManualRun: (executionId) =>
+    apiClient.post(`/executions/manual/${executionId}/finish`),
+
+  cancelManualRun: (executionId) =>
+    apiClient.post(`/executions/manual/${executionId}/cancel`),
+
   // Get execution details (may include heavy step results)
   getDetails: (executionId) =>
     apiClient.get(`/executions/${executionId}`, { timeout: 30000 }),
@@ -213,9 +260,7 @@ export const executionAPI = {
     }
     return apiClient.get('/executions', { params })
   },
-  
 
-  
   // Cancel execution
   cancel: (executionId) =>
     apiClient.post(`/executions/${executionId}/cancel`),
@@ -263,6 +308,17 @@ export const executionAPI = {
 
   revokeShare: (executionId, shareId) =>
     apiClient.delete(`/executions/${executionId}/shares/${shareId}`),
+}
+
+export const testRunAPI = {
+  list: (params = {}) => apiClient.get('/test-runs', { params }),
+  create: (data) => apiClient.post('/test-runs', data),
+  getById: (id) => apiClient.get(`/test-runs/${id}`),
+  close: (id) => apiClient.post(`/test-runs/${id}/close`),
+  addItems: (id, scenarioIds) => apiClient.post(`/test-runs/${id}/items`, { scenarioIds }),
+  updateItem: (id, itemId, data) => apiClient.patch(`/test-runs/${id}/items/${itemId}`, data),
+  removeItem: (id, itemId) => apiClient.delete(`/test-runs/${id}/items/${itemId}`),
+  startManual: (id, itemId) => apiClient.post(`/test-runs/${id}/items/${itemId}/start-manual`),
 }
 
 export const recorderAPI = {

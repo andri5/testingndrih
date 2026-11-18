@@ -2,6 +2,7 @@ import {
   createScenario,
   getUserScenarios,
   getScenarioById,
+  getScenarioRuns,
   updateScenario,
   deleteScenario,
   duplicateScenario,
@@ -12,6 +13,9 @@ import {
   moveScenarios,
   getScenarioReminders,
 } from '../services/scenarioService.js'
+import * as scenarioAttachmentService from '../services/scenarioAttachmentService.js'
+import { listScenarioHistory } from '../services/scenarioAuditService.js'
+import { bulkAssignScenarioOwner } from '../services/testRunService.js'
 
 /**
  * POST /api/scenarios
@@ -19,10 +23,30 @@ import {
  */
 export async function createScenarioHandler(req, res, next) {
   try {
-    const { name, description, url, folderId, tags } = req.body
+    const {
+      name,
+      description,
+      url,
+      folderId,
+      tags,
+      precondition,
+      priority,
+      caseType,
+      ownerId,
+    } = req.body
     const userId = req.user.id
 
-    const scenario = await createScenario(userId, { name, description, url, folderId, tags })
+    const scenario = await createScenario(userId, {
+      name,
+      description,
+      url,
+      folderId,
+      tags,
+      precondition,
+      priority,
+      caseType,
+      ownerId,
+    })
 
     res.status(201).json({
       success: true,
@@ -135,6 +159,84 @@ export async function getScenarioHandler(req, res, next) {
 }
 
 /**
+ * GET /api/scenarios/:id/runs
+ * Execution history for this test case (Testiny Runs tab)
+ */
+export async function getScenarioRunsHandler(req, res, next) {
+  try {
+    const { id } = req.params
+    const { limit = '20', offset = '0' } = req.query
+    const data = await getScenarioRuns(id, req.user.id, { limit, offset })
+    res.json({ success: true, ...data })
+  } catch (error) {
+    next(error)
+  }
+}
+
+export async function uploadScenarioAttachmentsHandler(req, res, next) {
+  try {
+    const attachments = await scenarioAttachmentService.addScenarioAttachments(
+      req.user.id,
+      req.params.id,
+      req.files || []
+    )
+    res.status(201).json({ success: true, attachments })
+  } catch (error) {
+    next(error)
+  }
+}
+
+export async function listScenarioAttachmentsHandler(req, res, next) {
+  try {
+    const attachments = await scenarioAttachmentService.listScenarioAttachments(
+      req.user.id,
+      req.params.id
+    )
+    res.json({ success: true, attachments })
+  } catch (error) {
+    next(error)
+  }
+}
+
+export async function deleteScenarioAttachmentHandler(req, res, next) {
+  try {
+    await scenarioAttachmentService.deleteScenarioAttachment(
+      req.user.id,
+      req.params.id,
+      req.params.attachmentId
+    )
+    res.json({ success: true })
+  } catch (error) {
+    next(error)
+  }
+}
+
+export async function getScenarioHistoryHandler(req, res, next) {
+  try {
+    const data = await listScenarioHistory(req.params.id, req.user.id, {
+      limit: req.query.limit,
+      offset: req.query.offset,
+    })
+    res.json({ success: true, ...data })
+  } catch (error) {
+    next(error)
+  }
+}
+
+export async function bulkAssignOwnerHandler(req, res, next) {
+  try {
+    const result = await bulkAssignScenarioOwner(
+      req.user.id,
+      req.body?.ids || [],
+      req.body?.ownerId
+    )
+    res.json({ success: true, ...result })
+  } catch (error) {
+    next(error)
+  }
+}
+
+/**
  * PUT /api/scenarios/:id
  * Update a scenario
  */
@@ -142,7 +244,18 @@ export async function updateScenarioHandler(req, res, next) {
   try {
     const { id } = req.params
     const userId = req.user.id
-    const { name, description, url, tags, folderId, sortOrder } = req.body
+    const {
+      name,
+      description,
+      url,
+      tags,
+      folderId,
+      sortOrder,
+      precondition,
+      priority,
+      caseType,
+      ownerId,
+    } = req.body
 
     const scenario = await updateScenario(id, userId, {
       name,
@@ -151,6 +264,10 @@ export async function updateScenarioHandler(req, res, next) {
       tags,
       folderId,
       sortOrder,
+      precondition,
+      priority,
+      caseType,
+      ownerId,
     })
 
     res.json({

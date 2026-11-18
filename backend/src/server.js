@@ -36,6 +36,7 @@ import siteRoutes from './routes/siteRoutes.js'
 import aiRoutes from './routes/aiRoutes.js'
 import agentRoutes from './routes/agentRoutes.js'
 import publicShareRoutes from './routes/publicShareRoutes.js'
+import testRunRoutes from './routes/testRunRoutes.js'
 import { errorHandler } from './middleware/auth.js'
 import { swaggerSpec } from './lib/swagger.js'
 import { validateProductionSecurity } from './lib/productionSecurity.js'
@@ -139,6 +140,7 @@ app.use('/api/step-types', stepTypeRoutes)
 app.use('/api/files', fileRoutes)
 app.use('/api/import', importRoutes)
 app.use('/api/executions', executionRoutes)
+app.use('/api/test-runs', testRunRoutes)
 app.use('/api/recorder', recorderRoutes)
 app.use('/api/analytics', analyticsRoutes)
 app.use('/api/chains', chainRoutes)
@@ -180,6 +182,10 @@ app.use('/api/videos', express.static(path.resolve(__dirname, '../uploads/videos
 app.use(
   '/api/issue-attachments',
   express.static(path.resolve(__dirname, '../uploads/issue-attachments'))
+)
+app.use(
+  '/api/scenario-attachments',
+  express.static(path.resolve(__dirname, '../uploads/scenario-attachments'))
 )
 
 // ── Combined-mode: serve built React frontend (Docker) ─────────────────────

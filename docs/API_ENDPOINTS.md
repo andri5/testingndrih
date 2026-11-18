@@ -25,11 +25,17 @@
 
 | Method | Path | Deskripsi |
 |--------|------|-----------|
-| GET | `/` | List skenario user |
-| POST | `/` | Buat skenario |
-| GET | `/:id` | Detail skenario + steps |
-| PUT | `/:id` | Update skenario |
+| GET | `/` | List skenario user (includes `lastResult`) |
+| POST | `/` | Buat skenario (opsional precondition/priority/caseType/ownerId) |
+| GET | `/:id` | Detail + steps + attachments |
+| PUT | `/:id` | Update skenario (+ audit History) |
 | DELETE | `/:id` | Hapus skenario |
+| GET | `/:id/runs` | Riwayat execution case + % complete |
+| GET | `/:id/history` | Audit log field changes |
+| GET/POST | `/:id/attachments` | List / upload attachment |
+| DELETE | `/:id/attachments/:attachmentId` | Hapus attachment |
+| POST | `/move` | Pindah folder |
+| POST | `/bulk-assign-owner` | Bulk set PIC (`ids`, `ownerId`) |
 
 ---
 
@@ -38,7 +44,7 @@
 | Method | Path | Deskripsi |
 |--------|------|-----------|
 | GET | `/` | List steps |
-| POST | `/` | Tambah step |
+| POST | `/` | Tambah step (opsional `expectedResult`) |
 | GET | `/:stepId` | Detail step |
 | PUT | `/:stepId` | Update step |
 | DELETE | `/:stepId` | Hapus step |
@@ -52,11 +58,30 @@
 
 | Method | Path | Deskripsi |
 |--------|------|-----------|
-| POST | `/` | Jalankan skenario |
+| POST | `/scenarios/:scenarioId` | Jalankan automated (Playwright) |
 | GET | `/` | History eksekusi |
 | GET | `/:id` | Detail eksekusi |
-| GET | `/:id/stream` | SSE stream status |
 | DELETE | `/:id` | Hapus eksekusi |
+| POST | `/manual/:scenarioId/start` | Mulai Manual Run |
+| GET | `/manual/:scenarioId/active` | Manual run aktif |
+| POST | `/manual/:executionId/steps/:testStepId` | Catat Pass/Fail/Blocked/Skipped |
+| POST | `/manual/:executionId/finish` | Selesai Manual Run |
+| POST | `/manual/:executionId/cancel` | Batalkan Manual Run |
+
+---
+
+## Test Runs — `/api/test-runs`
+
+| Method | Path | Deskripsi |
+|--------|------|-----------|
+| GET | `/` | List multi-case runs |
+| POST | `/` | Buat run (`title`, `scenarioIds[]`) |
+| GET | `/:id` | Detail + items + progress |
+| POST | `/:id/close` | Close / seal |
+| POST | `/:id/items` | Tambah cases |
+| PATCH | `/:id/items/:itemId` | Set status / notes / assignee |
+| DELETE | `/:id/items/:itemId` | Hapus case dari run |
+| POST | `/:id/items/:itemId/start-manual` | Mulai checklist Manual untuk item |
 
 ---
 

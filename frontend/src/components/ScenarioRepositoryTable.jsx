@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import {
   Star,
-  Eye,
+  FileText,
   Pencil,
   Copy,
   Trash2,
@@ -57,11 +57,13 @@ function RowActions({ s, folderOptions, onOpen, onEdit, onDuplicate, onDelete, o
       <div className="hidden md:flex items-center justify-end gap-1">
         <button
           type="button"
-          title="Open"
+          title="Buka detail test case"
+          aria-label="Buka detail test case"
           onClick={() => onOpen(s)}
-          className="p-1.5 rounded-md bg-brand-soft text-brand hover:bg-teal-200"
+          className="inline-flex items-center gap-1 px-2 py-1.5 rounded-md bg-brand-soft text-brand hover:bg-teal-200 text-[11px] font-semibold"
         >
-          <Eye size={14} />
+          <FileText size={14} />
+          Open
         </button>
         <button
           type="button"
@@ -111,7 +113,7 @@ function RowActions({ s, folderOptions, onOpen, onEdit, onDuplicate, onDelete, o
                 onOpen(s)
               }}
             >
-              <Eye size={14} /> Open
+              <FileText size={14} /> Open detail
             </button>
             <button
               type="button"
@@ -159,17 +161,43 @@ function LastResultBadge({ result }) {
       </span>
     )
   }
+  const total = result.totalSteps || 0
+  const done = (result.passedSteps || 0) + (result.failedSteps || 0)
+  const pct = total > 0 ? Math.min(100, Math.round((done / total) * 100)) : null
+  const typeHint = result.testType === 'MANUAL' ? 'Manual' : null
+
   if (result.status === 'PASSED') {
     return (
-      <span className="inline-flex items-center gap-1 text-xs text-emerald-600 font-medium">
-        <CheckCircle2 size={13} /> Passed
+      <span className="inline-flex items-center gap-1 text-xs text-emerald-600 font-medium" title={typeHint || undefined}>
+        <CheckCircle2 size={13} /> Passed{pct != null ? ` · ${pct}%` : ''}
       </span>
     )
   }
   if (result.status === 'FAILED') {
     return (
-      <span className="inline-flex items-center gap-1 text-xs text-red-600 font-medium">
-        <XCircle size={13} /> Failed
+      <span className="inline-flex items-center gap-1 text-xs text-red-600 font-medium" title={typeHint || undefined}>
+        <XCircle size={13} /> Failed{pct != null ? ` · ${pct}%` : ''}
+      </span>
+    )
+  }
+  if (result.status === 'RUNNING') {
+    return (
+      <span className="inline-flex items-center gap-1 text-xs text-brand font-medium" title={typeHint || undefined}>
+        <Circle size={12} className="fill-brand text-brand" /> Running{pct != null ? ` · ${pct}%` : ''}
+      </span>
+    )
+  }
+  if (result.status === 'BLOCKED') {
+    return (
+      <span className="inline-flex items-center gap-1 text-xs text-amber-700 font-medium">
+        <Circle size={12} /> Blocked
+      </span>
+    )
+  }
+  if (result.status === 'SKIPPED') {
+    return (
+      <span className="inline-flex items-center gap-1 text-xs text-ink-muted font-medium">
+        <Circle size={12} /> Skipped
       </span>
     )
   }

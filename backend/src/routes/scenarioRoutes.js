@@ -1,8 +1,10 @@
 import express from 'express'
+import multer from 'multer'
 import {
   createScenarioHandler,
   getScenarioListHandler,
   getScenarioHandler,
+  getScenarioRunsHandler,
   updateScenarioHandler,
   deleteScenarioHandler,
   duplicateScenarioHandler,
@@ -12,11 +14,21 @@ import {
   updateTagsHandler,
   moveScenariosHandler,
   getScenarioRemindersHandler,
+  uploadScenarioAttachmentsHandler,
+  listScenarioAttachmentsHandler,
+  deleteScenarioAttachmentHandler,
+  getScenarioHistoryHandler,
+  bulkAssignOwnerHandler,
 } from '../controllers/scenarioController.js'
 import { authenticateToken } from '../middleware/auth.js'
+import { MAX_FILE_BYTES } from '../services/scenarioAttachmentService.js'
 import testStepRoutes from './testStepRoutes.js'
 
 const router = express.Router()
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: MAX_FILE_BYTES, files: 12 },
+})
 
 // All routes require authentication
 router.use(authenticateToken)
@@ -40,6 +52,12 @@ router.get('/', getScenarioListHandler)
 router.post('/move', moveScenariosHandler)
 
 /**
+ * POST /api/scenarios/bulk-assign-owner
+ * Bulk set PIC / owner on selected cases
+ */
+router.post('/bulk-assign-owner', bulkAssignOwnerHandler)
+
+/**
  * GET /api/scenarios/tags
  * List unique tags for authenticated user
  */
@@ -56,6 +74,21 @@ router.get('/reminders', getScenarioRemindersHandler)
  * Get a specific scenario
  */
 router.get('/:id', getScenarioHandler)
+
+/**
+ * GET /api/scenarios/:id/runs
+ * Runs history for this test case
+ */
+router.get('/:id/runs', getScenarioRunsHandler)
+
+router.get('/:id/attachments', listScenarioAttachmentsHandler)
+router.post(
+  '/:id/attachments',
+  upload.array('files', 12),
+  uploadScenarioAttachmentsHandler
+)
+router.delete('/:id/attachments/:attachmentId', deleteScenarioAttachmentHandler)
+router.get('/:id/history', getScenarioHistoryHandler)
 
 /**
  * PUT /api/scenarios/:id

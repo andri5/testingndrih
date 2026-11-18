@@ -12,6 +12,7 @@ import {
   Lock,
   Bug,
   PanelLeft,
+  ListChecks,
 } from 'lucide-react'
 import { useAuthStore } from '../store/authStore'
 
@@ -20,7 +21,7 @@ const ADMIN_HELP_TAB_IDS = new Set(['chain', 'smoke', 'stress', 'security', 'too
 const content = {
   en: {
     title: 'How to Use',
-    subtitle: 'Get started with Test Sambil Ngopi',
+    subtitle: 'QA guide — Manual checklist, Test Runs, and Automated playback',
     tabs: [
       {
         id: 'nav',
@@ -36,89 +37,144 @@ const content = {
           {
             num: 2,
             title: 'Main menu & Tools',
-            desc: 'Dashboard, Scenarios, Execution, Environments, Reports, Analytics, and Bugs are in the main list. Extra admin tools live under Tools (wrench icon).',
+            desc: 'Main: Dashboard, Scenarios, Test Runs, Execution, Environments, Reports, Analytics, Bugs. Admin tools live under Tools (wrench). Menus depend on your role.',
             adminOnly: false,
           },
           {
             num: 3,
             title: 'Folders (Scenarios)',
-            desc: 'On Scenarios, open Folders on mobile or use the folder pane on desktop to organize scenarios. Drag a scenario onto a folder to move it.',
+            desc: 'On Scenarios, use the folder pane to organize cases. Drag a scenario onto a folder to move it. Select rows for bulk Create Test Run / Move / Set PIC.',
             adminOnly: false,
           },
           {
             num: 4,
+            title: 'Dashboard reminders',
+            desc: 'Unfinished scenarios show as reminders. Use Sembunyikan / Hide to collapse the panel, Tampilkan to show again. Nanti aja dismisses items for today.',
+            adminOnly: false,
+          },
+          {
+            num: 5,
             title: 'How to use anytime',
-            desc: 'Open this guide anytime from the help icon (or “How to use”) at the bottom of the sidebar.',
+            desc: 'Open this guide from the help icon (or “How to use”) at the bottom of the sidebar.',
             adminOnly: false,
           },
         ],
       },
       {
         id: 'scenario',
-        label: 'Scenarios',
+        label: 'Test cases',
         icon: <ClipboardList size={14} />,
         steps: [
           {
             num: 1,
-            title: 'Create a Scenario',
-            desc: 'Go to Scenarios → Create. Choose Create Manual (name, URL, description), Templates, or Import Excel. Ctrl/Cmd+Click Import Excel to download the template.',
+            title: 'Create a test case',
+            desc: 'Scenarios → Create → Create Manual (name, URL). Or Templates / Import Excel. Quick Record is for automation capture (admin).',
             adminOnly: false,
           },
           {
             num: 2,
-            title: 'Add or edit steps',
-            desc: 'Open a scenario → Add Step. Types include navigate, click, fill, wait, assert, screenshot, and more. Edit or delete steps from the step list.',
+            title: 'Details tab',
+            desc: 'Open a case → Details: set Priority, Type, Precondition, PIC, and Steps (with Expected result per step). Click Simpan detail.',
             adminOnly: false,
           },
           {
             num: 3,
-            title: 'Quick Record',
-            desc: 'Create → Quick Record → enter URL → interact in the target window. Live steps appear in the modal; Stop & Save when done.',
-            adminOnly: true,
+            title: 'Attachments / Runs / History',
+            desc: 'Attachments: upload PNG/PDF evidence. Runs: history + % complete for this case. History: audit of field changes after you save.',
+            adminOnly: false,
           },
           {
             num: 4,
-            title: 'Record on scenario page',
-            desc: 'Open an existing scenario → Record to capture steps on the real site (works well for public URLs; internal/VPN from your own PC).',
+            title: 'Record (Automated only)',
+            desc: 'Switch Mode to Automated (Playwright) to show Record. Manual mode hides Record — add steps by hand instead.',
             adminOnly: false,
           },
           {
             num: 5,
             title: 'Organize',
-            desc: 'Use folders, tags, favorites, search, and Move… / bulk actions. On mobile, use the ⋯ menu on each row for Open, Edit, Duplicate, Move, Delete.',
+            desc: 'Folders, tags, favorites, search. Select cases → Create Test Run, Auto Run, Move…, or Set PIC…',
             adminOnly: false,
           },
         ],
       },
       {
+        id: 'manual',
+        label: 'Manual Run',
+        icon: <ClipboardList size={14} />,
+        steps: [
+          {
+            num: 1,
+            title: 'Default mode = Manual',
+            desc: 'On a case (or Execution page), Mode defaults to Manual checklist. No Playwright / no Record needed.',
+          },
+          {
+            num: 2,
+            title: 'Start Manual Run',
+            desc: 'Click Manual Run. Mark each step: Passed / Failed / Blocked / Skipped. Failed & Blocked require notes; you can create a Bug.',
+          },
+          {
+            num: 3,
+            title: 'Finish or cancel',
+            desc: 'When all steps are marked, Finish. Or Cancel if you stop early. Progress shows on Dashboard reminders if left hanging.',
+          },
+          {
+            num: 4,
+            title: 'From Execution page',
+            desc: 'Execution → pick scenario → Mode Manual → Manual Run opens the case checklist. History shows Type Manual vs Automated.',
+          },
+        ],
+      },
+      {
+        id: 'testruns',
+        label: 'Test Runs',
+        icon: <ListChecks size={14} />,
+        steps: [
+          {
+            num: 1,
+            title: 'Multi-case run',
+            desc: 'Test Runs → Create Run, or select cases in Scenarios → Create Test Run. One run holds many cases with overall progress.',
+          },
+          {
+            num: 2,
+            title: 'Set results',
+            desc: 'Open the run → Pass / Fail / Blocked / Skip per case (notes required for Fail/Blocked). Or Checklist for step-level Manual Run.',
+          },
+          {
+            num: 3,
+            title: 'Close / Seal',
+            desc: 'When done, Close / Seal so results cannot be changed. Filter Open vs Closed on the Test Runs list.',
+          },
+        ],
+      },
+      {
         id: 'execution',
-        label: 'Execution',
+        label: 'Automated',
         icon: <PlayCircle size={14} />,
         steps: [
           {
             num: 1,
-            title: 'Run a Scenario',
-            desc: 'Open a scenario → Run. Browser Runner shows the live Playwright page. Use Pause / Resume / Stop while it runs.',
+            title: 'Automated (Playwright)',
+            desc: 'On a case, set Mode → Automated. Record appears. Run uses Playwright (cloud for public URLs).',
           },
           {
             num: 2,
             title: 'Public vs internal URLs',
-            desc: 'Cloud Run works for public URLs. For LAN/VPN staging (e.g. 10.x), use a local backend on the same network or Queue local agent on a VPN PC (Settings → API Tokens).',
+            desc: 'Cloud Run works for public URLs. For LAN/VPN staging, use local backend or Queue local agent (Settings → API Tokens) on a VPN PC.',
           },
           {
             num: 3,
-            title: 'History & compare',
-            desc: 'Execution page lists past runs. Filter by status, open reports, and select two runs to compare side by side.',
+            title: 'Execution history',
+            desc: 'Execution page lists past runs (Manual + Automated). Compare two runs, export HTML/PDF, share links.',
           },
           {
             num: 4,
-            title: 'Bulk Execute',
-            desc: 'On Scenarios, select multiple rows → Run Selected to execute sequentially (headless). Use Move… for bulk folder moves.',
+            title: 'Bulk Auto Run',
+            desc: 'Scenarios → select rows → Auto Run (headless sequential). Prefer Create Test Run for structured Manual QA cycles.',
           },
           {
             num: 5,
-            title: 'Failed steps',
-            desc: 'Failed steps show diagnosis tips and DOM-based locator suggestions. Apply a suggested selector and retry when available.',
+            title: 'Failed automated steps',
+            desc: 'Failed steps show diagnosis tips and locator suggestions. Apply a suggested selector and retry when available.',
           },
         ],
       },

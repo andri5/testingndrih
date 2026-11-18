@@ -1,10 +1,16 @@
 import { executionService, executionEvents } from '../services/executionService.js'
+import * as manualExecutionService from '../services/manualExecutionService.js'
 import { reportService } from '../services/reportService.js'
 import {
   collectExecutionTargetUrls,
   preflightExecutionTargets,
 } from '../utils/networkReachability.js'
 import { beginUserRun } from '../services/runQuotaService.js'
+
+function manualError(res, err) {
+  const status = err.status || 500
+  return res.status(status).json({ success: false, message: err.message || 'Manual run error' })
+}
 
 /**
  * Execution Controller
@@ -837,5 +843,69 @@ body{font-family:Segoe UI,system-ui,sans-serif;background:#111827;color:#e5e7eb;
     } catch (error) {
       res.status(400).json({ success: false, message: error.message })
     }
-  }
+  },
+
+  /** POST /api/executions/manual/:scenarioId/start */
+  async startManualRun(req, res) {
+    try {
+      const data = await manualExecutionService.startManualExecution(req.user.id, req.params.scenarioId)
+      res.status(201).json({ success: true, ...data })
+    } catch (err) {
+      return manualError(res, err)
+    }
+  },
+
+  /** GET /api/executions/manual/:scenarioId/active */
+  async getActiveManualRun(req, res) {
+    try {
+      const execution = await manualExecutionService.getActiveManualExecution(
+        req.user.id,
+        req.params.scenarioId
+      )
+      res.json({ success: true, execution })
+    } catch (err) {
+      return manualError(res, err)
+    }
+  },
+
+  /** POST /api/executions/manual/:executionId/steps/:testStepId */
+  async recordManualStep(req, res) {
+    try {
+      const data = await manualExecutionService.recordManualStep(
+        req.user.id,
+        req.params.executionId,
+        req.params.testStepId,
+        req.body || {}
+      )
+      res.json({ success: true, ...data })
+    } catch (err) {
+      return manualError(res, err)
+    }
+  },
+
+  /** POST /api/executions/manual/:executionId/finish */
+  async finishManualRun(req, res) {
+    try {
+      const execution = await manualExecutionService.finishManualExecution(
+        req.user.id,
+        req.params.executionId
+      )
+      res.json({ success: true, execution })
+    } catch (err) {
+      return manualError(res, err)
+    }
+  },
+
+  /** POST /api/executions/manual/:executionId/cancel */
+  async cancelManualRun(req, res) {
+    try {
+      const execution = await manualExecutionService.cancelManualExecution(
+        req.user.id,
+        req.params.executionId
+      )
+      res.json({ success: true, execution })
+    } catch (err) {
+      return manualError(res, err)
+    }
+  },
 }

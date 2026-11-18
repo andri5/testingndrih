@@ -3,6 +3,7 @@
 export const MENU_DEFINITIONS = [
   { key: 'dashboard', path: '/dashboard', group: 'main', label: 'Dashboard' },
   { key: 'scenarios', path: '/scenarios', group: 'main', label: 'Scenarios' },
+  { key: 'test-runs', path: '/test-runs', group: 'main', label: 'Test Runs' },
   { key: 'execution', path: '/execution', group: 'main', label: 'Execution' },
   { key: 'environments', path: '/environments', group: 'main', label: 'Environments' },
   { key: 'reports', path: '/reports', group: 'main', label: 'Reports' },
@@ -24,6 +25,7 @@ export const ALL_MENU_KEYS = MENU_DEFINITIONS.map((m) => m.key)
 export const DEFAULT_USER_MENU_KEYS = [
   'dashboard',
   'scenarios',
+  'test-runs',
   'execution',
   'environments',
   'reports',
@@ -42,7 +44,7 @@ export function isValidMenuKey(key) {
 const ROLE_FALLBACK_BY_ROLE = {
   LEAD: ALL_MENU_KEYS,
   USER: DEFAULT_USER_MENU_KEYS,
-  VIEWER: ['dashboard', 'reports', 'analytics', 'issues'],
+  VIEWER: ['dashboard', 'scenarios', 'test-runs', 'reports', 'analytics', 'issues'],
 }
 
 /**

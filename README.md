@@ -59,9 +59,12 @@
 ## Key features
 
 ### Core testing
-- **Scenario management** — create, edit, duplicate, search scenarios
+- **Scenario / test case management** — folders, create, edit, duplicate, search; Details (precondition, priority, type, PIC, steps + expected result)
+- **Manual Run** — checklist Pass/Fail/Blocked/Skipped with notes & optional bug create (default mode)
+- **Test Runs** — multi-case cycles, per-case result, Close/Seal; bulk Create Test Run / Set PIC
+- **Attachments / Runs / History tabs** — evidence files, case execution history, field audit log
 - **Step editor** — NAVIGATE, CLICK, FILL, WAIT, ASSERTION, SCREENSHOT, API_CALL, and more
-- **Browser recording** — client-direct (default) or proxy; public vs internal auto-detect; playback via Playwright
+- **Browser recording** — only in Automated mode; client-direct (default) or proxy; playback via Playwright
 - **Execution engine** — step-by-step runs with screenshots, retries, error suggestions
 - **Test chains** — multi-scenario workflows with stop-on-fail options
 - **Excel import** — bulk scenario import with preview
@@ -82,7 +85,8 @@
 - **Analytics & reports** — trends, flaky steps, PDF/HTML export
 - **Notifications** — email & webhook on failure
 - **CI API** — run scenarios via API token (`/api/ci/run/:scenarioId`)
-- **User management** — admin CRUD, roles, active/inactive, activity log
+- **User management** — admin CRUD, roles (ADMIN / LEAD / USER / VIEWER) with recommended menus, activity log
+- **Dashboard reminders** — unfinished/stuck/draft cases; hide/show panel
 - **Welcome splash** — one-time modal after registration
 
 ### Auth & resilience

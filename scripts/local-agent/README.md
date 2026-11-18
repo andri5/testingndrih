@@ -4,30 +4,62 @@ Run Playwright on a PC that can reach private/VPN URLs, while jobs are queued fr
 
 Jobs and results are **persisted in the database** (Execution + StepResult). Restarting the API does not clear the queue.
 
-## Setup
+## Recommended: shared VPN runner (QA-friendly)
 
-1. In the web app: **Settings → API Tokens** → create token (`tsn_...`).
-2. On your VPN/LAN machine:
+Install **once** on one office/VPN PC. QA only clicks **Jalankan di PC ini** — they do not run the agent themselves.
 
-```bash
+1. **Settings → Integrations → CI/CD API Tokens** → create `tsn_...` token (ADMIN).
+2. On the shared VPN PC:
+
+```powershell
+cd D:\testingndrih-1
+cd backend
+npm install
+npx playwright install chromium
+cd ..
+
+copy scripts\local-agent\agent.env.example scripts\local-agent\agent.env
+notepad scripts\local-agent\agent.env
+# set AGENT_TOKEN=tsn_...
+
+powershell -ExecutionPolicy Bypass -File scripts\local-agent\install-windows-task.ps1
+```
+
+3. Keep **VPN connected** on that PC (task starts at user logon).
+4. Check status / logs:
+
+```powershell
+powershell -File scripts\local-agent\status-windows-task.ps1
+```
+
+5. QA: open Internal scenario → **Jalankan di PC ini**.
+
+Uninstall:
+
+```powershell
+powershell -File scripts\local-agent\uninstall-windows-task.ps1
+```
+
+Task name: `TSN-LocalAgent` · log file: `scripts/local-agent/agent.log`
+
+## Manual / foreground (debug)
+
+```powershell
 cd testingndrih
-# Playwright must be installed (backend dependency)
-set AGENT_API_URL=https://testsambilngopi.my.id
-set AGENT_TOKEN=tsn_your_token_here
+copy scripts\local-agent\agent.env.example scripts\local-agent\agent.env
+# edit AGENT_TOKEN
 node scripts/local-agent/run.mjs
 ```
 
-Linux/macOS:
+Or with env vars (overrides `agent.env`):
 
-```bash
-export AGENT_API_URL=https://testsambilngopi.my.id
-export AGENT_TOKEN=tsn_your_token_here
+```powershell
+$env:AGENT_API_URL="https://testsambilngopi.my.id"
+$env:AGENT_TOKEN="tsn_your_token_here"
 node scripts/local-agent/run.mjs
 ```
 
-3. On a scenario with an **Internal** badge, click **Queue local agent**.
-4. The Scenario Detail page shows job status (`QUEUED` → `CLAIMED` → `COMPLETED`/`FAILED`).
-5. The agent claims the job, opens the internal URL locally, and posts step results — visible like a normal Run history.
+`run.mjs` resolves `playwright` from `backend/node_modules` and auto-loads `agent.env`.
 
 ## API
 

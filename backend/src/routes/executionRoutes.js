@@ -24,6 +24,16 @@ executionRoutes.post('/:executionId/viewer-resume', executionController.viewerRe
 // All remaining routes require authentication
 executionRoutes.use(authenticateToken)
 
+// Manual QA checklist (no Playwright) — register before /:executionId
+executionRoutes.post('/manual/:scenarioId/start', executionController.startManualRun)
+executionRoutes.get('/manual/:scenarioId/active', executionController.getActiveManualRun)
+executionRoutes.post(
+  '/manual/:executionId/steps/:testStepId',
+  executionController.recordManualStep
+)
+executionRoutes.post('/manual/:executionId/finish', executionController.finishManualRun)
+executionRoutes.post('/manual/:executionId/cancel', executionController.cancelManualRun)
+
 /**
  * @swagger
  * /api/executions/scenarios/{scenarioId}:

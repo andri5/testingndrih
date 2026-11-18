@@ -14,6 +14,7 @@ import { useFolderStore } from '../store/folderStore'
 import {
   LayoutDashboard,
   ClipboardList,
+  ListChecks,
   PlayCircle,
   FileBarChart2,
   PieChart,
@@ -187,6 +188,7 @@ export default function Layout({ children, showFolderPane = false, onFolderSelec
   const mainItems = [
     { key: 'dashboard', name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
     { key: 'scenarios', name: 'Scenarios', path: '/scenarios', icon: ClipboardList },
+    { key: 'test-runs', name: 'Test Runs', path: '/test-runs', icon: ListChecks },
     { key: 'execution', name: 'Execution', path: '/execution', icon: PlayCircle },
     { key: 'environments', name: 'Environments', path: '/environments', icon: Layers },
     { key: 'reports', name: 'Reports', path: '/reports', icon: FileBarChart2 },

@@ -5,26 +5,45 @@ import { Card, Button, Badge, Spinner, Alert } from '../components/ui'
 import StepErrorDetail from '../components/StepErrorDetail'
 import { useExecutionStore } from '../store/executionStore'
 import { useScenarioStore } from '../store/scenarioStore'
+import { executionAPI } from '../services/api'
 import ExportFormatButton from '../components/ExportFormatButton'
 import StepResultCard, { StepResultsSummary } from '../components/StepResultCard'
 import { ExecuteScenarioButton } from '../components/ExecuteScenarioButton'
 import SoftSelect from '../components/SoftSelect'
 import ExecutionRunDiff from '../components/ExecutionRunDiff'
-import { PlayCircle, CheckCircle2, XCircle, TrendingUp, ClipboardList, Clock, ListTree, GitCompare, Link2 } from 'lucide-react'
+import {
+  PlayCircle,
+  CheckCircle2,
+  XCircle,
+  TrendingUp,
+  ClipboardList,
+  Clock,
+  ListTree,
+  GitCompare,
+  Link2,
+  Loader2,
+} from 'lucide-react'
 import ShareRunModal from '../components/ShareRunModal'
 
 const i18n = {
     title: 'Test Execution',
-    subtitle: 'Run and monitor test scenarios',
+    subtitle: 'Jalankan Manual checklist atau Automated (Playwright), lalu pantau hasilnya',
     runScenario: 'Run Scenario',
     selectScenario: 'Select Scenario',
     selectScenarioPlaceholder: 'Choose a scenario...',
+    mode: 'Mode',
     status: 'Status',
     action: 'Action',
     selectScenarioFirst: '← Select a scenario first',
+    manualRun: 'Manual Run',
+    manualRunHint: 'Checklist Pass/Fail di halaman test case — tanpa Playwright / Record.',
+    automatedHint: 'Automated memakai Playwright. Record hanya di halaman scenario (mode Automated).',
+    manualRunStarted: 'Manual run dimulai — lanjutkan checklist di test case.',
+    noSteps: 'Scenario belum punya steps. Tambah steps dulu di detail test case.',
     viewScreenshot: 'View screenshot',
     executionHistory: 'Execution History',
     scenario: 'Scenario',
+    type: 'Type',
     steps: 'Steps (P/F)',
     duration: 'Duration',
     date: 'Date',
@@ -38,7 +57,14 @@ const i18n = {
     compareRuns: 'Compare Runs',
     compareSelected: 'Compare Selected',
     selectTwoRuns: 'Select 2 runs to compare',
-  
+}
+
+function runTypeLabel(testType) {
+  if (testType === 'MANUAL') return 'Manual'
+  if (testType === 'AGENT') return 'Agent'
+  if (testType === 'SMOKE') return 'Smoke'
+  if (testType === 'STRESS') return 'Stress'
+  return 'Automated'
 }
 
 export default function ExecutionPage() {
@@ -46,6 +72,10 @@ export default function ExecutionPage() {
   const t = i18n
   const [selectedScenarioId, setSelectedScenarioId] = useState(null)
   const [selectedScenarioName, setSelectedScenarioName] = useState('')
+  const [selectedStepCount, setSelectedStepCount] = useState(0)
+  const [runMode, setRunMode] = useState('manual')
+  const [isStartingManualRun, setIsStartingManualRun] = useState(false)
+  const [localError, setLocalError] = useState(null)
   const [screenshotModal, setScreenshotModal] = useState(null)
   const [compareIds, setCompareIds] = useState([])
   const [diffPair, setDiffPair] = useState(null)
@@ -62,10 +92,10 @@ export default function ExecutionPage() {
     fetchExecutions,
     fetchExecutionStats,
     clearError,
-    executeScenario
   } = useExecutionStore()
 
   const { scenarios, fetchScenarios } = useScenarioStore()
+  const displayError = localError || error
 
   // Load executions and scenarios on mount
   useEffect(() => {
@@ -116,7 +146,11 @@ export default function ExecutionPage() {
       case 'RUNNING':
         return 'primary'
       case 'PENDING':
+      case 'BLOCKED':
+      case 'SKIPPED':
         return 'warning'
+      case 'CANCELLED':
+        return 'default'
       default:
         return 'default'
     }
@@ -132,6 +166,12 @@ export default function ExecutionPage() {
         return '⏳'
       case 'PENDING':
         return '⟳'
+      case 'BLOCKED':
+        return '⛔'
+      case 'SKIPPED':
+        return '⊘'
+      case 'CANCELLED':
+        return '−'
       default:
         return '−'
     }
@@ -141,7 +181,7 @@ export default function ExecutionPage() {
     { value: '', label: t.selectScenarioPlaceholder },
     ...(scenarios || []).map((scenario) => ({
       value: scenario.id,
-      label: `${scenario.name} (${scenario.stepCount ?? scenario.steps ?? 0} steps)`,
+      label: `${scenario.name} (${scenario.stepCount ?? scenario._count?.testSteps ?? scenario.steps?.length ?? 0} steps)`,
     })),
   ]
 
@@ -149,11 +189,39 @@ export default function ExecutionPage() {
     if (!scenarioId) {
       setSelectedScenarioId(null)
       setSelectedScenarioName('')
+      setSelectedStepCount(0)
       return
     }
     const scenario = scenarios.find((s) => s.id === scenarioId)
     setSelectedScenarioId(scenarioId)
     setSelectedScenarioName(scenario?.name || '')
+    setSelectedStepCount(
+      scenario?.stepCount ?? scenario?._count?.testSteps ?? scenario?.steps?.length ?? 0
+    )
+    setLocalError(null)
+  }
+
+  const handleStartManualRun = async () => {
+    if (!selectedScenarioId) return
+    if (selectedStepCount === 0) {
+      setLocalError(t.noSteps)
+      return
+    }
+    setIsStartingManualRun(true)
+    setLocalError(null)
+    try {
+      await executionAPI.startManualRun(selectedScenarioId)
+      navigate(`/scenarios/${selectedScenarioId}`)
+    } catch (err) {
+      // Active run already exists — open case so checklist can continue
+      if (err.response?.status === 409) {
+        navigate(`/scenarios/${selectedScenarioId}`)
+        return
+      }
+      setLocalError(err.response?.data?.message || 'Gagal mulai Manual Run')
+    } finally {
+      setIsStartingManualRun(false)
+    }
   }
 
   const toggleCompareSelection = (executionId) => {
@@ -187,11 +255,14 @@ export default function ExecutionPage() {
         </div>
 
         {/* Error Alert */}
-        {error && (
+        {displayError && (
           <Alert
             type="error"
-            message={error}
-            onClose={clearError}
+            message={displayError}
+            onClose={() => {
+              setLocalError(null)
+              clearError()
+            }}
           />
         )}
 
@@ -199,7 +270,7 @@ export default function ExecutionPage() {
         <Card>
           <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-4">{t.runScenario}</h2>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             {/* Scenario Selector */}
             <div>
               <label className="block text-sm font-semibold text-gray-500 mb-2">
@@ -214,16 +285,35 @@ export default function ExecutionPage() {
               />
             </div>
 
+            {/* Mode — Manual default, same as scenario detail */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-500 mb-2">
+                {t.mode}
+              </label>
+              <select
+                value={runMode}
+                onChange={(e) => {
+                  setRunMode(e.target.value)
+                  setLocalError(null)
+                }}
+                disabled={isRunning || isStartingManualRun}
+                className="w-full text-sm font-semibold rounded-lg border border-gray-200 bg-white text-gray-900 px-3 py-2.5 focus:outline-none focus:ring-1 focus:ring-[#0F766E] min-h-[42px]"
+              >
+                <option value="manual">Manual checklist</option>
+                <option value="automated">Automated (Playwright)</option>
+              </select>
+            </div>
+
             {/* Status Info */}
             <div>
               <label className="block text-sm font-semibold text-gray-500 mb-2">
                 {t.status}
               </label>
               <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg min-h-[42px] flex items-center">
-                {isRunning ? (
+                {isRunning || isStartingManualRun ? (
                   <div className="flex items-center gap-2 text-[#0F766E] text-sm font-medium">
                     <Spinner size="sm" />
-                    <span>Running...</span>
+                    <span>{isStartingManualRun ? 'Starting…' : 'Running...'}</span>
                   </div>
                 ) : (
                   <span className="inline-flex items-center gap-1.5 text-sm font-medium text-emerald-600">
@@ -239,8 +329,22 @@ export default function ExecutionPage() {
               <label className="block text-sm font-semibold text-gray-500 mb-2">
                 {t.action}
               </label>
-              {selectedScenarioId ? (
-                <ExecuteScenarioButton 
+              {!selectedScenarioId ? (
+                <div className="inline-flex items-center justify-center gap-2 w-full px-3 py-2 rounded-lg text-xs font-medium bg-gray-100 text-gray-500 border border-gray-200 min-h-[42px]">
+                  {t.selectScenarioFirst}
+                </div>
+              ) : runMode === 'manual' ? (
+                <ExportFormatButton
+                  format="csv"
+                  icon={isStartingManualRun ? Loader2 : ClipboardList}
+                  onClick={handleStartManualRun}
+                  disabled={isStartingManualRun || isRunning}
+                  className={`w-full justify-center ${isStartingManualRun ? '[&_svg]:animate-spin' : ''}`}
+                >
+                  {isStartingManualRun ? 'Starting…' : t.manualRun}
+                </ExportFormatButton>
+              ) : (
+                <ExecuteScenarioButton
                   scenarioId={selectedScenarioId}
                   scenarioName={selectedScenarioName}
                   onExecutionStart={() => {
@@ -250,13 +354,12 @@ export default function ExecutionPage() {
                     }, 2000)
                   }}
                 />
-              ) : (
-                <div className="inline-flex items-center justify-center gap-2 w-full px-3 py-2 rounded-lg text-xs font-medium bg-gray-100 text-gray-500 border border-gray-200">
-                  {t.selectScenarioFirst}
-                </div>
               )}
             </div>
           </div>
+          <p className="text-xs text-gray-500 mt-3">
+            {runMode === 'manual' ? t.manualRunHint : t.automatedHint}
+          </p>
         </Card>
 
         {/* Stats Cards */}
@@ -318,6 +421,15 @@ export default function ExecutionPage() {
                   <h2 className="text-2xl font-bold text-[#E0E0E2]">
                     {currentExecution.scenario?.name}
                   </h2>
+                  <span
+                    className={`inline-flex text-[11px] font-semibold px-2 py-0.5 rounded-md ${
+                      currentExecution.testType === 'MANUAL'
+                        ? 'bg-amber-50 text-amber-800 border border-amber-200'
+                        : 'bg-teal-50 text-teal-800 border border-teal-200'
+                    }`}
+                  >
+                    {runTypeLabel(currentExecution.testType)}
+                  </span>
                   <Badge variant={getStatusColor(currentExecution.status)}>
                     {getStatusIcon(currentExecution.status)} {currentExecution.status}
                   </Badge>
@@ -484,10 +596,13 @@ export default function ExecutionPage() {
                     <th className="text-left py-3 px-4 font-semibold text-[#A0A0A4]">
                       {t.scenario}
                     </th>
+                    <th className="text-left py-3 px-4 font-semibold text-[#A0A0A4] hidden sm:table-cell">
+                      {t.type}
+                    </th>
                     <th className="text-left py-3 px-4 font-semibold text-[#A0A0A4]">
                       {t.status}
                     </th>
-                    <th className="text-center py-3 px-4 font-semibold text-[#A0A0A4] hidden sm:table-cell">
+                    <th className="text-center py-3 px-4 font-semibold text-[#A0A0A4] hidden md:table-cell">
                       {t.steps}
                     </th>
                     <th className="text-center py-3 px-4 font-semibold text-[#A0A0A4] hidden md:table-cell">
@@ -519,14 +634,36 @@ export default function ExecutionPage() {
                         />
                       </td>
                       <td className="py-3 px-4 text-[#E0E0E2] max-w-[140px] sm:max-w-none truncate">
-                        {execution.scenario?.name}
+                        {execution.scenarioId ? (
+                          <button
+                            type="button"
+                            onClick={() => navigate(`/scenarios/${execution.scenarioId}`)}
+                            className="text-left hover:text-[#0F766E] hover:underline truncate max-w-full"
+                            title="Open test case"
+                          >
+                            {execution.scenario?.name}
+                          </button>
+                        ) : (
+                          execution.scenario?.name
+                        )}
+                      </td>
+                      <td className="py-3 px-4 hidden sm:table-cell">
+                        <span
+                          className={`inline-flex text-[11px] font-semibold px-2 py-0.5 rounded-md ${
+                            execution.testType === 'MANUAL'
+                              ? 'bg-amber-50 text-amber-800 border border-amber-200'
+                              : 'bg-teal-50 text-teal-800 border border-teal-200'
+                          }`}
+                        >
+                          {runTypeLabel(execution.testType)}
+                        </span>
                       </td>
                       <td className="py-3 px-4">
                         <Badge variant={getStatusColor(execution.status)}>
                           {getStatusIcon(execution.status)} {execution.status}
                         </Badge>
                       </td>
-                      <td className="py-3 px-4 text-center text-sm hidden sm:table-cell">
+                      <td className="py-3 px-4 text-center text-sm hidden md:table-cell">
                         <span className="text-green-600 font-semibold">
                           {execution.passedSteps}
                         </span>
@@ -545,6 +682,17 @@ export default function ExecutionPage() {
                       </td>
                       <td className="py-3 px-4 text-center">
                         <div className="flex items-center justify-center gap-1.5 flex-wrap">
+                          {execution.testType === 'MANUAL' && execution.status === 'RUNNING' && execution.scenarioId && (
+                            <ExportFormatButton
+                              format="csv"
+                              icon={ClipboardList}
+                              onClick={() => navigate(`/scenarios/${execution.scenarioId}`)}
+                              title="Lanjut checklist"
+                              className="!px-2 sm:!px-3"
+                            >
+                              Checklist
+                            </ExportFormatButton>
+                          )}
                           <ExportFormatButton
                             format="html"
                             onClick={() => handleExportReport(execution.id, 'html')}

@@ -27,16 +27,30 @@ ALLOW_PRIVATE_NETWORK_EXECUTION=true
 
 Only use this when the runner machine can actually reach the private hosts.
 
-### B. Hybrid local agent (P2 — durable)
+### B. Shared VPN runner (recommended for QA)
 
-Use production UI to queue, run Playwright on a VPN PC:
+One PC on VPN runs the agent as a Windows Scheduled Task. QA only uses the cloud UI.
 
-1. Create an API token (**Settings → API Tokens**).
-2. On the VPN machine: `AGENT_API_URL=…` + `AGENT_TOKEN=tsn_…` → `node scripts/local-agent/run.mjs`.
-3. On Scenario Detail (Internal badge) → **Queue local agent**.
-4. Watch status on the page; results appear as a normal **Execution** with step results.
+1. Create an API token (**Settings → Integrations → CI/CD API Tokens**).
+2. On the shared VPN PC: copy `scripts/local-agent/agent.env.example` → `agent.env`, set `AGENT_TOKEN`, then:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\local-agent\install-windows-task.ps1
+```
+
+3. Keep VPN connected on that PC.
+4. Scenario Detail (Internal) → **Jalankan di PC ini**.
+5. Status / logs: `powershell -File scripts\local-agent\status-windows-task.ps1`
 
 Details: [`scripts/local-agent/README.md`](../scripts/local-agent/README.md).
+
+### B2. Foreground agent (debug only)
+
+```powershell
+$env:AGENT_API_URL="https://testsambilngopi.my.id"
+$env:AGENT_TOKEN="tsn_…"
+node scripts/local-agent/run.mjs
+```
 
 ## What production does (P0)
 

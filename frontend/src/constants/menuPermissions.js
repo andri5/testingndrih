@@ -3,6 +3,7 @@
 export const MENU_DEFINITIONS = [
   { key: 'dashboard', path: '/dashboard', group: 'main', labelId: 'Dashboard', labelEn: 'Dashboard' },
   { key: 'scenarios', path: '/scenarios', group: 'main', labelId: 'Skenario', labelEn: 'Scenarios' },
+  { key: 'test-runs', path: '/test-runs', group: 'main', labelId: 'Test Runs', labelEn: 'Test Runs' },
   { key: 'execution', path: '/execution', group: 'main', labelId: 'Eksekusi', labelEn: 'Execution' },
   { key: 'environments', path: '/environments', group: 'main', labelId: 'Environment', labelEn: 'Environments' },
   { key: 'reports', path: '/reports', group: 'main', labelId: 'Laporan', labelEn: 'Reports' },
@@ -24,6 +25,7 @@ export const ALL_MENU_KEYS = MENU_DEFINITIONS.map((m) => m.key)
 export const DEFAULT_USER_MENU_KEYS = [
   'dashboard',
   'scenarios',
+  'test-runs',
   'execution',
   'environments',
   'reports',
@@ -36,7 +38,7 @@ const PATH_BY_KEY = Object.fromEntries(MENU_DEFINITIONS.map((m) => [m.key, m.pat
 const ROLE_FALLBACK_BY_ROLE = {
   LEAD: ALL_MENU_KEYS,
   USER: DEFAULT_USER_MENU_KEYS,
-  VIEWER: ['dashboard', 'reports', 'analytics', 'issues'],
+  VIEWER: ['dashboard', 'scenarios', 'test-runs', 'reports', 'analytics', 'issues'],
 }
 
 /**

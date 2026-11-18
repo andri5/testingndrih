@@ -11,10 +11,63 @@
  *   set AGENT_TOKEN=tsn_your_api_token
  *   node scripts/local-agent/run.mjs
  *
- * Create an API token in Settings → API Tokens.
+ * Create an API token in Settings → Integrations → CI/CD API Tokens.
+ * Playwright lives in backend/ — this script resolves it from there.
  */
 
-import { chromium, firefox, webkit } from 'playwright'
+import { createRequire } from 'node:module'
+import fs from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const require = createRequire(import.meta.url)
+
+/** Load KEY=VALUE from scripts/local-agent/agent.env (does not override existing env). */
+function loadAgentEnvFile() {
+  const envPath = path.resolve(__dirname, 'agent.env')
+  if (!fs.existsSync(envPath)) return
+  const text = fs.readFileSync(envPath, 'utf8')
+  for (const raw of text.split(/\r?\n/)) {
+    const line = raw.trim()
+    if (!line || line.startsWith('#')) continue
+    const eq = line.indexOf('=')
+    if (eq <= 0) continue
+    const key = line.slice(0, eq).trim()
+    let value = line.slice(eq + 1).trim()
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
+      value = value.slice(1, -1)
+    }
+    if (key && process.env[key] === undefined) process.env[key] = value
+  }
+}
+
+loadAgentEnvFile()
+
+function loadPlaywright() {
+  const candidates = [
+    path.resolve(__dirname, '../../backend/node_modules/playwright'),
+    path.resolve(__dirname, '../../node_modules/playwright'),
+    'playwright',
+  ]
+  for (const candidate of candidates) {
+    try {
+      return require(candidate)
+    } catch {
+      /* try next */
+    }
+  }
+  console.error(
+    "Cannot find package 'playwright'. From repo root run:\n" +
+      '  cd backend && npm install && npx playwright install chromium'
+  )
+  process.exit(1)
+}
+
+const { chromium, firefox, webkit } = loadPlaywright()
 
 const API_URL = (process.env.AGENT_API_URL || 'http://localhost:5001').replace(/\/$/, '')
 const TOKEN = process.env.AGENT_TOKEN || process.env.API_TOKEN || ''

@@ -23,8 +23,25 @@ function normalizeScenarioUrl(url) {
   return `https://${trimmed}`
 }
 
+const PRIORITIES = new Set(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'])
+
+function normalizePriority(value) {
+  const p = String(value || 'MEDIUM').toUpperCase()
+  return PRIORITIES.has(p) ? p : 'MEDIUM'
+}
+
 export async function createScenario(userId, data) {
-  const { name, description, url, folderId = null, tags } = data
+  const {
+    name,
+    description,
+    url,
+    folderId = null,
+    tags,
+    precondition,
+    priority,
+    caseType,
+    ownerId,
+  } = data
 
   if (!name?.trim()) {
     throw new Error('Name is required')
@@ -34,6 +51,15 @@ export async function createScenario(userId, data) {
 
   if (folderId) {
     await assertFolderBelongsToUser(folderId, userId)
+  }
+
+  const resolvedOwnerId = ownerId || userId
+  if (resolvedOwnerId !== userId) {
+    const owner = await prisma.user.findUnique({
+      where: { id: resolvedOwnerId },
+      select: { id: true },
+    })
+    if (!owner) throw new Error('Owner (PIC) not found')
   }
 
   try {
@@ -48,6 +74,10 @@ export async function createScenario(userId, data) {
         description: description || '',
         url: normalizedUrl,
         userId,
+        ownerId: resolvedOwnerId,
+        precondition: precondition != null ? String(precondition) : null,
+        priority: normalizePriority(priority),
+        caseType: caseType != null ? String(caseType).trim() || 'Functional' : 'Functional',
         steps: 0,
         folderId: folderId || null,
         sortOrder: siblingCount,
@@ -112,20 +142,35 @@ export async function getUserScenarios(userId, options = {}) {
         scenarioCode: true,
         name: true,
         description: true,
+        precondition: true,
+        priority: true,
+        caseType: true,
         url: true,
         steps: true,
         isFavorite: true,
         tags: true,
         folderId: true,
         sortOrder: true,
+        ownerId: true,
         createdAt: true,
         updatedAt: true,
         folder: { select: { id: true, name: true } },
+        owner: { select: { id: true, name: true, email: true } },
         _count: { select: { testSteps: true } },
         executions: {
           orderBy: { startTime: 'desc' },
           take: 1,
-          select: { id: true, status: true, startTime: true, createdAt: true, updatedAt: true },
+          select: {
+            id: true,
+            status: true,
+            testType: true,
+            totalSteps: true,
+            passedSteps: true,
+            failedSteps: true,
+            startTime: true,
+            createdAt: true,
+            updatedAt: true,
+          },
         },
       },
     })
@@ -158,6 +203,19 @@ export async function getScenarioById(scenarioId, userId) {
           orderBy: { stepNumber: 'asc' }
         },
         folder: { select: { id: true, name: true, parentId: true } },
+        owner: { select: { id: true, name: true, email: true } },
+        attachments: {
+          orderBy: { createdAt: 'asc' },
+          select: {
+            id: true,
+            filename: true,
+            originalName: true,
+            mimeType: true,
+            size: true,
+            url: true,
+            createdAt: true,
+          },
+        },
       }
     })
 
@@ -177,10 +235,78 @@ export async function getScenarioById(scenarioId, userId) {
 }
 
 /**
+ * Runs history for a single test case (Testiny Runs tab).
+ */
+export async function getScenarioRuns(scenarioId, userId, { limit = 20, offset = 0 } = {}) {
+  await getScenarioById(scenarioId, userId)
+
+  const where = { userId, scenarioId }
+  const take = Math.min(Math.max(parseInt(limit, 10) || 20, 1), 100)
+  const skip = Math.max(parseInt(offset, 10) || 0, 0)
+  const [executions, total] = await Promise.all([
+    prisma.execution.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      take,
+      skip,
+      select: {
+        id: true,
+        status: true,
+        testType: true,
+        browser: true,
+        totalSteps: true,
+        passedSteps: true,
+        failedSteps: true,
+        duration: true,
+        startTime: true,
+        endTime: true,
+        createdAt: true,
+        errorMessage: true,
+        _count: { select: { stepResults: true } },
+      },
+    }),
+    prisma.execution.count({ where }),
+  ])
+
+  const runs = executions.map((ex) => {
+    const totalSteps = ex.totalSteps || 0
+    const recorded = ex._count?.stepResults || 0
+    const finishedDone = (ex.passedSteps || 0) + (ex.failedSteps || 0)
+    const done = ex.status === 'RUNNING' ? recorded : finishedDone || recorded
+    let percentComplete = 0
+    if (totalSteps > 0) {
+      percentComplete = Math.min(100, Math.round((done / totalSteps) * 100))
+    } else if (ex.status === 'PASSED') {
+      percentComplete = 100
+    }
+    const { _count, ...rest } = ex
+    return { ...rest, recordedSteps: recorded, percentComplete }
+  })
+
+  return {
+    runs,
+    total,
+    limit: take,
+    offset: skip,
+  }
+}
+
+/**
  * Update a scenario
  */
 export async function updateScenario(scenarioId, userId, data) {
-  const { name, description, url, tags, folderId, sortOrder } = data
+  const {
+    name,
+    description,
+    url,
+    tags,
+    folderId,
+    sortOrder,
+    precondition,
+    priority,
+    caseType,
+    ownerId,
+  } = data
 
   try {
     // Verify ownership first
@@ -200,17 +326,67 @@ export async function updateScenario(scenarioId, userId, data) {
       await assertFolderBelongsToUser(folderId, userId)
     }
 
+    if (ownerId !== undefined && ownerId !== null) {
+      const owner = await prisma.user.findUnique({
+        where: { id: ownerId },
+        select: { id: true },
+      })
+      if (!owner) throw new Error('Owner (PIC) not found')
+    }
+
+    const nextData = {
+      ...(name && { name }),
+      ...(description !== undefined && { description }),
+      ...(url !== undefined && { url: normalizeScenarioUrl(url) }),
+      ...(tags !== undefined && { tags: normalizeTags(tags) }),
+      ...(folderId !== undefined && { folderId: folderId || null }),
+      ...(sortOrder !== undefined && { sortOrder: Number(sortOrder) || 0 }),
+      ...(precondition !== undefined && {
+        precondition: precondition == null ? null : String(precondition),
+      }),
+      ...(priority !== undefined && { priority: normalizePriority(priority) }),
+      ...(caseType !== undefined && {
+        caseType: caseType == null ? null : String(caseType).trim() || 'Functional',
+      }),
+      ...(ownerId !== undefined && { ownerId: ownerId || null }),
+    }
+
+    const auditFields = [
+      'name',
+      'description',
+      'url',
+      'precondition',
+      'priority',
+      'caseType',
+      'ownerId',
+      'folderId',
+    ]
+    const auditEntries = []
+    for (const field of auditFields) {
+      if (!(field in nextData)) continue
+      const oldVal = scenario[field] ?? null
+      const newVal = nextData[field] ?? null
+      if (String(oldVal ?? '') === String(newVal ?? '')) continue
+      auditEntries.push({
+        action: 'update',
+        field,
+        oldValue: oldVal,
+        newValue: newVal,
+      })
+    }
+
     const updated = await prisma.scenario.update({
       where: { id: scenarioId },
-      data: {
-        ...(name && { name }),
-        ...(description !== undefined && { description }),
-        ...(url !== undefined && { url: normalizeScenarioUrl(url) }),
-        ...(tags !== undefined && { tags: normalizeTags(tags) }),
-        ...(folderId !== undefined && { folderId: folderId || null }),
-        ...(sortOrder !== undefined && { sortOrder: Number(sortOrder) || 0 }),
-      }
+      data: nextData,
+      include: {
+        owner: { select: { id: true, name: true, email: true } },
+      },
     })
+
+    if (auditEntries.length) {
+      const { writeScenarioAudit } = await import('./scenarioAuditService.js')
+      await writeScenarioAudit(scenarioId, userId, auditEntries)
+    }
 
     return updated
   } catch (error) {

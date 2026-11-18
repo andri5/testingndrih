@@ -230,7 +230,7 @@ export const defaultTargetKindLabels = {
   internalActions: [
     'Record: tetap bisa — recorder jalan di browser PC Anda (client-direct) saat VPN aktif.',
     'Run opsi A: jalankan backend/app lokal di mesin yang sama jaringan dengan staging.',
-    'Run opsi B: Queue local agent di PC VPN (Settings → API Tokens + scripts/local-agent).',
+    'Run opsi B: Manual Run (checklist Pass/Fail) atau Jalankan di PC ini (shared VPN runner).',
     'Atau ekspos staging lewat URL publik/tunnel jika ingin Run penuh di cloud.',
   ],
   resolvedIps: 'Resolved IP',

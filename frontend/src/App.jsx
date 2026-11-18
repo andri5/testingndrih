@@ -14,6 +14,8 @@ import AnalyticsPage from './pages/AnalyticsPage'
 import ScenariosPage from './pages/ScenariosPage'
 import ScenarioDetailPage from './pages/ScenarioDetailPage'
 import ExecutionPage from './pages/ExecutionPage'
+import TestRunsPage from './pages/TestRunsPage'
+import TestRunDetailPage from './pages/TestRunDetailPage'
 import ReportsPage from './pages/ReportsPage'
 import IssuesPage from './pages/IssuesPage'
 import SettingsPage from './pages/SettingsPage'
@@ -186,6 +188,22 @@ export default function App() {
           element={
             <ProtectedRoute>
               <ExecutionPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/test-runs"
+          element={
+            <ProtectedRoute>
+              <TestRunsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/test-runs/:id"
+          element={
+            <ProtectedRoute>
+              <TestRunDetailPage />
             </ProtectedRoute>
           }
         />

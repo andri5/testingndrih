@@ -11,6 +11,10 @@ import ExportFormatButton from '../components/ExportFormatButton'
 import { CheckCircle2, XCircle, ClipboardList, Clock, HelpCircle, Globe, Play, Circle, Square, ChevronDown, ListTree, Plus, Copy, Trash2, Save, Loader2, Zap, Link2 } from 'lucide-react'
 import ShareRunModal from '../components/ShareRunModal'
 import TargetKindBanner, { defaultTargetKindLabels } from '../components/TargetKindBanner'
+import ManualRunPanel from '../components/ManualRunPanel'
+import CaseAttachmentsPanel from '../components/CaseAttachmentsPanel'
+import CaseRunsPanel from '../components/CaseRunsPanel'
+import CaseHistoryPanel from '../components/CaseHistoryPanel'
 
 const RecordIcon = (props) => <Circle {...props} className="text-red-500 fill-red-500" />
 
@@ -58,7 +62,7 @@ const i18n = {
     targetInternalRunHint: 'Cloud Run diblokir untuk URL internal — pakai backend lokal di LAN yang sama, atau Queue local agent.',
     queueLocalAgent: 'Queue local agent',
     queueLocalAgentHint:
-      'Job tersimpan di database. Jalankan node scripts/local-agent/run.mjs di PC VPN (API token di Settings).',
+      'Job masuk antrean. Shared VPN runner (install-windows-task) akan mengambilnya — atau jalankan npm run agent di PC VPN.',
     queueLocalAgentError: 'Gagal mengantrekan job local agent',
     agentJobStatus: 'Local agent job',
     agentJobQueued: 'Menunggu agent…',
@@ -82,6 +86,11 @@ const i18n = {
     running: 'Running...',
     runScenario: 'Jalankan',
     runOnThisPc: 'Jalankan di PC ini',
+    manualRun: 'Manual Run',
+    manualRunHint: 'Checklist Pass/Fail di browser Anda — cocok untuk staging internal tanpa agent.',
+    manualRunStarted: 'Manual run dimulai — tandai Pass/Fail per step.',
+    manualRunFinished: (status) => `Manual run selesai: ${status}`,
+    manualRunCancelled: 'Manual run dibatalkan',
     liveRunIsolatedHint:
       'Run memakai browser bersih (tanpa cookie dari run sebelumnya).',
     stopRecording: 'Stop',
@@ -181,7 +190,14 @@ const STEP_TYPES = [
   { value: 'API_CALL', label: 'API Call', icon: '📡', fields: ['value', 'metadata'], placeholder: { value: 'https://api.example.com/endpoint', metadata: '{"method":"GET","headers":{}}' } },
 ]
 
-const emptyStep = { type: 'NAVIGATE', description: '', selector: '', value: '', metadata: '' }
+const emptyStep = {
+  type: 'NAVIGATE',
+  description: '',
+  expectedResult: '',
+  selector: '',
+  value: '',
+  metadata: '',
+}
 
 export default function ScenarioDetailPage() {
   const { id } = useParams()
@@ -244,6 +260,19 @@ export default function ScenarioDetailPage() {
   const [agentJob, setAgentJob] = useState(null)
   const [isQueueingAgent, setIsQueueingAgent] = useState(false)
   const [shareExecutionId, setShareExecutionId] = useState(null)
+  const [manualRun, setManualRun] = useState(null) // { executionId, recorded: { [stepId]: {...} } }
+  const [isStartingManualRun, setIsStartingManualRun] = useState(false)
+  /** automated = Playwright; manual = checklist QA */
+  const [runMode, setRunMode] = useState('manual')
+  const [caseMeta, setCaseMeta] = useState({
+    precondition: '',
+    priority: 'MEDIUM',
+    caseType: 'Functional',
+  })
+  const [isSavingCaseMeta, setIsSavingCaseMeta] = useState(false)
+  /** Testiny-style case tabs */
+  const [caseTab, setCaseTab] = useState('details') // details | attachments | runs | history
+  const [caseAttachments, setCaseAttachments] = useState([])
   const agentPollRef = useRef(null)
   const targetProbeRef = useRef(0)
   const recordTokenRef = useRef(null)
@@ -286,10 +315,11 @@ export default function ScenarioDetailPage() {
     return () => clearTimeout(timer)
   }, [scenario?.url])
 
-  // Legacy ?autoRecord=1 — only open panel (no auto window.open; gesture lost after timeout)
+  // Legacy ?autoRecord=1 — open panel in automated mode (Record is automation-only)
   useEffect(() => {
     const params = new URLSearchParams(routeLocation.search)
     if (params.get('autoRecord') === '1') {
+      setRunMode('automated')
       setShowRecordingPanel(true)
       setRecordingUrl(scenario?.url || '')
       window.history.replaceState(null, '', routeLocation.pathname)
@@ -360,7 +390,14 @@ export default function ScenarioDetailPage() {
   const loadScenario = useCallback(async () => {
     try {
       const res = await scenarioAPI.getById(id)
-      setScenario(res.data.scenario || res.data)
+      const sc = res.data.scenario || res.data
+      setScenario(sc)
+      setCaseAttachments(sc.attachments || [])
+      setCaseMeta({
+        precondition: sc.precondition || '',
+        priority: sc.priority || 'MEDIUM',
+        caseType: sc.caseType || 'Functional',
+      })
     } catch (err) {
       setError(err.response?.data?.error || t.loadScenarioError)
     }
@@ -386,6 +423,26 @@ export default function ScenarioDetailPage() {
         const total = histRes.data?.total ?? (histRes.data?.executions?.length ?? 0)
         setExecutionIteration(total)
       } catch { /* abaikan jika gagal */ }
+      try {
+        const activeRes = await executionAPI.getActiveManualRun(id)
+        const execution = activeRes.data?.execution
+        if (execution?.id) {
+          const recorded = {}
+          for (const sr of execution.stepResults || []) {
+            if (sr.testStepId) {
+              recorded[sr.testStepId] = {
+                status: sr.status,
+                notes: sr.errorMessage || '',
+              }
+            }
+          }
+          setManualRun({ executionId: execution.id, recorded })
+        } else {
+          setManualRun(null)
+        }
+      } catch {
+        /* ignore */
+      }
     }
     load()
   }, [loadScenario, loadSteps, id])
@@ -412,6 +469,7 @@ export default function ScenarioDetailPage() {
     setStepForm({
       type: step.type,
       description: step.description || '',
+      expectedResult: step.expectedResult || '',
       selector: step.selector || '',
       value: step.value || '',
       metadata: step.metadata || ''
@@ -420,6 +478,33 @@ export default function ScenarioDetailPage() {
     setTimeout(() => {
       stepFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }, 100)
+  }
+
+  const handleSaveCaseMeta = async () => {
+    if (!scenario) return
+    setIsSavingCaseMeta(true)
+    setError(null)
+    try {
+      const res = await scenarioAPI.update(
+        id,
+        scenario.name,
+        scenario.description || '',
+        scenario.url || '',
+        {
+          precondition: caseMeta.precondition,
+          priority: caseMeta.priority,
+          caseType: caseMeta.caseType,
+          ownerId: scenario.ownerId || undefined,
+        }
+      )
+      const updated = res.data.scenario || res.data
+      setScenario((prev) => ({ ...prev, ...updated }))
+      showSuccess('Detail test case disimpan')
+    } catch (err) {
+      setError(err.response?.data?.error || err.response?.data?.message || 'Gagal simpan detail case')
+    } finally {
+      setIsSavingCaseMeta(false)
+    }
   }
 
   const cancelForm = () => {
@@ -476,6 +561,7 @@ export default function ScenarioDetailPage() {
         await scenarioAPI.updateStep(id, editingStep.id, {
           type: stepForm.type,
           description: stepForm.description.trim(),
+          expectedResult: stepForm.expectedResult?.trim() || null,
           selector: stepForm.selector || null,
           value: valueToSave,
           metadata: parsedMetadata
@@ -489,7 +575,8 @@ export default function ScenarioDetailPage() {
           stepForm.description.trim(),
           stepForm.selector || null,
           valueToSave,
-          parsedMetadata
+          parsedMetadata,
+          stepForm.expectedResult?.trim() || null
         )
         showSuccess(t.stepAdded)
       }
@@ -723,11 +810,75 @@ export default function ScenarioDetailPage() {
   const agentBusy = agentJob?.status === 'QUEUED' || agentJob?.status === 'CLAIMED'
 
   const handlePrimaryRun = async () => {
+    if (runMode === 'manual') {
+      await handleStartManualRun()
+      return
+    }
     if (needsLocalRun) {
       await handleQueueLocalAgent()
       return
     }
     await handleExecute()
+  }
+
+  const handleStartManualRun = async () => {
+    if (steps.length === 0) {
+      setError(t.addStepFirst)
+      return
+    }
+    setIsStartingManualRun(true)
+    setError(null)
+    try {
+      const res = await executionAPI.startManualRun(id)
+      const execution = res.data.execution
+      const recorded = {}
+      setManualRun({ executionId: execution.id, recorded })
+      showSuccess(t.manualRunStarted)
+    } catch (err) {
+      setError(err.response?.data?.message || 'Gagal mulai Manual Run')
+    } finally {
+      setIsStartingManualRun(false)
+    }
+  }
+
+  const handleManualStepRecorded = (stepId, payload) => {
+    setManualRun((prev) => {
+      if (!prev) return prev
+      return {
+        ...prev,
+        recorded: {
+          ...prev.recorded,
+          [stepId]: payload,
+        },
+      }
+    })
+  }
+
+  const handleManualRunFinished = (execution) => {
+    setManualRun(null)
+    setExecutionResult(execution)
+    setExecutionIteration((n) => n + 1)
+    const base = t.manualRunFinished(execution?.status || 'DONE')
+    showSuccess(
+      execution?.status === 'FAILED'
+        ? `${base} — cek menu Bugs jika ada issue yang dibuat.`
+        : base
+    )
+  }
+
+  const handleCancelManualRun = async () => {
+    if (!manualRun?.executionId) {
+      setManualRun(null)
+      return
+    }
+    try {
+      await executionAPI.cancelManualRun(manualRun.executionId)
+      showSuccess(t.manualRunCancelled)
+    } catch (err) {
+      setError(err.response?.data?.message || 'Gagal membatalkan Manual Run')
+    } finally {
+      setManualRun(null)
+    }
   }
 
   const handleExecute = async () => {
@@ -1059,6 +1210,7 @@ export default function ScenarioDetailPage() {
     if (!id) return
     recorderAPI.status(id).then(res => {
       if (res.data.status === 'recording') {
+        setRunMode('automated')
         setIsRecording(true)
         setRecordingSteps(res.data.steps || [])
         setShowRecordingPanel(true)
@@ -1356,56 +1508,425 @@ export default function ScenarioDetailPage() {
               {selectedDevice || selectedBrowser}
             </ExportFormatButton>
 
-            {!isRecording ? (
-              <ExportFormatButton
-                format="pdf"
-                icon={RecordIcon}
-                onClick={() => {
-                  setRecordingUrl(scenario.url || '')
-                  setShowRecordingPanel(true)
-                }}
-                disabled={isExecuting}
-              >
-                Record
-              </ExportFormatButton>
-            ) : (
-              <ExportFormatButton
-                format="pdf"
-                icon={isStoppingRecording ? Loader2 : Square}
-                onClick={handleStopRecording}
-                disabled={isStoppingRecording}
-                className={isStoppingRecording ? '[&_svg]:animate-spin' : ''}
-              >
-                {isStoppingRecording ? '…' : t.stopRecording}
-              </ExportFormatButton>
+            {runMode === 'automated' && (
+              !isRecording ? (
+                <ExportFormatButton
+                  format="pdf"
+                  icon={RecordIcon}
+                  onClick={() => {
+                    setRecordingUrl(scenario.url || '')
+                    setShowRecordingPanel(true)
+                  }}
+                  disabled={isExecuting}
+                >
+                  Record
+                </ExportFormatButton>
+              ) : (
+                <ExportFormatButton
+                  format="pdf"
+                  icon={isStoppingRecording ? Loader2 : Square}
+                  onClick={handleStopRecording}
+                  disabled={isStoppingRecording}
+                  className={isStoppingRecording ? '[&_svg]:animate-spin' : ''}
+                >
+                  {isStoppingRecording ? '…' : t.stopRecording}
+                </ExportFormatButton>
+              )
             )}
 
+            <div className="flex items-center gap-2">
+              <label className="text-xs font-semibold text-ink-muted whitespace-nowrap">Mode</label>
+              <select
+                value={runMode}
+                onChange={(e) => {
+                  const next = e.target.value
+                  setRunMode(next)
+                  if (next === 'manual') {
+                    setShowRecordingPanel(false)
+                  }
+                }}
+                disabled={!!manualRun || isExecuting || isRecording}
+                className="text-xs font-semibold rounded-lg border border-surface-border bg-white text-ink px-2.5 py-2 focus:outline-none focus:ring-1 focus:ring-brand"
+              >
+                <option value="manual">Manual checklist</option>
+                <option value="automated">Automated (Playwright)</option>
+              </select>
+            </div>
             <ExportFormatButton
               format="csv"
-              icon={isExecuting || isQueueingAgent ? Loader2 : (needsLocalRun ? Zap : Play)}
+              icon={
+                isExecuting || isQueueingAgent || isStartingManualRun
+                  ? Loader2
+                  : runMode === 'manual'
+                    ? ClipboardList
+                    : (needsLocalRun ? Zap : Play)
+              }
               onClick={handlePrimaryRun}
               disabled={
                 isExecuting ||
                 isQueueingAgent ||
+                isStartingManualRun ||
                 steps.length === 0 ||
                 isRecording ||
-                (needsLocalRun && agentBusy)
+                !!manualRun ||
+                (runMode === 'automated' && needsLocalRun && agentBusy)
               }
-              className={isExecuting || isQueueingAgent ? '[&_svg]:animate-spin' : ''}
+              className={
+                isExecuting || isQueueingAgent || isStartingManualRun ? '[&_svg]:animate-spin' : ''
+              }
             >
-              {isExecuting || isQueueingAgent
+              {isExecuting || isQueueingAgent || isStartingManualRun
                 ? t.running
-                : needsLocalRun
-                  ? t.runOnThisPc
-                  : t.runScenario}
+                : runMode === 'manual'
+                  ? t.manualRun
+                  : needsLocalRun
+                    ? t.runOnThisPc
+                    : t.runScenario}
             </ExportFormatButton>
             <p className="text-xs text-ink-muted basis-full max-w-sm sm:text-right">
-              {needsLocalRun
-                ? 'Butuh PC di VPN/LAN yang sama (local agent).'
-                : t.liveRunIsolatedHint}
+              {manualRun
+                ? t.manualRunHint
+                : runMode === 'manual'
+                  ? t.manualRunHint
+                  : needsLocalRun
+                    ? 'Automated internal: butuh local agent di PC VPN.'
+                    : t.liveRunIsolatedHint}
             </p>
           </div>
         </div>
+
+        <Card>
+          <div className="flex flex-wrap items-center gap-1 mb-4 border-b border-surface-border pb-2">
+            {[
+              { id: 'details', label: 'Details' },
+              { id: 'attachments', label: `Attachments${caseAttachments.length ? ` (${caseAttachments.length})` : ''}` },
+              { id: 'runs', label: 'Runs' },
+              { id: 'history', label: 'History' },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setCaseTab(tab.id)}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
+                  caseTab === tab.id
+                    ? 'bg-brand-soft text-brand'
+                    : 'text-ink-muted hover:bg-surface-muted hover:text-ink'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          {caseTab === 'attachments' && (
+            <CaseAttachmentsPanel
+              scenarioId={id}
+              attachments={caseAttachments}
+              onRefresh={async () => {
+                const res = await scenarioAPI.listAttachments(id)
+                setCaseAttachments(res.data.attachments || [])
+              }}
+            />
+          )}
+
+          {caseTab === 'runs' && <CaseRunsPanel scenarioId={id} />}
+
+          {caseTab === 'history' && <CaseHistoryPanel scenarioId={id} />}
+
+          {caseTab === 'details' && (
+          <>
+          <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
+            <div>
+              <h2 className="text-sm font-bold text-ink uppercase tracking-wider">Test case details</h2>
+              <p className="text-xs text-ink-muted mt-0.5">
+                Owner, priority, type, precondition, dan test steps — mirip Testiny Details.
+              </p>
+            </div>
+            <ExportFormatButton
+              format="primary"
+              icon={isSavingCaseMeta ? Loader2 : Save}
+              onClick={handleSaveCaseMeta}
+              disabled={isSavingCaseMeta}
+              className={isSavingCaseMeta ? '[&_svg]:animate-spin' : ''}
+            >
+              Simpan detail
+            </ExportFormatButton>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-3 mb-3">
+            <div>
+              <label className="block text-xs font-medium text-ink-muted mb-1">Priority</label>
+              <select
+                value={caseMeta.priority}
+                onChange={(e) => setCaseMeta((m) => ({ ...m, priority: e.target.value }))}
+                className="w-full text-sm rounded-lg border border-surface-border px-3 py-2 bg-white text-ink"
+              >
+                <option value="LOW">LOW</option>
+                <option value="MEDIUM">MEDIUM</option>
+                <option value="HIGH">HIGH</option>
+                <option value="CRITICAL">CRITICAL</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-ink-muted mb-1">Type</label>
+              <select
+                value={caseMeta.caseType}
+                onChange={(e) => setCaseMeta((m) => ({ ...m, caseType: e.target.value }))}
+                className="w-full text-sm rounded-lg border border-surface-border px-3 py-2 bg-white text-ink"
+              >
+                <option value="Functional">Functional</option>
+                <option value="Regression">Regression</option>
+                <option value="Smoke">Smoke</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-ink-muted mb-1">PIC / Owner</label>
+              <div className="text-sm rounded-lg border border-surface-border px-3 py-2 bg-surface-muted text-ink">
+                {scenario?.owner?.name || scenario?.owner?.email || 'Anda (creator)'}
+              </div>
+            </div>
+          </div>
+          <div className="mb-5">
+            <label className="block text-xs font-medium text-ink-muted mb-1">Precondition</label>
+            <textarea
+              value={caseMeta.precondition}
+              onChange={(e) => setCaseMeta((m) => ({ ...m, precondition: e.target.value }))}
+              rows={3}
+              placeholder="Kondisi awal sebelum step dijalankan…"
+              className="w-full text-sm rounded-lg border border-surface-border px-3 py-2 bg-white text-ink"
+            />
+          </div>
+
+          {/* Steps — same Details panel as Testiny */}
+          <div className="border-t border-surface-border pt-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
+              <div>
+                <h3 className="text-sm font-bold text-ink uppercase tracking-wider">Steps</h3>
+                <p className="text-xs text-ink-muted mt-0.5">{steps.length} step dalam test case ini</p>
+              </div>
+              {!showStepForm && (
+                <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Test step actions">
+                  <ExportFormatButton
+                    format="json"
+                    icon={isCopyingBulk ? Loader2 : Copy}
+                    onClick={handleBulkCopy}
+                    disabled={selectedStepIds.size === 0 || isCopyingBulk || isDeletingBulk}
+                    className={isCopyingBulk ? '[&_svg]:animate-spin' : ''}
+                  >
+                    {isCopyingBulk
+                      ? t.copying
+                      : selectedStepIds.size > 0
+                        ? t.copySelectedSteps(selectedStepIds.size)
+                        : t.copySteps}
+                  </ExportFormatButton>
+                  <ExportFormatButton
+                    format="pdf"
+                    icon={isDeletingBulk ? Loader2 : Trash2}
+                    onClick={handleBulkDelete}
+                    disabled={selectedStepIds.size === 0 || isDeletingBulk || isCopyingBulk}
+                    className={isDeletingBulk ? '[&_svg]:animate-spin' : ''}
+                  >
+                    {isDeletingBulk
+                      ? t.deleting
+                      : selectedStepIds.size > 0
+                        ? t.deleteSelectedSteps(selectedStepIds.size)
+                        : t.deleteSteps}
+                  </ExportFormatButton>
+                  <ExportFormatButton format="primary" icon={Plus} onClick={openAddForm}>
+                    {t.addStep}
+                  </ExportFormatButton>
+                </div>
+              )}
+            </div>
+
+            {showStepForm && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
+                <div
+                  className="absolute inset-0 backdrop-blur-sm bg-black/40"
+                  onClick={cancelForm}
+                  aria-label={t.closeDialog}
+                />
+                <div
+                  ref={stepFormRef}
+                  role="dialog"
+                  aria-modal="true"
+                  aria-label={editingStep ? t.editStep : t.addNewStep}
+                  className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl border bg-white border-gray-200"
+                >
+                  <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-[#0F766E]/15 flex items-center justify-center">
+                        <span className="text-[#0F766E] text-sm">{editingStep ? '✏️' : '+'}</span>
+                      </div>
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        {editingStep ? t.editStep : t.addNewStep}
+                      </h3>
+                    </div>
+                    <button
+                      onClick={cancelForm}
+                      aria-label={t.closeDialog}
+                      className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-gray-100"
+                    >
+                      ✕
+                    </button>
+                  </div>
+
+                  <div className="px-6 py-5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-1 text-gray-700">
+                          {t.fieldType} <span className="text-xs text-red-600">*{t.required}</span>
+                        </label>
+                        <select
+                          value={stepForm.type}
+                          onChange={(e) => setStepForm({ ...stepForm, type: e.target.value })}
+                          className="w-full px-3 py-2 rounded-lg border focus:ring-1 focus:ring-[#0F766E] focus:outline-none bg-white border-gray-300 text-gray-900"
+                        >
+                          {STEP_TYPES.map((st) => (
+                            <option key={st.value} value={st.value}>
+                              {st.icon} {st.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium mb-1 text-gray-700">
+                          {t.fieldDescription} <span className="text-xs text-red-600">*{t.required}</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={stepForm.description}
+                          onChange={(e) => setStepForm({ ...stepForm, description: e.target.value })}
+                          placeholder={t.stepDescriptionPlaceholder}
+                          autoFocus
+                          className="w-full px-3 py-2 rounded-lg border focus:ring-1 focus:ring-[#0F766E] focus:outline-none bg-white border-gray-300 text-gray-900 placeholder-gray-400"
+                        />
+                      </div>
+
+                      <div className="sm:col-span-2">
+                        <label className="block text-sm font-medium mb-1 text-gray-700">
+                          Expected result
+                        </label>
+                        <input
+                          type="text"
+                          value={stepForm.expectedResult}
+                          onChange={(e) => setStepForm({ ...stepForm, expectedResult: e.target.value })}
+                          placeholder="Apa yang harus terlihat / terjadi setelah step ini"
+                          className="w-full px-3 py-2 rounded-lg border focus:ring-1 focus:ring-[#0F766E] focus:outline-none bg-white border-gray-300 text-gray-900 placeholder-gray-400"
+                        />
+                      </div>
+
+                      {getStepTypeConfig(stepForm.type).fields.includes('selector') && (
+                        <div>
+                          <div className="flex items-center gap-1.5 mb-1">
+                            <label className="text-sm font-medium text-gray-700">{t.fieldSelector}</label>
+                            <Tooltip text={t.selectorHelpTooltip} position="right" multiline>
+                              <HelpCircle
+                                size={14}
+                                className="text-gray-400 hover:text-[#0F766E] cursor-help shrink-0"
+                                aria-label="How to find a selector"
+                              />
+                            </Tooltip>
+                          </div>
+                          <input
+                            type="text"
+                            value={stepForm.selector}
+                            onChange={(e) => setStepForm({ ...stepForm, selector: e.target.value })}
+                            placeholder={getStepTypeConfig(stepForm.type).placeholder.selector}
+                            className="w-full px-3 py-2 rounded-lg border focus:ring-1 focus:ring-[#0F766E] focus:outline-none bg-white border-gray-300 text-gray-900 placeholder-gray-400"
+                          />
+                          <p className="mt-1 text-xs text-gray-500">{t.selectorHelpShort}</p>
+                        </div>
+                      )}
+
+                      {getStepTypeConfig(stepForm.type).fields.includes('value') && (
+                        <div>
+                          <label className="block text-sm font-medium mb-1 text-gray-700">{t.fieldValue}</label>
+                          <input
+                            type="text"
+                            value={stepForm.value}
+                            onChange={(e) => setStepForm({ ...stepForm, value: e.target.value })}
+                            placeholder={getStepTypeConfig(stepForm.type).placeholder.value}
+                            className="w-full px-3 py-2 rounded-lg border focus:ring-1 focus:ring-[#0F766E] focus:outline-none bg-white border-gray-300 text-gray-900 placeholder-gray-400"
+                          />
+                        </div>
+                      )}
+
+                      {getStepTypeConfig(stepForm.type).fields.includes('metadata') && (
+                        <div className="sm:col-span-2">
+                          <label className="block text-sm font-medium mb-1 text-gray-700">{t.fieldMetadata}</label>
+                          <textarea
+                            value={stepForm.metadata}
+                            onChange={(e) => setStepForm({ ...stepForm, metadata: e.target.value })}
+                            placeholder={getStepTypeConfig(stepForm.type).placeholder.metadata}
+                            rows={3}
+                            className="w-full px-3 py-2 rounded-lg border focus:ring-1 focus:ring-[#0F766E] focus:outline-none font-mono text-sm bg-white border-gray-300 text-gray-900 placeholder-gray-400"
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    {t.hints[stepForm.type] && (
+                      <div className="mt-4 px-3 py-2 rounded-lg text-sm bg-blue-50 text-blue-700 border border-blue-200">
+                        {t.hints[stepForm.type]}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex flex-wrap gap-3 px-6 py-4 border-t border-gray-100">
+                    <ExportFormatButton
+                      format="primary"
+                      icon={isSaving ? Loader2 : Save}
+                      onClick={handleSaveStep}
+                      disabled={isSaving}
+                      className={`flex-1 sm:flex-none justify-center ${isSaving ? '[&_svg]:animate-spin' : ''}`}
+                    >
+                      {isSaving ? t.saving : editingStep ? t.updateStepBtn : t.saveStepBtn}
+                    </ExportFormatButton>
+                    <ExportFormatButton format="json" icon={null} onClick={cancelForm} className="flex-1 sm:flex-none justify-center">
+                      {t.cancel}
+                    </ExportFormatButton>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <TestStepList
+              steps={steps}
+              onReorderSteps={handleReorderSteps}
+              onEditStep={openEditForm}
+              onDeleteStep={handleDeleteStep}
+              onToggleSelection={toggleStepSelection}
+              onToggleSelectAll={toggleSelectAll}
+              selectedStepIds={selectedStepIds}
+              executionResult={executionResult}
+              currentStepIndex={currentStepIndex}
+              STEP_TYPES={STEP_TYPES}
+              isDeletingBulk={isDeletingBulk}
+            />
+          </div>
+          </>
+          )}
+        </Card>
+
+        {manualRun && (
+          <Card className="border border-teal-200/80 bg-teal-50/30">
+            <ManualRunPanel
+              steps={steps}
+              executionId={manualRun.executionId}
+              recordedByStepId={manualRun.recorded}
+              onRecorded={handleManualStepRecorded}
+              onFinished={handleManualRunFinished}
+              onCancel={handleCancelManualRun}
+              stepTypes={STEP_TYPES}
+              scenarioName={scenario?.name || 'Scenario'}
+              scenarioCode={scenario?.scenarioCode || scenario?.code || ''}
+              precondition={scenario?.precondition || caseMeta.precondition}
+              assigneeOverride={scenario?.owner || null}
+            />
+          </Card>
+        )}
 
         {(targetKind || isProbingTarget) && (
           <div className="w-full max-w-4xl">
@@ -1496,7 +2017,7 @@ export default function ScenarioDetailPage() {
         )}
 
         {/* Recording Panel */}
-        {showRecordingPanel && (
+        {showRecordingPanel && runMode === 'automated' && (
           <Card>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-ink flex items-center gap-2">
@@ -1726,251 +2247,6 @@ export default function ScenarioDetailPage() {
             )}
           </Card>
         )}
-
-        {/* Test Steps */}
-        <Card>
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-            <h2 className="text-xl font-bold text-[#E0E0E2]">Test Steps</h2>
-            {!showStepForm && (
-              <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Test step actions">
-                <ExportFormatButton
-                  format="json"
-                  icon={isCopyingBulk ? Loader2 : Copy}
-                  onClick={handleBulkCopy}
-                  disabled={selectedStepIds.size === 0 || isCopyingBulk || isDeletingBulk}
-                  className={isCopyingBulk ? '[&_svg]:animate-spin' : ''}
-                >
-                  {isCopyingBulk
-                    ? t.copying
-                    : selectedStepIds.size > 0
-                      ? t.copySelectedSteps(selectedStepIds.size)
-                      : t.copySteps}
-                </ExportFormatButton>
-                <ExportFormatButton
-                  format="pdf"
-                  icon={isDeletingBulk ? Loader2 : Trash2}
-                  onClick={handleBulkDelete}
-                  disabled={selectedStepIds.size === 0 || isDeletingBulk || isCopyingBulk}
-                  className={isDeletingBulk ? '[&_svg]:animate-spin' : ''}
-                >
-                  {isDeletingBulk
-                    ? t.deleting
-                    : selectedStepIds.size > 0
-                      ? t.deleteSelectedSteps(selectedStepIds.size)
-                      : t.deleteSteps}
-                </ExportFormatButton>
-                <ExportFormatButton format="primary" icon={Plus} onClick={openAddForm}>
-                  {t.addStep}
-                </ExportFormatButton>
-              </div>
-            )}
-          </div>
-
-          {/* Step Form Modal */}
-          {showStepForm && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
-              {/* Backdrop */}
-              <div
-                className={`absolute inset-0 backdrop-blur-sm ${
-                  'bg-black/40'
-                }`}
-                onClick={cancelForm}
-                aria-label={t.closeDialog}
-              />
-              {/* Dialog */}
-              <div
-                ref={stepFormRef}
-                role="dialog"
-                aria-modal="true"
-                aria-label={editingStep ? t.editStep : t.addNewStep}
-                className={`relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl border transition-colors ${
-                  'bg-white border-gray-200'
-                }`}
-              >
-                {/* Header */}
-                <div className={`flex items-center justify-between px-6 py-4 border-b ${
-                  'border-gray-100'
-                }`}>
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-[#0F766E]/15 flex items-center justify-center">
-                      <span className="text-[#0F766E] text-sm">{editingStep ? '✏️' : '+'}</span>
-                    </div>
-                    <h3 className={`text-lg font-semibold ${
-                      'text-gray-900'
-                    }`}>
-                      {editingStep ? t.editStep : t.addNewStep}
-                    </h3>
-                  </div>
-                  <button
-                    onClick={cancelForm}
-                    aria-label={t.closeDialog}
-                    className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
-                      'text-gray-400 hover:text-gray-700 hover:bg-gray-100'
-                    }`}
-                  >
-                    ✕
-                  </button>
-                </div>
-
-                {/* Body */}
-                <div className="px-6 py-5">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                    {/* Type */}
-                    <div>
-                      <label className={`block text-sm font-medium mb-1 ${
-                        'text-gray-700'
-                      }`}>
-                        {t.fieldType} <span className={`text-xs ${'text-red-600'}`}>*{t.required}</span>
-                      </label>
-                      <select
-                        value={stepForm.type}
-                        onChange={(e) => setStepForm({ ...stepForm, type: e.target.value })}
-                        className={`w-full px-3 py-2 rounded-lg border focus:ring-1 focus:ring-[#0F766E] focus:outline-none transition-colors ${
-                          'bg-white border-gray-300 text-gray-900'
-                        }`}
-                      >
-                        {STEP_TYPES.map(st => (
-                          <option key={st.value} value={st.value}>
-                            {st.icon} {st.label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {/* Description */}
-                    <div>
-                      <label className={`block text-sm font-medium mb-1 ${
-                        'text-gray-700'
-                      }`}>
-                        {t.fieldDescription} <span className={`text-xs ${'text-red-600'}`}>*{t.required}</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={stepForm.description}
-                        onChange={(e) => setStepForm({ ...stepForm, description: e.target.value })}
-                        placeholder={t.stepDescriptionPlaceholder}
-                        autoFocus
-                        className={`w-full px-3 py-2 rounded-lg border focus:ring-1 focus:ring-[#0F766E] focus:outline-none transition-colors ${
-                          'bg-white border-gray-300 text-gray-900 placeholder-gray-400'
-                        }`}
-                      />
-                    </div>
-
-                    {/* Selector */}
-                    {getStepTypeConfig(stepForm.type).fields.includes('selector') && (
-                      <div>
-                        <div className="flex items-center gap-1.5 mb-1">
-                          <label className="text-sm font-medium text-gray-700">
-                            {t.fieldSelector}
-                          </label>
-                          <Tooltip text={t.selectorHelpTooltip} position="right" multiline>
-                            <HelpCircle
-                              size={14}
-                              className="text-gray-400 hover:text-[#0F766E] cursor-help shrink-0"
-                              aria-label="How to find a selector"
-                            />
-                          </Tooltip>
-                        </div>
-                        <input
-                          type="text"
-                          value={stepForm.selector}
-                          onChange={(e) => setStepForm({ ...stepForm, selector: e.target.value })}
-                          placeholder={getStepTypeConfig(stepForm.type).placeholder.selector}
-                          className={`w-full px-3 py-2 rounded-lg border focus:ring-1 focus:ring-[#0F766E] focus:outline-none transition-colors ${
-                            'bg-white border-gray-300 text-gray-900 placeholder-gray-400'
-                          }`}
-                        />
-                        <p className="mt-1 text-xs text-gray-500">{t.selectorHelpShort}</p>
-                      </div>
-                    )}
-
-                    {/* Value */}
-                    {getStepTypeConfig(stepForm.type).fields.includes('value') && (
-                      <div>
-                        <label className={`block text-sm font-medium mb-1 ${
-                          'text-gray-700'
-                        }`}>
-                          {t.fieldValue}
-                        </label>
-                        <input
-                          type="text"
-                          value={stepForm.value}
-                          onChange={(e) => setStepForm({ ...stepForm, value: e.target.value })}
-                          placeholder={getStepTypeConfig(stepForm.type).placeholder.value}
-                          className={`w-full px-3 py-2 rounded-lg border focus:ring-1 focus:ring-[#0F766E] focus:outline-none transition-colors ${
-                            'bg-white border-gray-300 text-gray-900 placeholder-gray-400'
-                          }`}
-                        />
-                      </div>
-                    )}
-
-                    {/* Metadata */}
-                    {getStepTypeConfig(stepForm.type).fields.includes('metadata') && (
-                      <div className="md:col-span-2">
-                        <label className={`block text-sm font-medium mb-1 ${
-                          'text-gray-700'
-                        }`}>
-                          {t.fieldMetadata}
-                        </label>
-                        <textarea
-                          value={stepForm.metadata}
-                          onChange={(e) => setStepForm({ ...stepForm, metadata: e.target.value })}
-                          placeholder={getStepTypeConfig(stepForm.type).placeholder.metadata}
-                          rows={3}
-                          className={`w-full px-3 py-2 rounded-lg border focus:ring-1 focus:ring-[#0F766E] focus:outline-none font-mono text-sm transition-colors ${
-                            'bg-white border-gray-300 text-gray-900 placeholder-gray-400'
-                          }`}
-                        />
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Type hint */}
-                  {t.hints[stepForm.type] && (
-                    <div className={`mt-4 px-3 py-2 rounded-lg text-sm ${
-                      'bg-blue-50 text-blue-700 border border-blue-200'
-                    }`}>
-                      {t.hints[stepForm.type]}
-                    </div>
-                  )}
-                </div>
-
-                {/* Footer */}
-                <div className={`flex flex-wrap gap-3 px-6 py-4 border-t ${
-                  'border-gray-100'
-                }`}>
-                  <ExportFormatButton
-                    format="primary"
-                    icon={isSaving ? Loader2 : Save}
-                    onClick={handleSaveStep}
-                    disabled={isSaving}
-                    className={`flex-1 sm:flex-none justify-center ${isSaving ? '[&_svg]:animate-spin' : ''}`}
-                  >
-                    {isSaving ? t.saving : editingStep ? t.updateStepBtn : t.saveStepBtn}
-                  </ExportFormatButton>
-                  <ExportFormatButton format="json" icon={null} onClick={cancelForm} className="flex-1 sm:flex-none justify-center">
-                    {t.cancel}
-                  </ExportFormatButton>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Steps List */}
-          <TestStepList
-            steps={steps}
-            onReorderSteps={handleReorderSteps}
-            onEditStep={openEditForm}
-            onDeleteStep={handleDeleteStep}
-            onToggleSelection={toggleStepSelection}
-            onToggleSelectAll={toggleSelectAll}
-            selectedStepIds={selectedStepIds}
-            executionResult={executionResult}
-            currentStepIndex={currentStepIndex}
-            STEP_TYPES={STEP_TYPES}
-            isDeletingBulk={isDeletingBulk}
-          />
-        </Card>
 
         {/* Execution Result */}
         {executionResult && (
