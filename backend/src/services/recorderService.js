@@ -45,13 +45,23 @@ export function buildProxyRecordingUrl(scenarioId, targetUrl) {
   return `/api/recorder/proxy?url=${encodeURIComponent(targetUrl)}&sessionId=${encodeURIComponent(scenarioId)}`
 }
 
-export function buildClientGateUrl(scenarioId, targetUrl, recordToken) {
+export function buildClientGateUrl(scenarioId, targetUrl, recordToken, { embed = false } = {}) {
   const params = new URLSearchParams({
     url: targetUrl,
     sessionId: scenarioId,
     rt: recordToken,
   })
+  if (embed) params.set('embed', '1')
   return `/api/recorder/client-gate?${params.toString()}`
+}
+
+export function buildInjectScriptUrl(scenarioId, recordToken, startUrl = '') {
+  const params = new URLSearchParams({
+    sessionId: scenarioId,
+    rt: recordToken,
+  })
+  if (startUrl) params.set('url', startUrl)
+  return `/api/recorder/inject.js?${params.toString()}`
 }
 
 function createRecordToken() {
@@ -1122,6 +1132,8 @@ export const recorderService = {
 
       if (preferClientDirect) {
         const clientGateUrl = buildClientGateUrl(scenarioId, url, recordToken)
+        const bridgeEmbedUrl = buildClientGateUrl(scenarioId, url, recordToken, { embed: true })
+        const injectScriptUrl = buildInjectScriptUrl(scenarioId, recordToken, url)
         const why = reach.privateNetwork
           ? `private/unreachable from server: ${reach.addresses?.join(',') || reach.reason}`
           : forcedFromProxy
@@ -1130,14 +1142,14 @@ export const recorderService = {
         console.log(`[RECORDER] ✅ Client-direct recording started for ${key} → ${url} (${why})`)
 
         let message =
-          'Recording di situs asli (bukan proxy). Pasang recorder dari halaman panduan, lalu Stop di aplikasi.'
+          'Tab target dibuka. Salin script di panel aplikasi → paste di Console tab target, lalu Stop di aplikasi.'
         if (reach.privateNetwork) {
           message =
-            'URL target hanya bisa diakses dari jaringan Anda. Buka halaman di browser, lalu pasang recorder dari halaman panduan.'
+            'URL internal: salin script di panel aplikasi, paste di Console tab target (VPN/LAN aktif).'
         }
         if (forcedFromProxy) {
           message =
-            'Proxy tidak tersedia untuk jaringan internal/VPN. Dialihkan ke rekam di situs asli — pasang recorder dari halaman panduan.'
+            'Proxy tidak tersedia untuk internal/VPN. Salin script di panel → paste di Console tab target.'
         }
 
         return {
@@ -1145,6 +1157,8 @@ export const recorderService = {
           method: 'client-direct',
           proxyUrl: null,
           clientGateUrl,
+          bridgeEmbedUrl,
+          injectScriptUrl,
           recordToken,
           startUrl: url,
           scenarioId,

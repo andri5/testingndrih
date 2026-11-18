@@ -300,13 +300,10 @@ export const recorderController = {
       const result = await recorderService.startRecording(userId, scenarioId, url, mode)
 
       const appOrigin = resolveAppOrigin(req).replace(/^http:\/\/testsambilngopi\.my\.id/i, 'https://testsambilngopi.my.id')
-      let clientGateUrl = result.clientGateUrl || null
-      let proxyUrl = result.proxyUrl || null
-      if (clientGateUrl && clientGateUrl.startsWith('/')) {
-        clientGateUrl = `${appOrigin}${clientGateUrl}`
-      }
-      if (proxyUrl && proxyUrl.startsWith('/')) {
-        proxyUrl = `${appOrigin}${proxyUrl}`
+      const absolutize = (pathOrUrl) => {
+        if (!pathOrUrl) return null
+        if (pathOrUrl.startsWith('/')) return `${appOrigin}${pathOrUrl}`
+        return pathOrUrl
       }
 
       res.status(202).json({
@@ -315,14 +312,17 @@ export const recorderController = {
         scenarioId: result.scenarioId,
         message: result.message,
         method: result.method || 'proxy',
-        proxyUrl,
-        clientGateUrl,
+        proxyUrl: absolutize(result.proxyUrl),
+        clientGateUrl: absolutize(result.clientGateUrl),
+        bridgeEmbedUrl: absolutize(result.bridgeEmbedUrl),
+        injectScriptUrl: absolutize(result.injectScriptUrl),
         recordToken: result.recordToken || null,
         browserPid: result.browserPid,
         targetKind: result.targetKind || null,
         reachability: result.reachability || null,
         modeRequested: result.modeRequested || null,
         modeForced: Boolean(result.modeForced),
+        appOrigin,
       })
     } catch (err) {
       console.error(`[RECORDER] startRecording error: ${err.message}`)
@@ -803,12 +803,32 @@ window.__targetBase=${JSON.stringify(url)};
         "default-src 'none'; script-src 'unsafe-inline'; connect-src 'self'; frame-ancestors *; base-uri 'none'"
       )
       return res.send(`<!DOCTYPE html>
-<html><head><meta charset="utf-8"/><title>TSN bridge</title></head>
+<html><head><meta charset="utf-8"/><title>TSN bridge</title>
+<style>
+  html,body{margin:0;height:100%;background:#0f172a;color:#e2e8f0;font:13px/1.45 system-ui,sans-serif}
+  .box{padding:16px 18px}
+  .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#22c55e;margin-right:8px;vertical-align:middle;animation:pulse 1.4s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+  .muted{color:#94a3b8;margin:8px 0 0}
+  #count{font-weight:700;color:#67e8f9}
+</style>
+</head>
 <body>
+<div class="box">
+  <div><span class="dot"></span><strong>Jembatan rekam aktif</strong></div>
+  <p class="muted">Jendela kecil ini boleh dikecilkan — <strong>jangan ditutup</strong> selama merekam.</p>
+  <p class="muted">Step diterima: <span id="count">0</span></p>
+</div>
 <script>
 (function(){
   var sessionId = ${JSON.stringify(String(sessionId))};
   var recordToken = ${JSON.stringify(String(rt))};
+  var stepCount = 0;
+  function setCount(n) {
+    stepCount = typeof n === 'number' ? n : stepCount;
+    var el = document.getElementById('count');
+    if (el) el.textContent = String(stepCount);
+  }
   function notify(msg) {
     try { if (window.parent && window.parent !== window) window.parent.postMessage(msg, '*'); } catch (e) {}
     try { if (window.opener && !window.opener.closed) window.opener.postMessage(msg, '*'); } catch (e2) {}
@@ -836,6 +856,8 @@ window.__targetBase=${JSON.stringify(url)};
       var body = result.body || {};
       var stored = result.httpOk && body.ok === true && body.stored === true;
       if (stored) {
+        if (typeof body.stepCount === 'number') setCount(body.stepCount);
+        else setCount(stepCount + 1);
         notify({ type: '__REC_STEP_ACK__', sessionId: sessionId, stepKey: stepKey, stored: true });
         notify({ type: '__REC_BRIDGE_READY__', sessionId: sessionId });
         try {
@@ -845,7 +867,7 @@ window.__targetBase=${JSON.stringify(url)};
             sessionId: sessionId,
             step: step,
             steps: body.steps || null,
-            stepCount: body.stepCount || 0,
+            stepCount: body.stepCount || stepCount,
             timestamp: Date.now()
           });
         } catch (_) {}

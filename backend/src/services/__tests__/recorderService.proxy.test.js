@@ -76,7 +76,10 @@ describe('recorderService recording mode helpers', () => {
     )
   })
 
-  test('buildClientGateUrl includes record token', () => {
+  test('buildClientGateUrl includes record token and optional embed', () => {
+    const embed = buildClientGateUrl('scen-1', 'https://intranet.example/login', 'tok123', { embed: true })
+    expect(embed).toContain('embed=1')
+    expect(embed).toContain('rt=tok123')
     const url = buildClientGateUrl('scen-1', 'https://intranet.example/login', 'tok123')
     expect(url).toContain('/api/recorder/client-gate?')
     expect(url).toContain('sessionId=scen-1')
@@ -204,6 +207,8 @@ describe('recorderService.startRecording proxy mode', () => {
     expect(result.targetKind).toBe('public')
     expect(result.proxyUrl).toBeNull()
     expect(result.clientGateUrl).toContain('/api/recorder/client-gate?')
+    expect(result.bridgeEmbedUrl).toContain('embed=1')
+    expect(result.injectScriptUrl).toContain('/api/recorder/inject.js?')
     expect(result.recordToken).toBeTruthy()
   })
 

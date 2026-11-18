@@ -24,9 +24,14 @@ export function QuickRecordModal({ onClose, onFinished, folderId = null }) {
   const [steps, setSteps] = useState([])
 
   const recWindowRef = useRef(null)
+  const bridgeWinRef = useRef(null)
   const recordTokenRef = useRef(null)
   const pollRef = useRef(null)
   const scenarioIdRef = useRef(null)
+  const [injectScriptText, setInjectScriptText] = useState('')
+  const [recordingMethod, setRecordingMethod] = useState(null)
+  const [clientGuideUrl, setClientGuideUrl] = useState(null)
+  const [isCopyingScript, setIsCopyingScript] = useState(false)
 
   const generateName = () => {
     const now = new Date()
@@ -164,8 +169,13 @@ export function QuickRecordModal({ onClose, onFinished, folderId = null }) {
     setPopupBlocked(false)
     setIsBusy(true)
 
-    // Open blank window immediately — preserve user gesture (avoid popup blocker)
-    const recWindow = window.open('', '_blank', 'width=1280,height=800,menubar=no,toolbar=no,scrollbars=yes,resizable=yes')
+    // Open target only — no full guide page. Bridge opens later via Hubungkan if needed.
+    const recWindow = window.open(
+      '',
+      'tsn_rec_target',
+      'width=1280,height=800,menubar=no,toolbar=no,scrollbars=yes,resizable=yes'
+    )
+    bridgeWinRef.current = null
     if (recWindow) {
       recWindowRef.current = recWindow
       try {
@@ -198,16 +208,15 @@ export function QuickRecordModal({ onClose, onFinished, folderId = null }) {
       // Backend forces client-direct for internal / private targets.
       const startRes = await recorderAPI.start(created.id, finalUrl, 'proxy')
       const method = startRes.data.method || 'proxy'
-      const gateUrl = method === 'client-direct'
-        ? (startRes.data.clientGateUrl || startRes.data.proxyUrl)
-        : (startRes.data.proxyUrl || startRes.data.clientGateUrl)
-
       recordTokenRef.current = startRes.data.recordToken || null
-      setOpenUrl(gateUrl || null)
+      setRecordingMethod(method)
+      setClientGuideUrl(startRes.data.clientGateUrl || null)
 
-      if (gateUrl) {
+      if (method === 'client-direct') {
+        setOpenUrl(finalUrl)
         if (recWindow && !recWindow.closed) {
-          recWindow.location.href = gateUrl
+          recWindow.location.href = finalUrl
+          try { recWindow.focus() } catch { /* ignore */ }
         } else {
           try { await recorderAPI.stop(created.id) } catch { /* ignore */ }
           setPopupBlocked(true)
@@ -217,8 +226,34 @@ export function QuickRecordModal({ onClose, onFinished, folderId = null }) {
           startPolling(created.id)
           return
         }
-      } else if (recWindow && !recWindow.closed) {
-        recWindow.close()
+        try {
+          if (startRes.data.injectScriptUrl) {
+            const u = new URL(startRes.data.injectScriptUrl, window.location.origin)
+            if (!u.searchParams.get('origin')) u.searchParams.set('origin', u.origin)
+            const scriptRes = await fetch(u.toString(), { credentials: 'omit' })
+            if (scriptRes.ok) setInjectScriptText(await scriptRes.text())
+          }
+        } catch {
+          setInjectScriptText('')
+        }
+      } else {
+        const gateUrl = startRes.data.proxyUrl || startRes.data.clientGateUrl
+        setOpenUrl(gateUrl || null)
+        if (gateUrl) {
+          if (recWindow && !recWindow.closed) {
+            recWindow.location.href = gateUrl
+          } else {
+            try { await recorderAPI.stop(created.id) } catch { /* ignore */ }
+            setPopupBlocked(true)
+            setError('Popup tertutup / diblokir. Izinkan popup, lalu pakai "Buka ulang window".')
+            setIsBusy(false)
+            setPhase(PHASE.RECORDING)
+            startPolling(created.id)
+            return
+          }
+        } else if (recWindow && !recWindow.closed) {
+          recWindow.close()
+        }
       }
 
       setPhase(PHASE.RECORDING)
@@ -252,14 +287,32 @@ export function QuickRecordModal({ onClose, onFinished, folderId = null }) {
   }
 
   const closeTargetWindow = () => {
-    try {
-      if (recWindowRef.current && !recWindowRef.current.closed) {
-        recWindowRef.current.close()
+    for (const ref of [recWindowRef, bridgeWinRef]) {
+      try {
+        if (ref.current && !ref.current.closed) ref.current.close()
+      } catch {
+        /* ignore */
       }
-    } catch {
-      /* ignore */
+      ref.current = null
     }
-    recWindowRef.current = null
+    setInjectScriptText('')
+    setClientGuideUrl(null)
+    setRecordingMethod(null)
+  }
+
+  const handleCopyInjectScript = async () => {
+    if (!injectScriptText) {
+      setError('Script belum siap. Coba Start ulang.')
+      return
+    }
+    setIsCopyingScript(true)
+    try {
+      await navigator.clipboard.writeText(injectScriptText)
+    } catch {
+      window.prompt('Salin script ini (Ctrl+A, Ctrl+C):', injectScriptText)
+    } finally {
+      setIsCopyingScript(false)
+    }
   }
 
   const handleStopAndSave = async () => {
@@ -403,6 +456,36 @@ export function QuickRecordModal({ onClose, onFinished, folderId = null }) {
                     Buka ulang window
                   </Button>
                 )}
+              </div>
+            )}
+
+            {recordingMethod === 'client-direct' && (
+              <div className="rounded-lg border border-[rgba(255,255,255,0.08)] bg-[#141316] p-3 space-y-2">
+                <p className="text-xs text-[#C8C8CC] leading-relaxed">
+                  Tab target sudah dibuka. Salin script → paste di Console (F12).
+                  Jika diminta Hubungkan bridge, klik sekali (jendela jembatan kecil jangan ditutup).
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    variant="primary"
+                    size="sm"
+                    onClick={handleCopyInjectScript}
+                    disabled={isCopyingScript || !injectScriptText}
+                  >
+                    {isCopyingScript ? 'Menyalin…' : 'Salin script'}
+                  </Button>
+                  {clientGuideUrl && (
+                    <a
+                      href={clientGuideUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center text-xs text-[#8A8A8F] hover:text-[#E0E0E2] px-2"
+                    >
+                      Panduan cadangan
+                    </a>
+                  )}
+                </div>
               </div>
             )}
 

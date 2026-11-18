@@ -281,6 +281,15 @@ export const recorderAPI = {
   save: (scenarioId, steps) =>
     apiClient.post(`/recorder/save/${scenarioId}`, { steps }),
 
+  /** Fetch CSP-safe inline recorder bootstrap (text) for console paste */
+  fetchInjectScript: (injectScriptUrl) =>
+    apiClient.get(injectScriptUrl, {
+      responseType: 'text',
+      skipGlobalErrorRedirect: true,
+      // Absolute URL from startRecording — avoid prefixing /api again
+      ...(String(injectScriptUrl).startsWith('http') ? { baseURL: '' } : {}),
+    }),
+
   /** Forward a live step (JWT) — used when client-direct posts via window.opener/parent bridge */
   receiveStep: (scenarioId, step) =>
     apiClient.post(`/recorder/step/${scenarioId}`, step, { skipGlobalErrorRedirect: true }),

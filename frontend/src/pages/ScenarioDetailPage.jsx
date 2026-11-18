@@ -95,7 +95,17 @@ const i18n = {
     recordingOverviewDirectBody:
       'Buka website asli di tab baru. Cocok untuk hampir semua kasus, termasuk target internal.',
     recordingOverviewDirectCsp:
-      'Kalau situs memblokir recorder otomatis: ikuti tombol di halaman panduan (salin script → Console).',
+      'Kalau situs memblokir recorder: salin script di panel → paste di Console tab target.',
+    recordingSetupTitle: 'Pasang recorder di tab target',
+    recordingSetupStep1: 'Tab target sudah dibuka (bukan halaman panduan).',
+    recordingSetupStep2: 'Di tab target: F12 → Console. Jika diminta, ketik allow pasting lalu Enter.',
+    recordingSetupStep3: 'Klik Salin script di bawah, lalu Ctrl+V → Enter di Console.',
+    recordingSetupStep4: 'Jika muncul “Hubungkan bridge”, klik sekali dan izinkan popup (jendela jembatan kecil).',
+    recordingCopyScript: 'Salin script',
+    recordingScriptCopied: 'Script disalin — paste di Console tab target.',
+    recordingCopyScriptError: 'Gagal menyalin script. Coba lagi atau buka panduan cadangan.',
+    recordingOpenGuide: 'Buka panduan cadangan',
+    recordingBridgeHint: 'Kalau bridge terbuka: boleh dikecilkan, jangan ditutup sampai Stop.',
     recordingOverviewProxyTitle: 'Lewat proxy app',
     recordingOverviewProxyBody:
       'Satu tab di domain aplikasi. Lebih cepat, tapi tampilan beberapa situs bisa kurang lengkap.',
@@ -222,6 +232,10 @@ export default function ScenarioDetailPage() {
   const [showRecordingPanel, setShowRecordingPanel] = useState(false)
   const [recordingModeChoice, setRecordingModeChoice] = useState('client-direct')
   const [showRecordAdvanced, setShowRecordAdvanced] = useState(false)
+  const [recordingMethod, setRecordingMethod] = useState(null) // 'client-direct' | 'proxy' | null
+  const [injectScriptText, setInjectScriptText] = useState('')
+  const [clientGuideUrl, setClientGuideUrl] = useState(null)
+  const [isCopyingInjectScript, setIsCopyingInjectScript] = useState(false)
   const [targetKind, setTargetKind] = useState(null) // 'public' | 'internal' | null
   const [targetInfoMessage, setTargetInfoMessage] = useState('')
   const [targetAddresses, setTargetAddresses] = useState([])
@@ -233,6 +247,8 @@ export default function ScenarioDetailPage() {
   const agentPollRef = useRef(null)
   const targetProbeRef = useRef(0)
   const recordTokenRef = useRef(null)
+  const bridgeWinRef = useRef(null)
+  const targetWinRef = useRef(null)
 
   // Probe scenario URL for Run badge (public vs internal) whenever scenario loads
   useEffect(() => {
@@ -1051,6 +1067,55 @@ export default function ScenarioDetailPage() {
     }).catch(() => {})
   }, [id, startPollingSteps])
 
+  const closeRecordingWindows = useCallback(() => {
+    for (const ref of [bridgeWinRef, targetWinRef]) {
+      try {
+        if (ref.current && !ref.current.closed) ref.current.close()
+      } catch (_) { /* ignore */ }
+      ref.current = null
+    }
+  }, [])
+
+  const writeLoadingDoc = (win, message) => {
+    if (!win) return
+    try {
+      win.document.write(
+        `<html><body style="font-family:sans-serif;padding:24px;background:#0f172a;color:#e2e8f0"><p>${message}</p></body></html>`
+      )
+    } catch (_) { /* ignore */ }
+  }
+
+  const loadInjectScriptText = async (injectScriptUrl) => {
+    if (!injectScriptUrl) return ''
+    const u = new URL(injectScriptUrl, window.location.origin)
+    if (!u.searchParams.get('origin')) {
+      u.searchParams.set('origin', u.origin)
+    }
+    const res = await fetch(u.toString(), { credentials: 'omit' })
+    if (!res.ok) throw new Error(`inject script HTTP ${res.status}`)
+    return res.text()
+  }
+
+  const handleCopyInjectScript = async () => {
+    if (!injectScriptText) {
+      setError(t.recordingCopyScriptError)
+      return
+    }
+    setIsCopyingInjectScript(true)
+    try {
+      await navigator.clipboard.writeText(injectScriptText)
+      showSuccess(t.recordingScriptCopied)
+    } catch (_) {
+      try {
+        window.prompt('Salin script ini (Ctrl+A, Ctrl+C):', injectScriptText)
+      } catch (e2) {
+        setError(t.recordingCopyScriptError)
+      }
+    } finally {
+      setIsCopyingInjectScript(false)
+    }
+  }
+
   const handleStartRecording = async () => {
     const url = (recordingUrl.trim() || scenario?.url || '').trim()
     if (!url) {
@@ -1061,14 +1126,24 @@ export default function ScenarioDetailPage() {
     const selectedMode =
       targetKind === 'internal' ? 'client-direct' : (recordingModeChoice || 'client-direct')
 
-    // Open window early to avoid popup blockers (user gesture)
-    const recWindow = window.open('', '_blank', 'width=1280,height=800,menubar=no,toolbar=no,scrollbars=yes,resizable=yes')
-    if (recWindow) {
-      recWindow.document.write(`<html><body style="font-family:sans-serif;padding:40px;background:#0f172a;color:#e2e8f0"><p>${t.openingBrowser}</p></body></html>`)
-    }
+    // Open target in the same user gesture (avoid popup blockers).
+    // client-direct: open real target only — no full guide page.
+    // Bridge popup appears later only if user clicks Hubungkan bridge (CSP).
+    // proxy: single proxy tab.
+    const targetWin = window.open(
+      '',
+      'tsn_rec_target',
+      'width=1280,height=800,menubar=no,toolbar=no,scrollbars=yes,resizable=yes'
+    )
+    targetWinRef.current = targetWin
+    bridgeWinRef.current = null
+    writeLoadingDoc(targetWin, t.openingBrowser)
 
     setIsStartingRecording(true)
     setError(null)
+    setInjectScriptText('')
+    setClientGuideUrl(null)
+    setRecordingMethod(null)
     try {
       const res = await recorderAPI.start(id, url, selectedMode)
       const method = res.data.method || selectedMode
@@ -1078,41 +1153,56 @@ export default function ScenarioDetailPage() {
       if (res.data.modeForced) {
         setRecordingModeChoice('client-direct')
       }
-      const openUrl = method === 'client-direct'
-        ? (res.data.clientGateUrl || res.data.proxyUrl)
-        : (res.data.proxyUrl || res.data.clientGateUrl)
 
       recordTokenRef.current = res.data.recordToken || null
+      setRecordingMethod(method)
+      setClientGuideUrl(res.data.clientGateUrl || null)
 
-      if (openUrl) {
-        if (recWindow && !recWindow.closed) {
-          recWindow.location.href = openUrl
-        } else {
-          // Session already started — stop it so user can retry after allowing popups
+      if (!targetWin || targetWin.closed) {
+        try { await recorderAPI.stop(id) } catch (_) { /* ignore */ }
+        closeRecordingWindows()
+        setError(t.recordingPopupBlocked)
+        setIsRecording(false)
+        return
+      }
+
+      if (method === 'client-direct') {
+        targetWin.location.href = url
+        try { targetWin.focus() } catch (_) { /* ignore */ }
+
+        try {
+          const script = await loadInjectScriptText(res.data.injectScriptUrl)
+          setInjectScriptText(script || '')
+        } catch (scriptErr) {
+          console.warn('inject script fetch failed', scriptErr)
+          setInjectScriptText('')
+        }
+      } else {
+        const proxyUrl = res.data.proxyUrl || res.data.clientGateUrl
+        if (!proxyUrl) {
           try { await recorderAPI.stop(id) } catch (_) { /* ignore */ }
-          setError(t.recordingPopupBlocked)
+          closeRecordingWindows()
+          setError(t.startRecordingError)
           setIsRecording(false)
           return
         }
-      } else if (recWindow && !recWindow.closed) {
-        recWindow.close()
+        targetWin.location.href = proxyUrl
       }
 
       setIsRecording(true)
       setRecordingSteps([])
       setShowRecordingPanel(true)
-      const startedMsg = method === 'client-direct'
-        ? (res.data.message || 'Mode client-direct: pasang recorder di tab target, lalu Stop di aplikasi.')
-        : res.data.message
-      showSuccess(t.recordingStarted(startedMsg))
+      showSuccess(t.recordingStarted(res.data.message || ''))
       startPollingSteps()
 
     } catch (err) {
-      if (recWindow && !recWindow.closed) recWindow.close()
+      closeRecordingWindows()
       const errorMsg = err.response?.data?.message || err.response?.data?.error || t.startRecordingError
       setError(errorMsg)
       console.error('Recording start error:', err.response?.data || err.message)
       setIsRecording(false)
+      setRecordingMethod(null)
+      setInjectScriptText('')
     } finally {
       setIsStartingRecording(false)
     }
@@ -1122,6 +1212,9 @@ export default function ScenarioDetailPage() {
     setIsStoppingRecording(true)
     stopPolling() // Stop polling steps from backend
     recordTokenRef.current = null
+    closeRecordingWindows()
+    setInjectScriptText('')
+    setClientGuideUrl(null)
     try {
       // ═══ Stop Playwright-based Recording ═══
       const res = await recorderAPI.stop(id)
@@ -1129,6 +1222,7 @@ export default function ScenarioDetailPage() {
       
       setRecordingSteps(stoppedSteps)
       setIsRecording(false)
+      setRecordingMethod(null)
 
       // Auto-save steps ke database jika ada
       if (stoppedSteps.length > 0) {
@@ -1178,8 +1272,12 @@ export default function ScenarioDetailPage() {
 
   const handleDiscardRecording = () => {
     if (recordingSteps.length > 0 && !window.confirm(t.confirmDiscardRecording(recordingSteps.length))) return
+    closeRecordingWindows()
     setRecordingSteps([])
     setShowRecordingPanel(false)
+    setRecordingMethod(null)
+    setInjectScriptText('')
+    setClientGuideUrl(null)
   }
 
   if (isLoading) {
@@ -1539,6 +1637,42 @@ export default function ScenarioDetailPage() {
             {/* Live recorded steps */}
             {(isRecording || recordingSteps.length > 0) && (
               <div>
+                {isRecording && recordingMethod === 'client-direct' && (
+                  <div className="mb-4 rounded-lg border border-surface-border bg-surface-muted/50 p-4 space-y-3">
+                    <p className="text-sm font-semibold text-ink">{t.recordingSetupTitle}</p>
+                    <ol className="list-decimal pl-5 text-xs text-ink-muted space-y-1.5 leading-relaxed">
+                      <li>{t.recordingSetupStep1}</li>
+                      <li>{t.recordingSetupStep2}</li>
+                      <li>{t.recordingSetupStep3}</li>
+                      <li>{t.recordingSetupStep4}</li>
+                    </ol>
+                    <p className="text-xs text-amber-900 bg-amber-50 border border-amber-200 rounded-md px-3 py-2 leading-relaxed">
+                      {t.recordingBridgeHint}
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      <ExportFormatButton
+                        format="csv"
+                        icon={isCopyingInjectScript ? Loader2 : Copy}
+                        onClick={handleCopyInjectScript}
+                        disabled={isCopyingInjectScript || !injectScriptText}
+                        className={isCopyingInjectScript ? '[&_svg]:animate-spin' : ''}
+                      >
+                        {t.recordingCopyScript}
+                      </ExportFormatButton>
+                      {clientGuideUrl && (
+                        <a
+                          href={clientGuideUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 text-xs font-semibold text-ink-muted hover:text-ink px-3 py-2 rounded-lg border border-surface-border"
+                        >
+                          <Link2 size={14} />
+                          {t.recordingOpenGuide}
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                )}
                 <div className="flex items-center justify-between mb-3">
                   <p className="text-sm text-[#888]">
                     {t.stepsRecorded(recordingSteps.length)}
