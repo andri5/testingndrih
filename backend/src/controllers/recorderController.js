@@ -142,7 +142,7 @@ function buildClientInjectPayload(sessionId, recordToken, appOrigin, bridgeUrl =
     if (ov) ov.remove();
   }
 
-  // LPDP/Garuda CSP blocks fetch+iframe to testsambilngopi.my.id.
+  // Strict CSP may block fetch+iframe to the recorder origin.
   // Only postMessage via opener or popup works — popup needs a user gesture.
   function showConnectOverlay() {
     if (document.getElementById('__rec_connect_overlay')) return;
@@ -911,7 +911,7 @@ window.__targetBase=${JSON.stringify(url)};
     </div>
 
     <div class="card">
-      <strong>Langkah (Garuda / CSP ketat)</strong>
+      <strong>Langkah (situs dengan keamanan ketat / CSP)</strong>
       <ol class="steps">
         <li>Biarkan tab <em>panduan ini</em> tetap terbuka.</li>
         <li>Klik <strong>Buka halaman target</strong> (tab baru — harus dibuka dari tautan ini agar <code>window.opener</code> terhubung).</li>
@@ -923,7 +923,7 @@ window.__targetBase=${JSON.stringify(url)};
         </li>
         <li>Paste script: <kbd>Ctrl+V</kbd> → <strong>Enter</strong>.</li>
         <li class="warn" style="list-style:none;margin:8px 0 8px -1.2rem;padding:10px 12px;border:1px solid #f59e0b55;border-radius:8px;background:#78350f33">
-          Situs dengan CSP ketat (LPDP/Garuda) memblokir fetch &amp; iframe ke testsambilngopi.my.id.
+          Beberapa situs memblokir koneksi langsung ke testsambilngopi.my.id (kebijakan keamanan / CSP).
           Setelah paste, klik <strong>Hubungkan bridge sekarang</strong> (izinkan popup).
           Status harus jadi <em>Bridge siap</em> / <em>Connected</em>. Jangan tutup tab panduan.
         </li>

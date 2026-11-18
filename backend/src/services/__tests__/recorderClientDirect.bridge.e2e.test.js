@@ -58,7 +58,7 @@ describe('client-direct CSP bridge E2E', () => {
     targetServer = http.createServer((req, res) => {
       res.writeHead(200, {
         'Content-Type': 'text/html; charset=utf-8',
-        // Block connect to recorder origin — forces postMessage bridge (real Garuda-style CSP)
+        // Block connect to recorder origin — forces postMessage bridge (strict CSP)
         'Content-Security-Policy':
           "default-src 'self'; script-src 'unsafe-inline' 'unsafe-eval'; connect-src 'self'; style-src 'unsafe-inline'",
       })
