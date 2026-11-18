@@ -384,8 +384,12 @@ export async function updateScenario(scenarioId, userId, data) {
     })
 
     if (auditEntries.length) {
-      const { writeScenarioAudit } = await import('./scenarioAuditService.js')
-      await writeScenarioAudit(scenarioId, userId, auditEntries)
+      try {
+        const { writeScenarioAudit } = await import('./scenarioAuditService.js')
+        await writeScenarioAudit(scenarioId, userId, auditEntries)
+      } catch (auditErr) {
+        console.warn('Scenario audit log skipped:', auditErr.message)
+      }
     }
 
     return updated

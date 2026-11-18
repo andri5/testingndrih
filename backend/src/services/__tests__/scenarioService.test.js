@@ -295,10 +295,12 @@ describe('ScenarioService - Comprehensive Business Logic Testing', () => {
 
       await updateScenario('scenario-1', 'user-123', { url: 'invalid.com' })
 
-      expect(prisma.scenario.update).toHaveBeenCalledWith({
-        where: { id: 'scenario-1' },
-        data: expect.objectContaining({ url: 'https://invalid.com' }),
-      })
+      expect(prisma.scenario.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'scenario-1' },
+          data: expect.objectContaining({ url: 'https://invalid.com' }),
+        })
+      )
     })
 
     it('should throw error if scenario not found', async () => {
