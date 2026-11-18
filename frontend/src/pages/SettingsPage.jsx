@@ -15,6 +15,7 @@ import { useSettingsStore } from '../store/settingsStore'
 import {
   getProfilePicture,
   setProfilePicture as persistProfilePicture,
+  compressProfilePicture,
 } from '../utils/profilePictureStorage'
 
 const inputCls = 'w-full px-3 py-2 bg-[#0F0E11] border border-[#2D2D2F] rounded-lg text-[#E0E0E2] text-sm placeholder-[#666] focus:outline-none focus:border-[#0F766E] transition'
@@ -48,6 +49,7 @@ const i18n = {
     profileSaved: 'Profile updated successfully',
     settingsSaved: 'Settings saved successfully',
     photoSizeError: 'Image size must be less than 5MB',
+    photoSaveError: 'Could not save profile photo in this browser',
     users: 'Users',
     userManagement: 'USER MANAGEMENT',
     userManagementDesc: 'View, add, edit, and delete registered users',
@@ -104,34 +106,43 @@ export default function SettingsPage() {
     }
   }, [isAdmin, activeTab])
 
-  const handleProfilePictureChange = (e) => {
+  const handleProfilePictureChange = async (e) => {
     const file = e.target.files?.[0]
     if (!file) return
 
-    // Validate file size (max 5MB)
+    // Validate file size (max 5MB) — we still compress before localStorage
     if (file.size > 5 * 1024 * 1024) {
       setError(t.photoSizeError)
       setTimeout(() => setError(null), 3000)
       return
     }
 
-    // Read file as base64 — scoped per user so accounts on the same browser do not share photos
-    const reader = new FileReader()
-    reader.onloadend = () => {
-      const base64String = reader.result
-      setProfilePictureState(base64String)
-      if (user?.id) {
-        persistProfilePicture(user.id, base64String)
+    try {
+      const compressed = await compressProfilePicture(file)
+      if (!user?.id) {
+        setProfilePictureState(compressed)
+        return
       }
+      const result = persistProfilePicture(user.id, compressed)
+      if (!result.ok) {
+        setError(result.error || t.photoSaveError)
+        setTimeout(() => setError(null), 5000)
+        return
+      }
+      setProfilePictureState(compressed)
       window.dispatchEvent(
         new CustomEvent('profilePictureUpdated', {
-          detail: { userId: user?.id, picture: base64String },
+          detail: { userId: user.id, picture: compressed },
         })
       )
       setSuccess(t.profileSaved)
       setTimeout(() => setSuccess(null), 3000)
+    } catch {
+      setError(t.photoSaveError)
+      setTimeout(() => setError(null), 4000)
+    } finally {
+      e.target.value = ''
     }
-    reader.readAsDataURL(file)
   }
 
   const handleSaveProfile = () => {

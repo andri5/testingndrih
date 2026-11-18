@@ -111,8 +111,12 @@ export default function Layout({ children, showFolderPane = false, onFolderSelec
 
   useEffect(() => {
     const loadProfilePicture = () => {
-      if (user?.id) claimLegacyProfilePicture(user.id)
-      setProfilePicture(getProfilePicture(user?.id))
+      try {
+        if (user?.id) claimLegacyProfilePicture(user.id)
+        setProfilePicture(getProfilePicture(user?.id))
+      } catch {
+        setProfilePicture(null)
+      }
     }
     const handleProfilePictureUpdate = (event) => {
       const detail = event.detail
