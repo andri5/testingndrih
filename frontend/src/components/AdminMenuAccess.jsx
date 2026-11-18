@@ -8,7 +8,12 @@ import {
   ALL_MENU_KEYS,
   menuLabel,
 } from '../constants/menuPermissions'
-import { ROLE_DEFINITIONS, ROLE_MENU_PRESETS, getRoleMenuPreset } from '../constants/roles'
+import {
+  ROLE_DEFINITIONS,
+  ROLE_MENU_PRESETS,
+  ROLE_MENU_SUMMARY,
+  getRoleMenuPreset,
+} from '../constants/roles'
 
 function MenuToggleRow({ def, checked, onToggle }) {
   return (
@@ -140,8 +145,8 @@ export default function AdminMenuAccess() {
                 <div>
                   <p className="text-sm font-medium text-[#E0E0E2]">{role.label}</p>
                   <p className="text-[11px] text-[#666] mt-1 leading-relaxed">{role.description}</p>
-                  <p className="text-[11px] text-[#0F766E] mt-2 font-mono">
-                    {preset.length} menus
+                  <p className="text-[11px] text-[#0F766E] mt-2">
+                    {ROLE_MENU_SUMMARY[role.key] || `${preset.length} menus`}
                   </p>
                 </div>
                 <button

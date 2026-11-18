@@ -40,6 +40,13 @@ export const ROLE_MENU_PRESETS = {
   VIEWER: ['dashboard', 'reports', 'analytics', 'issues'],
 }
 
+export const ROLE_MENU_SUMMARY = {
+  ADMIN: 'All menus + Settings admin tabs',
+  LEAD: 'All testing menus (Main + Tools)',
+  USER: 'Dashboard, Scenarios, Execution, Environments, Reports, Analytics, Bugs',
+  VIEWER: 'Dashboard, Reports, Analytics, Bugs',
+}
+
 export function isAssignableRole(role) {
   return ASSIGNABLE_ROLES.includes(role)
 }

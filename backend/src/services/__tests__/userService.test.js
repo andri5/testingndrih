@@ -101,7 +101,7 @@ describe('userService', () => {
     it('rejects demoting primary admin', async () => {
       prisma.user.findUnique.mockResolvedValue({
         id: '1',
-        email: 'admin@testingndrih.local',
+        email: 'faizalandri04@gmail.com',
         role: 'ADMIN',
       })
 
@@ -126,7 +126,7 @@ describe('userService', () => {
       })
 
       const result = await updateUserRole(
-        { id: '1', email: 'admin@testingndrih.local' },
+        { id: '1', email: 'faizalandri04@gmail.com' },
         '2',
         'ADMIN'
       )
@@ -139,7 +139,7 @@ describe('userService', () => {
     it('rejects deleting primary admin', async () => {
       prisma.user.findUnique.mockResolvedValue({
         id: '1',
-        email: 'admin@testingndrih.local',
+        email: 'faizalandri04@gmail.com',
         role: 'ADMIN',
       })
 
@@ -163,7 +163,7 @@ describe('userService', () => {
     it('rejects deactivating primary admin', async () => {
       prisma.user.findUnique.mockResolvedValue({
         id: '1',
-        email: 'admin@testingndrih.local',
+        email: 'faizalandri04@gmail.com',
         role: 'ADMIN',
         isActive: true,
       })
@@ -188,7 +188,7 @@ describe('userService', () => {
       })
 
       const result = await setUserActive(
-        { id: '1', email: 'admin@testingndrih.local' },
+        { id: '1', email: 'faizalandri04@gmail.com' },
         '2',
         false
       )
@@ -205,7 +205,7 @@ describe('userService', () => {
       prisma.user.delete.mockResolvedValue({ id: '2' })
 
       const result = await deleteUser(
-        { id: '1', email: 'admin@testingndrih.local' },
+        { id: '1', email: 'faizalandri04@gmail.com' },
         '2'
       )
 

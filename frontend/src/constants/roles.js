@@ -32,11 +32,19 @@ export const ROLE_DEFINITIONS = [
   },
 ]
 
+/** Recommended sidebar menus per role (Settings remains available to everyone). */
 export const ROLE_MENU_PRESETS = {
   ADMIN: [...ALL_MENU_KEYS],
   LEAD: [...ALL_MENU_KEYS],
   USER: [...DEFAULT_USER_MENU_KEYS],
   VIEWER: ['dashboard', 'reports', 'analytics', 'issues'],
+}
+
+export const ROLE_MENU_SUMMARY = {
+  ADMIN: 'All menus + Settings admin tabs',
+  LEAD: 'All testing menus (Main + Tools)',
+  USER: 'Dashboard, Scenarios, Execution, Environments, Reports, Analytics, Bugs',
+  VIEWER: 'Dashboard, Reports, Analytics, Bugs',
 }
 
 export function getRoleMenuPreset(role) {

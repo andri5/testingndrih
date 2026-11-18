@@ -153,7 +153,7 @@ async function main() {
   try {
     console.log('🌱 Starting database seed...')
 
-    const seedEmail = process.env.SEED_EMAIL || 'admin@testingndrih.local'
+    const seedEmail = process.env.SEED_EMAIL || 'faizalandri04@gmail.com'
     const seedPassword = process.env.SEED_PASSWORD || 'change-me-local-only'
 
     let user = await prisma.user.findUnique({ where: { email: seedEmail } })

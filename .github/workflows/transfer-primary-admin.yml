@@ -1,0 +1,37 @@
+name: Transfer Primary Admin
+
+# Promote KEEP_EMAIL to ADMIN, delete REMOVE_EMAIL, patch prod ADMIN_EMAIL.
+on:
+  workflow_dispatch:
+    inputs:
+      keep_email:
+        description: 'Email that becomes primary ADMIN'
+        required: true
+        type: string
+        default: 'faizalandri04@gmail.com'
+      remove_email:
+        description: 'Email to delete'
+        required: true
+        type: string
+        default: 'admin@testingndrih.local'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: transfer-primary-admin
+  cancel-in-progress: false
+
+jobs:
+  transfer:
+    name: Transfer primary admin
+    runs-on: [self-hosted, production]
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Transfer primary admin
+        env:
+          KEEP_EMAIL: ${{ github.event.inputs.keep_email }}
+          REMOVE_EMAIL: ${{ github.event.inputs.remove_email }}
+        run: bash scripts/ops/transfer-primary-admin.sh

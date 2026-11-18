@@ -4,7 +4,7 @@ import { Alert, Button, Input, Spinner } from './ui'
 import { userAPI } from '../services/api'
 import { useAuthStore } from '../store/authStore'
 import UserMenuAssignment, { MenuAssignButton } from './UserMenuAssignment'
-import { ROLE_DEFINITIONS, roleLabel } from '../constants/roles'
+import { ROLE_DEFINITIONS, ROLE_MENU_SUMMARY, roleLabel } from '../constants/roles'
 
 const emptyForm = {
   name: '',
@@ -411,12 +411,15 @@ export default function UserManagement() {
                 >
                   {ROLE_DEFINITIONS.map((r) => (
                     <option key={r.key} value={r.key}>
-                      {roleLabel(r.key)} — {r.description.slice(0, 48)}…
+                      {roleLabel(r.key)}
                     </option>
                   ))}
                 </select>
                 <p className="text-[11px] text-[#666] mt-1.5">
                   {ROLE_DEFINITIONS.find((r) => r.key === formData.role)?.description}
+                </p>
+                <p className="text-[11px] text-[#0F766E] mt-1">
+                  Menus: {ROLE_MENU_SUMMARY[formData.role] || '—'}
                 </p>
               </div>
             )}
