@@ -1201,8 +1201,8 @@ export default function ScenarioDetailPage() {
     <Layout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
-          <div className="min-w-0 flex-1 w-full">
+        <div className="flex flex-col xl:flex-row xl:items-start xl:justify-between gap-4">
+          <div className="w-full xl:flex-1 xl:min-w-0">
             <nav className="flex flex-wrap items-center gap-1.5 text-sm text-ink-muted mb-2">
               <button
                 type="button"
@@ -1226,28 +1226,15 @@ export default function ScenarioDetailPage() {
             {scenario.description && (
               <p className="text-[#A0A0A4] mt-1 break-words">{scenario.description}</p>
             )}
-            <div className="flex flex-wrap items-center gap-3 mt-2 text-sm text-[#888]">
-              <span className="break-words [overflow-wrap:anywhere] min-w-0 max-w-full">
-                🌐 {scenario.url}
-              </span>
-              <span className="shrink-0">📋 {steps.length} steps</span>
-            </div>
-            {(targetKind || isProbingTarget) && (
-              <div className="mt-3 w-full max-w-3xl">
-                <TargetKindBanner
-                  targetKind={targetKind}
-                  executionBlocked={executionBlocked}
-                  isProbing={isProbingTarget}
-                  message={targetInfoMessage}
-                  addresses={targetAddresses}
-                  url={scenario.url}
-                  labels={defaultTargetKindLabels}
-                />
+            <div className="mt-2 space-y-1.5 text-sm text-[#888]">
+              <div className="rounded-lg border border-surface-border bg-white/60 px-3 py-2 overflow-x-auto">
+                <p className="text-xs font-mono text-ink whitespace-nowrap">🌐 {scenario.url}</p>
               </div>
-            )}
+              <p>📋 {steps.length} steps</p>
+            </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 shrink-0 w-full lg:w-auto">
+          <div className="flex flex-wrap items-center gap-2 shrink-0 w-full xl:w-auto xl:max-w-md">
             <ExportFormatButton
               format="primary"
               icon={Globe}
@@ -1307,6 +1294,20 @@ export default function ScenarioDetailPage() {
             </p>
           </div>
         </div>
+
+        {(targetKind || isProbingTarget) && (
+          <div className="w-full max-w-4xl">
+            <TargetKindBanner
+              targetKind={targetKind}
+              executionBlocked={executionBlocked}
+              isProbing={isProbingTarget}
+              message={targetInfoMessage}
+              addresses={targetAddresses}
+              url={scenario.url}
+              labels={defaultTargetKindLabels}
+            />
+          </div>
+        )}
 
         {agentJob && targetKind === 'internal' && (
           <Card className="border border-amber-200/80 bg-amber-50/40">
@@ -1429,7 +1430,7 @@ export default function ScenarioDetailPage() {
 
                 <div>
                   {(targetKind || isProbingTarget) && (
-                    <div className="mb-3">
+                    <div className="mb-3 w-full max-w-full overflow-hidden">
                       <TargetKindBanner
                         targetKind={targetKind}
                         executionBlocked={executionBlocked}
