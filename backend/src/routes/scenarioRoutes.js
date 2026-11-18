@@ -11,6 +11,7 @@ import {
   toggleFavoriteHandler,
   updateTagsHandler,
   moveScenariosHandler,
+  getScenarioRemindersHandler,
 } from '../controllers/scenarioController.js'
 import { authenticateToken } from '../middleware/auth.js'
 import testStepRoutes from './testStepRoutes.js'
@@ -43,6 +44,12 @@ router.post('/move', moveScenariosHandler)
  * List unique tags for authenticated user
  */
 router.get('/tags', listScenarioTagsHandler)
+
+/**
+ * GET /api/scenarios/reminders
+ * Never-run / stuck / empty-draft reminders
+ */
+router.get('/reminders', getScenarioRemindersHandler)
 
 /**
  * GET /api/scenarios/:id

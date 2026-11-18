@@ -3,6 +3,9 @@ import {
   assertFolderBelongsToUser,
   collectDescendantIds,
 } from './scenarioFolderService.js'
+import { allocateScenarioCode } from '../utils/scenarioCode.js'
+
+export const STUCK_EXECUTION_MINUTES = 15
 
 export function withLiveStepCount(scenario) {
   const count = scenario._count?.testSteps ?? scenario.steps ?? 0
@@ -37,6 +40,7 @@ export async function createScenario(userId, data) {
     const siblingCount = await prisma.scenario.count({
       where: { userId, folderId: folderId || null },
     })
+    const scenarioCode = await allocateScenarioCode(prisma, name.trim())
 
     const scenario = await prisma.scenario.create({
       data: {
@@ -47,6 +51,7 @@ export async function createScenario(userId, data) {
         steps: 0,
         folderId: folderId || null,
         sortOrder: siblingCount,
+        scenarioCode,
         ...(tags !== undefined ? { tags: normalizeTags(tags) } : {}),
       }
     })
@@ -104,6 +109,7 @@ export async function getUserScenarios(userId, options = {}) {
       orderBy: orderClause,
       select: {
         id: true,
+        scenarioCode: true,
         name: true,
         description: true,
         url: true,
@@ -119,7 +125,7 @@ export async function getUserScenarios(userId, options = {}) {
         executions: {
           orderBy: { startTime: 'desc' },
           take: 1,
-          select: { id: true, status: true, startTime: true },
+          select: { id: true, status: true, startTime: true, createdAt: true, updatedAt: true },
         },
       },
     })
@@ -348,10 +354,13 @@ export async function duplicateScenario(scenarioId, userId) {
       throw new Error('Unauthorized: Cannot duplicate this scenario')
     }
 
+    const copyName = `${original.name} (Copy)`
+    const scenarioCode = await allocateScenarioCode(prisma, copyName)
+
     // Create new scenario (same folder as original)
     const newScenario = await prisma.scenario.create({
       data: {
-        name: `${original.name} (Copy)`,
+        name: copyName,
         description: original.description,
         url: original.url,
         userId,
@@ -360,6 +369,7 @@ export async function duplicateScenario(scenarioId, userId) {
         isFavorite: false,
         folderId: original.folderId || null,
         sortOrder: original.sortOrder ?? 0,
+        scenarioCode,
       }
     })
 
@@ -417,6 +427,7 @@ export async function getScenarioStats(scenarioId, userId) {
     return {
       scenarioId: scenario.id,
       name: scenario.name,
+      scenarioCode: scenario.scenarioCode || null,
       totalSteps: scenario.testSteps.length,
       totalExecutions,
       passedExecutions,
@@ -424,5 +435,117 @@ export async function getScenarioStats(scenarioId, userId) {
     }
   } catch (error) {
     throw new Error(`Failed to fetch scenario stats: ${error.message}`)
+  }
+}
+
+async function ensureScenarioCode(scenario) {
+  if (scenario.scenarioCode) return scenario.scenarioCode
+  const scenarioCode = await allocateScenarioCode(prisma, scenario.name)
+  await prisma.scenario.update({
+    where: { id: scenario.id },
+    data: { scenarioCode },
+  })
+  return scenarioCode
+}
+
+/**
+ * Reminders for unfinished / never-run / stuck scenarios.
+ */
+export async function getScenarioReminders(userId, { limit = 8 } = {}) {
+  const stuckBefore = new Date(Date.now() - STUCK_EXECUTION_MINUTES * 60 * 1000)
+
+  const scenarios = await prisma.scenario.findMany({
+    where: { userId },
+    orderBy: { updatedAt: 'desc' },
+    take: 100,
+    select: {
+      id: true,
+      scenarioCode: true,
+      name: true,
+      steps: true,
+      updatedAt: true,
+      _count: { select: { testSteps: true } },
+      executions: {
+        orderBy: [{ startTime: 'desc' }, { createdAt: 'desc' }],
+        take: 1,
+        select: {
+          id: true,
+          status: true,
+          startTime: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      },
+    },
+  })
+
+  const stuck = []
+  const draft = []
+  const neverRun = []
+
+  for (const s of scenarios) {
+    const stepCount = s._count?.testSteps ?? s.steps ?? 0
+    const last = s.executions?.[0] || null
+    const scenarioCode = await ensureScenarioCode(s)
+    const base = {
+      id: s.id,
+      name: s.name,
+      scenarioCode,
+      steps: stepCount,
+      updatedAt: s.updatedAt,
+    }
+
+    if (stepCount === 0) {
+      draft.push({
+        ...base,
+        type: 'draft',
+        executionId: null,
+        executionStatus: null,
+      })
+      continue
+    }
+
+    if (!last) {
+      neverRun.push({
+        ...base,
+        type: 'never_run',
+        executionId: null,
+        executionStatus: null,
+      })
+      continue
+    }
+
+    const stuckStatuses = ['PENDING', 'RUNNING']
+    const refTime = last.updatedAt || last.startTime || last.createdAt
+    if (
+      stuckStatuses.includes(last.status) &&
+      refTime &&
+      new Date(refTime) < stuckBefore
+    ) {
+      stuck.push({
+        ...base,
+        type: 'stuck',
+        executionId: last.id,
+        executionStatus: last.status,
+        stuckSince: refTime,
+      })
+    }
+  }
+
+  const items = [
+    ...stuck.slice(0, limit),
+    ...draft.slice(0, Math.max(0, limit - stuck.length)),
+    ...neverRun.slice(0, Math.max(0, limit - stuck.length - draft.length)),
+  ].slice(0, limit)
+
+  return {
+    items,
+    counts: {
+      stuck: stuck.length,
+      draft: draft.length,
+      neverRun: neverRun.length,
+      total: stuck.length + draft.length + neverRun.length,
+    },
+    stuckAfterMinutes: STUCK_EXECUTION_MINUTES,
   }
 }

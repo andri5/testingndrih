@@ -10,6 +10,7 @@ import {
   updateScenarioTags,
   listScenarioTags,
   moveScenarios,
+  getScenarioReminders,
 } from '../services/scenarioService.js'
 
 /**
@@ -94,6 +95,20 @@ export async function moveScenariosHandler(req, res, next) {
     const { ids, folderId = null, sortOrders } = req.body
     const result = await moveScenarios(req.user.id, { ids, folderId, sortOrders })
     res.json({ success: true, ...result })
+  } catch (error) {
+    next(error)
+  }
+}
+
+/**
+ * GET /api/scenarios/reminders
+ * Unfinished / never-run / stuck scenario reminders
+ */
+export async function getScenarioRemindersHandler(req, res, next) {
+  try {
+    const limit = Math.min(parseInt(req.query.limit, 10) || 8, 20)
+    const data = await getScenarioReminders(req.user.id, { limit })
+    res.json({ success: true, ...data })
   } catch (error) {
     next(error)
   }

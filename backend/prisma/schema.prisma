@@ -233,21 +233,22 @@ model ScenarioFolder {
 }
 
 model Scenario {
-  id          String   @id @default(cuid())
-  name        String
-  description String?
-  url         String
-  steps       Int      @default(0) // count of test steps
-  isSmoke     Boolean  @default(false) // Mark scenario as smoke test
-  isStress    Boolean  @default(false) // Mark scenario as stress test
-  isSecurity  Boolean  @default(false) // Mark scenario as security test
-  isFavorite  Boolean  @default(false)
-  tags        String[] @default([])
-  folderId    String?
-  sortOrder   Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  userId      String
+  id           String   @id @default(cuid())
+  scenarioCode String?  @unique
+  name         String
+  description  String?
+  url          String
+  steps        Int      @default(0) // count of test steps
+  isSmoke      Boolean  @default(false) // Mark scenario as smoke test
+  isStress     Boolean  @default(false) // Mark scenario as stress test
+  isSecurity   Boolean  @default(false) // Mark scenario as security test
+  isFavorite   Boolean  @default(false)
+  tags         String[] @default([])
+  folderId     String?
+  sortOrder    Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  userId       String
 
   user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   folder        ScenarioFolder?  @relation(fields: [folderId], references: [id], onDelete: SetNull)

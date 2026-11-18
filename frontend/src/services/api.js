@@ -130,6 +130,9 @@ export const scenarioAPI = {
 
   listTags: () => apiClient.get('/scenarios/tags'),
 
+  reminders: (limit = 8) =>
+    apiClient.get('/scenarios/reminders', { params: { limit } }),
+
   toggleFavorite: (id) => apiClient.patch(`/scenarios/${id}/favorite`),
 
   updateTags: (id, tags) => apiClient.patch(`/scenarios/${id}/tags`, { tags }),

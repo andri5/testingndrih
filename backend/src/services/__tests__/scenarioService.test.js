@@ -20,6 +20,8 @@ describe('ScenarioService - Comprehensive Business Logic Testing', () => {
       }
 
       prisma.scenario.count.mockResolvedValue(0)
+      prisma.scenario.findUnique.mockResolvedValue(null)
+      prisma.scenario.findUnique.mockResolvedValue(null)
       prisma.scenario.create.mockResolvedValue(mockData)
 
       const result = await createScenario('user-123', {
@@ -36,7 +38,8 @@ describe('ScenarioService - Comprehensive Business Logic Testing', () => {
           description: 'Test login flow',
           url: 'https://example.com',
           userId: 'user-123',
-          steps: 0
+          steps: 0,
+          scenarioCode: expect.stringMatching(/^TSN-/),
         })
       })
     })
@@ -49,6 +52,7 @@ describe('ScenarioService - Comprehensive Business Logic Testing', () => {
 
     it('should allow empty URL and store blank', async () => {
       prisma.scenario.count.mockResolvedValue(0)
+      prisma.scenario.findUnique.mockResolvedValue(null)
       prisma.scenario.create.mockResolvedValue({
         id: 'scenario-1',
         name: 'Test',
@@ -71,6 +75,7 @@ describe('ScenarioService - Comprehensive Business Logic Testing', () => {
 
     it('should auto-prefix https for domain-only URL', async () => {
       prisma.scenario.count.mockResolvedValue(0)
+      prisma.scenario.findUnique.mockResolvedValue(null)
       prisma.scenario.create.mockResolvedValue({
         id: 'scenario-1',
         name: 'Test',
@@ -91,6 +96,7 @@ describe('ScenarioService - Comprehensive Business Logic Testing', () => {
 
     it('should accept https URLs', async () => {
       prisma.scenario.count.mockResolvedValue(0)
+      prisma.scenario.findUnique.mockResolvedValue(null)
       prisma.scenario.create.mockResolvedValue({
         id: 'scenario-1',
         name: 'Test',
@@ -111,6 +117,7 @@ describe('ScenarioService - Comprehensive Business Logic Testing', () => {
 
     it('should accept http URLs', async () => {
       prisma.scenario.count.mockResolvedValue(0)
+      prisma.scenario.findUnique.mockResolvedValue(null)
       prisma.scenario.create.mockResolvedValue({
         id: 'scenario-1',
         name: 'Test',
@@ -130,6 +137,7 @@ describe('ScenarioService - Comprehensive Business Logic Testing', () => {
 
     it('should handle database errors gracefully', async () => {
       prisma.scenario.count.mockResolvedValue(0)
+      prisma.scenario.findUnique.mockResolvedValue(null)
       prisma.scenario.create.mockRejectedValue(new Error('Database error'))
 
       await expect(
@@ -176,6 +184,7 @@ describe('ScenarioService - Comprehensive Business Logic Testing', () => {
     it('should use default pagination values', async () => {
       prisma.scenario.findMany.mockResolvedValue([])
       prisma.scenario.count.mockResolvedValue(0)
+      prisma.scenario.findUnique.mockResolvedValue(null)
 
       await getUserScenarios('user-123')
 
@@ -190,6 +199,7 @@ describe('ScenarioService - Comprehensive Business Logic Testing', () => {
     it('should support custom ordering', async () => {
       prisma.scenario.findMany.mockResolvedValue([])
       prisma.scenario.count.mockResolvedValue(0)
+      prisma.scenario.findUnique.mockResolvedValue(null)
 
       await getUserScenarios('user-123', { orderBy: 'name', orderDirection: 'asc' })
 
@@ -372,3 +382,4 @@ describe('ScenarioService - Comprehensive Business Logic Testing', () => {
     })
   })
 })
+

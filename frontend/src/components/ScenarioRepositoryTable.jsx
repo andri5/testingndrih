@@ -299,6 +299,11 @@ export default function ScenarioRepositoryTable({
                             {s.name}
                           </button>
                         </div>
+                        {s.scenarioCode ? (
+                          <p className="text-[10px] font-mono text-brand truncate max-w-[280px] sm:max-w-md mt-0.5 pl-6">
+                            {s.scenarioCode}
+                          </p>
+                        ) : null}
                         {s.description ? (
                           <p className="text-[11px] text-ink-muted truncate max-w-[280px] sm:max-w-md mt-0.5 pl-6">
                             {s.description}

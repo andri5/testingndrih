@@ -1223,6 +1223,9 @@ export default function ScenarioDetailPage() {
               <span className="text-ink font-medium truncate max-w-[220px]">{scenario.name}</span>
             </nav>
             <h1 className="text-2xl sm:text-3xl font-bold text-[#E0E0E2] break-words">{scenario.name}</h1>
+            {scenario.scenarioCode && (
+              <p className="text-xs font-mono text-brand mt-1">{scenario.scenarioCode}</p>
+            )}
             {scenario.description && (
               <p className="text-[#A0A0A4] mt-1 break-words">{scenario.description}</p>
             )}

@@ -18,6 +18,7 @@ import { getQuickActionsForRole } from '../constants/quickActions'
 import OnboardingChecklist from '../components/OnboardingChecklist'
 import OpenIssuesWidget from '../components/OpenIssuesWidget'
 import WelcomeSplashModal from '../components/WelcomeSplashModal'
+import ScenarioReminders from '../components/ScenarioReminders'
 import ExportFormatButton from '../components/ExportFormatButton'
 import { WELCOME_SPLASH_STORAGE_KEY } from '../constants/welcomeSplash'
 
@@ -190,6 +191,8 @@ export default function DashboardPage() {
             {t.hereIs}
           </p>
         </div>
+
+        <ScenarioReminders />
 
         <OnboardingChecklist />
 

@@ -45,6 +45,10 @@ const i18n = {
     timeoutHint: 'Max timeout per step in seconds (5–300)',
     captureScreenshot: 'Capture screenshot after each step',
     captureDesc: 'Automatically saves screenshots during execution',
+    reminderTone: 'Dashboard reminder tone',
+    reminderToneDesc: 'Casual (“Woy bro…”) or formal English copy',
+    reminderCasual: 'Santai',
+    reminderFormal: 'Formal',
     saveSettings: 'Save Settings',
     profileSaved: 'Profile updated successfully',
     settingsSaved: 'Settings saved successfully',
@@ -68,7 +72,14 @@ export default function SettingsPage() {
   const user = useAuthStore((state) => state.user)
   const logout = useAuthStore((state) => state.logout)
 
-  const { executionTimeout, autoScreenshot, setExecutionTimeout, setAutoScreenshot } = useSettingsStore()
+  const {
+    executionTimeout,
+    autoScreenshot,
+    setExecutionTimeout,
+    setAutoScreenshot,
+    reminderTone,
+    setReminderTone,
+  } = useSettingsStore()
 
   const [activeTab, setActiveTab] = useState('profile')
   const [success, setSuccess] = useState(null)
@@ -311,6 +322,35 @@ export default function SettingsPage() {
                           autoScreenshot ? 'translate-x-4' : 'translate-x-0.5'
                         }`} />
                       </button>
+                    </div>
+
+                    <div>
+                      <p className="text-sm font-medium text-[#E0E0E2]">{t.reminderTone}</p>
+                      <p className="text-xs text-[#666] mt-0.5 mb-2">{t.reminderToneDesc}</p>
+                      <div className="inline-flex rounded-lg border border-[#2D2D2F] overflow-hidden">
+                        <button
+                          type="button"
+                          onClick={() => setReminderTone('casual')}
+                          className={`px-3 py-1.5 text-xs font-medium transition ${
+                            reminderTone !== 'formal'
+                              ? 'bg-[#0F766E] text-white'
+                              : 'bg-[#0F0E11] text-[#A0A0A4] hover:text-[#E0E0E2]'
+                          }`}
+                        >
+                          {t.reminderCasual}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setReminderTone('formal')}
+                          className={`px-3 py-1.5 text-xs font-medium transition ${
+                            reminderTone === 'formal'
+                              ? 'bg-[#0F766E] text-white'
+                              : 'bg-[#0F0E11] text-[#A0A0A4] hover:text-[#E0E0E2]'
+                          }`}
+                        >
+                          {t.reminderFormal}
+                        </button>
+                      </div>
                     </div>
 
                     <p className="text-xs text-[#555] flex items-center gap-1.5">
