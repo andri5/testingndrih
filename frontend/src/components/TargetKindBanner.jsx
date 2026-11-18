@@ -77,7 +77,11 @@ export default function TargetKindBanner({
                   'URL ini tampak publik (external) — bisa dijangkau dari server cloud production.'}
             </p>
             {message && (
-              <p className="text-xs text-slate-700 mt-1.5 leading-relaxed">{message}</p>
+              <p className={`text-xs mt-1.5 leading-relaxed font-medium ${
+                isInternal ? 'text-amber-950' : 'text-slate-800'
+              }`}>
+                {message}
+              </p>
             )}
           </div>
         </div>

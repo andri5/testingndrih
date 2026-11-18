@@ -1406,18 +1406,18 @@ export default function ScenarioDetailPage() {
             {/* Start recording controls */}
             {!isRecording && recordingSteps.length === 0 && (
               <div className="space-y-4">
-                <p className="text-[#A0A0A4] text-sm">
+                <p className="text-ink-muted text-sm leading-relaxed">
                   {t.startRecordingHint}
                 </p>
-                <div className="flex items-end gap-3">
-                  <div className="flex-1">
-                    <label className="block text-sm font-medium text-[#A0A0A4] mb-1">{t.urlTarget}</label>
+                <div className="flex flex-col sm:flex-row sm:items-end gap-3">
+                  <div className="flex-1 min-w-0">
+                    <label className="block text-sm font-medium text-ink-muted mb-1">{t.urlTarget}</label>
                     <input
                       type="url"
                       value={recordingUrl}
                       onChange={(e) => setRecordingUrl(e.target.value)}
                       placeholder="https://example.com"
-                      className="w-full px-3 py-2 bg-[#161618] border border-[#2D2D2F] text-[#E0E0E2] placeholder-[#4A4A52] rounded-lg focus:ring-1 focus:ring-[#0F766E] focus:outline-none"
+                      className="w-full px-3 py-2 bg-white border border-surface-border text-ink placeholder-ink-subtle rounded-lg focus:ring-1 focus:ring-brand focus:outline-none"
                     />
                   </div>
                   <ExportFormatButton
@@ -1446,10 +1446,12 @@ export default function ScenarioDetailPage() {
                     </div>
                   )}
                   {targetKind === 'internal' && (
-                    <p className="text-xs text-amber-300/90 mb-3">{t.recordingOverviewInternalLock}</p>
+                    <p className="text-xs font-medium text-amber-900 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-3 leading-relaxed">
+                      {t.recordingOverviewInternalLock}
+                    </p>
                   )}
                   <div className="flex flex-wrap items-center gap-2 mb-2">
-                    <span className="text-sm font-medium text-[#A0A0A4]">{t.recordingOverviewSelectMode}</span>
+                    <span className="text-sm font-medium text-ink-muted">{t.recordingOverviewSelectMode}</span>
                   </div>
 
                   <div className="grid gap-3 sm:grid-cols-2">
@@ -1458,17 +1460,17 @@ export default function ScenarioDetailPage() {
                       onClick={() => setRecordingModeChoice('client-direct')}
                       className={`text-left rounded-lg border p-3 transition ${
                         recordingModeChoice === 'client-direct'
-                          ? 'border-[#0F766E] bg-[#0F766E]/10'
-                          : 'border-[#2D2D2F] bg-[#161618] hover:border-[#3f3f46]'
+                          ? 'border-brand bg-brand-soft'
+                          : 'border-surface-border bg-white hover:border-brand/40'
                       }`}
                     >
-                      <div className="text-sm font-semibold text-[#E0E0E2] mb-1">
+                      <div className="text-sm font-semibold text-ink mb-1">
                         {t.recordingOverviewDirectTitle}
                       </div>
-                      <p className="text-xs text-[#A0A0A4] leading-relaxed">
+                      <p className="text-xs text-ink-muted leading-relaxed">
                         {t.recordingOverviewDirectBody}
                       </p>
-                      <p className="text-xs text-[#67e8f9]/90 mt-2 leading-relaxed">
+                      <p className="text-xs text-teal-800 mt-2 leading-relaxed font-medium">
                         {t.recordingOverviewDirectCsp}
                       </p>
                     </button>
@@ -1482,19 +1484,25 @@ export default function ScenarioDetailPage() {
                       disabled={targetKind === 'internal'}
                       className={`text-left rounded-lg border p-3 transition ${
                         targetKind === 'internal'
-                          ? 'border-[#2D2D2F] bg-[#121214] opacity-50 cursor-not-allowed'
+                          ? 'border-surface-border bg-surface-muted cursor-not-allowed'
                           : recordingModeChoice === 'proxy'
-                            ? 'border-[#0F766E] bg-[#0F766E]/10'
-                            : 'border-[#2D2D2F] bg-[#161618] hover:border-[#3f3f46]'
+                            ? 'border-brand bg-brand-soft'
+                            : 'border-surface-border bg-white hover:border-brand/40'
                       }`}
                     >
-                      <div className="text-sm font-semibold text-[#E0E0E2] mb-1">
+                      <div className={`text-sm font-semibold mb-1 ${
+                        targetKind === 'internal' ? 'text-ink-muted' : 'text-ink'
+                      }`}>
                         {t.recordingOverviewProxyTitle}
                       </div>
-                      <p className="text-xs text-[#A0A0A4] leading-relaxed">
+                      <p className={`text-xs leading-relaxed ${
+                        targetKind === 'internal' ? 'text-ink-subtle' : 'text-ink-muted'
+                      }`}>
                         {t.recordingOverviewProxyBody}
                       </p>
-                      <p className="text-xs text-amber-300/90 mt-2 leading-relaxed">
+                      <p className={`text-xs mt-2 leading-relaxed font-medium ${
+                        targetKind === 'internal' ? 'text-amber-800/80' : 'text-amber-900'
+                      }`}>
                         {t.recordingOverviewProxyWarn}
                       </p>
                     </button>
