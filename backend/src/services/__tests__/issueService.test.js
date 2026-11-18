@@ -78,7 +78,18 @@ describe('issueService', () => {
       expect(result.total).toBe(1)
       expect(prisma.issue.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { execution: { userId: 'user-1' }, status: 'OPEN' }
+          where: {
+            AND: [
+              {
+                OR: [
+                  { userId: 'user-1' },
+                  { execution: { userId: 'user-1' } },
+                  { scenario: { userId: 'user-1' } },
+                ],
+              },
+              { status: 'OPEN' },
+            ],
+          },
         })
       )
     })

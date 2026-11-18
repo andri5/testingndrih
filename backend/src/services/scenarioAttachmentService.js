@@ -1,11 +1,9 @@
 import fs from 'fs/promises'
 import path from 'path'
-import { fileURLToPath } from 'url'
 import { prisma } from '../lib/prisma.js'
 import { getScenarioById } from './scenarioService.js'
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-export const SCENARIO_ATTACHMENTS_DIR = path.resolve(__dirname, '../../uploads/scenario-attachments')
+export const SCENARIO_ATTACHMENTS_DIR = path.resolve(process.cwd(), 'uploads/scenario-attachments')
 
 const MAX_FILES_PER_SCENARIO = 12
 const MAX_FILE_BYTES = 8 * 1024 * 1024 // 8 MB

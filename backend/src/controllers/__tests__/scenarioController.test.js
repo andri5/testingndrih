@@ -8,6 +8,9 @@ import {
 import * as scenarioService from '../../services/scenarioService.js'
 
 jest.mock('../../services/scenarioService.js')
+jest.mock('../../services/scenarioAttachmentService.js')
+jest.mock('../../services/scenarioAuditService.js')
+jest.mock('../../services/testRunService.js')
 
 describe('ScenarioController', () => {
   let req, res, next
@@ -100,7 +103,7 @@ describe('ScenarioController', () => {
       const response = res.json.mock.calls[0][0]
       expect(response.success).toBe(true)
       expect(response.pagination.skip).toBe(0)
-      expect(response.pagination.take).toBe(20)
+      expect(response.pagination.take).toBe(50)
     })
 
     it('should validate pagination parameters', async () => {
@@ -113,8 +116,8 @@ describe('ScenarioController', () => {
       expect(response.success).toBe(false)
     })
 
-    it('should reject take greater than 100', async () => {
-      req.query = { skip: 0, take: 101 }
+    it('should reject take greater than 500', async () => {
+      req.query = { skip: 0, take: 501 }
 
       await getScenarioListHandler(req, res, next)
 
@@ -140,6 +143,9 @@ describe('ScenarioController', () => {
           orderDirection: 'asc',
           favoritesOnly: false,
           tag: null,
+          folderId: undefined,
+          unfiled: false,
+          includeDescendants: false,
         }
       )
     })
