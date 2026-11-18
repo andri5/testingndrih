@@ -12,6 +12,10 @@ import SiteAnalytics from '../components/SiteAnalytics'
 import LandingFeedbackAdmin from '../components/landing/LandingFeedbackAdmin'
 import { useAuthStore } from '../store/authStore'
 import { useSettingsStore } from '../store/settingsStore'
+import {
+  getProfilePicture,
+  setProfilePicture as persistProfilePicture,
+} from '../utils/profilePictureStorage'
 
 const inputCls = 'w-full px-3 py-2 bg-[#0F0E11] border border-[#2D2D2F] rounded-lg text-[#E0E0E2] text-sm placeholder-[#666] focus:outline-none focus:border-[#0F766E] transition'
 const labelCls = 'block text-sm font-medium text-[#A0A0A4] mb-1.5'
@@ -69,8 +73,13 @@ export default function SettingsPage() {
   const [error, setError] = useState(null)
   const [name, setName] = useState(user?.name || '')
   const [email] = useState(user?.email || '')
-  const [profilePicture, setProfilePicture] = useState(JSON.parse(localStorage.getItem('profilePicture') || 'null'))
+  const [profilePicture, setProfilePictureState] = useState(() => getProfilePicture(user?.id))
   const fileInputRef = useRef(null)
+
+  useEffect(() => {
+    setName(user?.name || '')
+    setProfilePictureState(getProfilePicture(user?.id))
+  }, [user?.id, user?.name])
 
   const t = i18n.en
 
@@ -106,14 +115,19 @@ export default function SettingsPage() {
       return
     }
 
-    // Read file as base64
+    // Read file as base64 — scoped per user so accounts on the same browser do not share photos
     const reader = new FileReader()
     reader.onloadend = () => {
       const base64String = reader.result
-      setProfilePicture(base64String)
-      localStorage.setItem('profilePicture', JSON.stringify(base64String))
-      // Emit custom event to notify other components (like Layout) about profile picture change
-      window.dispatchEvent(new CustomEvent('profilePictureUpdated', { detail: base64String }))
+      setProfilePictureState(base64String)
+      if (user?.id) {
+        persistProfilePicture(user.id, base64String)
+      }
+      window.dispatchEvent(
+        new CustomEvent('profilePictureUpdated', {
+          detail: { userId: user?.id, picture: base64String },
+        })
+      )
       setSuccess(t.profileSaved)
       setTimeout(() => setSuccess(null), 3000)
     }

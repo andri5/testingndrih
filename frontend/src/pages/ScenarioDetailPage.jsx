@@ -1201,8 +1201,8 @@ export default function ScenarioDetailPage() {
     <Layout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-          <div className="min-w-0">
+        <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
+          <div className="min-w-0 flex-1 w-full">
             <nav className="flex flex-wrap items-center gap-1.5 text-sm text-ink-muted mb-2">
               <button
                 type="button"
@@ -1224,14 +1224,16 @@ export default function ScenarioDetailPage() {
             </nav>
             <h1 className="text-2xl sm:text-3xl font-bold text-[#E0E0E2] break-words">{scenario.name}</h1>
             {scenario.description && (
-              <p className="text-[#A0A0A4] mt-1">{scenario.description}</p>
+              <p className="text-[#A0A0A4] mt-1 break-words">{scenario.description}</p>
             )}
             <div className="flex flex-wrap items-center gap-3 mt-2 text-sm text-[#888]">
-              <span className="break-all">🌐 {scenario.url}</span>
-              <span>📋 {steps.length} steps</span>
+              <span className="break-words [overflow-wrap:anywhere] min-w-0 max-w-full">
+                🌐 {scenario.url}
+              </span>
+              <span className="shrink-0">📋 {steps.length} steps</span>
             </div>
             {(targetKind || isProbingTarget) && (
-              <div className="mt-3 max-w-3xl">
+              <div className="mt-3 w-full max-w-3xl">
                 <TargetKindBanner
                   targetKind={targetKind}
                   executionBlocked={executionBlocked}
@@ -1245,7 +1247,7 @@ export default function ScenarioDetailPage() {
             )}
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 shrink-0">
+          <div className="flex flex-wrap items-center gap-2 shrink-0 w-full lg:w-auto">
             <ExportFormatButton
               format="primary"
               icon={Globe}

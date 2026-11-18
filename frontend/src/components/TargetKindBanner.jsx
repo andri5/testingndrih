@@ -37,9 +37,9 @@ export default function TargetKindBanner({
   const Icon = isInternal ? ShieldAlert : Globe
 
   return (
-    <div className={`rounded-xl border-2 ${shell} px-4 py-3.5 shadow-sm`}>
-      <div className="flex flex-wrap items-start gap-3 justify-between">
-        <div className="flex items-start gap-3 min-w-0 flex-1">
+    <div className={`rounded-xl border-2 ${shell} px-4 py-3.5 shadow-sm w-full min-w-0`}>
+      <div className="flex flex-col sm:flex-row sm:flex-wrap items-start gap-3 justify-between">
+        <div className="flex items-start gap-3 min-w-0 flex-1 w-full">
           <div
             className={`shrink-0 w-10 h-10 rounded-xl flex items-center justify-center ${
               isInternal ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'
@@ -47,7 +47,7 @@ export default function TargetKindBanner({
           >
             <Icon size={20} />
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2 mb-1">
               <span className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-bold uppercase tracking-wide ${badge}`}>
                 {isInternal ? labels.badgeInternal || 'Internal / VPN' : labels.badgePublic || 'Publik (external)'}
@@ -73,7 +73,7 @@ export default function TargetKindBanner({
                   'URL ini tampak publik (external) — bisa dijangkau dari server cloud production.'}
             </p>
             {(message || url) && (
-              <p className="text-xs text-slate-700 mt-1 break-all">
+              <p className="text-xs text-slate-700 mt-1 break-words [overflow-wrap:anywhere]">
                 {url && <span className="font-mono font-medium text-slate-900">{url}</span>}
                 {url && message ? ' — ' : ''}
                 {message}

@@ -1,6 +1,10 @@
 import { create } from 'zustand'
 import { authAPI } from '../services/api'
 import { WELCOME_SPLASH_STORAGE_KEY } from '../constants/welcomeSplash'
+import {
+  clearLegacyProfilePicture,
+  claimLegacyProfilePicture,
+} from '../utils/profilePictureStorage'
 
 export const useAuthStore = create((set) => ({
   // State
@@ -20,6 +24,8 @@ export const useAuthStore = create((set) => ({
       localStorage.setItem('authToken', token)
       localStorage.setItem('user', JSON.stringify(user))
       localStorage.setItem(WELCOME_SPLASH_STORAGE_KEY, user.id)
+      // New accounts must not inherit a shared legacy avatar from another user
+      clearLegacyProfilePicture()
 
       // Update store
       set({ user, token, isLoading: false })
@@ -40,6 +46,8 @@ export const useAuthStore = create((set) => ({
       // Save to localStorage
       localStorage.setItem('authToken', token)
       localStorage.setItem('user', JSON.stringify(user))
+      // Existing users keep their previous shared photo (one-time migrate)
+      claimLegacyProfilePicture(user.id)
 
       // Update store
       set({ user, token, isLoading: false })

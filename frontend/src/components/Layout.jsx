@@ -36,6 +36,10 @@ import {
   PanelLeftOpen,
   ChevronDown,
 } from 'lucide-react'
+import {
+  getProfilePicture,
+  claimLegacyProfilePicture,
+} from '../utils/profilePictureStorage'
 
 const SIDEBAR_EXPANDED_KEY = 'tsn.sidebarExpanded'
 const COMPACT_MQ = '(max-width: 1279px)'
@@ -68,8 +72,9 @@ export default function Layout({ children, showFolderPane = false, onFolderSelec
   const toolsRef = useRef(null)
   const allowedMenuKeys = useMemo(() => new Set(resolveUserMenuKeys(user)), [user])
 
-  const onScenarios = location.pathname.startsWith('/scenarios')
-  const folderPaneVisible = showFolderPane || onScenarios
+  // Folder tree only on the repository list — not on /scenarios/:id detail
+  const onScenariosList = /^\/scenarios\/?$/.test(location.pathname)
+  const folderPaneVisible = showFolderPane || onScenariosList
   /** On compact screens, expanded nav is an overlay — in-flow rail stays icon-only. */
   const inFlowExpanded = sidebarExpanded && !isCompact
   const overlayNavOpen = sidebarExpanded && isCompact
@@ -106,11 +111,19 @@ export default function Layout({ children, showFolderPane = false, onFolderSelec
 
   useEffect(() => {
     const loadProfilePicture = () => {
-      const picture = localStorage.getItem('profilePicture')
-      if (!picture) return
-      try { setProfilePicture(JSON.parse(picture)) } catch { /* ignore */ }
+      if (user?.id) claimLegacyProfilePicture(user.id)
+      setProfilePicture(getProfilePicture(user?.id))
     }
-    const handleProfilePictureUpdate = (event) => setProfilePicture(event.detail)
+    const handleProfilePictureUpdate = (event) => {
+      const detail = event.detail
+      if (detail && typeof detail === 'object' && 'picture' in detail) {
+        if (detail.userId && user?.id && detail.userId !== user.id) return
+        setProfilePicture(detail.picture || null)
+        return
+      }
+      // Legacy event payload was a raw base64 string
+      if (user?.id) setProfilePicture(detail || null)
+    }
     loadProfilePicture()
     window.addEventListener('storage', loadProfilePicture)
     window.addEventListener('profilePictureUpdated', handleProfilePictureUpdate)
@@ -118,7 +131,7 @@ export default function Layout({ children, showFolderPane = false, onFolderSelec
       window.removeEventListener('storage', loadProfilePicture)
       window.removeEventListener('profilePictureUpdated', handleProfilePictureUpdate)
     }
-  }, [])
+  }, [user?.id])
 
   useEffect(() => {
     setMobileFoldersOpen(false)
