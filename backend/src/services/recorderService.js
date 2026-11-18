@@ -156,12 +156,17 @@ export function getRecorderScript(sessionId = null, options = {}) {
   }
   
   function __getBridgeWindow() {
-    try {
-      if (window.opener && !window.opener.closed) return window.opener;
-    } catch (e) {}
+    // Prefer explicit Hubungkan popup first — opener may point at a non-listener tab
     try {
       if (window.__recBridgeWin && !window.__recBridgeWin.closed) return window.__recBridgeWin;
+    } catch (e) {}
+    try {
+      if (window.opener && !window.opener.closed) return window.opener;
     } catch (e2) {}
+    // COOP can make .closed look true while postMessage still works — last resort
+    try {
+      if (window.__recBridgeWin) return window.__recBridgeWin;
+    } catch (e3) {}
     return null;
   }
 
@@ -408,6 +413,7 @@ export function getRecorderScript(sessionId = null, options = {}) {
     if (!el) return true;
     try {
       if (el.id === '__rec_toolbar' || (el.closest && el.closest('#__rec_toolbar'))) return true;
+      if (el.id === '__rec_connect_overlay' || (el.closest && el.closest('#__rec_connect_overlay'))) return true;
       var aria = (el.getAttribute && el.getAttribute('aria-label')) || '';
       var id = el.id || '';
       var cls = (typeof el.className === 'string' ? el.className : '') || '';

@@ -24,6 +24,24 @@ function setRecorderCors(req, res) {
   res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Record-Token')
 }
 
+/**
+ * Client-gate is opened as a popup/opener bridge from arbitrary target origins.
+ * Helmet's default COOP:same-origin severs window.opener / can mark the popup
+ * closed from the target's WindowProxy — Hubungkan bridge then never delivers steps.
+ */
+function clearRecorderBridgeIsolationHeaders(res) {
+  res.removeHeader('Cross-Origin-Opener-Policy')
+  res.removeHeader('cross-origin-opener-policy')
+  res.removeHeader('Cross-Origin-Resource-Policy')
+  res.removeHeader('cross-origin-resource-policy')
+  res.removeHeader('Cross-Origin-Embedder-Policy')
+  res.removeHeader('cross-origin-embedder-policy')
+  res.removeHeader('X-Frame-Options')
+  res.removeHeader('x-frame-options')
+  res.set('Cross-Origin-Opener-Policy', 'unsafe-none')
+  res.set('Cross-Origin-Resource-Policy', 'cross-origin')
+}
+
 /** Prefer https behind Caddy/nginx (X-Forwarded-Proto). */
 function resolveAppOrigin(req) {
   const xfProto = String(req.get('x-forwarded-proto') || '').split(',')[0].trim()
@@ -170,9 +188,16 @@ function buildClientInjectPayload(sessionId, recordToken, appOrigin, bridgeUrl =
       return false;
     }
     var w=null;
-    try { w=window.open('about:blank', 'tsn_rec_bridge'); } catch (e) {}
+    // Open the bridge URL directly. about:blank→navigate + COOP can orphan WindowProxy
+    // so postMessage never reaches the gate and steps look "not recorded".
+    try { w=window.open(url, 'tsn_rec_bridge'); } catch (e) {}
     if (!w) {
-      try { w=window.open(url, 'tsn_rec_bridge'); } catch (e2) {}
+      try { w=window.open('about:blank', 'tsn_rec_bridge'); } catch (e2) {}
+      if (w) {
+        try { w.location.href=url; } catch (e3) {
+          try { w.location=url; } catch (e4) {}
+        }
+      }
     }
     if (!w) {
       alert('Popup diblokir.\\n\\nIzinkan popup untuk situs ini, lalu klik Hubungkan bridge lagi.');
@@ -181,11 +206,11 @@ function buildClientInjectPayload(sessionId, recordToken, appOrigin, bridgeUrl =
       return false;
     }
     window.__recBridgeWin=w;
-    try { w.location.href=url; } catch (e3) {
-      try { w.location=url; } catch (e4) {}
-    }
-    setStatus('Bridge dibuka — menunggu READY…', 'wait');
+    setStatus('Bridge dibuka — mengirim step…', 'wait');
     hideConnectOverlay();
+    // Flush even if READY is delayed/missing (do not wait only on opener announce)
+    setTimeout(function(){ if (window.__recFlushBridgeQueue) window.__recFlushBridgeQueue(); }, 500);
+    setTimeout(function(){ if (window.__recFlushBridgeQueue) window.__recFlushBridgeQueue(); }, 1500);
     return true;
   };
 
@@ -756,6 +781,7 @@ window.__targetBase=${JSON.stringify(url)};
 
     const session = recorderService.findActiveSessionByScenarioId(String(sessionId))
     if (!session || session.recordToken !== String(rt)) {
+      clearRecorderBridgeIsolationHeaders(res)
       return res.status(409).send(`<html><body style="font-family:system-ui;padding:40px;background:#0f172a;color:#e2e8f0">
         <h2>Sesi recording tidak aktif</h2>
         <p>Kembali ke aplikasi dan klik Start Recording lagi.</p>
@@ -765,12 +791,11 @@ window.__targetBase=${JSON.stringify(url)};
     const appOrigin = resolveAppOrigin(req).replace(/^http:\/\/testsambilngopi\.my\.id/i, 'https://testsambilngopi.my.id')
     const embed = String(req.query.embed || '') === '1'
 
-    // Hidden iframe bridge — not blocked by popup blockers (COOP / internal sites)
+    // Hidden iframe / Hubungkan popup bridge — must not isolate opener (Helmet COOP)
     if (embed) {
       res.removeHeader('content-security-policy')
       res.removeHeader('Content-Security-Policy')
-      res.removeHeader('x-frame-options')
-      res.removeHeader('X-Frame-Options')
+      clearRecorderBridgeIsolationHeaders(res)
       res.set('content-type', 'text/html; charset=utf-8')
       res.set('cache-control', 'no-store')
       res.set(
@@ -842,7 +867,9 @@ window.__targetBase=${JSON.stringify(url)};
       url: String(url),
       sessionId: String(sessionId),
       rt: String(rt),
+      embed: '1',
     })
+    // Hubungkan opens the lightweight embed bridge (keeps opener; no second full guide)
     const bridgeUrl = `${appOrigin}/api/recorder/client-gate?${gateParams.toString()}`
     const inlinePayload = buildClientInjectPayload(String(sessionId), String(rt), appOrigin, bridgeUrl)
     // Safe for embedding in HTML <script type="application/json"> (avoid </script> breakouts)
@@ -851,6 +878,7 @@ window.__targetBase=${JSON.stringify(url)};
 
     res.removeHeader('content-security-policy')
     res.removeHeader('Content-Security-Policy')
+    clearRecorderBridgeIsolationHeaders(res)
     res.set('content-type', 'text/html; charset=utf-8')
     res.set('cache-control', 'no-store')
     // Allow inline boot script + JSON payload on this guide page (Helmet default CSP blocks it)
@@ -1111,9 +1139,11 @@ window.__targetBase=${JSON.stringify(url)};
       url: String(session.startUrl || req.query.url || ''),
       sessionId: String(sessionId),
       rt: String(rt),
+      embed: '1',
     })
     const bridgeUrl = `${safeOrigin}/api/recorder/client-gate?${gateParams.toString()}`
 
+    clearRecorderBridgeIsolationHeaders(res)
     res.set('content-type', 'application/javascript; charset=utf-8')
     res.set('cache-control', 'no-store')
     res.send(buildClientInjectPayload(String(sessionId), String(rt), safeOrigin, bridgeUrl))
