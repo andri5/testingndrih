@@ -45,10 +45,8 @@ const userPublicSelect = {
 }
 
 async function assertCaptcha(req, res) {
-  const captcha = await verifyTurnstileToken(
-    req.body.captchaToken,
-    req.ip || req.headers?.['x-forwarded-for']
-  )
+  // Prefer Express req.ip (trust proxy). Avoid raw X-Forwarded-For lists — they break siteverify.
+  const captcha = await verifyTurnstileToken(req.body.captchaToken, req.ip)
   if (!captcha.ok) {
     res.status(400).json({ success: false, message: captcha.message })
     return false
