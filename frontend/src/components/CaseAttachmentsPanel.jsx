@@ -33,7 +33,7 @@ export default function CaseAttachmentsPanel({
     setUploading(true)
     setError(null)
     try {
-      await scenarioAPI.uploadAttachments(scenarioId, files)
+      await scenarioAPI.uploadAttachments(scenarioId, files, { kind: 'GENERAL' })
       await onRefresh?.()
     } catch (err) {
       setError(err.response?.data?.message || err.message || 'Upload gagal')

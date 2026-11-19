@@ -175,10 +175,12 @@ export async function getScenarioRunsHandler(req, res, next) {
 
 export async function uploadScenarioAttachmentsHandler(req, res, next) {
   try {
+    const kind = req.body?.kind || req.query?.kind || 'GENERAL'
     const attachments = await scenarioAttachmentService.addScenarioAttachments(
       req.user.id,
       req.params.id,
-      req.files || []
+      req.files || [],
+      { kind }
     )
     res.status(201).json({ success: true, attachments })
   } catch (error) {
@@ -190,7 +192,8 @@ export async function listScenarioAttachmentsHandler(req, res, next) {
   try {
     const attachments = await scenarioAttachmentService.listScenarioAttachments(
       req.user.id,
-      req.params.id
+      req.params.id,
+      { kind: req.query?.kind }
     )
     res.json({ success: true, attachments })
   } catch (error) {

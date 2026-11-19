@@ -119,9 +119,10 @@ export const scenarioAPI = {
   listAttachments: (id) =>
     apiClient.get(`/scenarios/${id}/attachments`),
 
-  uploadAttachments: (id, files) => {
+  uploadAttachments: (id, files, options = {}) => {
     const form = new FormData()
     ;[...(files || [])].forEach((f) => form.append('files', f))
+    if (options.kind) form.append('kind', options.kind)
     return apiClient.post(`/scenarios/${id}/attachments`, form, {
       headers: { 'Content-Type': 'multipart/form-data' },
     })

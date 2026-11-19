@@ -8,7 +8,7 @@ import StepResultCard, { StepResultsSummary } from '../components/StepResultCard
 import TestStepList from '../components/TestStepList'
 import { scenarioAPI, executionAPI, recorderAPI, agentAPI } from '../services/api'
 import ExportFormatButton from '../components/ExportFormatButton'
-import { CheckCircle2, XCircle, ClipboardList, Clock, HelpCircle, Globe, Play, Circle, Square, ChevronDown, ListTree, Plus, Copy, Trash2, Save, Loader2, Zap, Link2 } from 'lucide-react'
+import { CheckCircle2, XCircle, ClipboardList, Clock, HelpCircle, Globe, Play, Circle, Square, ChevronDown, ListTree, Plus, Copy, Trash2, Save, Loader2, Zap, Link2, ImagePlus, Upload } from 'lucide-react'
 import ShareRunModal from '../components/ShareRunModal'
 import TargetKindBanner, { defaultTargetKindLabels } from '../components/TargetKindBanner'
 import ManualRunPanel from '../components/ManualRunPanel'
@@ -266,10 +266,14 @@ export default function ScenarioDetailPage() {
   const [runMode, setRunMode] = useState('manual')
   const [caseMeta, setCaseMeta] = useState({
     precondition: '',
+    expectedResult: '',
     priority: 'MEDIUM',
     caseType: 'Functional',
   })
   const [isSavingCaseMeta, setIsSavingCaseMeta] = useState(false)
+  const [uploadingExpectedImage, setUploadingExpectedImage] = useState(false)
+  const [deletingExpectedImageId, setDeletingExpectedImageId] = useState(null)
+  const expectedImageInputRef = useRef(null)
   /** Testiny-style case tabs */
   const [caseTab, setCaseTab] = useState('details') // details | attachments | runs | history
   const [caseAttachments, setCaseAttachments] = useState([])
@@ -395,6 +399,7 @@ export default function ScenarioDetailPage() {
       setCaseAttachments(sc.attachments || [])
       setCaseMeta({
         precondition: sc.precondition || '',
+        expectedResult: sc.expectedResult || '',
         priority: sc.priority || 'MEDIUM',
         caseType: sc.caseType || 'Functional',
       })
@@ -492,6 +497,7 @@ export default function ScenarioDetailPage() {
         scenario.url || '',
         {
           precondition: caseMeta.precondition,
+          expectedResult: caseMeta.expectedResult,
           priority: caseMeta.priority,
           caseType: caseMeta.caseType,
           ownerId: scenario.ownerId || undefined,
@@ -504,6 +510,49 @@ export default function ScenarioDetailPage() {
       setError(err.response?.data?.error || err.response?.data?.message || 'Gagal simpan detail case')
     } finally {
       setIsSavingCaseMeta(false)
+    }
+  }
+
+  const refreshCaseAttachments = async () => {
+    const res = await scenarioAPI.listAttachments(id)
+    setCaseAttachments(res.data.attachments || [])
+  }
+
+  const expectedResultImages = (caseAttachments || []).filter(
+    (a) => (a.kind || 'GENERAL') === 'EXPECTED_RESULT'
+  )
+  const generalAttachments = (caseAttachments || []).filter(
+    (a) => (a.kind || 'GENERAL') !== 'EXPECTED_RESULT'
+  )
+
+  const handleUploadExpectedImages = async (fileList) => {
+    const files = [...(fileList || [])]
+    if (!files.length || !id) return
+    setUploadingExpectedImage(true)
+    setError(null)
+    try {
+      await scenarioAPI.uploadAttachments(id, files, { kind: 'EXPECTED_RESULT' })
+      await refreshCaseAttachments()
+      showSuccess('Gambar expected result diunggah')
+    } catch (err) {
+      setError(err.response?.data?.message || err.message || 'Gagal upload gambar expected result')
+    } finally {
+      setUploadingExpectedImage(false)
+      if (expectedImageInputRef.current) expectedImageInputRef.current.value = ''
+    }
+  }
+
+  const handleDeleteExpectedImage = async (attachmentId) => {
+    if (!id || !attachmentId) return
+    setDeletingExpectedImageId(attachmentId)
+    setError(null)
+    try {
+      await scenarioAPI.deleteAttachment(id, attachmentId)
+      await refreshCaseAttachments()
+    } catch (err) {
+      setError(err.response?.data?.message || err.message || 'Gagal hapus gambar')
+    } finally {
+      setDeletingExpectedImageId(null)
     }
   }
 
@@ -1599,7 +1648,7 @@ export default function ScenarioDetailPage() {
           <div className="flex flex-wrap items-center gap-1 mb-4 border-b border-surface-border pb-2">
             {[
               { id: 'details', label: 'Details' },
-              { id: 'attachments', label: `Attachments${caseAttachments.length ? ` (${caseAttachments.length})` : ''}` },
+              { id: 'attachments', label: `Attachments${generalAttachments.length ? ` (${generalAttachments.length})` : ''}` },
               { id: 'runs', label: 'Runs' },
               { id: 'history', label: 'History' },
             ].map((tab) => (
@@ -1621,11 +1670,8 @@ export default function ScenarioDetailPage() {
           {caseTab === 'attachments' && (
             <CaseAttachmentsPanel
               scenarioId={id}
-              attachments={caseAttachments}
-              onRefresh={async () => {
-                const res = await scenarioAPI.listAttachments(id)
-                setCaseAttachments(res.data.attachments || [])
-              }}
+              attachments={generalAttachments}
+              onRefresh={refreshCaseAttachments}
             />
           )}
 
@@ -1695,6 +1741,84 @@ export default function ScenarioDetailPage() {
               placeholder="Kondisi awal sebelum step dijalankan…"
               className="w-full text-sm rounded-lg border border-surface-border px-3 py-2 bg-white text-ink"
             />
+          </div>
+
+          <div className="mb-5">
+            <div className="flex flex-wrap items-start justify-between gap-2 mb-1">
+              <div>
+                <label className="block text-xs font-medium text-ink-muted">Expected result</label>
+                <p className="text-[11px] text-ink-subtle mt-0.5">
+                  Hasil yang diharapkan untuk test case ini — teks dan/atau screenshot.
+                </p>
+              </div>
+              <div>
+                <input
+                  ref={expectedImageInputRef}
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp,image/gif"
+                  multiple
+                  className="hidden"
+                  onChange={(e) => handleUploadExpectedImages(e.target.files)}
+                />
+                <ExportFormatButton
+                  format="primary"
+                  icon={uploadingExpectedImage ? Loader2 : ImagePlus}
+                  onClick={() => expectedImageInputRef.current?.click()}
+                  disabled={uploadingExpectedImage}
+                  className={uploadingExpectedImage ? '[&_svg]:animate-spin' : ''}
+                >
+                  {uploadingExpectedImage ? 'Uploading…' : 'Tambah gambar'}
+                </ExportFormatButton>
+              </div>
+            </div>
+            <textarea
+              value={caseMeta.expectedResult}
+              onChange={(e) => setCaseMeta((m) => ({ ...m, expectedResult: e.target.value }))}
+              rows={3}
+              placeholder="Mis. User berhasil login dan diarahkan ke dashboard…"
+              className="w-full text-sm rounded-lg border border-surface-border px-3 py-2 bg-white text-ink"
+            />
+            {expectedResultImages.length > 0 ? (
+              <ul className="mt-3 grid gap-3 sm:grid-cols-3">
+                {expectedResultImages.map((img) => (
+                  <li
+                    key={img.id}
+                    className="relative group rounded-xl border border-surface-border bg-white overflow-hidden"
+                  >
+                    <a href={img.url} target="_blank" rel="noopener noreferrer" className="block">
+                      <img
+                        src={img.url}
+                        alt={img.originalName}
+                        className="w-full h-28 object-cover"
+                      />
+                    </a>
+                    <div className="flex items-center justify-between gap-2 px-2 py-1.5">
+                      <span className="text-[11px] text-ink-muted truncate" title={img.originalName}>
+                        {img.originalName}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteExpectedImage(img.id)}
+                        disabled={deletingExpectedImageId === img.id}
+                        className="shrink-0 text-[11px] text-red-600 hover:text-red-700 disabled:opacity-50"
+                      >
+                        {deletingExpectedImageId === img.id ? '…' : 'Hapus'}
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <button
+                type="button"
+                onClick={() => expectedImageInputRef.current?.click()}
+                disabled={uploadingExpectedImage}
+                className="mt-3 w-full rounded-xl border border-dashed border-surface-border bg-surface-muted/40 px-4 py-6 text-center hover:bg-surface-muted/70 transition-colors"
+              >
+                <Upload size={18} className="mx-auto text-ink-subtle mb-1.5" />
+                <p className="text-xs text-ink-muted">Belum ada gambar — klik untuk upload screenshot expected result</p>
+              </button>
+            )}
           </div>
 
           {/* Steps — same Details panel as Testiny */}
@@ -1923,6 +2047,8 @@ export default function ScenarioDetailPage() {
               scenarioName={scenario?.name || 'Scenario'}
               scenarioCode={scenario?.scenarioCode || scenario?.code || ''}
               precondition={scenario?.precondition || caseMeta.precondition}
+              expectedResult={scenario?.expectedResult || caseMeta.expectedResult}
+              expectedResultImages={expectedResultImages}
               assigneeOverride={scenario?.owner || null}
             />
           </Card>

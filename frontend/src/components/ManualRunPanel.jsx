@@ -43,6 +43,8 @@ export default function ManualRunPanel({
   scenarioName = 'Manual run',
   scenarioCode = '',
   precondition = '',
+  expectedResult = '',
+  expectedResultImages = [],
   assigneeOverride = null,
 }) {
   const user = useAuthStore((s) => s.user)
@@ -210,6 +212,37 @@ export default function ManualRunPanel({
             <p className="text-xs text-slate-600 mt-1 bg-amber-50 border border-amber-200 rounded-md px-2 py-1.5 max-w-2xl">
               <span className="font-semibold">Precondition:</span> {precondition}
             </p>
+          ) : null}
+          {(expectedResult || (expectedResultImages && expectedResultImages.length > 0)) ? (
+            <div className="mt-1.5 max-w-2xl rounded-md border border-sky-200 bg-sky-50 px-2 py-1.5">
+              {expectedResult ? (
+                <p className="text-xs text-slate-700 whitespace-pre-wrap">
+                  <span className="font-semibold">Expected result:</span> {expectedResult}
+                </p>
+              ) : (
+                <p className="text-xs font-semibold text-slate-700">Expected result</p>
+              )}
+              {expectedResultImages?.length > 0 ? (
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {expectedResultImages.map((img) => (
+                    <a
+                      key={img.id}
+                      href={img.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block"
+                      title={img.originalName}
+                    >
+                      <img
+                        src={img.url}
+                        alt={img.originalName || 'Expected result'}
+                        className="h-16 w-24 object-cover rounded border border-sky-200 bg-white"
+                      />
+                    </a>
+                  ))}
+                </div>
+              ) : null}
+            </div>
           ) : null}
         </div>
         <div className="flex flex-wrap items-center gap-2">

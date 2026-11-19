@@ -258,6 +258,8 @@ model Scenario {
   description  String?
   /// Testiny-style: what must be true before steps
   precondition String?
+  /// Case-level expected result (text); images use attachments kind=EXPECTED_RESULT
+  expectedResult String?
   /// LOW | MEDIUM | HIGH | CRITICAL
   priority     String   @default("MEDIUM")
   /// Functional | Regression | Smoke | Other
@@ -369,6 +371,7 @@ model ScenarioAuditLog {
 }
 
 /// Files attached to a test case (Testiny Attachments tab)
+/// kind: GENERAL | EXPECTED_RESULT
 model ScenarioAttachment {
   id           String   @id @default(cuid())
   filename     String
@@ -376,6 +379,8 @@ model ScenarioAttachment {
   mimeType     String
   size         Int
   url          String
+  /// GENERAL = Attachments tab; EXPECTED_RESULT = Details expected-result images
+  kind         String   @default("GENERAL")
   createdAt    DateTime @default(now())
   scenarioId   String
   uploadedById String?
@@ -383,6 +388,7 @@ model ScenarioAttachment {
   scenario Scenario @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
 
   @@index([scenarioId])
+  @@index([scenarioId, kind])
   @@map("scenario_attachments")
 }
 

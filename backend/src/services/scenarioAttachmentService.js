@@ -5,7 +5,7 @@ import { getScenarioById } from './scenarioService.js'
 
 export const SCENARIO_ATTACHMENTS_DIR = path.resolve(process.cwd(), 'uploads/scenario-attachments')
 
-const MAX_FILES_PER_SCENARIO = 12
+const MAX_FILES_PER_SCENARIO = 16
 const MAX_FILE_BYTES = 8 * 1024 * 1024 // 8 MB
 const ALLOWED_MIME = new Set([
   'image/png',
@@ -15,12 +15,26 @@ const ALLOWED_MIME = new Set([
   'image/gif',
   'application/pdf',
 ])
+const IMAGE_MIME = new Set([
+  'image/png',
+  'image/jpeg',
+  'image/jpg',
+  'image/webp',
+  'image/gif',
+])
+
+export const ATTACHMENT_KINDS = new Set(['GENERAL', 'EXPECTED_RESULT'])
 
 function safeName(originalName = 'file') {
   return String(originalName)
     .replace(/[^\w.\-()+ ]+/g, '_')
     .replace(/\s+/g, '_')
     .slice(0, 120)
+}
+
+function normalizeKind(kind) {
+  const k = String(kind || 'GENERAL').trim().toUpperCase()
+  return ATTACHMENT_KINDS.has(k) ? k : 'GENERAL'
 }
 
 export async function ensureScenarioAttachmentDir() {
@@ -31,10 +45,12 @@ export async function ensureScenarioAttachmentDir() {
  * @param {string} userId
  * @param {string} scenarioId
  * @param {Express.Multer.File[]} files
+ * @param {{ kind?: string }} [options]
  */
-export async function addScenarioAttachments(userId, scenarioId, files = []) {
+export async function addScenarioAttachments(userId, scenarioId, files = [], options = {}) {
   await getScenarioById(scenarioId, userId)
 
+  const kind = normalizeKind(options.kind)
   const existing = await prisma.scenarioAttachment.count({ where: { scenarioId } })
   const incoming = Array.isArray(files) ? files.filter(Boolean) : []
   if (incoming.length === 0) {
@@ -54,7 +70,14 @@ export async function addScenarioAttachments(userId, scenarioId, files = []) {
   const created = []
   for (const file of incoming) {
     const mime = String(file.mimetype || '').toLowerCase()
-    if (!ALLOWED_MIME.has(mime)) {
+    if (kind === 'EXPECTED_RESULT') {
+      if (!IMAGE_MIME.has(mime)) {
+        throw Object.assign(
+          new Error(`Expected result hanya menerima gambar (PNG/JPG/WEBP/GIF): ${file.originalname}`),
+          { status: 400 }
+        )
+      }
+    } else if (!ALLOWED_MIME.has(mime)) {
       throw Object.assign(
         new Error(`Tipe file tidak didukung: ${file.originalname}. Pakai PNG/JPG/WEBP/GIF/PDF.`),
         { status: 400 }
@@ -84,6 +107,7 @@ export async function addScenarioAttachments(userId, scenarioId, files = []) {
         mimeType: mime,
         size: file.size || buffer.length,
         url,
+        kind,
         uploadedById: userId,
       },
     })
@@ -93,10 +117,14 @@ export async function addScenarioAttachments(userId, scenarioId, files = []) {
   return created
 }
 
-export async function listScenarioAttachments(userId, scenarioId) {
+export async function listScenarioAttachments(userId, scenarioId, options = {}) {
   await getScenarioById(scenarioId, userId)
+  const where = { scenarioId }
+  if (options.kind) {
+    where.kind = normalizeKind(options.kind)
+  }
   return prisma.scenarioAttachment.findMany({
-    where: { scenarioId },
+    where,
     orderBy: { createdAt: 'asc' },
   })
 }
@@ -116,4 +144,4 @@ export async function deleteScenarioAttachment(userId, scenarioId, attachmentId)
   return { ok: true }
 }
 
-export { MAX_FILES_PER_SCENARIO, MAX_FILE_BYTES, ALLOWED_MIME }
+export { MAX_FILES_PER_SCENARIO, MAX_FILE_BYTES, ALLOWED_MIME, IMAGE_MIME }
