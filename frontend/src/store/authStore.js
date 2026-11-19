@@ -29,10 +29,12 @@ export const useAuthStore = create((set) => ({
 
       // Update store
       set({ user, token, isLoading: false })
+      toast.success('Akun berhasil dibuat — selamat datang!')
       return response.data
     } catch (error) {
       const errorMessage = error.response?.data?.message || 'Registration failed'
       set({ error: errorMessage, isLoading: false })
+      toast.error(errorMessage)
       throw new Error(errorMessage)
     }
   },
@@ -51,11 +53,13 @@ export const useAuthStore = create((set) => ({
 
       // Update store
       set({ user, token, isLoading: false })
+      toast.success('Login berhasil')
       return response.data
     } catch (error) {
       const errorMessage = error.response?.data?.message || 'Login failed'
       const errorCode = error.response?.data?.code
       set({ error: errorMessage, isLoading: false })
+      toast.error(errorMessage)
       const err = new Error(errorMessage)
       err.code = errorCode
       throw err
@@ -65,6 +69,7 @@ export const useAuthStore = create((set) => ({
   logout: () => {
     authAPI.logout()
     set({ user: null, token: null, error: null })
+    toast.success('Logout berhasil')
   },
 
   clearError: () => {

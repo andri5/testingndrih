@@ -4,6 +4,7 @@ import Layout from '../components/Layout'
 import { Card, Badge, Spinner, Alert, Button } from '../components/ui'
 import ExportFormatButton from '../components/ExportFormatButton'
 import { testRunAPI, scenarioAPI } from '../services/api'
+import toast from 'react-hot-toast'
 import { ListChecks, Plus, Loader2, RefreshCw, Folder } from 'lucide-react'
 
 function groupScenariosByFeature(scenarios = []) {
@@ -119,9 +120,12 @@ export default function TestRunsPage() {
         scenarioIds: [...selected],
       })
       setShowCreate(false)
+      toast.success('Test Run berhasil dibuat')
       navigate(`/test-runs/${res.data.run.id}`)
     } catch (err) {
-      setError(err.response?.data?.message || 'Gagal membuat test run')
+      const msg = err.response?.data?.message || 'Gagal membuat test run'
+      setError(msg)
+      toast.error(msg)
     } finally {
       setCreating(false)
     }

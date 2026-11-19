@@ -1,10 +1,39 @@
 import { useRef, useState } from 'react'
-import { Paperclip, Trash2, FileText, Loader2, Upload } from 'lucide-react'
+import {
+  Paperclip,
+  Trash2,
+  FileText,
+  FileSpreadsheet,
+  FileType,
+  Loader2,
+  Upload,
+  Eye,
+} from 'lucide-react'
+import toast from 'react-hot-toast'
 import { scenarioAPI } from '../services/api'
 import ExportFormatButton from './ExportFormatButton'
+import AttachmentPreviewModal from './AttachmentPreviewModal'
+
+const ACCEPT =
+  'image/png,image/jpeg,image/webp,image/gif,application/pdf,' +
+  'application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,' +
+  'application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,' +
+  'text/csv,.doc,.docx,.xls,.xlsx,.pdf,.odt,.ods'
 
 function isImageMime(mime) {
   return String(mime || '').startsWith('image/')
+}
+
+function fileIcon(mime, name = '') {
+  const m = String(mime || '').toLowerCase()
+  const n = String(name || '').toLowerCase()
+  if (m.includes('sheet') || m.includes('excel') || m.includes('csv') || /\.(xlsx?|csv|ods)$/.test(n)) {
+    return FileSpreadsheet
+  }
+  if (m.includes('word') || m.includes('msword') || /\.(docx?|odt)$/.test(n)) {
+    return FileType
+  }
+  return FileText
 }
 
 function formatBytes(n) {
@@ -26,6 +55,7 @@ export default function CaseAttachmentsPanel({
   const [uploading, setUploading] = useState(false)
   const [deletingId, setDeletingId] = useState(null)
   const [error, setError] = useState(null)
+  const [preview, setPreview] = useState(null)
 
   const handleUpload = async (fileList) => {
     const files = [...(fileList || [])]
@@ -35,8 +65,11 @@ export default function CaseAttachmentsPanel({
     try {
       await scenarioAPI.uploadAttachments(scenarioId, files, { kind: 'GENERAL' })
       await onRefresh?.()
+      toast.success(files.length > 1 ? `${files.length} file diunggah` : 'File diunggah')
     } catch (err) {
-      setError(err.response?.data?.message || err.message || 'Upload gagal')
+      const msg = err.response?.data?.message || err.message || 'Upload gagal'
+      setError(msg)
+      toast.error(msg)
     } finally {
       setUploading(false)
       if (inputRef.current) inputRef.current.value = ''
@@ -50,8 +83,12 @@ export default function CaseAttachmentsPanel({
     try {
       await scenarioAPI.deleteAttachment(scenarioId, attachmentId)
       await onRefresh?.()
+      toast.success('Attachment dihapus')
+      if (preview?.id === attachmentId) setPreview(null)
     } catch (err) {
-      setError(err.response?.data?.message || err.message || 'Gagal hapus')
+      const msg = err.response?.data?.message || err.message || 'Gagal hapus'
+      setError(msg)
+      toast.error(msg)
     } finally {
       setDeletingId(null)
     }
@@ -59,18 +96,18 @@ export default function CaseAttachmentsPanel({
 
   return (
     <div>
-      <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
-        <div>
+      <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-start sm:justify-between gap-3 mb-4">
+        <div className="min-w-0">
           <h3 className="text-sm font-bold text-ink uppercase tracking-wider">Attachments</h3>
           <p className="text-xs text-ink-muted mt-0.5">
-            Screenshot, PDF, atau evidence untuk test case ini (maks. 12 · 8MB).
+            Gambar, PDF, Excel, atau Word sebagai evidence (maks. 16 · 8MB).
           </p>
         </div>
-        <div>
+        <div className="w-full sm:w-auto">
           <input
             ref={inputRef}
             type="file"
-            accept="image/png,image/jpeg,image/webp,image/gif,application/pdf"
+            accept={ACCEPT}
             multiple
             className="hidden"
             onChange={(e) => handleUpload(e.target.files)}
@@ -80,9 +117,9 @@ export default function CaseAttachmentsPanel({
             icon={uploading ? Loader2 : Upload}
             onClick={() => inputRef.current?.click()}
             disabled={uploading}
-            className={uploading ? '[&_svg]:animate-spin' : ''}
+            className={`w-full sm:w-auto justify-center ${uploading ? '[&_svg]:animate-spin' : ''}`}
           >
-            {uploading ? 'Uploading…' : 'Upload'}
+            {uploading ? 'Uploading…' : 'Upload file'}
           </ExportFormatButton>
         </div>
       </div>
@@ -97,55 +134,84 @@ export default function CaseAttachmentsPanel({
         <div className="rounded-xl border border-dashed border-surface-border bg-surface-muted/50 px-4 py-10 text-center">
           <Paperclip size={22} className="mx-auto text-ink-subtle mb-2" />
           <p className="text-sm text-ink-muted">Belum ada attachment</p>
-          <p className="text-xs text-ink-subtle mt-1">Drag file ke sini tidak wajib — pakai Upload.</p>
+          <p className="text-xs text-ink-subtle mt-1">
+            Upload gambar, PDF, Excel (.xls/.xlsx), atau Word (.doc/.docx).
+          </p>
         </div>
       ) : (
         <ul className="grid gap-3 sm:grid-cols-2">
-          {attachments.map((a) => (
-            <li
-              key={a.id}
-              className="flex gap-3 rounded-xl border border-surface-border bg-white p-3"
-            >
-              {isImageMime(a.mimeType) ? (
-                <a href={a.url} target="_blank" rel="noopener noreferrer" className="shrink-0">
-                  <img
-                    src={a.url}
-                    alt={a.originalName}
-                    className="w-16 h-16 object-cover rounded-lg border border-surface-border"
-                  />
-                </a>
-              ) : (
-                <div className="w-16 h-16 rounded-lg bg-surface-muted flex items-center justify-center shrink-0">
-                  <FileText size={22} className="text-brand" />
+          {attachments.map((a) => {
+            const Icon = fileIcon(a.mimeType, a.originalName)
+            return (
+              <li
+                key={a.id}
+                className="flex gap-3 rounded-xl border border-surface-border bg-white p-3"
+              >
+                {isImageMime(a.mimeType) ? (
+                  <button
+                    type="button"
+                    onClick={() => setPreview(a)}
+                    className="shrink-0 relative group"
+                    title="Preview"
+                  >
+                    <img
+                      src={a.url}
+                      alt={a.originalName}
+                      className="w-16 h-16 object-cover rounded-lg border border-surface-border"
+                    />
+                    <span className="absolute inset-0 rounded-lg bg-slate-900/0 group-hover:bg-slate-900/35 flex items-center justify-center transition-colors">
+                      <Eye size={16} className="text-white opacity-0 group-hover:opacity-100" />
+                    </span>
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setPreview(a)}
+                    className="w-16 h-16 rounded-lg bg-surface-muted flex items-center justify-center shrink-0 hover:ring-2 hover:ring-brand/40"
+                    title="Preview / buka"
+                  >
+                    <Icon size={22} className="text-brand" />
+                  </button>
+                )}
+                <div className="min-w-0 flex-1">
+                  <button
+                    type="button"
+                    onClick={() => setPreview(a)}
+                    className="text-sm font-medium text-ink hover:text-brand truncate block text-left w-full"
+                    title={a.originalName}
+                  >
+                    {a.originalName}
+                  </button>
+                  <p className="text-xs text-ink-muted mt-0.5">
+                    {formatBytes(a.size)} · {new Date(a.createdAt).toLocaleString()}
+                  </p>
+                  <div className="mt-2 flex flex-wrap items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setPreview(a)}
+                      className="inline-flex items-center gap-1 text-xs text-brand hover:text-brand-hover"
+                    >
+                      <Eye size={12} />
+                      Preview
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(a.id)}
+                      disabled={deletingId === a.id}
+                      className="inline-flex items-center gap-1 text-xs text-red-600 hover:text-red-700 disabled:opacity-50"
+                    >
+                      {deletingId === a.id ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} />}
+                      Hapus
+                    </button>
+                  </div>
                 </div>
-              )}
-              <div className="min-w-0 flex-1">
-                <a
-                  href={a.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm font-medium text-ink hover:text-brand truncate block"
-                  title={a.originalName}
-                >
-                  {a.originalName}
-                </a>
-                <p className="text-xs text-ink-muted mt-0.5">
-                  {formatBytes(a.size)} · {new Date(a.createdAt).toLocaleString()}
-                </p>
-                <button
-                  type="button"
-                  onClick={() => handleDelete(a.id)}
-                  disabled={deletingId === a.id}
-                  className="mt-2 inline-flex items-center gap-1 text-xs text-red-600 hover:text-red-700 disabled:opacity-50"
-                >
-                  {deletingId === a.id ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} />}
-                  Hapus
-                </button>
-              </div>
-            </li>
-          ))}
+              </li>
+            )
+          })}
         </ul>
       )}
+
+      <AttachmentPreviewModal attachment={preview} onClose={() => setPreview(null)} />
     </div>
   )
 }

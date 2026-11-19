@@ -90,10 +90,29 @@ export default function App() {
   return (
     <ErrorBoundary>
       <Toaster
-        position="top-right"
+        position="top-center"
+        containerStyle={{
+          top: 12,
+          left: 12,
+          right: 12,
+        }}
         toastOptions={{
-          duration: 4000,
-          style: { background: '#1A1A1C', color: '#E0E0E2', border: '1px solid rgba(255,255,255,0.1)' }
+          duration: 3500,
+          className: 'max-w-[calc(100vw-1.5rem)] sm:max-w-sm',
+          style: {
+            background: '#ffffff',
+            color: '#12202a',
+            border: '1px solid #d5e0e0',
+            boxShadow: '0 8px 24px rgba(15, 23, 42, 0.08)',
+            fontSize: '13px',
+            wordBreak: 'break-word',
+          },
+          success: {
+            iconTheme: { primary: '#0F766E', secondary: '#ffffff' },
+          },
+          error: {
+            iconTheme: { primary: '#DC2626', secondary: '#ffffff' },
+          },
         }}
       />
       <OfflineBanner />

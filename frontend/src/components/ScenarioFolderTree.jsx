@@ -12,6 +12,7 @@ import {
   Trash2,
 } from 'lucide-react'
 import { useFolderStore } from '../store/folderStore'
+import toast from 'react-hot-toast'
 
 function readScenarioDragId(dt) {
   const custom = (dt.getData('application/x-scenario-id') || '').trim()
@@ -211,8 +212,9 @@ export default function ScenarioFolderTree({ onSelectionChange, onDropScenario }
       if (folderId === targetFolderId) return
       try {
         await moveFolder(folderId, targetFolderId ?? null)
+        toast.success('Folder dipindahkan')
       } catch (e) {
-        window.alert(e.response?.data?.message || e.message || 'Failed to move folder')
+        toast.error(e.response?.data?.message || e.message || 'Gagal memindahkan folder')
       }
     }
   }
@@ -226,8 +228,9 @@ export default function ScenarioFolderTree({ onSelectionChange, onDropScenario }
     if (!name?.trim()) return
     try {
       await createFolder(name.trim(), parentId)
+      toast.success('Folder berhasil dibuat')
     } catch (e) {
-      window.alert(e.response?.data?.message || e.message || 'Failed to create folder')
+      toast.error(e.response?.data?.message || e.message || 'Gagal membuat folder')
     }
   }
 
@@ -236,8 +239,9 @@ export default function ScenarioFolderTree({ onSelectionChange, onDropScenario }
     if (!name?.trim() || name.trim() === node.name) return
     try {
       await renameFolder(node.id, name.trim())
+      toast.success('Folder berhasil diubah')
     } catch (e) {
-      window.alert(e.response?.data?.message || e.message || 'Failed to rename')
+      toast.error(e.response?.data?.message || e.message || 'Gagal rename folder')
     }
   }
 
@@ -246,8 +250,9 @@ export default function ScenarioFolderTree({ onSelectionChange, onDropScenario }
     try {
       await deleteFolder(node.id)
       onSelectionChange?.(useFolderStore.getState().selectedKey)
+      toast.success('Folder berhasil dihapus')
     } catch (e) {
-      window.alert(e.response?.data?.message || e.message || 'Failed to delete')
+      toast.error(e.response?.data?.message || e.message || 'Gagal menghapus folder')
     }
   }
 

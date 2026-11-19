@@ -14,6 +14,15 @@ const ALLOWED_MIME = new Set([
   'image/webp',
   'image/gif',
   'application/pdf',
+  // Excel
+  'application/vnd.ms-excel',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'application/vnd.oasis.opendocument.spreadsheet',
+  'text/csv',
+  // Word
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.oasis.opendocument.text',
 ])
 const IMAGE_MIME = new Set([
   'image/png',
@@ -22,6 +31,20 @@ const IMAGE_MIME = new Set([
   'image/webp',
   'image/gif',
 ])
+const ALLOWED_EXT = /\.(png|jpe?g|webp|gif|pdf|xlsx?|docx?|odt|ods|csv)$/i
+
+function isAllowedGeneralFile(file) {
+  const mime = String(file.mimetype || '').toLowerCase()
+  if (ALLOWED_MIME.has(mime)) return true
+  // Some browsers send octet-stream for Office files — allow by extension
+  if (
+    (mime === 'application/octet-stream' || mime === 'binary/octet-stream' || !mime) &&
+    ALLOWED_EXT.test(file.originalname || '')
+  ) {
+    return true
+  }
+  return false
+}
 
 export const ATTACHMENT_KINDS = new Set(['GENERAL', 'EXPECTED_RESULT'])
 
@@ -77,9 +100,11 @@ export async function addScenarioAttachments(userId, scenarioId, files = [], opt
           { status: 400 }
         )
       }
-    } else if (!ALLOWED_MIME.has(mime)) {
+    } else if (!isAllowedGeneralFile(file)) {
       throw Object.assign(
-        new Error(`Tipe file tidak didukung: ${file.originalname}. Pakai PNG/JPG/WEBP/GIF/PDF.`),
+        new Error(
+          `Tipe file tidak didukung: ${file.originalname}. Pakai gambar, PDF, Excel (.xls/.xlsx), atau Word (.doc/.docx).`
+        ),
         { status: 400 }
       )
     }

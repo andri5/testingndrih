@@ -13,9 +13,11 @@ import ShareRunModal from '../components/ShareRunModal'
 import TargetKindBanner, { defaultTargetKindLabels } from '../components/TargetKindBanner'
 import ManualRunPanel from '../components/ManualRunPanel'
 import CaseAttachmentsPanel from '../components/CaseAttachmentsPanel'
+import AttachmentPreviewModal from '../components/AttachmentPreviewModal'
 import CaseRunsPanel from '../components/CaseRunsPanel'
 import CaseHistoryPanel from '../components/CaseHistoryPanel'
 import { useFolderStore } from '../store/folderStore'
+import toast from 'react-hot-toast'
 
 const RecordIcon = (props) => <Circle {...props} className="text-red-500 fill-red-500" />
 
@@ -288,6 +290,7 @@ export default function ScenarioDetailPage() {
   const [isSavingCaseMeta, setIsSavingCaseMeta] = useState(false)
   const [uploadingExpectedImage, setUploadingExpectedImage] = useState(false)
   const [deletingExpectedImageId, setDeletingExpectedImageId] = useState(null)
+  const [previewAttachment, setPreviewAttachment] = useState(null)
   const expectedImageInputRef = useRef(null)
   /** Testiny-style case tabs */
   const [caseTab, setCaseTab] = useState('details') // details | attachments | runs | history
@@ -396,7 +399,13 @@ export default function ScenarioDetailPage() {
 
   const showSuccess = (msg) => {
     setSuccessMsg(msg)
+    toast.success(msg)
     setTimeout(() => setSuccessMsg(null), 3000)
+  }
+
+  const showActionError = (msg) => {
+    setError(msg)
+    toast.error(msg)
   }
   const t = i18n
   // Close step form modal on Escape
@@ -530,7 +539,7 @@ export default function ScenarioDetailPage() {
       setScenario((prev) => ({ ...prev, ...updated }))
       showSuccess('Detail test case disimpan')
     } catch (err) {
-      setError(err.response?.data?.error || err.response?.data?.message || 'Gagal simpan detail case')
+      showActionError(err.response?.data?.error || err.response?.data?.message || 'Gagal simpan detail case')
     } finally {
       setIsSavingCaseMeta(false)
     }
@@ -558,7 +567,7 @@ export default function ScenarioDetailPage() {
       await refreshCaseAttachments()
       showSuccess('Gambar expected result diunggah')
     } catch (err) {
-      setError(err.response?.data?.message || err.message || 'Gagal upload gambar expected result')
+      showActionError(err.response?.data?.message || err.message || 'Gagal upload gambar expected result')
     } finally {
       setUploadingExpectedImage(false)
       if (expectedImageInputRef.current) expectedImageInputRef.current.value = ''
@@ -572,8 +581,9 @@ export default function ScenarioDetailPage() {
     try {
       await scenarioAPI.deleteAttachment(id, attachmentId)
       await refreshCaseAttachments()
+      showSuccess('Gambar expected result dihapus')
     } catch (err) {
-      setError(err.response?.data?.message || err.message || 'Gagal hapus gambar')
+      showActionError(err.response?.data?.message || err.message || 'Gagal hapus gambar')
     } finally {
       setDeletingExpectedImageId(null)
     }
@@ -656,7 +666,7 @@ export default function ScenarioDetailPage() {
       cancelForm()
       await loadSteps()
     } catch (err) {
-      setError(err.response?.data?.error || t.saveStepError)
+      showActionError(err.response?.data?.error || t.saveStepError)
     } finally {
       setIsSaving(false)
     }
@@ -671,7 +681,7 @@ export default function ScenarioDetailPage() {
       setSelectedStepIds(prev => { const next = new Set(prev); next.delete(stepId); return next })
       await loadSteps()
     } catch (err) {
-      setError(err.response?.data?.error || t.deleteStepError)
+      showActionError(err.response?.data?.error || t.deleteStepError)
     }
   }
 
@@ -709,7 +719,7 @@ export default function ScenarioDetailPage() {
       setSelectedStepIds(new Set())
       await loadSteps()
     } catch (err) {
-      setError(err.response?.data?.error || t.deleteStepsError)
+      showActionError(err.response?.data?.error || t.deleteStepsError)
     } finally {
       setIsDeletingBulk(false)
     }
@@ -750,7 +760,7 @@ export default function ScenarioDetailPage() {
       setSelectedStepIds(new Set())
       await loadSteps()
     } catch (err) {
-      setError(err.response?.data?.error || err.response?.data?.message || t.copyStepsError)
+      showActionError(err.response?.data?.error || err.response?.data?.message || t.copyStepsError)
       await loadSteps()
     } finally {
       setIsCopyingBulk(false)
@@ -1886,23 +1896,33 @@ export default function ScenarioDetailPage() {
               className="w-full text-sm rounded-lg border border-surface-border px-3 py-2 bg-white text-ink"
             />
             {expectedResultImages.length > 0 ? (
-              <ul className="mt-3 grid gap-3 sm:grid-cols-3">
+              <ul className="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {expectedResultImages.map((img) => (
                   <li
                     key={img.id}
                     className="relative group rounded-xl border border-surface-border bg-white overflow-hidden"
                   >
-                    <a href={img.url} target="_blank" rel="noopener noreferrer" className="block">
+                    <button
+                      type="button"
+                      onClick={() => setPreviewAttachment(img)}
+                      className="block w-full text-left"
+                      title="Preview gambar"
+                    >
                       <img
                         src={img.url}
                         alt={img.originalName}
                         className="w-full h-28 object-cover"
                       />
-                    </a>
+                    </button>
                     <div className="flex items-center justify-between gap-2 px-2 py-1.5">
-                      <span className="text-[11px] text-ink-muted truncate" title={img.originalName}>
+                      <button
+                        type="button"
+                        onClick={() => setPreviewAttachment(img)}
+                        className="text-[11px] text-ink-muted truncate hover:text-brand text-left"
+                        title={img.originalName}
+                      >
                         {img.originalName}
-                      </span>
+                      </button>
                       <button
                         type="button"
                         onClick={() => handleDeleteExpectedImage(img.id)}
@@ -1971,7 +1991,7 @@ export default function ScenarioDetailPage() {
             </div>
 
             {showStepForm && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
+              <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 modal-backdrop">
                 <div
                   className="absolute inset-0 backdrop-blur-sm bg-black/40"
                   onClick={cancelForm}
@@ -1982,27 +2002,27 @@ export default function ScenarioDetailPage() {
                   role="dialog"
                   aria-modal="true"
                   aria-label={editingStep ? t.editStep : t.addNewStep}
-                  className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl border bg-white border-gray-200"
+                  className="relative w-full sm:max-w-2xl max-h-[92vh] sm:max-h-[90vh] overflow-y-auto rounded-t-2xl sm:rounded-2xl shadow-2xl border bg-white border-gray-200 pb-[env(safe-area-inset-bottom)]"
                 >
-                  <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-[#0F766E]/15 flex items-center justify-center">
+                  <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100 sticky top-0 bg-white z-10">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-8 h-8 rounded-lg bg-[#0F766E]/15 flex items-center justify-center shrink-0">
                         <span className="text-[#0F766E] text-sm">{editingStep ? '✏️' : '+'}</span>
                       </div>
-                      <h3 className="text-lg font-semibold text-gray-900">
+                      <h3 className="text-base sm:text-lg font-semibold text-gray-900 truncate">
                         {editingStep ? t.editStep : t.addNewStep}
                       </h3>
                     </div>
                     <button
                       onClick={cancelForm}
                       aria-label={t.closeDialog}
-                      className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-gray-100"
+                      className="w-9 h-9 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-gray-100 shrink-0"
                     >
                       ✕
                     </button>
                   </div>
 
-                  <div className="px-6 py-5">
+                  <div className="px-4 sm:px-6 py-4 sm:py-5">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                       <div>
                         <label className="block text-sm font-medium mb-1 text-gray-700">
@@ -2105,17 +2125,17 @@ export default function ScenarioDetailPage() {
                     )}
                   </div>
 
-                  <div className="flex flex-wrap gap-3 px-6 py-4 border-t border-gray-100">
+                  <div className="flex flex-col-reverse sm:flex-row flex-wrap gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 border-t border-gray-100 sticky bottom-0 bg-white">
                     <ExportFormatButton
                       format="primary"
                       icon={isSaving ? Loader2 : Save}
                       onClick={handleSaveStep}
                       disabled={isSaving}
-                      className={`flex-1 sm:flex-none justify-center ${isSaving ? '[&_svg]:animate-spin' : ''}`}
+                      className={`w-full sm:w-auto sm:flex-none justify-center ${isSaving ? '[&_svg]:animate-spin' : ''}`}
                     >
                       {isSaving ? t.saving : editingStep ? t.updateStepBtn : t.saveStepBtn}
                     </ExportFormatButton>
-                    <ExportFormatButton format="json" icon={null} onClick={cancelForm} className="flex-1 sm:flex-none justify-center">
+                    <ExportFormatButton format="json" icon={null} onClick={cancelForm} className="w-full sm:w-auto sm:flex-none justify-center">
                       {t.cancel}
                     </ExportFormatButton>
                   </div>
@@ -2164,6 +2184,11 @@ export default function ScenarioDetailPage() {
         {/* Alerts */}
         {error && <Alert type="error" message={error} onClose={() => setError(null)} />}
         {successMsg && <Alert type="success" message={successMsg} />}
+
+        <AttachmentPreviewModal
+          attachment={previewAttachment}
+          onClose={() => setPreviewAttachment(null)}
+        />
 
         {/* Browser Selector */}
         {showBrowserSelector && (

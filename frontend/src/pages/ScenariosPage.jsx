@@ -14,6 +14,7 @@ import { Tooltip } from '../components/ui'
 import { useScenarioStore } from '../store/scenarioStore'
 import { useFolderStore } from '../store/folderStore'
 import { executionAPI, testRunAPI, scenarioAPI } from '../services/api'
+import toast from 'react-hot-toast'
 const i18n = {
     title: 'Test Repository',
     subtitle: '1 folder = 1 fitur → buat case di dalamnya → isi steps di detail',
@@ -143,8 +144,9 @@ export default function ScenariosPage() {
   const handleMoveRequest = async (scenarioId, folderId) => {
     try {
       await moveScenarios([scenarioId], folderId)
+      toast.success('Case dipindahkan')
     } catch (err) {
-      alert(err.message || 'Failed to move scenario')
+      toast.error(err.message || 'Gagal memindahkan case')
     }
   }
 
@@ -183,9 +185,10 @@ export default function ScenariosPage() {
 
     try {
       await moveScenarios(ids, folderId, sortOrders)
+      toast.success('Urutan case disimpan')
     } catch (err) {
       await fetchScenarios(0, pageSize, '', { favoritesOnly, tag: filterTag })
-      alert(err.message || 'Failed to reorder')
+      toast.error(err.message || 'Gagal mengubah urutan')
     }
   }
 
@@ -201,8 +204,9 @@ export default function ScenariosPage() {
     try {
       await moveScenarios([...selectedIds], folderId)
       setSelectedIds(new Set())
+      toast.success('Case terpilih dipindahkan')
     } catch (err) {
-      alert(err.message || 'Failed to move scenarios')
+      toast.error(err.message || 'Gagal memindahkan case')
     }
   }
 
@@ -214,7 +218,7 @@ export default function ScenariosPage() {
     )
     if (title === null) return
     if (!title.trim()) {
-      alert('Judul wajib diisi')
+      toast.error('Judul wajib diisi')
       return
     }
     try {
@@ -223,9 +227,10 @@ export default function ScenariosPage() {
         scenarioIds: [...selectedIds],
       })
       setSelectedIds(new Set())
+      toast.success('Test Run dibuat')
       navigate(`/test-runs/${res.data.run.id}`)
     } catch (err) {
-      alert(err.response?.data?.message || err.message || 'Gagal membuat Test Run')
+      toast.error(err.response?.data?.message || err.message || 'Gagal membuat Test Run')
     }
   }
 
@@ -239,9 +244,9 @@ export default function ScenariosPage() {
       await scenarioAPI.bulkAssignOwner([...selectedIds], ownerId.trim())
       setSelectedIds(new Set())
       refreshList()
-      alert('PIC diperbarui')
+      toast.success('PIC diperbarui')
     } catch (err) {
-      alert(err.response?.data?.message || err.message || 'Gagal assign PIC')
+      toast.error(err.response?.data?.message || err.message || 'Gagal assign PIC')
     }
   }
 
@@ -262,8 +267,9 @@ export default function ScenariosPage() {
     const tags = input.split(',').map((t) => t.trim()).filter(Boolean)
     try {
       await updateScenarioTags(scenario.id, tags)
+      toast.success('Tags disimpan')
     } catch (err) {
-      alert(err.message)
+      toast.error(err.message || 'Gagal menyimpan tags')
     }
   }
 
@@ -289,7 +295,10 @@ export default function ScenariosPage() {
       })
       setShowCreateForm(false)
       refreshList()
-    } catch (error) {}
+      toast.success('Case berhasil dibuat')
+    } catch (error) {
+      toast.error(error.response?.data?.message || error.message || 'Gagal membuat case')
+    }
   }
 
   const handleUpdateScenario = async (formData) => {
@@ -298,7 +307,10 @@ export default function ScenariosPage() {
       setEditingScenario(null)
       refreshList()
       fetchFolders()
-    } catch (error) {}
+      toast.success('Case berhasil diperbarui')
+    } catch (error) {
+      toast.error(error.response?.data?.message || error.message || 'Gagal memperbarui case')
+    }
   }
 
   const handleViewScenario = (scenario) => {
@@ -318,7 +330,10 @@ export default function ScenariosPage() {
       await deleteScenario(scenarioId)
       setSelectedIds(prev => { const n = new Set(prev); n.delete(scenarioId); return n })
       fetchFolders()
-    } catch (error) {}
+      toast.success('Case berhasil dihapus')
+    } catch (error) {
+      toast.error(error.response?.data?.message || error.message || 'Gagal menghapus case')
+    }
   }
 
   const handleDuplicateScenario = async (scenarioOrId) => {
@@ -326,7 +341,10 @@ export default function ScenariosPage() {
     try {
       await duplicateScenario(scenarioId)
       fetchFolders()
-    } catch (error) {}
+      toast.success('Case berhasil diduplikasi')
+    } catch (error) {
+      toast.error(error.response?.data?.message || error.message || 'Gagal menduplikasi case')
+    }
   }
 
   const handleMarkSmoke = async (scenarioId, isSmoking) => {

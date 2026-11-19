@@ -4,6 +4,7 @@ import Layout from '../components/Layout'
 import { Card, Badge, Spinner, Alert, Button } from '../components/ui'
 import ExportFormatButton from '../components/ExportFormatButton'
 import { testRunAPI } from '../services/api'
+import toast from 'react-hot-toast'
 import {
   ArrowLeft,
   Loader2,
@@ -85,8 +86,11 @@ export default function TestRunDetailPage() {
       setNotesFor(null)
       setNotes('')
       setPendingStatus(null)
+      toast.success(`Status diubah: ${status}`)
     } catch (err) {
-      setError(err.response?.data?.message || 'Gagal update result')
+      const msg = err.response?.data?.message || 'Gagal update result'
+      setError(msg)
+      toast.error(msg)
     } finally {
       setBusyId(null)
     }
@@ -109,8 +113,11 @@ export default function TestRunDetailPage() {
     try {
       const res = await testRunAPI.close(id)
       setRun(res.data.run)
+      toast.success('Test Run ditutup (sealed)')
     } catch (err) {
-      setError(err.response?.data?.message || 'Gagal menutup run')
+      const msg = err.response?.data?.message || 'Gagal menutup run'
+      setError(msg)
+      toast.error(msg)
     } finally {
       setClosing(false)
     }
