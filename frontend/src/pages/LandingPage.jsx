@@ -2,9 +2,12 @@ import { Link, useLocation } from 'react-router-dom'
 import {
   PlayCircle,
   ClipboardList,
+  ClipboardCheck,
+  FolderKanban,
+  ListChecks,
+  Image,
+  Mic,
   BarChart2,
-  Layers,
-  GitCompare,
   Zap,
   Globe,
   Clock,
@@ -12,11 +15,9 @@ import {
   Activity,
   Shield,
   Gauge,
-  Image,
-  Webhook,
   ArrowRight,
   CheckCircle2,
-  Mic,
+  Circle,
 } from 'lucide-react'
 import LandingNav, { LandingFooter } from '../components/landing/LandingNav'
 import LandingFeedbackSection from '../components/landing/LandingFeedbackSection'
@@ -26,32 +27,38 @@ import { landingCopy, ADVANCED_LABELS } from '../i18n/landingI18n'
 import { useLandingSEO } from '../hooks/useLandingSEO'
 import { getPublicLang } from '../utils/landingRoutes'
 
-const FEATURE_ICONS = [Mic, ClipboardList, PlayCircle, Layers, BarChart2, GitCompare, Webhook]
+const FEATURE_ICONS = [FolderKanban, ClipboardCheck, ListChecks, Image, ClipboardList, Mic, BarChart2]
 const FEATURE_ICON_CLASSES = [
-  'lp-icon-indigo', 'lp-icon-teal', 'lp-icon-emerald',
-  'lp-icon-indigo', 'lp-icon-amber', 'lp-icon-rose', 'lp-icon-sky',
+  'lp-icon-teal', 'lp-icon-emerald', 'lp-icon-indigo',
+  'lp-icon-amber', 'lp-icon-sky', 'lp-icon-rose', 'lp-icon-indigo',
 ]
 const ADVANCED_ICONS = [Link2, Clock, Globe, Activity, Gauge, Shield, Image, Zap]
 const STEP_NUMS = ['01', '02', '03', '04']
 
 function HeroMockup({ t }) {
+  const cases = [
+    { name: t.mockupCase1, status: 'pass' },
+    { name: t.mockupCase2, status: 'pending' },
+  ]
   return (
     <div className="lp-hero-preview relative overflow-hidden lp-float border border-white/10 shadow-2xl shadow-black/30 rounded-xl">
       <div className="lp-hero-preview__chrome flex items-center gap-2 px-4 py-2.5 bg-[#0a2425] border-b border-white/10">
         <span className="w-2.5 h-2.5 rounded-full bg-red-400/80" />
         <span className="w-2.5 h-2.5 rounded-full bg-amber-400/80" />
         <span className="w-2.5 h-2.5 rounded-full bg-emerald-400/80" />
-        <span className="ml-2 text-[10px] sm:text-xs text-teal-100/50 font-mono truncate">testsambilngopi.my.id/dashboard</span>
+        <span className="ml-2 text-[10px] sm:text-xs text-teal-100/50 font-mono truncate">testsambilngopi.my.id/scenarios</span>
       </div>
-      <div className="lp-hero-preview__body grid grid-cols-1 sm:grid-cols-[5.5rem_1fr] min-h-[220px] sm:min-h-[260px] bg-white">
+      <div className="lp-hero-preview__body grid grid-cols-1 sm:grid-cols-[6.5rem_1fr] min-h-[220px] sm:min-h-[260px] bg-white">
         <div className="bg-[#f7fafa] border-r border-[#d5e0e0] p-2 space-y-1.5 hidden sm:block">
-          {['Dashboard', 'Scenarios', 'Runs'].map((item, i) => (
+          <div className="text-[9px] uppercase tracking-wide text-slate-400 px-2 pt-1">{t.mockupFolder}</div>
+          {['Login', 'Checkout', 'Profile'].map((item, i) => (
             <div
               key={item}
-              className={`text-[9px] sm:text-[10px] px-2 py-1.5 rounded-md truncate ${
-                i === 1 ? 'bg-[#ccfbf1] text-[#0f766e] font-semibold' : 'text-slate-500'
+              className={`text-[9px] sm:text-[10px] px-2 py-1.5 rounded-md truncate flex items-center gap-1.5 ${
+                i === 0 ? 'bg-[#ccfbf1] text-[#0f766e] font-semibold' : 'text-slate-500'
               }`}
             >
+              <FolderKanban size={11} className="shrink-0 opacity-70" />
               {item}
             </div>
           ))}
@@ -59,22 +66,31 @@ function HeroMockup({ t }) {
         <div className="p-3 sm:p-4 space-y-2.5 bg-white">
           <div className="flex items-center justify-between gap-2">
             <span className="text-xs sm:text-sm font-semibold text-[#12202a] truncate">{t.mockupTitle}</span>
-            <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200 shrink-0">
-              PASSED
+            <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-teal-100 text-teal-800 border border-teal-200 shrink-0">
+              {t.mockupRunLabel}
             </span>
           </div>
-          {[
-            { step: 'NAVIGATE', time: '1.2s' },
-            { step: 'FILL email', time: '0.4s' },
-            { step: 'CLICK Submit', time: '0.8s' },
-            { step: 'ASSERTION dashboard', time: '0.3s' },
-          ].map((row) => (
-            <div key={row.step} className="lp-mockup-row flex items-center gap-2 sm:gap-3 px-2.5 sm:px-3 py-2 rounded-lg bg-[#f4f7f7]">
-              <CheckCircle2 size={14} className="text-emerald-500 shrink-0" />
-              <span className="text-[10px] sm:text-xs text-[#5b6b73] flex-1 font-mono truncate">{row.step}</span>
-              <span className="text-[10px] text-[#8a9aa2] shrink-0">{row.time}</span>
+          {cases.map((row) => (
+            <div key={row.name} className="lp-mockup-row flex items-center gap-2 sm:gap-3 px-2.5 sm:px-3 py-2 rounded-lg bg-[#f4f7f7]">
+              {row.status === 'pass' ? (
+                <CheckCircle2 size={14} className="text-emerald-500 shrink-0" />
+              ) : (
+                <Circle size={14} className="text-slate-300 shrink-0" />
+              )}
+              <span className="text-[10px] sm:text-xs text-[#5b6b73] flex-1 truncate">{row.name}</span>
+              <span
+                className={`text-[10px] shrink-0 font-medium ${
+                  row.status === 'pass' ? 'text-emerald-600' : 'text-[#8a9aa2]'
+                }`}
+              >
+                {row.status === 'pass' ? t.mockupPass : t.mockupPending}
+              </span>
             </div>
           ))}
+          <div className="lp-mockup-row flex items-center gap-2 sm:gap-3 px-2.5 sm:px-3 py-2 rounded-lg bg-[#ecfdf5] border border-emerald-100">
+            <ClipboardCheck size={14} className="text-emerald-600 shrink-0" />
+            <span className="text-[10px] sm:text-xs text-emerald-800 flex-1 truncate">Manual Run · checklist</span>
+          </div>
         </div>
       </div>
     </div>

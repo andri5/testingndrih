@@ -72,7 +72,7 @@ const i18n = {
     agentJobFailed: 'Local agent gagal',
     agentJobCancelled: 'Job dibatalkan',
     cancelAgentJob: 'Batalkan antrean',
-    viewAgentExecution: 'Lihat hasil di bawah',
+    viewAgentExecution: 'Buka hasil execution',
     startRecordingError: 'Failed to start recording',
     stepsSavedRecording: (c) => `${c} steps recorded and saved`,
     recordingAutoSaveError: (c, e) => `Recording completed (${c} steps), but failed to auto-save: ${e}. Click "Save" to try again.`,
@@ -473,11 +473,19 @@ export default function ScenarioDetailPage() {
   // Step form handlers
   const openAddForm = () => {
     setEditingStep(null)
-    setStepForm({
-      ...emptyStep,
-      value: scenario?.url || '',
-      description: scenario?.url ? `Navigate to ${scenario.url}` : '',
-    })
+    // Only prefill Navigate+URL for the very first step — later adds stay blank
+    // so we don't look like we're duplicating an existing Navigate step.
+    const isFirstStep = (steps?.length || 0) === 0
+    setStepForm(
+      isFirstStep && scenario?.url
+        ? {
+            ...emptyStep,
+            type: 'NAVIGATE',
+            value: scenario.url,
+            description: `Navigate to ${scenario.url}`,
+          }
+        : { ...emptyStep, type: 'CLICK', description: '', value: '', selector: '', expectedResult: '', metadata: '' }
+    )
     setShowStepForm(true)
     setTimeout(() => {
       stepFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -1674,6 +1682,69 @@ export default function ScenarioDetailPage() {
           </div>
         </div>
 
+        {/* Target kind sits under URL/actions — not buried below steps */}
+        {(targetKind || isProbingTarget) && (
+          <TargetKindBanner
+            variant="compact"
+            targetKind={targetKind}
+            executionBlocked={executionBlocked}
+            isProbing={isProbingTarget}
+            message={targetInfoMessage}
+            addresses={targetAddresses}
+            url={scenario.url}
+            labels={defaultTargetKindLabels}
+          />
+        )}
+
+        {agentJob && targetKind === 'internal' && (
+          <Card className="border border-amber-200/80 bg-amber-50/40">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-slate-800">{t.agentJobStatus}</p>
+                <p className="text-sm text-slate-600 mt-0.5">
+                  {agentJob.status === 'QUEUED' && t.agentJobQueued}
+                  {agentJob.status === 'CLAIMED' && t.agentJobClaimed}
+                  {agentJob.status === 'COMPLETED' && t.agentJobCompleted}
+                  {agentJob.status === 'FAILED' && (agentJob.error || t.agentJobFailed)}
+                  {agentJob.status === 'CANCELLED' && t.agentJobCancelled}
+                </p>
+                {agentJob.executionId && (
+                  <button
+                    type="button"
+                    className="text-xs text-brand hover:underline mt-1 font-mono truncate max-w-full"
+                    onClick={() => navigate(`/execution/${agentJob.executionId}`)}
+                  >
+                    execution: {agentJob.executionId}
+                    {['COMPLETED', 'FAILED'].includes(agentJob.status) ? ` — ${t.viewAgentExecution}` : ''}
+                  </button>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <Badge
+                  variant={
+                    agentJob.status === 'COMPLETED'
+                      ? 'success'
+                      : agentJob.status === 'FAILED' || agentJob.status === 'CANCELLED'
+                        ? 'danger'
+                        : 'warning'
+                  }
+                >
+                  {agentJob.status}
+                </Badge>
+                {agentJob.status === 'QUEUED' && (
+                  <button
+                    type="button"
+                    onClick={handleCancelAgentJob}
+                    className="text-xs px-2.5 py-1 rounded border border-slate-300 text-slate-700 hover:bg-white"
+                  >
+                    {t.cancelAgentJob}
+                  </button>
+                )}
+              </div>
+            </div>
+          </Card>
+        )}
+
         <Card>
           <div className="flex flex-wrap items-center gap-1 mb-4 border-b border-surface-border pb-2">
             {[
@@ -2087,66 +2158,6 @@ export default function ScenarioDetailPage() {
               expectedResultImages={expectedResultImages}
               assigneeOverride={scenario?.owner || null}
             />
-          </Card>
-        )}
-
-        {(targetKind || isProbingTarget) && (
-          <div className="w-full max-w-4xl">
-            <TargetKindBanner
-              variant="compact"
-              targetKind={targetKind}
-              executionBlocked={executionBlocked}
-              isProbing={isProbingTarget}
-              message={targetInfoMessage}
-              addresses={targetAddresses}
-              url={scenario.url}
-              labels={defaultTargetKindLabels}
-            />
-          </div>
-        )}
-
-        {agentJob && targetKind === 'internal' && (
-          <Card className="border border-amber-200/80 bg-amber-50/40">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="min-w-0">
-                <p className="text-sm font-semibold text-slate-800">{t.agentJobStatus}</p>
-                <p className="text-sm text-slate-600 mt-0.5">
-                  {agentJob.status === 'QUEUED' && t.agentJobQueued}
-                  {agentJob.status === 'CLAIMED' && t.agentJobClaimed}
-                  {agentJob.status === 'COMPLETED' && t.agentJobCompleted}
-                  {agentJob.status === 'FAILED' && (agentJob.error || t.agentJobFailed)}
-                  {agentJob.status === 'CANCELLED' && t.agentJobCancelled}
-                </p>
-                {agentJob.executionId && (
-                  <p className="text-xs text-slate-500 mt-1 font-mono truncate">
-                    execution: {agentJob.executionId}
-                    {['COMPLETED', 'FAILED'].includes(agentJob.status) ? ` — ${t.viewAgentExecution}` : ''}
-                  </p>
-                )}
-              </div>
-              <div className="flex items-center gap-2">
-                <Badge
-                  variant={
-                    agentJob.status === 'COMPLETED'
-                      ? 'success'
-                      : agentJob.status === 'FAILED' || agentJob.status === 'CANCELLED'
-                        ? 'danger'
-                        : 'warning'
-                  }
-                >
-                  {agentJob.status}
-                </Badge>
-                {agentJob.status === 'QUEUED' && (
-                  <button
-                    type="button"
-                    onClick={handleCancelAgentJob}
-                    className="text-xs px-2.5 py-1 rounded border border-slate-300 text-slate-700 hover:bg-white"
-                  >
-                    {t.cancelAgentJob}
-                  </button>
-                )}
-              </div>
-            </div>
           </Card>
         )}
 
