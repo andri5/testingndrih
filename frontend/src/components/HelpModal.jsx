@@ -5,7 +5,7 @@ import {
   PlayCircle,
   Link2,
   Clock,
-  Zap,
+  Wrench,
   ChevronRight,
   Flame,
   Gauge,
@@ -42,8 +42,8 @@ const content = {
           },
           {
             num: 3,
-            title: 'Folders (Scenarios)',
-            desc: 'On Scenarios, use the folder pane to organize cases. Drag a scenario onto a folder to move it. Select rows for bulk Create Test Run / Move / Set PIC.',
+            title: 'Feature folders',
+            desc: 'On Scenarios, 1 folder = 1 fitur. Drag the grip (⋮⋮) on a case onto a feature folder (or No folder). Click a folder to list cases, then Open for steps. Bulk: Create Test Run / Move / Set PIC.',
             adminOnly: false,
           },
           {
@@ -68,13 +68,13 @@ const content = {
           {
             num: 1,
             title: 'Create a test case',
-            desc: 'Scenarios → Create → Create Manual (name, URL). Or Templates / Import Excel. Quick Record is for automation capture (admin).',
+            desc: 'Prefer: New feature folder (e.g. Login) → Create Manual inside it (1 case = 1 flow). Or Templates / Import Excel. Quick Record is for automation capture (admin).',
             adminOnly: false,
           },
           {
             num: 2,
             title: 'Details tab',
-            desc: 'Open a case → Details: set Priority, Type, Precondition, PIC, and Steps (with Expected result per step). Click Simpan detail.',
+            desc: 'Open a case → Details: Priority, Type, Precondition, Expected result (+ images), PIC, and Steps. Click Simpan detail. Breadcrumb folder returns to that feature.',
             adminOnly: false,
           },
           {
@@ -92,7 +92,7 @@ const content = {
           {
             num: 5,
             title: 'Organize',
-            desc: 'Folders, tags, favorites, search. Select cases → Create Test Run, Auto Run, Move…, or Set PIC…',
+            desc: 'Feature folders (1 folder = 1 fitur), tags, favorites, search. Select cases → Create Test Run, Auto Run, Move…, or Set PIC…',
             adminOnly: false,
           },
         ],
@@ -132,12 +132,12 @@ const content = {
           {
             num: 1,
             title: 'Multi-case run',
-            desc: 'Test Runs → Create Run, or select cases in Scenarios → Create Test Run. One run holds many cases with overall progress.',
+            desc: 'Test Runs → Create Run: cases are grouped by feature folder (1 folder = 1 fitur). Use Select fitur to pick a whole module, or filter by feature. Or select cases in Scenarios → Create Test Run.',
           },
           {
             num: 2,
             title: 'Set results',
-            desc: 'Open the run → Pass / Fail / Blocked / Skip per case (notes required for Fail/Blocked). Or Checklist for step-level Manual Run.',
+            desc: 'Open the run → cases listed under each feature. Pass / Fail / Blocked / Skip per case (notes for Fail/Blocked). Or Checklist for step-level Manual Run.',
           },
           {
             num: 3,
@@ -251,14 +251,14 @@ const content = {
       {
         id: 'tools',
         label: 'Tools',
-        icon: <Zap size={14} />,
+        icon: <Wrench size={14} />,
         steps: [
-          { num: 1, title: 'Scheduler', desc: 'Scheduler → set a cron schedule to run a scenario automatically.' },
-          { num: 2, title: 'Parallel Execution', desc: 'Run multiple scenarios at once — useful for broader regression suites.' },
-          { num: 3, title: 'Browser Matrix', desc: 'Run one scenario across Chromium, Firefox, and WebKit to catch browser-specific issues.' },
-          { num: 4, title: 'Analytics', desc: 'Analytics shows pass/fail distribution (pie) and related execution insights.' },
-          { num: 5, title: 'Reports', desc: 'Reports → export results as Excel (and other formats where available) for sharing with the team.' },
-          { num: 6, title: 'Environments', desc: 'Define variables per environment (dev/staging/prod) and use {{var}} substitution in steps.' },
+          { num: 1, title: 'Open Tools', desc: 'Sidebar wrench icon → Visual Regression, Chains, API Testing, Scheduler, Parallel, Smoke/Stress/Security, Browser Test.' },
+          { num: 2, title: 'Scheduler', desc: 'Scheduler → set a cron schedule to run a scenario automatically.' },
+          { num: 3, title: 'Parallel Execution', desc: 'Run multiple scenarios at once — useful for broader regression suites.' },
+          { num: 4, title: 'Browser Matrix', desc: 'Run one scenario across Chromium, Firefox, and WebKit to catch browser-specific issues.' },
+          { num: 5, title: 'Analytics & Reports', desc: 'Main menu Analytics/Reports (not under Tools). Export Excel/PDF where available.' },
+          { num: 6, title: 'Environments', desc: 'Main menu Environments — define variables and use {{var}} in steps.' },
         ],
       },
       {

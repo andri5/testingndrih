@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+// drag reorder: grip → drop on another row (folder / No folder views)
 import {
   Star,
   FileText,
@@ -222,11 +223,25 @@ export default function ScenarioRepositoryTable({
   onReorder,
   folderOptions = [],
   isLoading,
+  emptyTitle = 'Belum ada test case',
+  emptyHint = 'Buat case baru untuk fitur ini, lalu isi steps di detail.',
+  onCreateEmpty,
+  createEmptyLabel = 'Create Manual',
+  reorderEnabled = false,
 }) {
   const allSelected = scenarios.length > 0 && scenarios.every((s) => selectedIds.has(s.id))
+  const canReorder = Boolean(onReorder) && reorderEnabled
+  const [draggingId, setDraggingId] = useState(null)
+  const [dropTargetId, setDropTargetId] = useState(null)
 
   return (
     <div className="linear-card overflow-hidden">
+      {canReorder && scenarios.length > 1 ? (
+        <p className="px-3 py-2 text-[11px] text-ink-muted border-b border-surface-border bg-surface-muted/40">
+          Ubah urutan: drag ikon <span className="font-semibold text-ink">⋮⋮</span> ke baris lain (atas/bawah).
+          Drag ke sidebar untuk pindah feature folder.
+        </p>
+      ) : null}
       <div className="table-wrap">
         <table className="w-full text-sm">
           <thead className="bg-surface-muted/80 border-b border-surface-border text-left">
@@ -239,7 +254,7 @@ export default function ScenarioRepositoryTable({
                   className="rounded border-surface-border accent-brand"
                 />
               </th>
-              <th className="w-8 px-1 py-2.5" />
+              <th className="w-8 px-1 py-2.5" title={canReorder ? 'Drag to reorder' : undefined} />
               <th className="px-3 py-2.5 font-semibold">Title</th>
               <th className="px-3 py-2.5 font-semibold hidden md:table-cell">Folder</th>
               <th className="px-3 py-2.5 font-semibold hidden sm:table-cell">Steps</th>
@@ -257,34 +272,57 @@ export default function ScenarioRepositoryTable({
             )}
             {!isLoading && scenarios.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-4 py-10 text-center text-ink-subtle">
-                  No scenarios in this folder
+                <td colSpan={7} className="px-4 py-10 text-center">
+                  <p className="text-sm font-medium text-ink">{emptyTitle}</p>
+                  <p className="text-xs text-ink-muted mt-1 max-w-md mx-auto">{emptyHint}</p>
+                  {onCreateEmpty ? (
+                    <button
+                      type="button"
+                      onClick={onCreateEmpty}
+                      className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-brand text-white hover:bg-brand-hover"
+                    >
+                      {createEmptyLabel}
+                    </button>
+                  ) : null}
                 </td>
               </tr>
             )}
             {!isLoading &&
               scenarios.map((s) => {
                 const selected = selectedIds.has(s.id)
+                const isDragging = draggingId === s.id
+                const isDropTarget = canReorder && dropTargetId === s.id && draggingId && draggingId !== s.id
                 return (
                   <tr
                     key={s.id}
-                    className={`border-b border-surface-border/80 hover:bg-brand-soft/30 ${
-                      selected ? 'bg-brand-soft/40' : 'bg-white'
-                    }`}
-                    draggable
-                    onDragStart={(e) => {
-                      e.dataTransfer.setData('application/x-scenario-id', s.id)
-                      e.dataTransfer.effectAllowed = 'move'
-                    }}
+                    className={[
+                      'border-b border-surface-border/80 hover:bg-brand-soft/30 transition-colors',
+                      selected ? 'bg-brand-soft/40' : 'bg-white',
+                      isDragging ? 'opacity-40' : '',
+                      isDropTarget ? 'bg-brand-soft/70 shadow-[inset_0_2px_0_0_var(--color-brand,#0d9488)]' : '',
+                    ]
+                      .filter(Boolean)
+                      .join(' ')}
                     onDragOver={(e) => {
-                      if (!onReorder) return
+                      if (!canReorder || !draggingId) return
                       e.preventDefault()
+                      e.dataTransfer.dropEffect = 'move'
+                      if (dropTargetId !== s.id) setDropTargetId(s.id)
+                    }}
+                    onDragLeave={(e) => {
+                      if (!e.currentTarget.contains(e.relatedTarget)) {
+                        setDropTargetId((cur) => (cur === s.id ? null : cur))
+                      }
                     }}
                     onDrop={(e) => {
-                      if (!onReorder) return
+                      if (!canReorder) return
                       e.preventDefault()
-                      const draggedId = e.dataTransfer.getData('application/x-scenario-id')
-                      if (!draggedId || draggedId === s.id) return
+                      const draggedId =
+                        e.dataTransfer.getData('application/x-scenario-id') ||
+                        e.dataTransfer.getData('text/plain')
+                      setDropTargetId(null)
+                      setDraggingId(null)
+                      if (!draggedId || draggedId === s.id || draggedId.startsWith('folder:')) return
                       onReorder(draggedId, s.id)
                     }}
                   >
@@ -294,9 +332,30 @@ export default function ScenarioRepositoryTable({
                         checked={selected}
                         onChange={() => onToggleSelect(s.id)}
                         className="rounded border-surface-border accent-brand"
+                        onMouseDown={(e) => e.stopPropagation()}
                       />
                     </td>
-                    <td className="px-1 py-2.5 text-ink-subtle cursor-grab">
+                    <td
+                      className="px-1 py-2.5 text-ink-subtle cursor-grab active:cursor-grabbing"
+                      draggable
+                      data-drag-handle="scenario"
+                      title={
+                        canReorder
+                          ? 'Drag atas/bawah untuk ubah urutan · drop ke folder di sidebar untuk pindah fitur'
+                          : 'Drag ke feature folder di sidebar'
+                      }
+                      onDragStart={(e) => {
+                        e.stopPropagation()
+                        e.dataTransfer.setData('application/x-scenario-id', s.id)
+                        e.dataTransfer.setData('text/plain', s.id)
+                        e.dataTransfer.effectAllowed = 'move'
+                        setDraggingId(s.id)
+                      }}
+                      onDragEnd={() => {
+                        setDraggingId(null)
+                        setDropTargetId(null)
+                      }}
+                    >
                       <GripVertical size={14} />
                     </td>
                     <td className="px-3 py-2.5">

@@ -26,15 +26,16 @@
 | Method | Path | Deskripsi |
 |--------|------|-----------|
 | GET | `/` | List skenario user (includes `lastResult`) |
-| POST | `/` | Buat skenario (opsional precondition/priority/caseType/ownerId) |
-| GET | `/:id` | Detail + steps + attachments |
-| PUT | `/:id` | Update skenario (+ audit History) |
+| POST | `/` | Buat skenario (opsional precondition/`expectedResult`/priority/caseType/ownerId/folderId) |
+| GET | `/:id` | Detail + steps + attachments (`kind`: `GENERAL` \| `EXPECTED_RESULT`) |
+| PUT | `/:id` | Update skenario (+ audit History; supports `expectedResult`) |
 | DELETE | `/:id` | Hapus skenario |
 | GET | `/:id/runs` | Riwayat execution case + % complete |
 | GET | `/:id/history` | Audit log field changes |
-| GET/POST | `/:id/attachments` | List / upload attachment |
+| GET | `/:id/attachments` | List (`?kind=GENERAL` \| `EXPECTED_RESULT` optional) |
+| POST | `/:id/attachments` | Upload (`multipart` `files` + optional form `kind`) |
 | DELETE | `/:id/attachments/:attachmentId` | Hapus attachment |
-| POST | `/move` | Pindah folder |
+| POST | `/move` | Pindah folder (feature folder) |
 | POST | `/bulk-assign-owner` | Bulk set PIC (`ids`, `ownerId`) |
 
 ---

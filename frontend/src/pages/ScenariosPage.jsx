@@ -16,7 +16,7 @@ import { useFolderStore } from '../store/folderStore'
 import { executionAPI, testRunAPI, scenarioAPI } from '../services/api'
 const i18n = {
     title: 'Test Repository',
-    subtitle: 'Organize scenarios in folders — create, move, and run from one place',
+    subtitle: '1 folder = 1 fitur → buat case di dalamnya → isi steps di detail',
     createScenarioBtn: 'Create',
     selectedCount: (n) => `${n} scenario${n !== 1 ? 's' : ''} selected`,
     runningBulk: 'Running executions sequentially (headless)...',
@@ -149,37 +149,42 @@ export default function ScenariosPage() {
   }
 
   const handleReorder = async (draggedId, targetId) => {
+    // Sort order applies inside a feature folder or No folder (not on "All")
     if (selectedFolderKey === 'all') return
     const dragged = scenarios.find((s) => s.id === draggedId)
     const target = scenarios.find((s) => s.id === targetId)
     if (!dragged || !target) return
+
     const folderId = target.folderId ?? null
-    if ((dragged.folderId ?? null) !== folderId) {
-      // Different folders in descendant view — treat as move into target's folder at that position
-      const siblings = scenarios.filter((s) => (s.folderId ?? null) === folderId && s.id !== draggedId)
-      const to = siblings.findIndex((s) => s.id === targetId)
-      const ids = siblings.map((s) => s.id)
+    const sameFolder = (dragged.folderId ?? null) === folderId
+    const siblings = scenarios.filter((s) => (s.folderId ?? null) === folderId)
+    const ids = sameFolder
+      ? siblings.map((s) => s.id)
+      : siblings.filter((s) => s.id !== draggedId).map((s) => s.id)
+
+    if (sameFolder) {
+      const from = ids.indexOf(draggedId)
+      const to = ids.indexOf(targetId)
+      if (from < 0 || to < 0 || from === to) return
+      ids.splice(from, 1)
+      ids.splice(to, 0, draggedId)
+    } else {
+      const to = ids.indexOf(targetId)
       if (to >= 0) ids.splice(to, 0, draggedId)
       else ids.push(draggedId)
-      const sortOrders = ids.map((id, index) => ({ id, sortOrder: index }))
-      try {
-        await moveScenarios(ids, folderId, sortOrders)
-      } catch (err) {
-        alert(err.message || 'Failed to reorder')
-      }
-      return
     }
-    const siblings = scenarios.filter((s) => (s.folderId ?? null) === folderId)
-    const ids = siblings.map((s) => s.id)
-    const from = ids.indexOf(draggedId)
-    const to = ids.indexOf(targetId)
-    if (from < 0 || to < 0 || from === to) return
-    ids.splice(from, 1)
-    ids.splice(to, 0, draggedId)
+
     const sortOrders = ids.map((id, index) => ({ id, sortOrder: index }))
+    const byId = Object.fromEntries(scenarios.map((s) => [s.id, s]))
+    const optimistic = ids.map((id) => byId[id]).filter(Boolean)
+    const rest = scenarios.filter((s) => !ids.includes(s.id))
+    // Instant UI reorder; API persists sortOrder
+    useScenarioStore.setState({ scenarios: [...optimistic, ...rest] })
+
     try {
       await moveScenarios(ids, folderId, sortOrders)
     } catch (err) {
+      await fetchScenarios(0, pageSize, '', { favoritesOnly, tag: filterTag })
       alert(err.message || 'Failed to reorder')
     }
   }
@@ -556,6 +561,22 @@ export default function ScenariosPage() {
         ? 'No folder'
         : folderOptions.find((f) => f.id === selectedFolderKey)?.label || 'Folder'
 
+  const emptyState =
+    selectedFolderKey === 'all'
+      ? {
+          title: 'Belum ada test case',
+          hint: 'Buat feature folder di sidebar (1 folder = 1 fitur), lalu Create Manual di dalamnya.',
+        }
+      : selectedFolderKey === 'unfiled'
+        ? {
+            title: 'Tidak ada case tanpa folder',
+            hint: 'Case di sini belum digabung ke fitur. Pindahkan ke feature folder, atau Create Manual.',
+          }
+        : {
+            title: `Belum ada test case di fitur “${folderLabel}”`,
+            hint: 'Create Manual akan menaruh case baru di fitur ini. Satu case = satu flow.',
+          }
+
   // ── Bulk Execute ─────────────────────────────────────────────────────────────
   const handleBulkExecute = async () => {
     const ids = [...selectedIds]
@@ -596,6 +617,12 @@ export default function ScenariosPage() {
             </p>
             <h1 className="text-2xl sm:text-3xl font-bold text-ink">{t.title}</h1>
             <p className="text-ink-muted mt-1">{t.subtitle}</p>
+            {selectedFolderKey !== 'all' ? (
+              <p className="text-xs text-ink-subtle mt-1">
+                Urutan case: drag <span className="font-semibold">⋮⋮</span> ke baris atas/bawah.
+                (Di “All scenarios” urutan ikut tanggal — buka feature folder untuk sort manual.)
+              </p>
+            ) : null}
           </div>
           {!showCreateForm && !editingScenario && (
             <div className="flex flex-wrap gap-2 self-start" ref={menuRef}>
@@ -873,8 +900,13 @@ export default function ScenariosPage() {
               onToggleFavorite={handleToggleFavorite}
               onMoveRequest={handleMoveRequest}
               onReorder={selectedFolderKey === 'all' ? undefined : handleReorder}
+              reorderEnabled={selectedFolderKey !== 'all'}
               folderOptions={folderOptions}
               isLoading={isLoading}
+              emptyTitle={emptyState.title}
+              emptyHint={emptyState.hint}
+              onCreateEmpty={() => setShowCreateForm(true)}
+              createEmptyLabel={t.createManual}
             />
             {pagination.hasMore && (
               <div className="flex justify-center">

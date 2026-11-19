@@ -13,34 +13,61 @@ import {
 } from 'lucide-react'
 import { useFolderStore } from '../store/folderStore'
 
+function readScenarioDragId(dt) {
+  const custom = (dt.getData('application/x-scenario-id') || '').trim()
+  if (custom) return custom
+  const plain = (dt.getData('text/plain') || '').trim()
+  if (plain.startsWith('folder:')) return ''
+  return plain
+}
+
+function readFolderDragId(dt) {
+  const custom = (dt.getData('application/x-folder-id') || '').trim()
+  if (custom) return custom
+  const plain = (dt.getData('text/plain') || '').trim()
+  return plain.startsWith('folder:') ? plain.slice('folder:'.length) : ''
+}
+
 function FolderNode({ node, depth, selectedKey, expandedIds, onSelect, onToggle, onDropScenario, onRename, onDelete, onCreateChild }) {
   const isExpanded = expandedIds.has(node.id)
   const isActive = selectedKey === node.id
   const [menuOpen, setMenuOpen] = useState(false)
+  const [dragOver, setDragOver] = useState(false)
 
   return (
     <div>
       <div
         className={`group flex items-center gap-1 px-2 py-1.5 rounded-md text-sm cursor-pointer transition-colors ${
           isActive ? 'bg-brand-soft text-brand-ink' : 'text-ink-muted hover:bg-white hover:text-ink'
-        }`}
+        } ${dragOver ? 'ring-2 ring-brand bg-brand-soft/50' : ''}`}
         style={{ paddingLeft: 8 + depth * 12 }}
         onClick={() => onSelect(node.id)}
         onDragOver={(e) => {
           e.preventDefault()
-          e.currentTarget.classList.add('ring-1', 'ring-brand')
+          e.stopPropagation()
+          e.dataTransfer.dropEffect = 'move'
+          setDragOver(true)
         }}
-        onDragLeave={(e) => e.currentTarget.classList.remove('ring-1', 'ring-brand')}
+        onDragLeave={(e) => {
+          if (!e.currentTarget.contains(e.relatedTarget)) setDragOver(false)
+        }}
         onDrop={(e) => {
           e.preventDefault()
-          e.currentTarget.classList.remove('ring-1', 'ring-brand')
-          const scenarioId = e.dataTransfer.getData('application/x-scenario-id')
-          const folderId = e.dataTransfer.getData('application/x-folder-id')
-          onDropScenario?.({ scenarioId, folderId, targetFolderId: node.id })
+          e.stopPropagation()
+          setDragOver(false)
+          const scenarioId = readScenarioDragId(e.dataTransfer)
+          const folderId = readFolderDragId(e.dataTransfer)
+          // Prefer scenario move when both present (shouldn't happen)
+          onDropScenario?.({
+            scenarioId: scenarioId || undefined,
+            folderId: scenarioId ? undefined : folderId || undefined,
+            targetFolderId: node.id,
+          })
         }}
         draggable
         onDragStart={(e) => {
           e.dataTransfer.setData('application/x-folder-id', node.id)
+          e.dataTransfer.setData('text/plain', `folder:${node.id}`)
           e.dataTransfer.effectAllowed = 'move'
         }}
       >
@@ -176,19 +203,26 @@ export default function ScenarioFolderTree({ onSelectionChange, onDropScenario }
 
   const handleDrop = async (payload) => {
     const { scenarioId, folderId, targetFolderId } = payload || {}
+    if (scenarioId) {
+      onDropScenario?.({ scenarioId, targetFolderId: targetFolderId ?? null })
+      return
+    }
     if (folderId) {
+      if (folderId === targetFolderId) return
       try {
         await moveFolder(folderId, targetFolderId ?? null)
       } catch (e) {
         window.alert(e.response?.data?.message || e.message || 'Failed to move folder')
       }
-      return
     }
-    onDropScenario?.(payload)
   }
 
   const handleCreate = async (parentId = null) => {
-    const name = window.prompt(parentId ? 'Subfolder name' : 'Folder name')
+    const name = window.prompt(
+      parentId
+        ? 'Subfolder name (e.g. Login / Forgot password)'
+        : 'Feature / folder name (e.g. Login)'
+    )
     if (!name?.trim()) return
     try {
       await createFolder(name.trim(), parentId)
@@ -217,42 +251,60 @@ export default function ScenarioFolderTree({ onSelectionChange, onDropScenario }
     }
   }
 
-  const virtualItem = (key, label, icon, count) => (
-    <button
-      type="button"
+  const virtualItem = (key, label, icon, count, { droppable = false } = {}) => (
+    <div
+      role="button"
+      tabIndex={0}
       onClick={() => select(key)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          select(key)
+        }
+      }}
       onDragOver={(e) => {
-        if (key === 'unfiled') e.preventDefault()
+        if (!droppable) return
+        e.preventDefault()
+        e.dataTransfer.dropEffect = 'move'
+        e.currentTarget.classList.add('ring-2', 'ring-brand', 'bg-brand-soft/40')
+      }}
+      onDragLeave={(e) => {
+        e.currentTarget.classList.remove('ring-2', 'ring-brand', 'bg-brand-soft/40')
       }}
       onDrop={(e) => {
-        if (key !== 'unfiled') return
+        if (!droppable) return
         e.preventDefault()
-        const scenarioId = e.dataTransfer.getData('application/x-scenario-id')
-        const draggedFolderId = e.dataTransfer.getData('application/x-folder-id')
-        handleDrop({ scenarioId, folderId: draggedFolderId || undefined, targetFolderId: null })
+        e.currentTarget.classList.remove('ring-2', 'ring-brand', 'bg-brand-soft/40')
+        const scenarioId = readScenarioDragId(e.dataTransfer)
+        const draggedFolderId = readFolderDragId(e.dataTransfer)
+        handleDrop({
+          scenarioId: scenarioId || undefined,
+          folderId: scenarioId ? undefined : draggedFolderId || undefined,
+          targetFolderId: null,
+        })
       }}
-      className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-sm transition-colors ${
+      className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-sm transition-colors cursor-pointer ${
         selectedKey === key ? 'bg-brand-soft text-brand-ink' : 'text-ink-muted hover:bg-white hover:text-ink'
       }`}
     >
       {icon}
       <span className="flex-1 text-left font-medium truncate">{label}</span>
       <span className="text-[10px] text-ink-subtle tabular-nums">{count}</span>
-    </button>
+    </div>
   )
 
   return (
     <div className="h-full flex flex-col bg-surface-sidebar border-r border-surface-border">
       <div className="px-3 py-3 border-b border-surface-border flex items-center justify-between gap-2">
         <div>
-          <p className="text-xs font-semibold text-ink uppercase tracking-wide">Test case folders</p>
-          <p className="text-[10px] text-ink-subtle">Repository</p>
+          <p className="text-xs font-semibold text-ink uppercase tracking-wide">Feature folders</p>
+          <p className="text-[10px] text-ink-subtle">1 folder = 1 fitur</p>
         </div>
         <button
           type="button"
           onClick={() => handleCreate(null)}
           className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold bg-brand text-white hover:bg-brand-hover"
-          title="New folder"
+          title="New feature folder"
         >
           <FolderPlus size={13} /> New
         </button>
@@ -262,22 +314,43 @@ export default function ScenarioFolderTree({ onSelectionChange, onDropScenario }
         <input
           value={filterQuery}
           onChange={(e) => setFilterQuery(e.target.value)}
-          placeholder="Filter folders..."
+          placeholder="Filter features..."
           className="w-full px-2.5 py-1.5 text-xs rounded-md border border-surface-border bg-white text-ink placeholder-ink-subtle focus:outline-none focus:ring-1 focus:ring-brand"
         />
       </div>
 
       <div className="flex-1 overflow-y-auto px-2 pb-3 space-y-0.5">
         {virtualItem('all', 'All scenarios', <Layers size={15} className="text-brand" />, counts.all || 0)}
-        {virtualItem('unfiled', 'No folder', <Inbox size={15} className="text-ink-subtle" />, counts.unfiled || 0)}
+        {virtualItem(
+          'unfiled',
+          'No folder',
+          <Inbox size={15} className="text-ink-subtle" />,
+          counts.unfiled || 0,
+          { droppable: true }
+        )}
 
         <div className="pt-2 pb-1 px-2.5 text-[10px] font-semibold uppercase tracking-widest text-ink-subtle">
-          Folders
+          Features
         </div>
+        <p className="px-2.5 pb-1.5 text-[10px] text-ink-subtle leading-snug">
+          Drag ⋮⋮ pada case → drop ke fitur di sini
+        </p>
 
         {isLoading && <p className="px-2.5 text-xs text-ink-subtle">Loading...</p>}
         {!isLoading && filteredTree.length === 0 && (
-          <p className="px-2.5 text-xs text-ink-subtle">No folders yet</p>
+          <div className="mx-1 mt-1 rounded-lg border border-dashed border-surface-border bg-white/60 px-2.5 py-3">
+            <p className="text-xs font-medium text-ink">Belum ada feature folder</p>
+            <p className="text-[11px] text-ink-subtle mt-1 leading-snug">
+              Buat folder fitur dulu (mis. Login). Lalu drag case dari tabel (ikon ⋮⋮) ke folder ini.
+            </p>
+            <button
+              type="button"
+              onClick={() => handleCreate(null)}
+              className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold text-brand hover:text-brand-hover"
+            >
+              <FolderPlus size={12} /> New feature folder
+            </button>
+          </div>
         )}
         {filteredTree.map((node) => (
           <FolderNode

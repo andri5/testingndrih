@@ -39,6 +39,8 @@ const itemInclude = {
       caseType: true,
       steps: true,
       url: true,
+      folderId: true,
+      folder: { select: { id: true, name: true } },
       owner: { select: { id: true, name: true, email: true } },
     },
   },

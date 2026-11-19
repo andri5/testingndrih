@@ -59,9 +59,11 @@
 ## Key features
 
 ### Core testing
-- **Scenario / test case management** — folders, create, edit, duplicate, search; Details (precondition, priority, type, PIC, steps + expected result)
+- **Feature folders** — organize Test Repository as **1 folder = 1 fitur**, **1 case = 1 flow**
+- **Scenario / test case management** — create, edit, duplicate, search; Details (precondition, priority/type with colors, PIC, steps)
+- **Expected result** — case-level text + screenshot attachments; shown during Manual Run
 - **Manual Run** — checklist Pass/Fail/Blocked/Skipped with notes & optional bug create (default mode)
-- **Test Runs** — multi-case cycles, per-case result, Close/Seal; bulk Create Test Run / Set PIC
+- **Test Runs** — multi-case cycles **grouped by feature**; filter / Select fitur; per-case result; Close/Seal
 - **Attachments / Runs / History tabs** — evidence files, case execution history, field audit log
 - **Step editor** — NAVIGATE, CLICK, FILL, WAIT, ASSERTION, SCREENSHOT, API_CALL, and more
 - **Browser recording** — only in Automated mode; client-direct (default) or proxy; playback via Playwright
@@ -69,7 +71,7 @@
 - **Test chains** — multi-scenario workflows with stop-on-fail options
 - **Excel import** — bulk scenario import with preview
 
-### Advanced testing (admin tools)
+### Advanced testing (sidebar Tools / wrench)
 - **Smoke test** — quick health-check suite
 - **Stress test** — load / concurrency checks
 - **Security test** — common vulnerability scans

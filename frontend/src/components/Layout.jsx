@@ -25,13 +25,14 @@ import {
   User,
   Clock,
   Shield,
-  Globe,
   HelpCircle,
   Activity,
   Gauge,
   GitBranch,
   Layers,
-  Image,
+  ImageIcon,
+  Network,
+  AppWindow,
   Wrench,
   PanelLeftClose,
   PanelLeftOpen,
@@ -197,15 +198,15 @@ export default function Layout({ children, showFolderPane = false, onFolderSelec
   ].filter((item) => allowedMenuKeys.has(item.key))
 
   const toolItems = [
-    { key: 'visual-regression', name: 'Visual Regression', path: '/visual-regression', icon: Image },
+    { key: 'visual-regression', name: 'Visual Regression', path: '/visual-regression', icon: ImageIcon },
     { key: 'chains', name: 'Chains', path: '/chains', icon: Link2 },
-    { key: 'api-testing', name: 'API Testing', path: '/api-testing', icon: Globe },
+    { key: 'api-testing', name: 'API Testing', path: '/api-testing', icon: Network },
     { key: 'scheduler', name: 'Scheduler', path: '/scheduler', icon: Clock },
     { key: 'parallel', name: 'Parallel', path: '/parallel', icon: GitBranch },
     { key: 'smoke-test', name: 'Smoke Test', path: '/smoke-test', icon: Activity },
     { key: 'stress-test', name: 'Stress Test', path: '/stress-test', icon: Gauge },
     { key: 'security-test', name: 'Security Test', path: '/security-test', icon: Shield },
-    { key: 'browser-matrix', name: 'Browser Test', path: '/browser-matrix', icon: Globe },
+    { key: 'browser-matrix', name: 'Browser Test', path: '/browser-matrix', icon: AppWindow },
   ].filter((item) => allowedMenuKeys.has(item.key))
 
   const pageTitle =
@@ -241,12 +242,108 @@ export default function Layout({ children, showFolderPane = false, onFolderSelec
     )
   }
 
+  const renderToolsMenu = ({ onNavigate, labels = false } = {}) => {
+    if (toolItems.length === 0) return null
+    return (
+      <div
+        className={['relative shrink-0', labels ? 'w-full mt-1' : 'mt-1']}
+        ref={toolsRef}
+      >
+        <button
+          type="button"
+          title={labels ? undefined : 'Tools'}
+          aria-expanded={toolsOpen}
+          aria-haspopup="menu"
+          onClick={() => setToolsOpen((v) => !v)}
+          className={[
+            'rounded-lg flex items-center transition-colors',
+            labels
+              ? 'w-full h-10 px-2.5 gap-2.5 justify-start'
+              : 'w-10 h-10 justify-center',
+            toolsActive
+              ? 'bg-brand text-white'
+              : 'text-white/70 hover:bg-white/10 hover:text-white',
+          ].join(' ')}
+        >
+          <Wrench size={18} className="shrink-0" strokeWidth={2} />
+          {labels && (
+            <>
+              <span className="text-sm font-medium flex-1 text-left truncate">Tools</span>
+              <ChevronDown
+                size={14}
+                className={`shrink-0 opacity-70 transition-transform ${toolsOpen ? 'rotate-180' : ''}`}
+              />
+            </>
+          )}
+        </button>
+        {toolsOpen && (
+          labels ? (
+            <div className="mt-1 ml-2 pl-2 border-l border-white/15 space-y-0.5 max-h-[min(40vh,16rem)] overflow-y-auto">
+              {toolItems.map((item) => {
+                const Icon = item.icon
+                const isActive =
+                  location.pathname === item.path || location.pathname.startsWith(item.path + '/')
+                return (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    onClick={() => {
+                      setToolsOpen(false)
+                      onNavigate?.()
+                    }}
+                    className={[
+                      'flex items-center gap-2 px-2.5 py-2 rounded-md text-sm transition-colors',
+                      isActive
+                        ? 'bg-brand/80 text-white'
+                        : 'text-white/65 hover:bg-white/10 hover:text-white',
+                    ].join(' ')}
+                  >
+                    <Icon size={14} className="shrink-0" />
+                    <span className="truncate">{item.name}</span>
+                  </Link>
+                )
+              })}
+            </div>
+          ) : (
+            <div
+              role="menu"
+              className="fixed z-[80] w-56 max-h-[min(70vh,24rem)] overflow-y-auto rounded-lg border border-surface-border bg-white shadow-xl py-1"
+              style={{
+                left: '3.75rem',
+                bottom: '5.5rem',
+              }}
+            >
+              {toolItems.map((item) => {
+                const Icon = item.icon
+                return (
+                  <Link
+                    key={item.path}
+                    role="menuitem"
+                    to={item.path}
+                    onClick={() => {
+                      setToolsOpen(false)
+                      onNavigate?.()
+                    }}
+                    className="flex items-center gap-2.5 px-3 py-2 text-sm text-ink-muted hover:bg-surface-muted hover:text-ink"
+                  >
+                    <Icon size={15} className="shrink-0 text-brand" />
+                    <span className="truncate">{item.name}</span>
+                  </Link>
+                )
+              })}
+            </div>
+          )
+        )}
+      </div>
+    )
+  }
+
   const renderNavBody = ({ onNavigate, forceLabels = false } = {}) => {
     const labels = forceLabels || showNavLabels
     return (
       <>
         <nav className={[
-          'flex-1 flex flex-col gap-1 overflow-y-auto py-1 w-full',
+          'flex-1 flex flex-col gap-1 overflow-y-auto py-1 w-full min-h-0',
           labels ? '' : 'items-center px-2',
         ].join(' ')}>
           {mainItems.map((item) => (
@@ -256,87 +353,12 @@ export default function Layout({ children, showFolderPane = false, onFolderSelec
               onNavigate={onNavigate}
             />
           ))}
-
-          {toolItems.length > 0 && (
-            <div className={['relative mt-1', labels ? 'w-full' : ''].join(' ')} ref={labels ? toolsRef : undefined}>
-              <button
-                type="button"
-                title={labels ? undefined : 'Tools'}
-                onClick={() => setToolsOpen((v) => !v)}
-                className={[
-                  'rounded-lg flex items-center transition-colors',
-                  labels
-                    ? 'w-full h-10 px-2.5 gap-2.5 justify-start'
-                    : 'w-10 h-10 justify-center',
-                  toolsActive
-                    ? 'bg-brand text-white'
-                    : 'text-white/70 hover:bg-white/10 hover:text-white',
-                ].join(' ')}
-              >
-                <Wrench size={18} className="shrink-0" />
-                {labels && (
-                  <>
-                    <span className="text-sm font-medium flex-1 text-left truncate">Tools</span>
-                    <ChevronDown
-                      size={14}
-                      className={`shrink-0 opacity-70 transition-transform ${toolsOpen ? 'rotate-180' : ''}`}
-                    />
-                  </>
-                )}
-              </button>
-              {toolsOpen && (
-                labels ? (
-                  <div className="mt-1 ml-2 pl-2 border-l border-white/15 space-y-0.5 max-h-[min(50vh,18rem)] overflow-y-auto">
-                    {toolItems.map((item) => {
-                      const Icon = item.icon
-                      const isActive =
-                        location.pathname === item.path || location.pathname.startsWith(item.path + '/')
-                      return (
-                        <Link
-                          key={item.path}
-                          to={item.path}
-                          onClick={() => {
-                            setToolsOpen(false)
-                            onNavigate?.()
-                          }}
-                          className={[
-                            'flex items-center gap-2 px-2.5 py-2 rounded-md text-sm transition-colors',
-                            isActive
-                              ? 'bg-brand/80 text-white'
-                              : 'text-white/65 hover:bg-white/10 hover:text-white',
-                          ].join(' ')}
-                        >
-                          <Icon size={14} className="shrink-0" />
-                          <span className="truncate">{item.name}</span>
-                        </Link>
-                      )
-                    })}
-                  </div>
-                ) : (
-                  <div className="absolute left-12 top-0 w-52 max-h-[min(70vh,24rem)] overflow-y-auto rounded-lg border border-surface-border bg-white shadow-xl py-1 z-50">
-                    {toolItems.map((item) => {
-                      const Icon = item.icon
-                      return (
-                        <Link
-                          key={item.path}
-                          to={item.path}
-                          onClick={() => setToolsOpen(false)}
-                          className="flex items-center gap-2 px-3 py-2 text-sm text-ink-muted hover:bg-surface-muted hover:text-ink"
-                        >
-                          <Icon size={14} />
-                          {item.name}
-                        </Link>
-                      )
-                    })}
-                  </div>
-                )
-              )}
-            </div>
-          )}
         </nav>
 
+        {renderToolsMenu({ onNavigate, labels })}
+
         <div className={[
-          'flex flex-col gap-1 pb-1',
+          'flex flex-col gap-1 pb-1 shrink-0',
           labels ? '' : 'items-center px-2',
         ].join(' ')}>
           <button
@@ -416,7 +438,7 @@ export default function Layout({ children, showFolderPane = false, onFolderSelec
           ? renderNavBody()
           : (
             <>
-              <nav className="flex-1 flex flex-col items-center gap-1 overflow-y-auto py-1 w-full px-2" ref={!showNavLabels ? toolsRef : undefined}>
+              <nav className="flex-1 flex flex-col items-center gap-1 overflow-y-auto py-1 w-full px-2 min-h-0">
                 {mainItems.map((item) => {
                   const Icon = item.icon
                   const isActive = location.pathname === item.path || location.pathname.startsWith(item.path + '/')
@@ -433,40 +455,9 @@ export default function Layout({ children, showFolderPane = false, onFolderSelec
                     </Link>
                   )
                 })}
-                {toolItems.length > 0 && (
-                  <div className="relative mt-1">
-                    <button
-                      type="button"
-                      title="Tools"
-                      onClick={() => setToolsOpen((v) => !v)}
-                      className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${
-                        toolsActive ? 'bg-brand text-white' : 'text-white/70 hover:bg-white/10 hover:text-white'
-                      }`}
-                    >
-                      <Wrench size={18} />
-                    </button>
-                    {toolsOpen && !overlayNavOpen && (
-                      <div className="absolute left-12 top-0 w-52 max-h-[min(70vh,24rem)] overflow-y-auto rounded-lg border border-surface-border bg-white shadow-xl py-1 z-50">
-                        {toolItems.map((item) => {
-                          const Icon = item.icon
-                          return (
-                            <Link
-                              key={item.path}
-                              to={item.path}
-                              onClick={() => setToolsOpen(false)}
-                              className="flex items-center gap-2 px-3 py-2 text-sm text-ink-muted hover:bg-surface-muted hover:text-ink"
-                            >
-                              <Icon size={14} />
-                              {item.name}
-                            </Link>
-                          )
-                        })}
-                      </div>
-                    )}
-                  </div>
-                )}
               </nav>
-              <div className="flex flex-col items-center gap-1 px-2 pb-1">
+              <div className="flex flex-col items-center gap-1 px-2 pb-1 shrink-0">
+                {!overlayNavOpen && renderToolsMenu({ labels: false })}
                 <button
                   type="button"
                   title="How to use"

@@ -1,10 +1,30 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { Card, Badge, Spinner, Alert, Button } from '../components/ui'
 import ExportFormatButton from '../components/ExportFormatButton'
 import { testRunAPI, scenarioAPI } from '../services/api'
-import { ListChecks, Plus, Loader2, RefreshCw } from 'lucide-react'
+import { ListChecks, Plus, Loader2, RefreshCw, Folder } from 'lucide-react'
+
+function groupScenariosByFeature(scenarios = []) {
+  const map = new Map()
+  for (const s of scenarios) {
+    const key = s.folderId || s.folder?.id || '__unfiled__'
+    const label = s.folder?.name || 'No folder'
+    if (!map.has(key)) map.set(key, { key, label, cases: [] })
+    map.get(key).cases.push(s)
+  }
+  const groups = [...map.values()]
+  groups.sort((a, b) => {
+    if (a.key === '__unfiled__') return 1
+    if (b.key === '__unfiled__') return -1
+    return a.label.localeCompare(b.label, 'id')
+  })
+  for (const g of groups) {
+    g.cases.sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''), 'id'))
+  }
+  return groups
+}
 
 export default function TestRunsPage() {
   const navigate = useNavigate()
@@ -18,6 +38,8 @@ export default function TestRunsPage() {
   const [scenarios, setScenarios] = useState([])
   const [selected, setSelected] = useState(() => new Set())
   const [creating, setCreating] = useState(false)
+  const [featureFilter, setFeatureFilter] = useState('all') // all | __unfiled__ | folderId
+  const [loadingCases, setLoadingCases] = useState(false)
 
   const load = async () => {
     setLoading(true)
@@ -41,15 +63,26 @@ export default function TestRunsPage() {
     load()
   }, [filter])
 
+  const featureGroups = useMemo(() => groupScenariosByFeature(scenarios), [scenarios])
+
+  const visibleGroups = useMemo(() => {
+    if (featureFilter === 'all') return featureGroups
+    return featureGroups.filter((g) => g.key === featureFilter)
+  }, [featureGroups, featureFilter])
+
   const openCreate = async () => {
     setShowCreate(true)
     setTitle(`Run ${new Date().toLocaleDateString('id-ID')}`)
     setSelected(new Set())
+    setFeatureFilter('all')
+    setLoadingCases(true)
     try {
-      const res = await scenarioAPI.getAll(0, 100)
+      const res = await scenarioAPI.getAll(0, 200)
       setScenarios(res.data.scenarios || [])
     } catch {
       setScenarios([])
+    } finally {
+      setLoadingCases(false)
     }
   }
 
@@ -58,6 +91,17 @@ export default function TestRunsPage() {
       const next = new Set(prev)
       if (next.has(id)) next.delete(id)
       else next.add(id)
+      return next
+    })
+  }
+
+  const toggleFeature = (group) => {
+    const ids = group.cases.map((c) => c.id)
+    setSelected((prev) => {
+      const next = new Set(prev)
+      const allOn = ids.every((id) => next.has(id))
+      if (allOn) ids.forEach((id) => next.delete(id))
+      else ids.forEach((id) => next.add(id))
       return next
     })
   }
@@ -90,7 +134,7 @@ export default function TestRunsPage() {
           <div>
             <h1 className="text-3xl font-bold text-ink">Test Runs</h1>
             <p className="text-ink-muted mt-1 text-sm">
-              Multi-case run mirip Testiny — assign PIC, set Pass/Fail, lalu seal.
+              Jalankan beberapa case per fitur — pilih feature folder, set Pass/Fail, lalu seal.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -132,35 +176,88 @@ export default function TestRunsPage() {
 
         {showCreate && (
           <Card>
-            <h2 className="text-lg font-bold text-ink mb-3">Create Test Run</h2>
+            <h2 className="text-lg font-bold text-ink mb-1">Create Test Run</h2>
+            <p className="text-xs text-ink-muted mb-3">
+              1 folder = 1 fitur. Pilih seluruh case di satu fitur, atau campur beberapa fitur.
+            </p>
             <label className="block text-xs font-medium text-ink-muted mb-1">Title</label>
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               className="w-full mb-3 text-sm rounded-lg border border-surface-border px-3 py-2"
-              placeholder="Nama run / sprint / cycle"
+              placeholder="Mis. Sprint 12 · Login + Checkout"
             />
-            <p className="text-xs text-ink-muted mb-2">Pilih test case ({selected.size} selected)</p>
-            <div className="max-h-56 overflow-y-auto border border-surface-border rounded-lg divide-y divide-surface-border mb-4">
-              {scenarios.map((s) => (
-                <label
-                  key={s.id}
-                  className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-surface-muted cursor-pointer"
-                >
-                  <input
-                    type="checkbox"
-                    checked={selected.has(s.id)}
-                    onChange={() => toggle(s.id)}
-                    className="accent-brand"
-                  />
-                  <span className="truncate text-ink">{s.name}</span>
-                  <span className="text-xs text-ink-subtle ml-auto shrink-0">
-                    {s.stepCount ?? s.steps ?? 0} steps
-                  </span>
-                </label>
-              ))}
-              {scenarios.length === 0 && (
-                <p className="px-3 py-6 text-center text-sm text-ink-muted">Belum ada scenario</p>
+
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+              <p className="text-xs text-ink-muted">Pilih test case ({selected.size} selected)</p>
+              <select
+                value={featureFilter}
+                onChange={(e) => setFeatureFilter(e.target.value)}
+                className="text-xs rounded-lg border border-surface-border px-2 py-1.5 bg-white text-ink"
+              >
+                <option value="all">Semua fitur</option>
+                {featureGroups.map((g) => (
+                  <option key={g.key} value={g.key}>
+                    {g.label} ({g.cases.length})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="max-h-72 overflow-y-auto border border-surface-border rounded-lg mb-4">
+              {loadingCases ? (
+                <div className="flex justify-center py-10">
+                  <Spinner />
+                </div>
+              ) : visibleGroups.length === 0 ? (
+                <p className="px-3 py-6 text-center text-sm text-ink-muted">
+                  Belum ada test case. Buat feature folder di Scenarios dulu.
+                </p>
+              ) : (
+                visibleGroups.map((group) => {
+                  const ids = group.cases.map((c) => c.id)
+                  const selectedCount = ids.filter((id) => selected.has(id)).length
+                  const allOn = ids.length > 0 && selectedCount === ids.length
+                  return (
+                    <div key={group.key} className="border-b border-surface-border last:border-b-0">
+                      <div className="sticky top-0 z-[1] flex items-center gap-2 px-3 py-2 bg-surface-muted/90 backdrop-blur-sm">
+                        <Folder size={14} className="text-brand shrink-0" />
+                        <span className="text-xs font-semibold text-ink truncate flex-1">
+                          {group.label}
+                        </span>
+                        <span className="text-[10px] text-ink-subtle tabular-nums">
+                          {selectedCount}/{group.cases.length}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => toggleFeature(group)}
+                          className="text-[11px] font-semibold text-brand hover:text-brand-hover"
+                        >
+                          {allOn ? 'Unselect' : 'Select fitur'}
+                        </button>
+                      </div>
+                      <div className="divide-y divide-surface-border">
+                        {group.cases.map((s) => (
+                          <label
+                            key={s.id}
+                            className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-surface-muted/50 cursor-pointer"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={selected.has(s.id)}
+                              onChange={() => toggle(s.id)}
+                              className="accent-brand"
+                            />
+                            <span className="truncate text-ink flex-1">{s.name}</span>
+                            <span className="text-xs text-ink-subtle shrink-0">
+                              {s.stepCount ?? s.steps ?? 0} steps
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  )
+                })
               )}
             </div>
             <div className="flex gap-2">
@@ -187,7 +284,9 @@ export default function TestRunsPage() {
               <Spinner size="lg" />
             </div>
           ) : runs.length === 0 ? (
-            <p className="text-center text-ink-muted py-10 text-sm">Belum ada test run</p>
+            <p className="text-center text-ink-muted py-10 text-sm">
+              Belum ada test run — Create Run dan pilih case per feature folder.
+            </p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">

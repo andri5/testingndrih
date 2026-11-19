@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { Fragment, useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { Card, Badge, Spinner, Alert, Button } from '../components/ui'
@@ -13,7 +13,26 @@ import {
   XCircle,
   Ban,
   SkipForward,
+  Folder,
 } from 'lucide-react'
+
+function groupItemsByFeature(items = []) {
+  const map = new Map()
+  for (const item of items) {
+    const folder = item.scenario?.folder
+    const key = item.scenario?.folderId || folder?.id || '__unfiled__'
+    const label = folder?.name || 'No folder'
+    if (!map.has(key)) map.set(key, { key, label, items: [] })
+    map.get(key).items.push(item)
+  }
+  const groups = [...map.values()]
+  groups.sort((a, b) => {
+    if (a.key === '__unfiled__') return 1
+    if (b.key === '__unfiled__') return -1
+    return a.label.localeCompare(b.label, 'id')
+  })
+  return groups
+}
 
 const RESULTS = [
   { value: 'PASSED', label: 'Pass', icon: CheckCircle2, className: 'text-emerald-700 border-emerald-200 bg-emerald-50' },
@@ -111,6 +130,11 @@ export default function TestRunDetailPage() {
     }
   }
 
+  const featureGroups = useMemo(
+    () => groupItemsByFeature(run?.items || []),
+    [run?.items]
+  )
+
   if (loading && !run) {
     return (
       <Layout>
@@ -147,6 +171,9 @@ export default function TestRunDetailPage() {
               <ArrowLeft size={14} /> Test Runs
             </button>
             <h1 className="text-2xl font-bold text-ink">{run.title}</h1>
+            <p className="text-xs text-ink-muted mt-1">
+              Case dikelompokkan per feature folder (1 folder = 1 fitur).
+            </p>
             <div className="flex flex-wrap items-center gap-2 mt-2">
               <Badge variant={sealed ? 'default' : 'primary'}>{run.status}</Badge>
               <span className="text-xs text-ink-muted">
@@ -192,7 +219,20 @@ export default function TestRunDetailPage() {
                 </tr>
               </thead>
               <tbody>
-                {(run.items || []).map((item, idx) => (
+                {featureGroups.map((group) => (
+                  <Fragment key={group.key}>
+                    <tr className="bg-surface-muted/70">
+                      <td colSpan={5} className="py-2 px-1">
+                        <div className="flex items-center gap-2 text-xs font-semibold text-ink">
+                          <Folder size={14} className="text-brand" />
+                          <span>{group.label}</span>
+                          <span className="text-ink-subtle font-normal tabular-nums">
+                            ({group.items.length} case)
+                          </span>
+                        </div>
+                      </td>
+                    </tr>
+                    {group.items.map((item, idx) => (
                   <tr key={item.id} className="border-b border-surface-border/70 align-top">
                     <td className="py-3 pr-3 text-ink-subtle">{idx + 1}</td>
                     <td className="py-3 pr-3">
@@ -204,6 +244,7 @@ export default function TestRunDetailPage() {
                         {item.scenario?.name}
                       </button>
                       <p className="text-xs text-ink-subtle mt-0.5">
+                        {item.scenario?.folder?.name || 'No folder'} ·{' '}
                         {item.scenario?.priority || 'MEDIUM'} · {item.scenario?.caseType || 'Functional'} ·{' '}
                         {item.scenario?.steps ?? 0} steps
                       </p>
@@ -297,6 +338,8 @@ export default function TestRunDetailPage() {
                       </div>
                     </td>
                   </tr>
+                    ))}
+                  </Fragment>
                 ))}
               </tbody>
             </table>

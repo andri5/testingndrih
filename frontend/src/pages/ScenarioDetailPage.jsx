@@ -15,6 +15,7 @@ import ManualRunPanel from '../components/ManualRunPanel'
 import CaseAttachmentsPanel from '../components/CaseAttachmentsPanel'
 import CaseRunsPanel from '../components/CaseRunsPanel'
 import CaseHistoryPanel from '../components/CaseHistoryPanel'
+import { useFolderStore } from '../store/folderStore'
 
 const RecordIcon = (props) => <Circle {...props} className="text-red-500 fill-red-500" />
 
@@ -197,6 +198,20 @@ const emptyStep = {
   selector: '',
   value: '',
   metadata: '',
+}
+
+const PRIORITY_SELECT_COLORS = {
+  LOW: 'border-sky-300 bg-sky-50 text-sky-800',
+  MEDIUM: 'border-amber-300 bg-amber-50 text-amber-900',
+  HIGH: 'border-orange-400 bg-orange-50 text-orange-900',
+  CRITICAL: 'border-red-400 bg-red-50 text-red-800',
+}
+
+const CASE_TYPE_SELECT_COLORS = {
+  Functional: 'border-indigo-300 bg-indigo-50 text-indigo-900',
+  Regression: 'border-violet-300 bg-violet-50 text-violet-900',
+  Smoke: 'border-emerald-300 bg-emerald-50 text-emerald-900',
+  Other: 'border-slate-300 bg-slate-50 text-slate-700',
 }
 
 export default function ScenarioDetailPage() {
@@ -1515,7 +1530,10 @@ export default function ScenarioDetailPage() {
             <nav className="flex flex-wrap items-center gap-1.5 text-sm text-ink-muted mb-2">
               <button
                 type="button"
-                onClick={() => navigate('/scenarios')}
+                onClick={() => {
+                  useFolderStore.getState().setSelectedKey('all')
+                  navigate('/scenarios')
+                }}
                 className="text-brand hover:text-brand-hover font-medium"
               >
                 Repository
@@ -1523,8 +1541,20 @@ export default function ScenarioDetailPage() {
               <span className="text-ink-subtle">/</span>
               <button
                 type="button"
-                onClick={() => navigate('/scenarios')}
+                onClick={() => {
+                  const folderId = scenario.folderId || scenario.folder?.id || null
+                  useFolderStore.getState().setSelectedKey(folderId || 'unfiled')
+                  if (folderId && scenario.folder?.parentId) {
+                    useFolderStore.getState().expandMany([scenario.folder.parentId])
+                  }
+                  navigate('/scenarios')
+                }}
                 className="hover:text-brand font-medium truncate max-w-[180px]"
+                title={
+                  scenario.folder?.name
+                    ? `Buka feature folder “${scenario.folder.name}”`
+                    : 'Buka case tanpa folder'
+                }
               >
                 {scenario.folder?.name || 'No folder'}
               </button>
@@ -1704,7 +1734,10 @@ export default function ScenarioDetailPage() {
               <select
                 value={caseMeta.priority}
                 onChange={(e) => setCaseMeta((m) => ({ ...m, priority: e.target.value }))}
-                className="w-full text-sm rounded-lg border border-surface-border px-3 py-2 bg-white text-ink"
+                className={`w-full text-sm font-semibold rounded-lg border px-3 py-2 transition-colors ${
+                  PRIORITY_SELECT_COLORS[caseMeta.priority] ||
+                  'border-surface-border bg-white text-ink'
+                }`}
               >
                 <option value="LOW">LOW</option>
                 <option value="MEDIUM">MEDIUM</option>
@@ -1717,7 +1750,10 @@ export default function ScenarioDetailPage() {
               <select
                 value={caseMeta.caseType}
                 onChange={(e) => setCaseMeta((m) => ({ ...m, caseType: e.target.value }))}
-                className="w-full text-sm rounded-lg border border-surface-border px-3 py-2 bg-white text-ink"
+                className={`w-full text-sm font-semibold rounded-lg border px-3 py-2 transition-colors ${
+                  CASE_TYPE_SELECT_COLORS[caseMeta.caseType] ||
+                  'border-surface-border bg-white text-ink'
+                }`}
               >
                 <option value="Functional">Functional</option>
                 <option value="Regression">Regression</option>

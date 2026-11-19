@@ -1,7 +1,7 @@
 # Deployment & Development Workflow
 
 Production: **https://testsambilngopi.my.id**  
-App UI: **Test Repository** (icon rail + folder tree + scenario table).
+App UI: **Test Repository** (icon rail + **feature folders** + scenario table).
 
 Tanpa staging — rilis lewat `main`, dengan **Review deployments** sebelum deploy VPS.
 
@@ -12,7 +12,7 @@ Tanpa staging — rilis lewat `main`, dengan **Review deployments** sebelum depl
 ```
 1. Local develop
    frontend :3001  |  backend :5001  |  DB docker :5434
-   UI: /scenarios = Test Repository (folders, Create menu, DnD)
+   UI: /scenarios = Test Repository (feature folders, Create menu, DnD)
 
 2. Commit (Conventional Commits)
    feat(scenarios): ...
@@ -49,14 +49,15 @@ Lalu approve **Review deployments**.
 | Menu (icon rail) | Path | Catatan |
 |------------------|------|---------|
 | Dashboard | `/dashboard` | Ringkasan |
-| Scenarios | `/scenarios` | **Test Repository** + folder pane |
+| Scenarios | `/scenarios` | **Test Repository** + feature folders (1 folder = 1 fitur) |
+| Test Runs | `/test-runs` | Multi-case runs grouped by feature |
 | Execution | `/execution` | Run history |
 | Environments | `/environments` | Variabel `{{var}}` |
 | Reports / Analytics | `/reports`, `/analytics` | Laporan |
-| Tools | overflow | Smoke, stress, chains, … |
+| Tools | wrench flyout | Smoke, stress, chains, API, visual, … |
 | Settings | `/settings` | Profile, users, AI |
 
-Create di repository: Manual / Quick Record / Templates / Excel / AI — assign ke folder aktif.
+Create di repository: Manual / Quick Record / Templates / Excel / AI — assign ke **feature folder** aktif.
 
 ---
 
