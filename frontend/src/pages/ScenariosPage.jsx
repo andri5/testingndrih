@@ -141,17 +141,30 @@ export default function ScenariosPage() {
     fetchScenarios(0, pageSize, '', { favoritesOnly, tag })
   }
 
-  const handleFolderDrop = async () => {
+  const handleFolderDrop = async (payload) => {
     // Layout already moved via API; refresh filtered list for active folder
     await fetchScenarios(0, pageSize, '', { favoritesOnly, tag: filterTag })
+    if (payload?.scenarioId && panelCaseId === payload.scenarioId && selectedFolderKey !== 'all') {
+      setPanelCaseId(null)
+    }
   }
 
   const handleMoveRequest = async (scenarioId, folderId) => {
     try {
       await moveScenarios([scenarioId], folderId)
       toast.success('Case dipindahkan')
+      // If the open panel case left the current folder filter, close panel
+      if (panelCaseId === scenarioId) {
+        const key = selectedFolderKey
+        if (key !== 'all') {
+          const stillVisible =
+            key === 'unfiled' ? folderId == null : folderId === key
+          if (!stillVisible) setPanelCaseId(null)
+        }
+      }
     } catch (err) {
       toast.error(err.message || 'Gagal memindahkan case')
+      throw err
     }
   }
 
@@ -969,6 +982,8 @@ export default function ScenariosPage() {
                   <CaseDetailSidePanel
                     scenarioId={panelCaseId}
                     scenarioIds={panelScenarioIds}
+                    folderOptions={folderOptions}
+                    onMoveRequest={handleMoveRequest}
                     onClose={() => setPanelCaseId(null)}
                     onSelectId={setPanelCaseId}
                     onSaved={(updated) => {

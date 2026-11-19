@@ -40,6 +40,8 @@ export default function CaseDetailSidePanel({
   onClose,
   onSelectId,
   onSaved,
+  folderOptions = [],
+  onMoveRequest,
 }) {
   const navigate = useNavigate()
   const [tab, setTab] = useState('details')
@@ -254,6 +256,46 @@ export default function CaseDetailSidePanel({
                       ))}
                     </select>
                   </div>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-semibold uppercase tracking-wider text-ink-subtle mb-1">
+                    Feature folder
+                  </label>
+                  <select
+                    value={scenario?.folderId || scenario?.folder?.id || ''}
+                    onChange={async (e) => {
+                      const raw = e.target.value
+                      const folderId = raw === '' ? null : raw
+                      if (!scenarioId || !onMoveRequest) return
+                      const current = scenario?.folderId || scenario?.folder?.id || null
+                      if ((folderId || null) === (current || null)) return
+                      try {
+                        await onMoveRequest(scenarioId, folderId)
+                        setScenario((prev) => {
+                          if (!prev) return prev
+                          if (!folderId) return { ...prev, folderId: null, folder: null }
+                          const opt = folderOptions.find((f) => f.id === folderId)
+                          const leaf = (opt?.label || 'Folder').split(' / ').pop()
+                          return {
+                            ...prev,
+                            folderId,
+                            folder: { id: folderId, name: leaf },
+                          }
+                        })
+                      } catch {
+                        /* parent toasts */
+                      }
+                    }}
+                    className="w-full text-xs rounded-lg border border-surface-border bg-white px-2.5 py-2 text-ink"
+                  >
+                    <option value="">No folder</option>
+                    {folderOptions.map((f) => (
+                      <option key={f.id} value={f.id}>
+                        {f.label}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 <div>

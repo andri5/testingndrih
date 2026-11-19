@@ -1845,3 +1845,18 @@ html.theme-light .test-btn-disabled {
   padding-bottom: 5rem;
 }
 
+/* Case drag → folder: raise sidebar drop targets above detail-panel overlay */
+body.scenario-dragging [data-folder-pane] {
+  z-index: 50 !important;
+  width: min(16rem, 75vw) !important;
+}
+@media (min-width: 1280px) {
+  body.scenario-dragging [data-folder-pane] {
+    width: 16rem !important;
+  }
+}
+body.scenario-dragging [data-folder-pane] .ring-brand,
+body.scenario-dragging [data-folder-pane] [class*='ring-brand'] {
+  outline-color: var(--brand);
+}
+

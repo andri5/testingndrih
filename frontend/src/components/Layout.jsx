@@ -9,6 +9,7 @@ import {
 import HelpModal from './HelpModal'
 import BrandLogo from './BrandLogo'
 import ScenarioFolderTree from './ScenarioFolderTree'
+import toast from 'react-hot-toast'
 import { scenarioAPI } from '../services/api'
 import { useFolderStore } from '../store/folderStore'
 import {
@@ -162,8 +163,11 @@ export default function Layout({ children, showFolderPane = false, onFolderSelec
       try {
         await scenarioAPI.move([scenarioId], targetFolderId ?? null)
         await useFolderStore.getState().fetchFolders()
+        toast.success(
+          targetFolderId ? 'Case dipindahkan ke folder' : 'Case dipindahkan ke No folder'
+        )
       } catch (e) {
-        window.alert(e.response?.data?.message || e.message || 'Failed to move scenario')
+        toast.error(e.response?.data?.message || e.message || 'Failed to move scenario')
         return
       }
     }
@@ -517,11 +521,12 @@ export default function Layout({ children, showFolderPane = false, onFolderSelec
       {folderPaneVisible && (
         <aside
           className={[
-            'shrink-0 z-20 bg-surface-sidebar border-r border-surface-border overflow-hidden',
+            'folder-pane shrink-0 z-20 bg-surface-sidebar border-r border-surface-border overflow-hidden',
             'transition-[width] duration-200 ease-out',
             'xl:w-64',
             mobileFoldersOpen ? 'w-[min(16rem,75vw)]' : 'w-0 xl:w-64',
           ].join(' ')}
+          data-folder-pane
         >
           <div className="w-[min(16rem,75vw)] xl:w-64 h-full overflow-y-auto">
             <ScenarioFolderTree

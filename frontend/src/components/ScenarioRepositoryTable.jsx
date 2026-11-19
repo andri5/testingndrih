@@ -14,7 +14,36 @@ import {
   MoreHorizontal,
 } from 'lucide-react'
 
-function RowActions({ s, folderOptions, onOpen, onEdit, onDuplicate, onDelete, onMoveRequest }) {
+function MoveFolderSelect({ s, folderOptions, onMoveRequest, className = '' }) {
+  return (
+    <select
+      className={`text-[11px] border border-surface-border rounded-md px-1.5 py-1 bg-white text-ink-muted max-w-[140px] w-full ${className}`}
+      defaultValue=""
+      onClick={(e) => e.stopPropagation()}
+      onMouseDown={(e) => e.stopPropagation()}
+      onChange={(e) => {
+        const val = e.target.value
+        e.target.value = ''
+        if (!val) return
+        onMoveRequest?.(s.id, val === '__unfiled__' ? null : val)
+      }}
+      title="Pindah ke feature folder"
+      aria-label="Pindah ke feature folder"
+    >
+      <option value="" disabled>
+        Move…
+      </option>
+      <option value="__unfiled__">No folder</option>
+      {folderOptions.map((f) => (
+        <option key={f.id} value={f.id}>
+          {f.label}
+        </option>
+      ))}
+    </select>
+  )
+}
+
+function RowActions({ s, folderOptions, onOpen, onEdit, onDuplicate, onDelete, onMoveRequest, compact = false }) {
   const [open, setOpen] = useState(false)
   const ref = useRef(null)
 
@@ -28,29 +57,13 @@ function RowActions({ s, folderOptions, onOpen, onEdit, onDuplicate, onDelete, o
   }, [open])
 
   const moveSelect = (
-    <select
-      className="text-[11px] border border-surface-border rounded-md px-1.5 py-1 bg-white text-ink-muted max-w-[110px] w-full"
-      defaultValue=""
-      onChange={(e) => {
-        const val = e.target.value
-        e.target.value = ''
-        if (!val) return
-        onMoveRequest?.(s.id, val === '__unfiled__' ? null : val)
-        setOpen(false)
-      }}
-      title="Move to folder"
-    >
-      <option value="" disabled>
-        Move…
-      </option>
-      <option value="__unfiled__">No folder</option>
-      {folderOptions.map((f) => (
-        <option key={f.id} value={f.id}>
-          {f.label}
-        </option>
-      ))}
-    </select>
+    <MoveFolderSelect s={s} folderOptions={folderOptions} onMoveRequest={onMoveRequest} />
   )
+
+  // Panel open (compact): keep Move reachable — Edit/Delete stay behind full Actions
+  if (compact) {
+    return <div className="flex justify-end">{moveSelect}</div>
+  }
 
   return (
     <>
@@ -266,7 +279,7 @@ export default function ScenarioRepositoryTable({
       ) : null}
       {compact ? (
         <p className="px-3 py-1.5 text-[11px] text-ink-muted border-b border-surface-border bg-sky-50/80">
-          Klik baris untuk ganti case di panel kanan · tutup panel untuk aksi Edit/Delete lengkap.
+          Klik baris untuk ganti case di panel · Move… / drag ⋮⋮ ke folder tetap bisa · tutup panel untuk Edit/Delete.
         </p>
       ) : null}
       <div className={`table-wrap max-w-full ${compact ? 'overflow-x-hidden' : ''}`}>
@@ -302,8 +315,12 @@ export default function ScenarioRepositoryTable({
               >
                 Last result
               </th>
-              <th className={`px-3 py-2.5 font-semibold text-right ${compact ? 'hidden' : ''}`}>
-                Actions
+              <th
+                className={`px-2 sm:px-3 py-2.5 font-semibold text-right ${
+                  compact ? 'w-[7rem]' : ''
+                }`}
+              >
+                {compact ? 'Move' : 'Actions'}
               </th>
             </tr>
           </thead>
@@ -393,28 +410,36 @@ export default function ScenarioRepositoryTable({
                         onMouseDown={(e) => e.stopPropagation()}
                       />
                     </td>
-                    <td
-                      className="px-1 py-2.5 text-ink-subtle cursor-grab active:cursor-grabbing"
-                      draggable
-                      data-drag-handle="scenario"
-                      title={
-                        canReorder
-                          ? 'Drag atas/bawah untuk ubah urutan · drop ke folder di sidebar untuk pindah fitur'
-                          : 'Drag ke feature folder di sidebar'
-                      }
-                      onDragStart={(e) => {
-                        e.stopPropagation()
-                        e.dataTransfer.setData('application/x-scenario-id', s.id)
-                        e.dataTransfer.setData('text/plain', s.id)
-                        e.dataTransfer.effectAllowed = 'move'
-                        setDraggingId(s.id)
-                      }}
-                      onDragEnd={() => {
-                        setDraggingId(null)
-                        setDropTargetId(null)
-                      }}
-                    >
-                      <GripVertical size={14} />
+                    <td className="px-1 py-2.5">
+                      <button
+                        type="button"
+                        draggable
+                        data-drag-handle="scenario"
+                        title={
+                          canReorder
+                            ? 'Drag atas/bawah untuk ubah urutan · drop ke folder di sidebar untuk pindah fitur'
+                            : 'Drag ke feature folder di sidebar'
+                        }
+                        aria-label="Drag case"
+                        className="inline-flex items-center justify-center p-1 rounded text-ink-subtle cursor-grab active:cursor-grabbing hover:bg-surface-muted hover:text-ink"
+                        onClick={(e) => e.preventDefault()}
+                        onMouseDown={(e) => e.stopPropagation()}
+                        onDragStart={(e) => {
+                          e.stopPropagation()
+                          e.dataTransfer.setData('application/x-scenario-id', s.id)
+                          e.dataTransfer.setData('text/plain', s.id)
+                          e.dataTransfer.effectAllowed = 'move'
+                          setDraggingId(s.id)
+                          document.body.classList.add('scenario-dragging')
+                        }}
+                        onDragEnd={() => {
+                          setDraggingId(null)
+                          setDropTargetId(null)
+                          document.body.classList.remove('scenario-dragging')
+                        }}
+                      >
+                        <GripVertical size={14} />
+                      </button>
                     </td>
                     <td className="px-2 sm:px-3 py-2.5 min-w-0">
                       <div className="text-left group min-w-0 overflow-hidden">
@@ -487,7 +512,7 @@ export default function ScenarioRepositoryTable({
                       <LastResultBadge result={s.lastResult} />
                     </td>
                     <td
-                      className={`px-3 py-2.5 ${compact ? 'hidden' : ''}`}
+                      className="px-2 sm:px-3 py-2.5"
                       data-row-action
                       onClick={(e) => e.stopPropagation()}
                     >
@@ -499,6 +524,7 @@ export default function ScenarioRepositoryTable({
                         onDuplicate={onDuplicate}
                         onDelete={onDelete}
                         onMoveRequest={onMoveRequest}
+                        compact={compact}
                       />
                     </td>
                   </tr>
