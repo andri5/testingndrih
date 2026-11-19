@@ -27,10 +27,29 @@ Recommended structure (no step groups inside a case):
 2. Select that folder → **Create Manual** (case lands in the active feature)
 3. Or drag the **⋮⋮ grip** on a case from the table onto a feature folder (or **No folder**)
 4. **Reorder** inside a feature folder / No folder: drag **⋮⋮** onto another row (atas/bawah). Not available on “All scenarios” (that view sorts by date).
-5. **Open** the case → fill Details / Steps / Expected result
+5. **Click** a case (or **Open**) → detail panel opens on the **right** (Testiny-style: Details / Attachments / Runs / History). Edit steps / Manual Run via **full page** (icon ↗ in panel).
 6. Breadcrumb **feature name** returns to that folder’s case list
 
 Keep unrelated flows as separate cases under the same feature folder (e.g. Login valid / Login invalid).
+
+### Bulk import Excel
+
+**Scenarios → Create → Import Excel** (Ctrl+Click unduh template).
+
+Template columns (current):
+
+| Column | Notes |
+|--------|--------|
+| Feature Folder | 1 folder = 1 fitur; dibuat otomatis jika belum ada |
+| Case Name | 1 case = 1 flow (isi di baris pertama case) |
+| Description / Base URL / Precondition | Case meta |
+| Case Expected Result | Expected hasil case |
+| Severity (Priority) | LOW / MEDIUM / HIGH / CRITICAL |
+| Case Type | Functional / Regression / Smoke / Sanity / Other |
+| Step # / Step Type / Step Description | Steps |
+| Step Expected Result / Selector / Value | Opsional per step |
+
+Baris berikutnya kosongkan kolom case meta; isi hanya step. Format lama (`Scenario Name` + `Type`) masih diterima.
 
 ---
 

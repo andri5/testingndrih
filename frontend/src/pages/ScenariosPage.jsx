@@ -10,6 +10,7 @@ import ScenarioRepositoryTable, { flattenFolderOptions } from '../components/Sce
 import { TemplatePickerModal } from '../components/TemplatePickerModal'
 import { QuickRecordModal } from '../components/QuickRecordModal'
 import { ImportPreviewModal } from '../components/ImportPreviewModal'
+import CaseDetailSidePanel from '../components/CaseDetailSidePanel'
 import { Tooltip } from '../components/ui'
 import { useScenarioStore } from '../store/scenarioStore'
 import { useFolderStore } from '../store/folderStore'
@@ -17,7 +18,8 @@ import { executionAPI, testRunAPI, scenarioAPI } from '../services/api'
 import toast from 'react-hot-toast'
 const i18n = {
     title: 'Test Repository',
-    subtitle: '1 folder = 1 fitur → buat case di dalamnya → isi steps di detail',
+    subtitle:
+      '1 folder = 1 fitur → klik case untuk detail di panel kanan (ala Testiny) → Edit steps di halaman penuh bila perlu',
     createScenarioBtn: 'Create',
     selectedCount: (n) => `${n} scenario${n !== 1 ? 's' : ''} selected`,
     runningBulk: 'Running executions sequentially (headless)...',
@@ -37,7 +39,8 @@ const i18n = {
     templatesMenuTooltip: 'Choose from ready-made scenario templates (Login, E-Commerce, Navigation, Form Testing).',
     importExcel: 'Import Excel',
     importExcelDesc: 'Bulk import',
-    importExcelTooltip: 'Upload an Excel file with test scenarios. Use Ctrl+Click to view template.',
+    importExcelTooltip:
+      'Upload Excel (.xlsx). Template mengikuti Manual QA: Feature Folder, Case Name, Precondition, Expected Result, Priority, steps. Ctrl+Click unduh template.',
 }
 
 export default function ScenariosPage() {
@@ -55,6 +58,7 @@ export default function ScenariosPage() {
   const [importPreviewData, setImportPreviewData] = useState(null)
   const [importIsLoading, setImportIsLoading] = useState(false)
   const [selectedIds, setSelectedIds] = useState(new Set())
+  const [panelCaseId, setPanelCaseId] = useState(null)
   const [bulkExecuteStatus, setBulkExecuteStatus] = useState(null) // null | 'running' | 'done'
   const [bulkResults, setBulkResults] = useState([]) // [{id, name, status, executionId}]
 
@@ -112,6 +116,7 @@ export default function ScenariosPage() {
   useEffect(() => {
     fetchScenarios(0, pageSize, '', { favoritesOnly, tag: filterTag })
     fetchTags()
+    setPanelCaseId(null)
   }, [selectedFolderKey])
 
   const handleSearch = (query) => {
@@ -315,8 +320,10 @@ export default function ScenariosPage() {
 
   const handleViewScenario = (scenario) => {
     setSelectedScenario(scenario)
-    navigate(`/scenarios/${scenario.id}`)
+    setPanelCaseId(scenario.id)
   }
+
+  const panelScenarioIds = useMemo(() => scenarios.map((s) => s.id), [scenarios])
 
   const handleEditScenario = (scenario) => {
     setEditingScenario(scenario)
@@ -626,7 +633,7 @@ export default function ScenariosPage() {
 
   return (
     <Layout onFolderSelectionChange={() => refreshList()} onFolderDrop={handleFolderDrop}>
-      <div className="space-y-5">
+      <div className="space-y-5 min-w-0 w-full max-w-full overflow-x-hidden">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
           <div>
@@ -903,37 +910,77 @@ export default function ScenariosPage() {
           </Card>
         )}
 
-        {/* Repository table */}
+        {/* Repository list + Testiny-style right detail panel */}
         {!showCreateForm && !editingScenario && (
-          <>
-            <ScenarioRepositoryTable
-              scenarios={scenarios}
-              selectedIds={selectedIds}
-              onToggleSelect={handleToggleSelect}
-              onToggleSelectAll={handleSelectAll}
-              onOpen={handleViewScenario}
-              onEdit={handleEditScenario}
-              onDuplicate={handleDuplicateScenario}
-              onDelete={handleDeleteScenario}
-              onToggleFavorite={handleToggleFavorite}
-              onMoveRequest={handleMoveRequest}
-              onReorder={selectedFolderKey === 'all' ? undefined : handleReorder}
-              reorderEnabled={selectedFolderKey !== 'all'}
-              folderOptions={folderOptions}
-              isLoading={isLoading}
-              emptyTitle={emptyState.title}
-              emptyHint={emptyState.hint}
-              onCreateEmpty={() => setShowCreateForm(true)}
-              createEmptyLabel={t.createManual}
-            />
-            {pagination.hasMore && (
-              <div className="flex justify-center">
-                <Button variant="secondary" size="sm" onClick={handleLoadMore} disabled={isLoading}>
-                  Load more
-                </Button>
-              </div>
-            )}
-          </>
+          <div
+            className={
+              panelCaseId
+                ? 'grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(300px,380px)] xl:grid-cols-[minmax(0,1fr)_minmax(340px,420px)] gap-3 min-w-0 w-full items-start'
+                : 'min-w-0 w-full'
+            }
+          >
+            <div className="min-w-0 w-full max-w-full overflow-hidden space-y-3">
+              <ScenarioRepositoryTable
+                scenarios={scenarios}
+                selectedIds={selectedIds}
+                activeId={panelCaseId}
+                compact={Boolean(panelCaseId)}
+                onToggleSelect={handleToggleSelect}
+                onToggleSelectAll={handleSelectAll}
+                onOpen={handleViewScenario}
+                onEdit={handleEditScenario}
+                onDuplicate={handleDuplicateScenario}
+                onDelete={(s) => {
+                  if (panelCaseId && (s?.id === panelCaseId || s === panelCaseId)) {
+                    setPanelCaseId(null)
+                  }
+                  handleDeleteScenario(s)
+                }}
+                onToggleFavorite={handleToggleFavorite}
+                onMoveRequest={handleMoveRequest}
+                onReorder={selectedFolderKey === 'all' ? undefined : handleReorder}
+                reorderEnabled={selectedFolderKey !== 'all'}
+                folderOptions={folderOptions}
+                isLoading={isLoading}
+                emptyTitle={emptyState.title}
+                emptyHint={emptyState.hint}
+                onCreateEmpty={() => setShowCreateForm(true)}
+                createEmptyLabel={t.createManual}
+              />
+              {pagination.hasMore && (
+                <div className="flex justify-center">
+                  <Button variant="secondary" size="sm" onClick={handleLoadMore} disabled={isLoading}>
+                    Load more
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            {panelCaseId ? (
+              <>
+                {/* Mobile / tablet: overlay drawer */}
+                <button
+                  type="button"
+                  className="fixed inset-0 z-30 bg-slate-900/40 lg:hidden"
+                  aria-label="Close detail panel"
+                  onClick={() => setPanelCaseId(null)}
+                />
+                <div className="fixed inset-y-0 right-0 z-40 w-[min(100%,24rem)] sm:w-[28rem] lg:static lg:z-0 lg:w-auto lg:max-w-none min-w-0 h-[100dvh] lg:h-auto lg:max-h-[calc(100vh-5.5rem)] lg:sticky lg:top-3">
+                  <CaseDetailSidePanel
+                    scenarioId={panelCaseId}
+                    scenarioIds={panelScenarioIds}
+                    onClose={() => setPanelCaseId(null)}
+                    onSelectId={setPanelCaseId}
+                    onSaved={(updated) => {
+                      if (updated?.priority != null || updated?.name) {
+                        refreshList()
+                      }
+                    }}
+                  />
+                </div>
+              </>
+            ) : null}
+          </div>
         )}
       </div>
 

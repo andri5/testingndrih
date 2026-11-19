@@ -154,6 +154,26 @@ function RowActions({ s, folderOptions, onOpen, onEdit, onDuplicate, onDelete, o
   )
 }
 
+const SEVERITY_BADGE = {
+  LOW: 'border-sky-300 bg-sky-50 text-sky-800',
+  MEDIUM: 'border-amber-300 bg-amber-50 text-amber-900',
+  HIGH: 'border-orange-400 bg-orange-50 text-orange-900',
+  CRITICAL: 'border-red-400 bg-red-50 text-red-800',
+}
+
+function SeverityBadge({ priority }) {
+  const level = String(priority || 'MEDIUM').toUpperCase()
+  const cls = SEVERITY_BADGE[level] || SEVERITY_BADGE.MEDIUM
+  return (
+    <span
+      className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wide border ${cls}`}
+      title={`Severity / Priority: ${level}`}
+    >
+      {level}
+    </span>
+  )
+}
+
 function LastResultBadge({ result }) {
   if (!result) {
     return (
@@ -212,6 +232,7 @@ function LastResultBadge({ result }) {
 export default function ScenarioRepositoryTable({
   scenarios = [],
   selectedIds,
+  activeId = null,
   onToggleSelect,
   onToggleSelectAll,
   onOpen,
@@ -228,6 +249,7 @@ export default function ScenarioRepositoryTable({
   onCreateEmpty,
   createEmptyLabel = 'Create Manual',
   reorderEnabled = false,
+  compact = false,
 }) {
   const allSelected = scenarios.length > 0 && scenarios.every((s) => selectedIds.has(s.id))
   const canReorder = Boolean(onReorder) && reorderEnabled
@@ -235,18 +257,23 @@ export default function ScenarioRepositoryTable({
   const [dropTargetId, setDropTargetId] = useState(null)
 
   return (
-    <div className="linear-card overflow-hidden">
+    <div className="linear-card overflow-hidden max-w-full">
       {canReorder && scenarios.length > 1 ? (
         <p className="px-3 py-2 text-[11px] text-ink-muted border-b border-surface-border bg-surface-muted/40">
           Ubah urutan: drag ikon <span className="font-semibold text-ink">⋮⋮</span> ke baris lain (atas/bawah).
           Drag ke sidebar untuk pindah feature folder.
         </p>
       ) : null}
-      <div className="table-wrap">
-        <table className="w-full text-sm">
+      {compact ? (
+        <p className="px-3 py-1.5 text-[11px] text-ink-muted border-b border-surface-border bg-sky-50/80">
+          Klik baris untuk ganti case di panel kanan · tutup panel untuk aksi Edit/Delete lengkap.
+        </p>
+      ) : null}
+      <div className={`table-wrap max-w-full ${compact ? 'overflow-x-hidden' : ''}`}>
+        <table className={`w-full text-sm ${compact ? 'table-fixed' : ''}`}>
           <thead className="bg-surface-muted/80 border-b border-surface-border text-left">
             <tr className="text-xs uppercase tracking-wider text-ink-subtle">
-              <th className="w-10 px-3 py-2.5">
+              <th className={`${compact ? 'w-9' : 'w-10'} px-2 sm:px-3 py-2.5`}>
                 <input
                   type="checkbox"
                   checked={allSelected}
@@ -254,25 +281,43 @@ export default function ScenarioRepositoryTable({
                   className="rounded border-surface-border accent-brand"
                 />
               </th>
-              <th className="w-8 px-1 py-2.5" title={canReorder ? 'Drag to reorder' : undefined} />
-              <th className="px-3 py-2.5 font-semibold">Title</th>
-              <th className="px-3 py-2.5 font-semibold hidden md:table-cell">Folder</th>
-              <th className="px-3 py-2.5 font-semibold hidden sm:table-cell">Steps</th>
-              <th className="px-3 py-2.5 font-semibold hidden lg:table-cell">Last result</th>
-              <th className="px-3 py-2.5 font-semibold text-right">Actions</th>
+              <th
+                className={`${compact ? 'w-7' : 'w-8'} px-1 py-2.5`}
+                title={canReorder ? 'Drag to reorder' : undefined}
+              />
+              <th className="px-2 sm:px-3 py-2.5 font-semibold min-w-0">Title</th>
+              <th className={`px-3 py-2.5 font-semibold ${compact ? 'hidden' : 'hidden md:table-cell'}`}>
+                Folder
+              </th>
+              <th className={`px-3 py-2.5 font-semibold ${compact ? 'hidden' : 'hidden sm:table-cell'}`}>
+                Steps
+              </th>
+              <th className={`${compact ? 'w-[5.5rem]' : ''} px-2 sm:px-3 py-2.5 font-semibold`}>
+                Severity
+              </th>
+              <th
+                className={`px-3 py-2.5 font-semibold ${
+                  compact ? 'hidden' : 'hidden lg:table-cell'
+                }`}
+              >
+                Last result
+              </th>
+              <th className={`px-3 py-2.5 font-semibold text-right ${compact ? 'hidden' : ''}`}>
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody>
             {isLoading && (
               <tr>
-                <td colSpan={7} className="px-4 py-10 text-center text-ink-subtle">
+                <td colSpan={8} className="px-4 py-10 text-center text-ink-subtle">
                   Loading scenarios...
                 </td>
               </tr>
             )}
             {!isLoading && scenarios.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-4 py-10 text-center">
+                <td colSpan={8} className="px-4 py-10 text-center">
                   <p className="text-sm font-medium text-ink">{emptyTitle}</p>
                   <p className="text-xs text-ink-muted mt-1 max-w-md mx-auto">{emptyHint}</p>
                   {onCreateEmpty ? (
@@ -290,19 +335,32 @@ export default function ScenarioRepositoryTable({
             {!isLoading &&
               scenarios.map((s) => {
                 const selected = selectedIds.has(s.id)
+                const isActive = activeId === s.id
                 const isDragging = draggingId === s.id
                 const isDropTarget = canReorder && dropTargetId === s.id && draggingId && draggingId !== s.id
                 return (
                   <tr
                     key={s.id}
                     className={[
-                      'border-b border-surface-border/80 hover:bg-brand-soft/30 transition-colors',
-                      selected ? 'bg-brand-soft/40' : 'bg-white',
+                      'border-b border-surface-border/80 hover:bg-brand-soft/30 transition-colors cursor-pointer',
+                      isActive
+                        ? 'bg-sky-50/90 ring-1 ring-inset ring-sky-200'
+                        : selected
+                          ? 'bg-brand-soft/40'
+                          : 'bg-white',
                       isDragging ? 'opacity-40' : '',
                       isDropTarget ? 'bg-brand-soft/70 shadow-[inset_0_2px_0_0_var(--color-brand,#0d9488)]' : '',
                     ]
                       .filter(Boolean)
                       .join(' ')}
+                    onClick={(e) => {
+                      // Ignore interactive controls — Open / checkbox / drag handle handle themselves
+                      const tag = e.target?.closest?.(
+                        'button, a, input, select, [data-drag-handle], [data-row-action]'
+                      )
+                      if (tag) return
+                      onOpen?.(s)
+                    }}
                     onDragOver={(e) => {
                       if (!canReorder || !draggingId) return
                       e.preventDefault()
@@ -358,9 +416,9 @@ export default function ScenarioRepositoryTable({
                     >
                       <GripVertical size={14} />
                     </td>
-                    <td className="px-3 py-2.5">
-                      <div className="text-left group">
-                        <div className="flex items-center gap-2">
+                    <td className="px-2 sm:px-3 py-2.5 min-w-0">
+                      <div className="text-left group min-w-0 overflow-hidden">
+                        <div className="flex items-center gap-2 min-w-0">
                           <button
                             type="button"
                             onClick={(e) => {
@@ -380,42 +438,59 @@ export default function ScenarioRepositoryTable({
                               e.stopPropagation()
                               onEdit?.(s)
                             }}
-                            className="font-medium text-ink group-hover:text-brand truncate max-w-[9.5rem] xs:max-w-[12rem] sm:max-w-md text-left"
+                            className="font-medium text-ink group-hover:text-brand truncate text-left max-w-full block"
                             title="Open · double-click to edit"
                           >
                             {s.name}
                           </button>
                         </div>
                         {s.scenarioCode ? (
-                          <p className="text-[10px] font-mono text-brand truncate max-w-[280px] sm:max-w-md mt-0.5 pl-6">
+                          <p className="text-[10px] font-mono text-brand truncate mt-0.5 pl-6 max-w-full">
                             {s.scenarioCode}
                           </p>
                         ) : null}
-                        {s.description ? (
+                        {s.description && !compact ? (
                           <p className="text-[11px] text-ink-muted truncate max-w-[280px] sm:max-w-md mt-0.5 pl-6">
                             {s.description}
                           </p>
                         ) : null}
-                        {s.url && (
+                        {s.url && !compact ? (
                           <p className="text-[11px] text-ink-subtle truncate max-w-[280px] sm:max-w-md mt-0.5 pl-6">
                             {s.url}
                           </p>
-                        )}
+                        ) : null}
                       </div>
                     </td>
-                    <td className="px-3 py-2.5 hidden md:table-cell text-ink-muted">
+                    <td
+                      className={`px-3 py-2.5 text-ink-muted ${
+                        compact ? 'hidden' : 'hidden md:table-cell'
+                      }`}
+                    >
                       <span className="inline-flex items-center gap-1 text-xs">
                         <Folder size={12} />
                         {s.folder?.name || 'No folder'}
                       </span>
                     </td>
-                    <td className="px-3 py-2.5 hidden sm:table-cell text-ink-muted tabular-nums">
+                    <td
+                      className={`px-3 py-2.5 text-ink-muted tabular-nums ${
+                        compact ? 'hidden' : 'hidden sm:table-cell'
+                      }`}
+                    >
                       {s.stepCount ?? s.steps ?? 0}
                     </td>
-                    <td className="px-3 py-2.5 hidden lg:table-cell">
+                    <td className="px-3 py-2.5">
+                      <SeverityBadge priority={s.priority} />
+                    </td>
+                    <td
+                      className={`px-3 py-2.5 ${compact ? 'hidden' : 'hidden lg:table-cell'}`}
+                    >
                       <LastResultBadge result={s.lastResult} />
                     </td>
-                    <td className="px-3 py-2.5">
+                    <td
+                      className={`px-3 py-2.5 ${compact ? 'hidden' : ''}`}
+                      data-row-action
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <RowActions
                         s={s}
                         folderOptions={folderOptions}
