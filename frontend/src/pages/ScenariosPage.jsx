@@ -19,7 +19,7 @@ import toast from 'react-hot-toast'
 const i18n = {
     title: 'Test Repository',
     subtitle:
-      '1 folder = 1 fitur → klik case untuk detail di panel kanan (ala Testiny) → Edit steps di halaman penuh bila perlu',
+      '1 folder = 1 fitur · klik case untuk detail di kanan · edit steps di halaman penuh bila perlu',
     createScenarioBtn: 'Create',
     selectedCount: (n) => `${n} scenario${n !== 1 ? 's' : ''} selected`,
     runningBulk: 'Running executions sequentially (headless)...',
