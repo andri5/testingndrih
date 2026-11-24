@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import {
   Paperclip,
   Trash2,
@@ -12,6 +12,7 @@ import {
 import toast from 'react-hot-toast'
 import { scenarioAPI } from '../services/api'
 import AttachmentPreviewModal from './AttachmentPreviewModal'
+import { filesFromClipboardOrDrop } from '../utils/clipboardFiles'
 
 const ACCEPT =
   'image/png,image/jpeg,image/webp,image/gif,application/pdf,' +
@@ -43,7 +44,7 @@ function formatBytes(n) {
 }
 
 /**
- * Compact attachment list + upload for a single test step.
+ * Compact attachment list + upload/paste for a single test step.
  */
 export default function StepAttachmentsBlock({
   scenarioId,
@@ -53,25 +54,42 @@ export default function StepAttachmentsBlock({
   compact = false,
 }) {
   const inputRef = useRef(null)
+  const zoneRef = useRef(null)
   const [uploading, setUploading] = useState(false)
   const [deletingId, setDeletingId] = useState(null)
   const [preview, setPreview] = useState(null)
+  const [pasteActive, setPasteActive] = useState(false)
+  const [dragOver, setDragOver] = useState(false)
 
-  const handleUpload = async (fileList) => {
-    const files = [...(fileList || [])]
-    if (!files.length || !scenarioId || !stepId) return
-    setUploading(true)
-    try {
-      await scenarioAPI.uploadStepAttachments(scenarioId, stepId, files)
-      toast.success(files.length > 1 ? `${files.length} file diunggah` : 'File diunggah')
-      await onChanged?.()
-    } catch (err) {
-      toast.error(err.response?.data?.message || err.message || 'Upload gagal')
-    } finally {
-      setUploading(false)
-      if (inputRef.current) inputRef.current.value = ''
-    }
-  }
+  const handleUpload = useCallback(
+    async (fileList) => {
+      const files = [...(fileList || [])]
+      if (!files.length || !scenarioId || !stepId) return
+      setUploading(true)
+      try {
+        await scenarioAPI.uploadStepAttachments(scenarioId, stepId, files)
+        toast.success(files.length > 1 ? `${files.length} file diunggah` : 'Screenshot / file diunggah')
+        await onChanged?.()
+      } catch (err) {
+        toast.error(err.response?.data?.message || err.message || 'Upload gagal')
+      } finally {
+        setUploading(false)
+        if (inputRef.current) inputRef.current.value = ''
+      }
+    },
+    [scenarioId, stepId, onChanged]
+  )
+
+  const handlePasteOrDrop = useCallback(
+    (e) => {
+      const files = filesFromClipboardOrDrop(e)
+      if (!files.length) return
+      e.preventDefault()
+      e.stopPropagation()
+      handleUpload(files)
+    },
+    [handleUpload]
+  )
 
   const handleDelete = async (attachmentId) => {
     if (!scenarioId || !stepId || !attachmentId) return
@@ -114,6 +132,35 @@ export default function StepAttachmentsBlock({
             Upload
           </button>
         </div>
+      </div>
+
+      <div
+        ref={zoneRef}
+        tabIndex={0}
+        role="button"
+        aria-label="Paste screenshot di sini"
+        onClick={() => zoneRef.current?.focus()}
+        onFocus={() => setPasteActive(true)}
+        onBlur={() => setPasteActive(false)}
+        onPaste={handlePasteOrDrop}
+        onDragOver={(e) => {
+          e.preventDefault()
+          setDragOver(true)
+        }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={(e) => {
+          setDragOver(false)
+          handlePasteOrDrop(e)
+        }}
+        className={`rounded-lg border border-dashed px-2.5 py-2 text-[11px] outline-none transition-colors cursor-text ${
+          dragOver || pasteActive
+            ? 'border-brand bg-brand-soft/40 text-brand-ink'
+            : 'border-surface-border bg-surface-muted/40 text-ink-muted'
+        }`}
+      >
+        {uploading
+          ? 'Mengunggah…'
+          : 'Klik di sini → Ctrl+V untuk paste screenshot (atau drag gambar)'}
       </div>
 
       {attachments.length === 0 ? (

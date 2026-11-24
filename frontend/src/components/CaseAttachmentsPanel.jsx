@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import {
   Paperclip,
   Trash2,
@@ -13,6 +13,7 @@ import toast from 'react-hot-toast'
 import { scenarioAPI } from '../services/api'
 import ExportFormatButton from './ExportFormatButton'
 import AttachmentPreviewModal from './AttachmentPreviewModal'
+import { filesFromClipboardOrDrop } from '../utils/clipboardFiles'
 
 const ACCEPT =
   'image/png,image/jpeg,image/webp,image/gif,application/pdf,' +
@@ -52,29 +53,48 @@ export default function CaseAttachmentsPanel({
   onRefresh,
 }) {
   const inputRef = useRef(null)
+  const zoneRef = useRef(null)
   const [uploading, setUploading] = useState(false)
   const [deletingId, setDeletingId] = useState(null)
   const [error, setError] = useState(null)
   const [preview, setPreview] = useState(null)
+  const [pasteActive, setPasteActive] = useState(false)
+  const [dragOver, setDragOver] = useState(false)
 
-  const handleUpload = async (fileList) => {
-    const files = [...(fileList || [])]
-    if (!files.length || !scenarioId) return
-    setUploading(true)
-    setError(null)
-    try {
-      await scenarioAPI.uploadAttachments(scenarioId, files, { kind: 'GENERAL' })
-      await onRefresh?.()
-      toast.success(files.length > 1 ? `${files.length} file diunggah` : 'File diunggah')
-    } catch (err) {
-      const msg = err.response?.data?.message || err.message || 'Upload gagal'
-      setError(msg)
-      toast.error(msg)
-    } finally {
-      setUploading(false)
-      if (inputRef.current) inputRef.current.value = ''
-    }
-  }
+  const handleUpload = useCallback(
+    async (fileList) => {
+      const files = [...(fileList || [])]
+      if (!files.length || !scenarioId) return
+      setUploading(true)
+      setError(null)
+      try {
+        await scenarioAPI.uploadAttachments(scenarioId, files, { kind: 'GENERAL' })
+        await onRefresh?.()
+        toast.success(
+          files.length > 1 ? `${files.length} file diunggah` : 'Screenshot / file diunggah'
+        )
+      } catch (err) {
+        const msg = err.response?.data?.message || err.message || 'Upload gagal'
+        setError(msg)
+        toast.error(msg)
+      } finally {
+        setUploading(false)
+        if (inputRef.current) inputRef.current.value = ''
+      }
+    },
+    [scenarioId, onRefresh]
+  )
+
+  const handlePasteOrDrop = useCallback(
+    (e) => {
+      const files = filesFromClipboardOrDrop(e)
+      if (!files.length) return
+      e.preventDefault()
+      e.stopPropagation()
+      handleUpload(files)
+    },
+    [handleUpload]
+  )
 
   const handleDelete = async (attachmentId) => {
     if (!scenarioId || !attachmentId) return
@@ -100,7 +120,7 @@ export default function CaseAttachmentsPanel({
         <div className="min-w-0">
           <h3 className="text-sm font-bold text-ink uppercase tracking-wider">Attachments</h3>
           <p className="text-xs text-ink-muted mt-0.5">
-            Gambar, PDF, Excel, atau Word sebagai evidence (maks. 16 · 8MB).
+            Gambar, PDF, Excel, atau Word (maks. 16 · 8MB). Screenshot: klik area paste lalu Ctrl+V.
           </p>
         </div>
         <div className="w-full sm:w-auto">
@@ -122,6 +142,35 @@ export default function CaseAttachmentsPanel({
             {uploading ? 'Uploading…' : 'Upload file'}
           </ExportFormatButton>
         </div>
+      </div>
+
+      <div
+        ref={zoneRef}
+        tabIndex={0}
+        role="button"
+        aria-label="Paste screenshot di sini"
+        onClick={() => zoneRef.current?.focus()}
+        onFocus={() => setPasteActive(true)}
+        onBlur={() => setPasteActive(false)}
+        onPaste={handlePasteOrDrop}
+        onDragOver={(e) => {
+          e.preventDefault()
+          setDragOver(true)
+        }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={(e) => {
+          setDragOver(false)
+          handlePasteOrDrop(e)
+        }}
+        className={`mb-4 rounded-xl border border-dashed px-4 py-6 text-center text-sm outline-none transition-colors cursor-text ${
+          dragOver || pasteActive
+            ? 'border-brand bg-brand-soft/40 text-brand-ink'
+            : 'border-surface-border bg-surface-muted/40 text-ink-muted'
+        }`}
+      >
+        {uploading
+          ? 'Mengunggah…'
+          : 'Klik di sini → Ctrl+V untuk paste screenshot, atau drag gambar ke sini'}
       </div>
 
       {error && (
