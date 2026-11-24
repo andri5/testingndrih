@@ -8,6 +8,8 @@ import {
   Loader2,
   Save,
   ListTree,
+  Plus,
+  Trash2,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { scenarioAPI } from '../services/api'
@@ -30,6 +32,15 @@ const TABS = [
   { id: 'attachments', label: 'Attachments' },
   { id: 'runs', label: 'Runs' },
   { id: 'history', label: 'History' },
+]
+
+const PANEL_STEP_TYPES = [
+  { value: 'NAVIGATE', label: 'Navigate' },
+  { value: 'CLICK', label: 'Action' },
+  { value: 'ASSERTION', label: 'Verify' },
+  { value: 'WAIT', label: 'Setup' },
+  { value: 'FILL', label: 'Fill' },
+  { value: 'SCREENSHOT', label: 'Observe' },
 ]
 
 /**
@@ -58,6 +69,9 @@ export default function CaseDetailSidePanel({
     priority: 'MEDIUM',
     caseType: 'Functional',
   })
+  const [savingStepId, setSavingStepId] = useState(null)
+  const [addingStep, setAddingStep] = useState(false)
+  const [deletingStepId, setDeletingStepId] = useState(null)
 
   const index = useMemo(
     () => scenarioIds.findIndex((id) => id === scenarioId),
@@ -136,6 +150,75 @@ export default function CaseDetailSidePanel({
       toast.error(err.response?.data?.message || 'Gagal menyimpan')
     } finally {
       setSaving(false)
+    }
+  }
+
+  const reloadSteps = useCallback(async () => {
+    if (!scenarioId) return
+    const stepsRes = await scenarioAPI.getSteps(scenarioId, 0, 200)
+    setSteps(stepsRes.data.steps || stepsRes.data || [])
+  }, [scenarioId])
+
+  const patchStepLocal = (stepId, patch) => {
+    setSteps((prev) => prev.map((s) => (s.id === stepId ? { ...s, ...patch } : s)))
+  }
+
+  const handleSaveStep = async (step) => {
+    if (!scenarioId || !step?.id) return
+    setSavingStepId(step.id)
+    try {
+      await scenarioAPI.updateStep(scenarioId, step.id, {
+        type: step.type || 'CLICK',
+        description: step.description || '',
+        expectedResult: step.expectedResult || null,
+        selector: step.selector || null,
+        value: step.value || null,
+        metadata: step.metadata || null,
+      })
+      toast.success('Step disimpan')
+      await reloadSteps()
+    } catch (err) {
+      toast.error(err.response?.data?.error || err.message || 'Gagal simpan step')
+    } finally {
+      setSavingStepId(null)
+    }
+  }
+
+  const handleAddStep = async () => {
+    if (!scenarioId) return
+    setAddingStep(true)
+    try {
+      await scenarioAPI.createStep(
+        scenarioId,
+        null,
+        'CLICK',
+        '',
+        null,
+        null,
+        null,
+        null
+      )
+      toast.success('Step ditambah')
+      await reloadSteps()
+    } catch (err) {
+      toast.error(err.response?.data?.error || err.message || 'Gagal tambah step')
+    } finally {
+      setAddingStep(false)
+    }
+  }
+
+  const handleDeleteStep = async (stepId) => {
+    if (!scenarioId || !stepId) return
+    if (!window.confirm('Hapus step ini?')) return
+    setDeletingStepId(stepId)
+    try {
+      await scenarioAPI.deleteStep(scenarioId, stepId)
+      toast.success('Step dihapus')
+      await reloadSteps()
+    } catch (err) {
+      toast.error(err.response?.data?.error || err.message || 'Gagal hapus step')
+    } finally {
+      setDeletingStepId(null)
     }
   }
 
@@ -339,53 +422,114 @@ export default function CaseDetailSidePanel({
                     <h3 className="text-[10px] font-semibold uppercase tracking-wider text-ink-subtle flex items-center gap-1">
                       <ListTree size={12} /> Steps ({steps.length})
                     </h3>
-                    <button
-                      type="button"
-                      onClick={() => navigate(`/scenarios/${scenarioId}`)}
-                      className="text-[11px] font-medium text-brand hover:underline"
-                    >
-                      Edit steps →
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={handleAddStep}
+                        disabled={addingStep || !scenarioId}
+                        className="inline-flex items-center gap-1 text-[11px] font-semibold text-brand hover:text-brand-hover disabled:opacity-40"
+                      >
+                        {addingStep ? <Loader2 size={12} className="animate-spin" /> : <Plus size={12} />}
+                        Tambah
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => navigate(`/scenarios/${scenarioId}`)}
+                        className="text-[11px] font-medium text-ink-muted hover:text-brand"
+                        title="Advanced edit di halaman penuh"
+                      >
+                        Full →
+                      </button>
+                    </div>
                   </div>
                   {steps.length === 0 ? (
-                    <p className="text-xs text-ink-muted rounded-lg border border-dashed border-surface-border px-3 py-6 text-center">
-                      Belum ada step. Buka halaman penuh untuk menambah.
-                    </p>
+                    <div className="rounded-lg border border-dashed border-surface-border px-3 py-6 text-center space-y-2">
+                      <p className="text-xs text-ink-muted">Belum ada step.</p>
+                      <button
+                        type="button"
+                        onClick={handleAddStep}
+                        disabled={addingStep}
+                        className="inline-flex items-center gap-1 text-[11px] font-semibold text-brand"
+                      >
+                        <Plus size={12} /> Tambah step pertama
+                      </button>
+                    </div>
                   ) : (
                     <ol className="space-y-2">
                       {steps.map((step, i) => (
                         <li
                           key={step.id || i}
-                          className="rounded-lg border border-surface-border bg-surface-muted/40 px-2.5 py-2"
+                          className="rounded-lg border border-surface-border bg-white px-2.5 py-2.5 space-y-2"
                         >
-                          <div className="flex items-start gap-2">
-                            <span className="text-[10px] font-mono text-ink-subtle shrink-0 mt-0.5">
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-mono text-ink-subtle shrink-0 w-4">
                               {step.stepNumber ?? i + 1}
                             </span>
-                            <div className="min-w-0 flex-1">
-                              <span className="inline-flex text-[10px] font-bold px-1.5 py-0.5 rounded bg-teal-100 text-teal-800 mr-1.5">
-                                {step.type}
-                              </span>
-                              <span className="text-xs text-ink">
-                                {step.description || '(tanpa deskripsi)'}
-                              </span>
-                              {step.expectedResult ? (
-                                <p className="text-[10px] text-ink-muted mt-0.5 truncate">
-                                  Expected: {step.expectedResult}
-                                </p>
+                            <select
+                              value={step.type || 'CLICK'}
+                              onChange={(e) => patchStepLocal(step.id, { type: e.target.value })}
+                              className="text-[11px] font-bold rounded-md border border-teal-200 bg-teal-50 text-teal-800 px-1.5 py-1"
+                            >
+                              {PANEL_STEP_TYPES.map((t) => (
+                                <option key={t.value} value={t.value}>
+                                  {t.label}
+                                </option>
+                              ))}
+                              {!PANEL_STEP_TYPES.some((t) => t.value === step.type) && step.type ? (
+                                <option value={step.type}>{step.type}</option>
                               ) : null}
-                              <StepAttachmentsBlock
-                                scenarioId={scenarioId}
-                                stepId={step.id}
-                                attachments={step.attachments || []}
-                                onChanged={async () => {
-                                  const stepsRes = await scenarioAPI.getSteps(scenarioId, 0, 200)
-                                  setSteps(stepsRes.data.steps || stepsRes.data || [])
-                                }}
-                                compact
-                              />
-                            </div>
+                            </select>
+                            <button
+                              type="button"
+                              onClick={() => handleSaveStep(step)}
+                              disabled={savingStepId === step.id}
+                              className="ml-auto inline-flex items-center gap-1 text-[11px] font-semibold text-brand disabled:opacity-40"
+                              title="Simpan step"
+                            >
+                              {savingStepId === step.id ? (
+                                <Loader2 size={12} className="animate-spin" />
+                              ) : (
+                                <Save size={12} />
+                              )}
+                              Simpan
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteStep(step.id)}
+                              disabled={deletingStepId === step.id}
+                              className="p-1 text-ink-subtle hover:text-red-600 disabled:opacity-40"
+                              title="Hapus step"
+                            >
+                              {deletingStepId === step.id ? (
+                                <Loader2 size={12} className="animate-spin" />
+                              ) : (
+                                <Trash2 size={12} />
+                              )}
+                            </button>
                           </div>
+                          <textarea
+                            value={step.description || ''}
+                            onChange={(e) => patchStepLocal(step.id, { description: e.target.value })}
+                            rows={2}
+                            placeholder="Deskripsi step (opsional)…"
+                            className="w-full text-xs rounded-lg border border-surface-border px-2.5 py-2 bg-white text-ink"
+                          />
+                          <input
+                            type="text"
+                            value={step.expectedResult || ''}
+                            onChange={(e) =>
+                              patchStepLocal(step.id, { expectedResult: e.target.value })
+                            }
+                            placeholder="Expected result (opsional)…"
+                            className="w-full text-xs rounded-lg border border-surface-border px-2.5 py-1.5 bg-white text-ink"
+                          />
+                          <StepAttachmentsBlock
+                            scenarioId={scenarioId}
+                            stepId={step.id}
+                            attachments={step.attachments || []}
+                            onChanged={reloadSteps}
+                            compact
+                          />
                         </li>
                       ))}
                     </ol>

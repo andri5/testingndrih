@@ -89,14 +89,15 @@ export async function updateTestStepHandler(req, res, next) {
   try {
     const userId = req.user.id
     const { stepId } = req.params
-    const { type, description, selector, value, metadata } = req.body
+    const { type, description, selector, value, metadata, expectedResult } = req.body
 
     const step = await updateTestStep(stepId, userId, {
       type,
       description,
       selector,
       value,
-      metadata
+      metadata,
+      expectedResult,
     })
 
     res.json(step)
