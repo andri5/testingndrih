@@ -208,6 +208,7 @@ export async function getScenarioById(scenarioId, userId) {
         folder: { select: { id: true, name: true, parentId: true } },
         owner: { select: { id: true, name: true, email: true } },
         attachments: {
+          where: { testStepId: null },
           orderBy: { createdAt: 'asc' },
           select: {
             id: true,
@@ -218,6 +219,7 @@ export async function getScenarioById(scenarioId, userId) {
             url: true,
             kind: true,
             createdAt: true,
+            testStepId: true,
           },
         },
       }

@@ -383,12 +383,16 @@ model ScenarioAttachment {
   kind         String   @default("GENERAL")
   createdAt    DateTime @default(now())
   scenarioId   String
+  /// When set, attachment belongs to a test step (not the case Attachments tab)
+  testStepId   String?
   uploadedById String?
 
-  scenario Scenario @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+  scenario Scenario  @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+  testStep TestStep? @relation(fields: [testStepId], references: [id], onDelete: Cascade)
 
   @@index([scenarioId])
   @@index([scenarioId, kind])
+  @@index([testStepId])
   @@map("scenario_attachments")
 }
 
@@ -455,8 +459,9 @@ model TestStep {
   updatedAt  DateTime @updatedAt
   scenarioId String
 
-  scenario   Scenario     @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+  scenario    Scenario             @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
   stepResults StepResult[]
+  attachments ScenarioAttachment[]
 
   @@unique([scenarioId, stepNumber])
   @@index([scenarioId])

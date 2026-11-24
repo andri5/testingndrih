@@ -4,6 +4,7 @@ import Layout from '../components/Layout'
 import { Card, Badge, Spinner, Alert, Button } from '../components/ui'
 import ExportFormatButton from '../components/ExportFormatButton'
 import { scenarioAPI, testRunAPI } from '../services/api'
+import StepAttachmentsBlock from '../components/StepAttachmentsBlock'
 import toast from 'react-hot-toast'
 import {
   ArrowLeft,
@@ -467,19 +468,35 @@ export default function TestRunDetailPage() {
                   ) : steps.length === 0 ? (
                     <p className="text-xs text-ink-muted">Belum ada step.</p>
                   ) : (
-                    <ol className="space-y-1.5">
+                    <ol className="space-y-2">
                       {steps.map((step, i) => (
                         <li
                           key={step.id || i}
                           className="rounded-lg border border-surface-border bg-surface-muted/40 px-2.5 py-2"
                         >
-                          <span className="text-[10px] font-mono text-ink-subtle mr-1.5">
-                            {step.stepNumber ?? i + 1}
-                          </span>
-                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-teal-100 text-teal-800 mr-1.5">
-                            {step.type}
-                          </span>
-                          <span className="text-xs text-ink">{step.description}</span>
+                          <div>
+                            <span className="text-[10px] font-mono text-ink-subtle mr-1.5">
+                              {step.stepNumber ?? i + 1}
+                            </span>
+                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-teal-100 text-teal-800 mr-1.5">
+                              {step.type}
+                            </span>
+                            <span className="text-xs text-ink">
+                              {step.description || '(tanpa deskripsi)'}
+                            </span>
+                          </div>
+                          {activeItem?.scenarioId ? (
+                            <StepAttachmentsBlock
+                              scenarioId={activeItem.scenarioId}
+                              stepId={step.id}
+                              attachments={step.attachments || []}
+                              onChanged={async () => {
+                                const res = await scenarioAPI.getSteps(activeItem.scenarioId, 0, 200)
+                                setSteps(res.data.steps || res.data || [])
+                              }}
+                              compact
+                            />
+                          ) : null}
                         </li>
                       ))}
                     </ol>

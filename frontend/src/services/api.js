@@ -131,6 +131,20 @@ export const scenarioAPI = {
   deleteAttachment: (id, attachmentId) =>
     apiClient.delete(`/scenarios/${id}/attachments/${attachmentId}`),
 
+  listStepAttachments: (scenarioId, stepId) =>
+    apiClient.get(`/scenarios/${scenarioId}/steps/${stepId}/attachments`),
+
+  uploadStepAttachments: (scenarioId, stepId, files) => {
+    const form = new FormData()
+    ;[...(files || [])].forEach((f) => form.append('files', f))
+    return apiClient.post(`/scenarios/${scenarioId}/steps/${stepId}/attachments`, form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+  },
+
+  deleteStepAttachment: (scenarioId, stepId, attachmentId) =>
+    apiClient.delete(`/scenarios/${scenarioId}/steps/${stepId}/attachments/${attachmentId}`),
+
   update: (id, name, description, url, extra = {}) =>
     apiClient.put(`/scenarios/${id}`, { name, description, url, ...extra }),
 

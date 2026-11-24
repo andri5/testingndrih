@@ -2219,11 +2219,13 @@ export default function ScenarioDetailPage() {
 
             <TestStepList
               steps={steps}
+              scenarioId={id}
               onReorderSteps={handleReorderSteps}
               onEditStep={openEditForm}
               onDeleteStep={handleDeleteStep}
               onToggleSelection={toggleStepSelection}
               onToggleSelectAll={toggleSelectAll}
+              onAttachmentsChanged={loadSteps}
               selectedStepIds={selectedStepIds}
               executionResult={executionResult}
               currentStepIndex={currentStepIndex}

@@ -216,6 +216,51 @@ export async function deleteScenarioAttachmentHandler(req, res, next) {
   }
 }
 
+export async function uploadStepAttachmentsHandler(req, res, next) {
+  try {
+    const scenarioId = req.params.scenarioId || req.params.id
+    const { stepId } = req.params
+    const attachments = await scenarioAttachmentService.addStepAttachments(
+      req.user.id,
+      scenarioId,
+      stepId,
+      req.files || []
+    )
+    res.status(201).json({ success: true, attachments })
+  } catch (error) {
+    next(error)
+  }
+}
+
+export async function listStepAttachmentsHandler(req, res, next) {
+  try {
+    const scenarioId = req.params.scenarioId || req.params.id
+    const { stepId } = req.params
+    const attachments = await scenarioAttachmentService.listStepAttachments(
+      req.user.id,
+      scenarioId,
+      stepId
+    )
+    res.json({ success: true, attachments })
+  } catch (error) {
+    next(error)
+  }
+}
+
+export async function deleteStepAttachmentHandler(req, res, next) {
+  try {
+    const scenarioId = req.params.scenarioId || req.params.id
+    await scenarioAttachmentService.deleteScenarioAttachment(
+      req.user.id,
+      scenarioId,
+      req.params.attachmentId
+    )
+    res.json({ success: true })
+  } catch (error) {
+    next(error)
+  }
+}
+
 export async function getScenarioHistoryHandler(req, res, next) {
   try {
     const data = await listScenarioHistory(req.params.id, req.user.id, {

@@ -100,7 +100,23 @@ export async function getTestSteps(scenarioId, userId, options = {}) {
         [orderBy]: orderDirection
       },
       skip,
-      take
+      take,
+      include: {
+        attachments: {
+          orderBy: { createdAt: 'asc' },
+          select: {
+            id: true,
+            filename: true,
+            originalName: true,
+            mimeType: true,
+            size: true,
+            url: true,
+            kind: true,
+            createdAt: true,
+            testStepId: true,
+          },
+        },
+      },
     })
 
     const total = await prisma.testStep.count({
@@ -127,7 +143,10 @@ export async function getTestStep(stepId, userId) {
       include: {
         scenario: {
           select: { userId: true }
-        }
+        },
+        attachments: {
+          orderBy: { createdAt: 'asc' },
+        },
       }
     })
 

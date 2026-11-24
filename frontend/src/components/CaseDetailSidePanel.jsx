@@ -14,6 +14,7 @@ import { scenarioAPI } from '../services/api'
 import CaseAttachmentsPanel from './CaseAttachmentsPanel'
 import CaseRunsPanel from './CaseRunsPanel'
 import CaseHistoryPanel from './CaseHistoryPanel'
+import StepAttachmentsBlock from './StepAttachmentsBlock'
 import ExportFormatButton from './ExportFormatButton'
 import { Spinner } from './ui'
 
@@ -351,7 +352,7 @@ export default function CaseDetailSidePanel({
                       Belum ada step. Buka halaman penuh untuk menambah.
                     </p>
                   ) : (
-                    <ol className="space-y-1.5">
+                    <ol className="space-y-2">
                       {steps.map((step, i) => (
                         <li
                           key={step.id || i}
@@ -365,12 +366,24 @@ export default function CaseDetailSidePanel({
                               <span className="inline-flex text-[10px] font-bold px-1.5 py-0.5 rounded bg-teal-100 text-teal-800 mr-1.5">
                                 {step.type}
                               </span>
-                              <span className="text-xs text-ink">{step.description}</span>
+                              <span className="text-xs text-ink">
+                                {step.description || '(tanpa deskripsi)'}
+                              </span>
                               {step.expectedResult ? (
                                 <p className="text-[10px] text-ink-muted mt-0.5 truncate">
                                   Expected: {step.expectedResult}
                                 </p>
                               ) : null}
+                              <StepAttachmentsBlock
+                                scenarioId={scenarioId}
+                                stepId={step.id}
+                                attachments={step.attachments || []}
+                                onChanged={async () => {
+                                  const stepsRes = await scenarioAPI.getSteps(scenarioId, 0, 200)
+                                  setSteps(stepsRes.data.steps || stepsRes.data || [])
+                                }}
+                                compact
+                              />
                             </div>
                           </div>
                         </li>

@@ -17,7 +17,7 @@ export async function createTestStepHandler(req, res, next) {
   try {
     const userId = req.user.id
     const { scenarioId } = req.params
-    const { stepNumber, type, description, selector, value, metadata } = req.body
+    const { stepNumber, type, description, selector, value, metadata, expectedResult } = req.body
 
     if (!type) {
       return res.status(400).json({
@@ -31,7 +31,8 @@ export async function createTestStepHandler(req, res, next) {
       description: description ?? '',
       selector,
       value,
-      metadata
+      metadata,
+      expectedResult,
     })
 
     res.status(201).json(step)

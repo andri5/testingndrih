@@ -2,15 +2,18 @@ import { useState } from 'react'
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd'
 import { Badge } from './ui'
 import ExportFormatButton from './ExportFormatButton'
-import { Pencil, Trash2 } from 'lucide-react'
+import StepAttachmentsBlock from './StepAttachmentsBlock'
+import { Pencil, Trash2, Paperclip } from 'lucide-react'
 
 export default function TestStepList({
   steps = [],
+  scenarioId = null,
   onReorderSteps,
   onEditStep,
   onDeleteStep,
   onToggleSelection,
   onToggleSelectAll,
+  onAttachmentsChanged,
   selectedStepIds = new Set(),
   executionResult = null,
   currentStepIndex = null,
@@ -185,7 +188,15 @@ export default function TestStepList({
                             {/* Step Description & Toggle */}
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 cursor-pointer" onClick={() => toggleDetail(step.id)}>
-                                <p className="font-medium text-[#E0E0E2] truncate">{step.description}</p>
+                                <p className="font-medium text-[#E0E0E2] truncate">
+                                  {step.description || '(tanpa deskripsi)'}
+                                </p>
+                                {(step.attachments?.length || 0) > 0 && (
+                                  <span className="inline-flex items-center gap-0.5 text-[10px] text-teal-300 shrink-0">
+                                    <Paperclip size={11} />
+                                    {step.attachments.length}
+                                  </span>
+                                )}
                                 <span className={`flex-shrink-0 text-[#555] transition ${isExpanded ? 'rotate-180' : ''}`}>
                                   ▼
                                 </span>
@@ -194,6 +205,12 @@ export default function TestStepList({
                               {/* Expanded Details */}
                               {isExpanded && (
                                 <div className="mt-2 pt-2 border-t border-[#2D2D2F] space-y-1">
+                                  {step.expectedResult && (
+                                    <div className="text-xs text-[#888]">
+                                      <span className="font-medium">Expected:</span>
+                                      <span className="block mt-0.5 text-[#A0A0A4]">{step.expectedResult}</span>
+                                    </div>
+                                  )}
                                   {step.selector && (
                                     <div className="text-xs text-[#888]">
                                       <span className="font-medium">Selector:</span>
@@ -218,6 +235,21 @@ export default function TestStepList({
                                       </code>
                                     </div>
                                   )}
+                                  {scenarioId ? (
+                                    <div
+                                      className="pt-1"
+                                      onMouseDown={(e) => e.stopPropagation()}
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      <StepAttachmentsBlock
+                                        scenarioId={scenarioId}
+                                        stepId={step.id}
+                                        attachments={step.attachments || []}
+                                        onChanged={onAttachmentsChanged}
+                                        compact
+                                      />
+                                    </div>
+                                  ) : null}
                                 </div>
                               )}
                             </div>

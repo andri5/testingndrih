@@ -6,6 +6,7 @@ import { getScenarioById } from './scenarioService.js'
 export const SCENARIO_ATTACHMENTS_DIR = path.resolve(process.cwd(), 'uploads/scenario-attachments')
 
 const MAX_FILES_PER_SCENARIO = 16
+const MAX_FILES_PER_STEP = 8
 const MAX_FILE_BYTES = 8 * 1024 * 1024 // 8 MB
 const ALLOWED_MIME = new Set([
   'image/png',
@@ -68,20 +69,40 @@ export async function ensureScenarioAttachmentDir() {
  * @param {string} userId
  * @param {string} scenarioId
  * @param {Express.Multer.File[]} files
- * @param {{ kind?: string }} [options]
+ * @param {{ kind?: string, testStepId?: string|null }} [options]
  */
 export async function addScenarioAttachments(userId, scenarioId, files = [], options = {}) {
   await getScenarioById(scenarioId, userId)
 
   const kind = normalizeKind(options.kind)
-  const existing = await prisma.scenarioAttachment.count({ where: { scenarioId } })
+  const testStepId = options.testStepId || null
+
+  if (testStepId) {
+    const step = await prisma.testStep.findFirst({
+      where: { id: testStepId, scenarioId },
+      select: { id: true },
+    })
+    if (!step) {
+      throw Object.assign(new Error('Test step not found'), { status: 404 })
+    }
+  }
+
+  const countWhere = testStepId
+    ? { scenarioId, testStepId }
+    : { scenarioId, testStepId: null }
+  const existing = await prisma.scenarioAttachment.count({ where: countWhere })
   const incoming = Array.isArray(files) ? files.filter(Boolean) : []
   if (incoming.length === 0) {
     throw Object.assign(new Error('No files uploaded'), { status: 400 })
   }
-  if (existing + incoming.length > MAX_FILES_PER_SCENARIO) {
+  const maxFiles = testStepId ? MAX_FILES_PER_STEP : MAX_FILES_PER_SCENARIO
+  if (existing + incoming.length > maxFiles) {
     throw Object.assign(
-      new Error(`Maksimal ${MAX_FILES_PER_SCENARIO} attachment per test case`),
+      new Error(
+        testStepId
+          ? `Maksimal ${MAX_FILES_PER_STEP} attachment per test step`
+          : `Maksimal ${MAX_FILES_PER_SCENARIO} attachment per test case`
+      ),
       { status: 400 }
     )
   }
@@ -127,12 +148,13 @@ export async function addScenarioAttachments(userId, scenarioId, files = [], opt
     const row = await prisma.scenarioAttachment.create({
       data: {
         scenarioId,
+        testStepId,
         filename: stored,
         originalName: file.originalname || stored,
         mimeType: mime,
         size: file.size || buffer.length,
         url,
-        kind,
+        kind: testStepId ? 'GENERAL' : kind,
         uploadedById: userId,
       },
     })
@@ -148,9 +170,26 @@ export async function listScenarioAttachments(userId, scenarioId, options = {}) 
   if (options.kind) {
     where.kind = normalizeKind(options.kind)
   }
+  if (options.testStepId) {
+    where.testStepId = options.testStepId
+  } else if (options.includeStepAttachments !== true) {
+    // Case Attachments tab: only case-level files
+    where.testStepId = null
+  }
   return prisma.scenarioAttachment.findMany({
     where,
     orderBy: { createdAt: 'asc' },
+  })
+}
+
+export async function listStepAttachments(userId, scenarioId, testStepId) {
+  return listScenarioAttachments(userId, scenarioId, { testStepId })
+}
+
+export async function addStepAttachments(userId, scenarioId, testStepId, files = []) {
+  return addScenarioAttachments(userId, scenarioId, files, {
+    kind: 'GENERAL',
+    testStepId,
   })
 }
 
@@ -169,4 +208,10 @@ export async function deleteScenarioAttachment(userId, scenarioId, attachmentId)
   return { ok: true }
 }
 
-export { MAX_FILES_PER_SCENARIO, MAX_FILE_BYTES, ALLOWED_MIME, IMAGE_MIME }
+export {
+  MAX_FILES_PER_SCENARIO,
+  MAX_FILES_PER_STEP,
+  MAX_FILE_BYTES,
+  ALLOWED_MIME,
+  IMAGE_MIME,
+}

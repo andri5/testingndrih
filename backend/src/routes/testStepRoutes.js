@@ -1,4 +1,5 @@
 import express from 'express'
+import multer from 'multer'
 import { authenticateToken } from '../middleware/auth.js'
 import {
   createTestStepHandler,
@@ -12,8 +13,18 @@ import {
   getStepTypesHandler,
   validateStepHandler
 } from '../controllers/testStepController.js'
+import {
+  uploadStepAttachmentsHandler,
+  listStepAttachmentsHandler,
+  deleteStepAttachmentHandler,
+} from '../controllers/scenarioController.js'
+import { MAX_FILE_BYTES } from '../services/scenarioAttachmentService.js'
 
 const router = express.Router({ mergeParams: true })
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: MAX_FILE_BYTES, files: 8 },
+})
 
 // Apply authentication middleware to all routes
 router.use(authenticateToken)
@@ -47,6 +58,14 @@ router.post('/bulk-delete', bulkDeleteStepsHandler)
  * PUT /api/scenarios/:scenarioId/steps/batch-update
  */
 router.put('/batch-update', batchUpdateStepsHandler)
+
+router.get('/:stepId/attachments', listStepAttachmentsHandler)
+router.post(
+  '/:stepId/attachments',
+  upload.array('files', 8),
+  uploadStepAttachmentsHandler
+)
+router.delete('/:stepId/attachments/:attachmentId', deleteStepAttachmentHandler)
 
 /**
  * Get a single test step
