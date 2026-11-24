@@ -64,6 +64,7 @@ export default function CaseDetailSidePanel({
   const [steps, setSteps] = useState([])
   const [attachments, setAttachments] = useState([])
   const [meta, setMeta] = useState({
+    name: '',
     precondition: '',
     expectedResult: '',
     priority: 'MEDIUM',
@@ -93,6 +94,7 @@ export default function CaseDetailSidePanel({
       const sc = scRes.data.scenario || scRes.data
       setScenario(sc)
       setMeta({
+        name: sc.name || '',
         precondition: sc.precondition || '',
         expectedResult: sc.expectedResult || '',
         priority: sc.priority || 'MEDIUM',
@@ -127,11 +129,16 @@ export default function CaseDetailSidePanel({
 
   const handleSave = async () => {
     if (!scenario) return
+    const name = (meta.name || '').trim()
+    if (!name) {
+      toast.error('Judul case wajib diisi')
+      return
+    }
     setSaving(true)
     try {
       const res = await scenarioAPI.update(
         scenario.id,
-        scenario.name,
+        name,
         scenario.description || '',
         scenario.url || '',
         {
@@ -144,6 +151,7 @@ export default function CaseDetailSidePanel({
       )
       const updated = res.data.scenario || res.data
       setScenario((prev) => ({ ...prev, ...updated }))
+      setMeta((m) => ({ ...m, name: updated.name || name }))
       toast.success('Detail case disimpan')
       onSaved?.(updated)
     } catch (err) {
@@ -240,13 +248,28 @@ export default function CaseDetailSidePanel({
             {scenario?.scenarioCode ? (
               <p className="text-[10px] font-mono text-brand truncate">{scenario.scenarioCode}</p>
             ) : null}
-            <h2 className="text-sm sm:text-base font-semibold text-ink leading-snug line-clamp-2">
-              {loading ? 'Memuat…' : scenario?.name || 'Case'}
-            </h2>
+            {loading ? (
+              <h2 className="text-sm sm:text-base font-semibold text-ink leading-snug">Memuat…</h2>
+            ) : (
+              <input
+                type="text"
+                value={meta.name}
+                onChange={(e) => setMeta((m) => ({ ...m, name: e.target.value }))}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault()
+                    handleSave()
+                  }
+                }}
+                placeholder="Judul case"
+                aria-label="Judul case"
+                className="w-full text-sm sm:text-base font-semibold text-ink leading-snug bg-transparent border border-transparent hover:border-surface-border focus:border-brand focus:bg-white rounded-md px-1.5 py-0.5 -mx-1.5 outline-none transition-colors"
+              />
+            )}
             {scenario?.folder?.name ? (
               <p className="text-[11px] text-ink-muted mt-0.5 truncate">
                 {scenario.folder.name}
-                {scenario.priority ? ` · ${scenario.priority}` : ''}
+                {meta.priority ? ` · ${meta.priority}` : ''}
               </p>
             ) : null}
           </div>
