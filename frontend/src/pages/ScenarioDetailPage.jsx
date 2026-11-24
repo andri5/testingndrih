@@ -169,13 +169,18 @@ const i18n = {
     goBackToScenarios: 'Kembali ke Scenarios',
     fieldType: 'Type',
     fieldDescription: 'Description',
+    fieldExpectedResult: 'Expected result',
+    expectedResultPlaceholder: 'Apa yang harus terlihat / terjadi setelah step ini',
     fieldSelector: 'Selector',
     selectorHelpTooltip: 'Cara dapat selector:\n1. Klik kanan elemen → Inspect\n2. Ada id? Pakai #id\n3. Atau Copy → Copy XPath',
     selectorHelpShort: 'Tip: Inspect elemen di browser, lalu pakai #id atau Copy XPath.',
     fieldValue: 'Value',
     fieldMetadata: 'Metadata (JSON)',
     required: 'wajib',
+    optional: 'opsional',
     closeDialog: 'Tutup',
+    descriptionRequired: 'Description wajib diisi',
+    manualStepHint: '💡 Mode manual: tulis aksi tester + expected result. Selector / Navigate tidak perlu.',
 }
 
 const STEP_TYPES = [
@@ -193,8 +198,25 @@ const STEP_TYPES = [
   { value: 'API_CALL', label: 'API Call', icon: '📡', fields: ['value', 'metadata'], placeholder: { value: 'https://api.example.com/endpoint', metadata: '{"method":"GET","headers":{}}' } },
 ]
 
+/** Human-friendly types for manual checklist — still maps to existing StepType enum */
+const MANUAL_STEP_TYPES = [
+  { value: 'ASSERTION', label: 'Verify', icon: '✅', fields: [], placeholder: {} },
+  { value: 'CLICK', label: 'Action', icon: '👉', fields: [], placeholder: {} },
+  { value: 'WAIT', label: 'Setup', icon: '📋', fields: [], placeholder: {} },
+  { value: 'SCREENSHOT', label: 'Observe', icon: '👁️', fields: [], placeholder: {} },
+]
+
 const emptyStep = {
   type: 'NAVIGATE',
+  description: '',
+  expectedResult: '',
+  selector: '',
+  value: '',
+  metadata: '',
+}
+
+const emptyManualStep = {
+  type: 'ASSERTION',
   description: '',
   expectedResult: '',
   selector: '',
@@ -477,24 +499,41 @@ export default function ScenarioDetailPage() {
   }, [loadScenario, loadSteps, id])
 
   // Get step type config
-  const getStepTypeConfig = (type) => STEP_TYPES.find(t => t.value === type) || STEP_TYPES[0]
+  const isManualMode = runMode === 'manual'
+  const formStepTypes = isManualMode ? MANUAL_STEP_TYPES : STEP_TYPES
+  const displayStepTypes = isManualMode
+    ? [
+        ...MANUAL_STEP_TYPES,
+        ...STEP_TYPES.filter((st) => !MANUAL_STEP_TYPES.some((m) => m.value === st.value)),
+      ]
+    : STEP_TYPES
+
+  const getStepTypeConfig = (type) =>
+    formStepTypes.find((t) => t.value === type) ||
+    STEP_TYPES.find((t) => t.value === type) ||
+    formStepTypes[0] ||
+    STEP_TYPES[0]
 
   // Step form handlers
   const openAddForm = () => {
     setEditingStep(null)
-    // Only prefill Navigate+URL for the very first step — later adds stay blank
-    // so we don't look like we're duplicating an existing Navigate step.
-    const isFirstStep = (steps?.length || 0) === 0
-    setStepForm(
-      isFirstStep && scenario?.url
-        ? {
-            ...emptyStep,
-            type: 'NAVIGATE',
-            value: scenario.url,
-            description: `Navigate to ${scenario.url}`,
-          }
-        : { ...emptyStep, type: 'CLICK', description: '', value: '', selector: '', expectedResult: '', metadata: '' }
-    )
+    if (runMode === 'manual') {
+      setStepForm({ ...emptyManualStep })
+    } else {
+      // Only prefill Navigate+URL for the very first step — later adds stay blank
+      // so we don't look like we're duplicating an existing Navigate step.
+      const isFirstStep = (steps?.length || 0) === 0
+      setStepForm(
+        isFirstStep && scenario?.url
+          ? {
+              ...emptyStep,
+              type: 'NAVIGATE',
+              value: scenario.url,
+              description: `Navigate to ${scenario.url}`,
+            }
+          : { ...emptyStep, type: 'CLICK', description: '', value: '', selector: '', expectedResult: '', metadata: '' }
+      )
+    }
     setShowStepForm(true)
     setTimeout(() => {
       stepFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -598,12 +637,19 @@ export default function ScenarioDetailPage() {
   const handleSaveStep = async () => {
     const manualSteps = runMode === 'manual'
     const description = (stepForm.description || '').trim()
-    if (!manualSteps && (!stepForm.type || !description)) {
+    const stepType = stepForm.type || (manualSteps ? 'ASSERTION' : '')
+
+    if (!description) {
+      setError(t.descriptionRequired)
+      return
+    }
+    if (!manualSteps && !stepType) {
       setError(t.typeRequired)
       return
     }
 
-    if (stepForm.type === 'NAVIGATE') {
+    // Navigate URL validation only matters for automated playback
+    if (!manualSteps && stepType === 'NAVIGATE') {
       const navUrl = String(stepForm.value || scenario?.url || '').trim()
       if (!navUrl) {
         setError(t.navigateUrlRequired)
@@ -621,10 +667,14 @@ export default function ScenarioDetailPage() {
       }
     }
 
-    const valueToSave =
-      stepForm.type === 'NAVIGATE' && !String(stepForm.value || '').trim() && scenario?.url
+    // Manual form hides automation fields; keep existing values on edit, leave blank on create
+    const valueToSave = manualSteps
+      ? (stepForm.value || null)
+      : stepType === 'NAVIGATE' && !String(stepForm.value || '').trim() && scenario?.url
         ? scenario.url
         : (stepForm.value || null)
+
+    const selectorToSave = stepForm.selector || null
 
     setIsSaving(true)
     setError(null)
@@ -635,18 +685,22 @@ export default function ScenarioDetailPage() {
         try {
           parsedMetadata = JSON.parse(stepForm.metadata)
         } catch {
-          setError(t.invalidMetadata)
-          setIsSaving(false)
-          return
+          // Ignore invalid metadata in manual mode (field is hidden); block in automated
+          if (!manualSteps) {
+            setError(t.invalidMetadata)
+            setIsSaving(false)
+            return
+          }
+          parsedMetadata = null
         }
       }
 
       if (editingStep) {
         await scenarioAPI.updateStep(id, editingStep.id, {
-          type: stepForm.type,
+          type: stepType,
           description,
           expectedResult: stepForm.expectedResult?.trim() || null,
-          selector: stepForm.selector || null,
+          selector: selectorToSave,
           value: valueToSave,
           metadata: parsedMetadata
         })
@@ -655,9 +709,9 @@ export default function ScenarioDetailPage() {
         await scenarioAPI.createStep(
           id,
           null,
-          stepForm.type,
+          stepType,
           description,
-          stepForm.selector || null,
+          selectorToSave,
           valueToSave,
           parsedMetadata,
           stepForm.expectedResult?.trim() || null
@@ -2029,18 +2083,27 @@ export default function ScenarioDetailPage() {
                       <div>
                         <label className="block text-sm font-medium mb-1 text-gray-700">
                           {t.fieldType}{' '}
-                          {runMode === 'manual' ? (
-                            <span className="text-xs text-ink-subtle font-normal">opsional</span>
+                          {isManualMode ? (
+                            <span className="text-xs text-ink-subtle font-normal">{t.optional}</span>
                           ) : (
                             <span className="text-xs text-red-600">*{t.required}</span>
                           )}
                         </label>
                         <select
-                          value={stepForm.type}
+                          value={stepForm.type || formStepTypes[0]?.value || ''}
                           onChange={(e) => setStepForm({ ...stepForm, type: e.target.value })}
                           className="w-full px-3 py-2 rounded-lg border focus:ring-1 focus:ring-[#0F766E] focus:outline-none bg-white border-gray-300 text-gray-900"
                         >
-                          {STEP_TYPES.map((st) => (
+                          {/* Keep current type visible when editing a step outside the manual shortlist */}
+                          {isManualMode &&
+                            stepForm.type &&
+                            !formStepTypes.some((st) => st.value === stepForm.type) && (
+                              <option value={stepForm.type}>
+                                {(STEP_TYPES.find((st) => st.value === stepForm.type)?.icon || '•')}{' '}
+                                {STEP_TYPES.find((st) => st.value === stepForm.type)?.label || stepForm.type}
+                              </option>
+                            )}
+                          {formStepTypes.map((st) => (
                             <option key={st.value} value={st.value}>
                               {st.icon} {st.label}
                             </option>
@@ -2051,11 +2114,7 @@ export default function ScenarioDetailPage() {
                       <div>
                         <label className="block text-sm font-medium mb-1 text-gray-700">
                           {t.fieldDescription}{' '}
-                          {runMode === 'manual' ? (
-                            <span className="text-xs text-ink-subtle font-normal">opsional</span>
-                          ) : (
-                            <span className="text-xs text-red-600">*{t.required}</span>
-                          )}
+                          <span className="text-xs text-red-600">*{t.required}</span>
                         </label>
                         <input
                           type="text"
@@ -2069,18 +2128,21 @@ export default function ScenarioDetailPage() {
 
                       <div className="sm:col-span-2">
                         <label className="block text-sm font-medium mb-1 text-gray-700">
-                          Expected result
+                          {t.fieldExpectedResult}{' '}
+                          {isManualMode ? (
+                            <span className="text-xs text-ink-subtle font-normal">{t.optional}</span>
+                          ) : null}
                         </label>
                         <input
                           type="text"
                           value={stepForm.expectedResult}
                           onChange={(e) => setStepForm({ ...stepForm, expectedResult: e.target.value })}
-                          placeholder="Apa yang harus terlihat / terjadi setelah step ini"
+                          placeholder={t.expectedResultPlaceholder}
                           className="w-full px-3 py-2 rounded-lg border focus:ring-1 focus:ring-[#0F766E] focus:outline-none bg-white border-gray-300 text-gray-900 placeholder-gray-400"
                         />
                       </div>
 
-                      {getStepTypeConfig(stepForm.type).fields.includes('selector') && (
+                      {!isManualMode && getStepTypeConfig(stepForm.type).fields.includes('selector') && (
                         <div>
                           <div className="flex items-center gap-1.5 mb-1">
                             <label className="text-sm font-medium text-gray-700">{t.fieldSelector}</label>
@@ -2103,7 +2165,7 @@ export default function ScenarioDetailPage() {
                         </div>
                       )}
 
-                      {getStepTypeConfig(stepForm.type).fields.includes('value') && (
+                      {!isManualMode && getStepTypeConfig(stepForm.type).fields.includes('value') && (
                         <div>
                           <label className="block text-sm font-medium mb-1 text-gray-700">{t.fieldValue}</label>
                           <input
@@ -2116,7 +2178,7 @@ export default function ScenarioDetailPage() {
                         </div>
                       )}
 
-                      {getStepTypeConfig(stepForm.type).fields.includes('metadata') && (
+                      {!isManualMode && getStepTypeConfig(stepForm.type).fields.includes('metadata') && (
                         <div className="sm:col-span-2">
                           <label className="block text-sm font-medium mb-1 text-gray-700">{t.fieldMetadata}</label>
                           <textarea
@@ -2130,9 +2192,9 @@ export default function ScenarioDetailPage() {
                       )}
                     </div>
 
-                    {t.hints[stepForm.type] && (
+                    {(isManualMode || t.hints[stepForm.type]) && (
                       <div className="mt-4 px-3 py-2 rounded-lg text-sm bg-blue-50 text-blue-700 border border-blue-200">
-                        {t.hints[stepForm.type]}
+                        {isManualMode ? t.manualStepHint : t.hints[stepForm.type]}
                       </div>
                     )}
                   </div>
@@ -2165,7 +2227,7 @@ export default function ScenarioDetailPage() {
               selectedStepIds={selectedStepIds}
               executionResult={executionResult}
               currentStepIndex={currentStepIndex}
-              STEP_TYPES={STEP_TYPES}
+              STEP_TYPES={displayStepTypes}
               isDeletingBulk={isDeletingBulk}
             />
           </div>
@@ -2182,7 +2244,7 @@ export default function ScenarioDetailPage() {
               onRecorded={handleManualStepRecorded}
               onFinished={handleManualRunFinished}
               onCancel={handleCancelManualRun}
-              stepTypes={STEP_TYPES}
+              stepTypes={displayStepTypes}
               scenarioName={scenario?.name || 'Scenario'}
               scenarioCode={scenario?.scenarioCode || scenario?.code || ''}
               precondition={scenario?.precondition || caseMeta.precondition}
