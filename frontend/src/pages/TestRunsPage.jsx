@@ -226,7 +226,7 @@ export default function TestRunsPage() {
                   </div>
                 ) : visibleGroups.length === 0 ? (
                   <p className="px-3 py-6 text-center text-sm text-ink-muted">
-                    Belum ada test case. Buat feature folder di Scenarios dulu.
+                    Belum ada test case. Buat feature folder di Cases dulu.
                   </p>
                 ) : (
                   visibleGroups.map((group) => {

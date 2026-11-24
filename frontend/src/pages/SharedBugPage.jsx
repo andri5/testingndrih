@@ -117,7 +117,7 @@ export default function SharedBugPage() {
 
               <dl className="mt-4 grid sm:grid-cols-2 gap-3 text-sm">
                 <div>
-                  <dt className="text-xs text-slate-500">Skenario</dt>
+                  <dt className="text-xs text-slate-500">Case</dt>
                   <dd className="font-medium text-slate-900">{issue.scenario?.name || '—'}</dd>
                 </div>
                 <div>

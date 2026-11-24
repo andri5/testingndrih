@@ -486,7 +486,7 @@ export default function UserManagement() {
               </div>
               <div className="grid grid-cols-2 gap-3 pt-2">
                 <div className="rounded-lg bg-[#0F0E11] p-3 border border-[#2D2D2F]">
-                  <p className="text-[#666] text-xs">Scenarios</p>
+                  <p className="text-[#666] text-xs">Cases</p>
                   <p className="text-[#E0E0E2] font-semibold">{viewUser._count?.scenarios ?? 0}</p>
                 </div>
                 <div className="rounded-lg bg-[#0F0E11] p-3 border border-[#2D2D2F]">
@@ -514,7 +514,7 @@ export default function UserManagement() {
         <Modal title="Delete user" onClose={() => setDeleteTarget(null)}>
           <p className="text-sm text-[#A0A0A4] mb-4">
             Delete <strong className="text-[#E0E0E2]">{deleteTarget.email}</strong>?
-            All scenarios, executions, and related data for this user will be removed.
+            All cases, executions, and related data for this user will be removed.
           </p>
           <div className="flex justify-end gap-2">
             <Button variant="secondary" onClick={() => setDeleteTarget(null)}>

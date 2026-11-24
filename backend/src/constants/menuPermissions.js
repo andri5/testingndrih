@@ -2,13 +2,13 @@
 
 export const MENU_DEFINITIONS = [
   { key: 'dashboard', path: '/dashboard', group: 'main', label: 'Dashboard' },
-  { key: 'scenarios', path: '/scenarios', group: 'main', label: 'Scenarios' },
+  { key: 'scenarios', path: '/scenarios', group: 'main', label: 'Cases' },
   { key: 'test-runs', path: '/test-runs', group: 'main', label: 'Test Runs' },
   { key: 'execution', path: '/execution', group: 'main', label: 'Execution' },
-  { key: 'environments', path: '/environments', group: 'main', label: 'Environments' },
   { key: 'reports', path: '/reports', group: 'main', label: 'Reports' },
   { key: 'analytics', path: '/analytics', group: 'main', label: 'Analytics' },
   { key: 'issues', path: '/issues', group: 'main', label: 'Bugs' },
+  { key: 'environments', path: '/environments', group: 'tools', label: 'Environments' },
   { key: 'visual-regression', path: '/visual-regression', group: 'tools', label: 'Visual Regression' },
   { key: 'chains', path: '/chains', group: 'tools', label: 'Chains' },
   { key: 'api-testing', path: '/api-testing', group: 'tools', label: 'API Testing' },
@@ -22,14 +22,15 @@ export const MENU_DEFINITIONS = [
 
 export const ALL_MENU_KEYS = MENU_DEFINITIONS.map((m) => m.key)
 
+/** Temporarily hidden from product UI (definition kept for later). */
+export const HIDDEN_MENU_KEYS = ['analytics', 'execution']
+
+/** Manual QA core path — Tools stay for ADMIN/LEAD */
 export const DEFAULT_USER_MENU_KEYS = [
   'dashboard',
   'scenarios',
   'test-runs',
-  'execution',
-  'environments',
   'reports',
-  'analytics',
   'issues',
 ]
 
@@ -44,7 +45,7 @@ export function isValidMenuKey(key) {
 const ROLE_FALLBACK_BY_ROLE = {
   LEAD: ALL_MENU_KEYS,
   USER: DEFAULT_USER_MENU_KEYS,
-  VIEWER: ['dashboard', 'scenarios', 'test-runs', 'reports', 'analytics', 'issues'],
+  VIEWER: ['dashboard', 'scenarios', 'test-runs', 'reports', 'issues'],
 }
 
 /**
@@ -54,18 +55,21 @@ const ROLE_FALLBACK_BY_ROLE = {
  */
 export function resolveUserMenuKeys(user, enabledMenus = null, rolePreset = null) {
   if (!user) return []
-  if (user.role === 'ADMIN') return ALL_MENU_KEYS
+  const visibleKeys = ALL_MENU_KEYS.filter((key) => !HIDDEN_MENU_KEYS.includes(key))
+  if (user.role === 'ADMIN') return visibleKeys
   const catalog = Array.isArray(enabledMenus) && enabledMenus.length > 0
-    ? enabledMenus.filter((key) => isValidMenuKey(key))
-    : ALL_MENU_KEYS
+    ? enabledMenus.filter((key) => visibleKeys.includes(key))
+    : visibleKeys
   const preset = Array.isArray(rolePreset) && rolePreset.length > 0
-    ? rolePreset.filter((key) => isValidMenuKey(key))
-    : (ROLE_FALLBACK_BY_ROLE[user.role] || DEFAULT_USER_MENU_KEYS)
+    ? rolePreset.filter((key) => visibleKeys.includes(key))
+    : (ROLE_FALLBACK_BY_ROLE[user.role] || DEFAULT_USER_MENU_KEYS).filter(
+        (key) => !HIDDEN_MENU_KEYS.includes(key)
+      )
   const assigned = Array.isArray(user.menuPermissions) ? user.menuPermissions : []
   const base = assigned.length === 0
     ? preset
-    : assigned.filter((key) => isValidMenuKey(key))
-  return base.filter((key) => catalog.includes(key))
+    : assigned.filter((key) => visibleKeys.includes(key))
+  return base.filter((key) => catalog.includes(key) && !HIDDEN_MENU_KEYS.includes(key))
 }
 
 export function resolveUserMenuPaths(user, enabledMenus = null) {

@@ -45,6 +45,7 @@ import {
 } from '../utils/profilePictureStorage'
 
 const SIDEBAR_EXPANDED_KEY = 'tsn.sidebarExpanded'
+const FOLDER_PANE_OPEN_KEY = 'tsn.folderPaneOpen'
 const COMPACT_MQ = '(max-width: 1279px)'
 
 function readSidebarExpanded() {
@@ -54,6 +55,16 @@ function readSidebarExpanded() {
     return raw === 'true'
   } catch {
     return false
+  }
+}
+
+function readFolderPaneOpen() {
+  try {
+    const raw = localStorage.getItem(FOLDER_PANE_OPEN_KEY)
+    if (raw === null) return true
+    return raw === 'true'
+  } catch {
+    return true
   }
 }
 
@@ -70,7 +81,7 @@ export default function Layout({ children, showFolderPane = false, onFolderSelec
     typeof window !== 'undefined' ? window.matchMedia(COMPACT_MQ).matches : true
   )
   const [profilePicture, setProfilePicture] = useState(null)
-  const [mobileFoldersOpen, setMobileFoldersOpen] = useState(false)
+  const [folderPaneOpen, setFolderPaneOpen] = useState(readFolderPaneOpen)
   const userMenuRef = useRef(null)
   const toolsRef = useRef(null)
   const allowedMenuKeys = useMemo(() => new Set(resolveUserMenuKeys(user)), [user])
@@ -141,16 +152,20 @@ export default function Layout({ children, showFolderPane = false, onFolderSelec
   }, [user?.id])
 
   useEffect(() => {
-    setMobileFoldersOpen(false)
-  }, [location.pathname])
-
-  useEffect(() => {
     try {
       localStorage.setItem(SIDEBAR_EXPANDED_KEY, String(sidebarExpanded))
     } catch {
       /* ignore */
     }
   }, [sidebarExpanded])
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(FOLDER_PANE_OPEN_KEY, String(folderPaneOpen))
+    } catch {
+      /* ignore */
+    }
+  }, [folderPaneOpen])
 
   const handleLogout = () => {
     logout()
@@ -177,13 +192,13 @@ export default function Layout({ children, showFolderPane = false, onFolderSelec
   const toggleSidebar = () => {
     setSidebarExpanded((v) => {
       const next = !v
-      if (next && isCompact) setMobileFoldersOpen(false)
+      if (next && isCompact) setFolderPaneOpen(false)
       return next
     })
   }
 
-  const openFolders = () => {
-    setMobileFoldersOpen((v) => {
+  const toggleFolderPane = () => {
+    setFolderPaneOpen((v) => {
       const next = !v
       if (next && isCompact) setSidebarExpanded(false)
       return next
@@ -192,16 +207,16 @@ export default function Layout({ children, showFolderPane = false, onFolderSelec
 
   const mainItems = [
     { key: 'dashboard', name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-    { key: 'scenarios', name: 'Scenarios', path: '/scenarios', icon: ClipboardList },
+    { key: 'scenarios', name: 'Cases', path: '/scenarios', icon: ClipboardList },
     { key: 'test-runs', name: 'Test Runs', path: '/test-runs', icon: ListChecks },
     { key: 'execution', name: 'Execution', path: '/execution', icon: PlayCircle },
-    { key: 'environments', name: 'Environments', path: '/environments', icon: Layers },
     { key: 'reports', name: 'Reports', path: '/reports', icon: FileBarChart2 },
     { key: 'analytics', name: 'Analytics', path: '/analytics', icon: PieChart },
     { key: 'issues', name: 'Bugs', path: '/issues', icon: Bug },
   ].filter((item) => allowedMenuKeys.has(item.key))
 
   const toolItems = [
+    { key: 'environments', name: 'Environments', path: '/environments', icon: Layers },
     { key: 'visual-regression', name: 'Visual Regression', path: '/visual-regression', icon: ImageIcon },
     { key: 'chains', name: 'Chains', path: '/chains', icon: Link2 },
     { key: 'api-testing', name: 'API Testing', path: '/api-testing', icon: Network },
@@ -517,14 +532,13 @@ export default function Layout({ children, showFolderPane = false, onFolderSelec
         </>
       )}
 
-      {/* Folder pane: push layout (not overlap) — hidden width on compact when closed */}
+      {/* Folder pane: push layout — collapsible on all breakpoints */}
       {folderPaneVisible && (
         <aside
           className={[
             'folder-pane shrink-0 z-20 bg-surface-sidebar border-r border-surface-border overflow-hidden',
             'transition-[width] duration-200 ease-out',
-            'xl:w-64',
-            mobileFoldersOpen ? 'w-[min(16rem,75vw)]' : 'w-0 xl:w-64',
+            folderPaneOpen ? 'w-[min(16rem,75vw)] xl:w-64' : 'w-0',
           ].join(' ')}
           data-folder-pane
         >
@@ -532,9 +546,10 @@ export default function Layout({ children, showFolderPane = false, onFolderSelec
             <ScenarioFolderTree
               onSelectionChange={(key) => {
                 onFolderSelectionChange?.(key)
-                setMobileFoldersOpen(false)
+                if (isCompact) setFolderPaneOpen(false)
               }}
               onDropScenario={handleFolderDrop}
+              onCollapse={() => setFolderPaneOpen(false)}
             />
           </div>
         </aside>
@@ -547,10 +562,12 @@ export default function Layout({ children, showFolderPane = false, onFolderSelec
             {folderPaneVisible && (
               <button
                 type="button"
-                className="xl:hidden px-2 py-1 text-xs rounded-md border border-surface-border text-ink-muted shrink-0"
-                onClick={openFolders}
+                className="inline-flex items-center gap-1.5 px-2 py-1 text-xs rounded-md border border-surface-border text-ink-muted hover:text-ink hover:bg-surface-muted shrink-0"
+                onClick={toggleFolderPane}
+                title={folderPaneOpen ? 'Sembunyikan feature folders' : 'Tampilkan feature folders'}
               >
-                {mobileFoldersOpen ? 'Hide folders' : 'Folders'}
+                {folderPaneOpen ? <PanelLeftClose size={14} /> : <PanelLeftOpen size={14} />}
+                <span className="hidden sm:inline">{folderPaneOpen ? 'Hide folders' : 'Folders'}</span>
               </button>
             )}
             <span className="text-sm font-semibold text-ink truncate">{pageTitle}</span>

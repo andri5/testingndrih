@@ -37,13 +37,13 @@ const content = {
           {
             num: 2,
             title: 'Main menu & Tools',
-            desc: 'Main: Dashboard, Scenarios, Test Runs, Execution, Environments, Reports, Analytics, Bugs. Admin tools live under Tools (wrench). Menus depend on your role.',
+            desc: 'Main: Dashboard, Cases, Test Runs, Reports, Bugs. Environments & automation suites live under Tools. Menus depend on your role.',
             adminOnly: false,
           },
           {
             num: 3,
             title: 'Feature folders',
-            desc: 'On Scenarios, 1 folder = 1 fitur. Drag the grip (⋮⋮) on a case onto a feature folder (or No folder). Click a folder to list cases, then Open for steps. Bulk: Create Test Run / Move / Set PIC.',
+            desc: 'On Cases, 1 folder = 1 fitur. Drag the grip (⋮⋮) on a case onto a feature folder (or No folder). Click a folder to list cases, then Open for steps. Bulk: Create Test Run / Move / Set PIC.',
             adminOnly: false,
           },
           {
@@ -68,7 +68,7 @@ const content = {
           {
             num: 1,
             title: 'Create a test case',
-            desc: 'Prefer: New feature folder (e.g. Login) → Create Manual inside it (1 case = 1 flow). Or Templates / Import Excel. Quick Record is for automation capture (admin).',
+            desc: 'Prefer: New feature folder (e.g. Login) → Create Manual. Templates / Import Excel / Quick Record ada di Lainnya (Quick Record = automation).',
             adminOnly: false,
           },
           {
@@ -105,7 +105,7 @@ const content = {
           {
             num: 1,
             title: 'Default mode = Manual',
-            desc: 'On a case (or Execution page), Mode defaults to Manual checklist. No Playwright / no Record needed.',
+            desc: 'On a case, Mode defaults to Manual checklist. No Playwright / no Record needed.',
           },
           {
             num: 2,
@@ -119,8 +119,8 @@ const content = {
           },
           {
             num: 4,
-            title: 'From Execution page',
-            desc: 'Execution → pick scenario → Mode Manual → Manual Run opens the case checklist. History shows Type Manual vs Automated.',
+            title: 'Prefer Test Runs for cycles',
+            desc: 'For multi-case Manual QA (per feature), use Test Runs → Create Run instead of running cases one-by-one.',
           },
         ],
       },
@@ -132,7 +132,7 @@ const content = {
           {
             num: 1,
             title: 'Multi-case run',
-            desc: 'Test Runs → Create Run: cases are grouped by feature folder (1 folder = 1 fitur). Use Select fitur to pick a whole module, or filter by feature. Or select cases in Scenarios → Create Test Run.',
+            desc: 'Test Runs → Create Run: cases are grouped by feature folder (1 folder = 1 fitur). Use Select fitur to pick a whole module, or filter by feature. Or select cases in Cases → Create Test Run.',
           },
           {
             num: 2,
@@ -163,13 +163,13 @@ const content = {
           },
           {
             num: 3,
-            title: 'Execution history',
-            desc: 'Execution page lists past runs (Manual + Automated). Compare two runs, export HTML/PDF, share links.',
+            title: 'Results on the case',
+            desc: 'After Automated Run, review step results on the case page. Export/share from the case or Reports when available.',
           },
           {
             num: 4,
             title: 'Bulk Auto Run',
-            desc: 'Scenarios → select rows → Auto Run (headless sequential). Prefer Create Test Run for structured Manual QA cycles.',
+            desc: 'Cases → select rows → Auto Run (headless sequential). Prefer Create Test Run for structured Manual QA cycles.',
           },
           {
             num: 5,
@@ -211,7 +211,7 @@ const content = {
         icon: <Link2 size={14} />,
         steps: [
           { num: 1, title: 'Create a Chain', desc: 'Go to Chains → New Chain. A chain groups multiple scenarios into one sequential run.' },
-          { num: 2, title: 'Add Scenarios', desc: 'Open a chain → add scenarios as steps. Reorder with the up/down controls.' },
+          { num: 2, title: 'Add Cases', desc: 'Open a chain → add cases as steps. Reorder with the up/down controls.' },
           { num: 3, title: 'Configure Steps', desc: 'Edit a chain step to set wait time, retry count, and stop-on-fail.' },
           { num: 4, title: 'Execute Chain', desc: 'Execute Chain runs all scenarios in order. Review results per scenario in history.' },
         ],
@@ -257,7 +257,7 @@ const content = {
           { num: 2, title: 'Scheduler', desc: 'Scheduler → set a cron schedule to run a scenario automatically.' },
           { num: 3, title: 'Parallel Execution', desc: 'Run multiple scenarios at once — useful for broader regression suites.' },
           { num: 4, title: 'Browser Matrix', desc: 'Run one scenario across Chromium, Firefox, and WebKit to catch browser-specific issues.' },
-          { num: 5, title: 'Analytics & Reports', desc: 'Main menu Analytics/Reports (not under Tools). Export Excel/PDF where available.' },
+          { num: 5, title: 'Reports', desc: 'Main menu Reports (not under Tools). Export Excel/PDF where available.' },
           { num: 6, title: 'Environments', desc: 'Main menu Environments — define variables and use {{var}} in steps.' },
         ],
       },

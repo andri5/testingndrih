@@ -5,6 +5,7 @@ import { userAPI } from '../services/api'
 import {
   MENU_DEFINITIONS,
   DEFAULT_USER_MENU_KEYS,
+  HIDDEN_MENU_KEYS,
   resolveUserMenuKeys,
 } from '../constants/menuPermissions'
 
@@ -108,7 +109,9 @@ export default function UserMenuAssignment({ user, onClose, onSaved }) {
     }
   }
 
-  const available = MENU_DEFINITIONS.filter((m) => enabledCatalog.includes(m.key))
+  const available = MENU_DEFINITIONS.filter(
+    (m) => enabledCatalog.includes(m.key) && !HIDDEN_MENU_KEYS.includes(m.key)
+  )
   const mainMenus = available.filter((m) => m.group === 'main')
   const toolMenus = available.filter((m) => m.group === 'tools')
 

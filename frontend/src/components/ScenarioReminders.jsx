@@ -23,7 +23,7 @@ const COPY = {
     empty: 'Santai, semua skenario lagi bersih. Gas terus ☕',
     never_run: 'Belum pernah lu run. Cobain sekali yuk.',
     stuck: 'Execution-nya masih menggantung. Lanjutin atau cek Execution.',
-    draft: 'Skenario masih kosong nih — belum ada step.',
+    draft: 'Case masih kosong nih — belum ada step.',
     ctaNever: 'Gas run',
     ctaStuck: 'Lanjutin',
     ctaDraft: 'Isi step',

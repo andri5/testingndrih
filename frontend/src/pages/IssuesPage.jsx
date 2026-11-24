@@ -5,6 +5,7 @@ import { issueAPI, scenarioAPI } from '../services/api'
 import toast from 'react-hot-toast'
 import { Bug, Plus, RefreshCw, Link2, Paperclip, Trash2, FileText } from 'lucide-react'
 import ShareBugModal from '../components/ShareBugModal'
+import { filesFromClipboardOrDrop } from '../utils/clipboardFiles'
 
 const STATUS_OPTIONS = ['OPEN', 'IN_PROGRESS', 'CLOSED']
 const SEVERITY_OPTIONS = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']
@@ -62,6 +63,7 @@ export default function IssuesPage() {
   const navigate = useNavigate()
   const fileInputRef = useRef(null)
   const extraFileRef = useRef(null)
+  const createPasteZoneRef = useRef(null)
   const [issues, setIssues] = useState([])
   const [scenarios, setScenarios] = useState([])
   const [loading, setLoading] = useState(true)
@@ -79,6 +81,8 @@ export default function IssuesPage() {
   const [shareIssueId, setShareIssueId] = useState(null)
   const [uploadForIssueId, setUploadForIssueId] = useState(null)
   const [previewUrl, setPreviewUrl] = useState(null)
+  const [createPasteActive, setCreatePasteActive] = useState(false)
+  const [createDragOver, setCreateDragOver] = useState(false)
 
   const load = useCallback(async () => {
     try {
@@ -172,6 +176,31 @@ export default function IssuesPage() {
     }
   }
 
+  const handleCreatePasteOrDrop = (e) => {
+    const files = filesFromClipboardOrDrop(e)
+    if (!files.length) return
+    e.preventDefault()
+    e.stopPropagation()
+    setPendingFiles((prev) => [...prev, ...files])
+    toast.success(files.length > 1 ? `${files.length} gambar ditambahkan` : 'Screenshot ditambahkan')
+  }
+
+  const handleIssueListPaste = async (e) => {
+    if (!uploadForIssueId) return
+    const files = filesFromClipboardOrDrop(e)
+    if (!files.length) return
+    e.preventDefault()
+    e.stopPropagation()
+    try {
+      await issueAPI.uploadAttachments(uploadForIssueId, files)
+      toast.success(files.length > 1 ? `${files.length} gambar diunggah` : 'Screenshot diunggah')
+      setUploadForIssueId(null)
+      await load()
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Gagal upload')
+    }
+  }
+
   return (
     <Layout>
       <div className="space-y-6 animate-fade-in">
@@ -247,7 +276,7 @@ export default function IssuesPage() {
               </div>
             </div>
             <div>
-              <label className="text-xs font-medium text-slate-600">Skenario (opsional)</label>
+              <label className="text-xs font-medium text-slate-600">Case (opsional)</label>
               <select
                 value={form.scenarioId}
                 onChange={(e) => setForm((f) => ({ ...f, scenarioId: e.target.value }))}
@@ -268,9 +297,35 @@ export default function IssuesPage() {
                 type="file"
                 accept="image/png,image/jpeg,image/webp,image/gif,application/pdf"
                 multiple
-                onChange={(e) => setPendingFiles([...(e.target.files || [])])}
+                onChange={(e) => setPendingFiles((prev) => [...prev, ...(e.target.files || [])])}
                 className="mt-1 block w-full text-xs text-slate-600"
               />
+              <div
+                ref={createPasteZoneRef}
+                tabIndex={0}
+                role="button"
+                aria-label="Paste screenshot bug"
+                onClick={() => createPasteZoneRef.current?.focus()}
+                onFocus={() => setCreatePasteActive(true)}
+                onBlur={() => setCreatePasteActive(false)}
+                onPaste={handleCreatePasteOrDrop}
+                onDragOver={(e) => {
+                  e.preventDefault()
+                  setCreateDragOver(true)
+                }}
+                onDragLeave={() => setCreateDragOver(false)}
+                onDrop={(e) => {
+                  setCreateDragOver(false)
+                  handleCreatePasteOrDrop(e)
+                }}
+                className={`mt-2 rounded-lg border border-dashed px-3 py-3 text-center text-[11px] outline-none transition-colors cursor-text ${
+                  createDragOver || createPasteActive
+                    ? 'border-amber-500 bg-amber-50 text-amber-900'
+                    : 'border-slate-200 bg-slate-50 text-slate-500'
+                }`}
+              >
+                Klik di sini → Ctrl+V paste screenshot, atau drag gambar
+              </div>
               {pendingFiles.length > 0 && (
                 <p className="text-[11px] text-slate-500 mt-1">
                   {pendingFiles.length} file dipilih: {pendingFiles.map((f) => f.name).join(', ')}
@@ -317,7 +372,10 @@ export default function IssuesPage() {
             ) : issues.length === 0 ? (
               <p className="text-sm text-slate-500 py-8 text-center">Belum ada issue.</p>
             ) : (
-              <div className="space-y-2 max-h-[70vh] overflow-y-auto">
+              <div
+                className="space-y-2 max-h-[70vh] overflow-y-auto"
+                onPaste={handleIssueListPaste}
+              >
                 {issues.map((issue) => {
                   const scenarioName =
                     issue.scenario?.name || issue.execution?.scenario?.name || null
@@ -376,8 +434,9 @@ export default function IssuesPage() {
                               setUploadForIssueId(issue.id)
                               extraFileRef.current?.click()
                             }}
+                            onFocus={() => setUploadForIssueId(issue.id)}
                             className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-                            title="Tambah attachment"
+                            title="Tambah attachment (klik lalu Ctrl+V untuk paste)"
                           >
                             <Paperclip size={12} />
                           </button>

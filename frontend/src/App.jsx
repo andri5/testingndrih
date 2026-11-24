@@ -10,10 +10,8 @@ import ResetPasswordPage from './pages/ResetPasswordPage'
 import SharedRunPage from './pages/SharedRunPage'
 import SharedBugPage from './pages/SharedBugPage'
 import DashboardPage from './pages/DashboardPage'
-import AnalyticsPage from './pages/AnalyticsPage'
 import ScenariosPage from './pages/ScenariosPage'
 import ScenarioDetailPage from './pages/ScenarioDetailPage'
-import ExecutionPage from './pages/ExecutionPage'
 import TestRunsPage from './pages/TestRunsPage'
 import TestRunDetailPage from './pages/TestRunDetailPage'
 import ReportsPage from './pages/ReportsPage'
@@ -178,14 +176,8 @@ export default function App() {
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/analytics"
-          element={
-            <ProtectedRoute>
-              <AnalyticsPage />
-            </ProtectedRoute>
-          }
-        />
+        {/* Analytics dashboard hidden for now — redirect so old bookmarks don't land on it */}
+        <Route path="/analytics" element={<Navigate to="/dashboard" replace />} />
         <Route
           path="/scenarios"
           element={
@@ -202,14 +194,8 @@ export default function App() {
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/execution"
-          element={
-            <ProtectedRoute>
-              <ExecutionPage />
-            </ProtectedRoute>
-          }
-        />
+        {/* Execution page hidden for now — prefer Test Runs for Manual QA cycles */}
+        <Route path="/execution" element={<Navigate to="/test-runs" replace />} />
         <Route
           path="/test-runs"
           element={

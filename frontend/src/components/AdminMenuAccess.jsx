@@ -6,6 +6,7 @@ import {
   MENU_DEFINITIONS,
   DEFAULT_USER_MENU_KEYS,
   ALL_MENU_KEYS,
+  HIDDEN_MENU_KEYS,
   menuLabel,
 } from '../constants/menuPermissions'
 import {
@@ -100,8 +101,12 @@ export default function AdminMenuAccess() {
     }
   }
 
-  const mainMenus = MENU_DEFINITIONS.filter((m) => m.group === 'main')
-  const toolMenus = MENU_DEFINITIONS.filter((m) => m.group === 'tools')
+  const mainMenus = MENU_DEFINITIONS.filter(
+    (m) => m.group === 'main' && !HIDDEN_MENU_KEYS.includes(m.key)
+  )
+  const toolMenus = MENU_DEFINITIONS.filter(
+    (m) => m.group === 'tools' && !HIDDEN_MENU_KEYS.includes(m.key)
+  )
   const nonAdminRoles = ROLE_DEFINITIONS.filter((r) => r.key !== 'ADMIN')
 
   if (loading) {

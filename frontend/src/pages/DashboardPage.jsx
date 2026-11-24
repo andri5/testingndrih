@@ -26,14 +26,14 @@ import { WELCOME_SPLASH_STORAGE_KEY } from '../constants/welcomeSplash'
 const i18n = {
     welcome: 'Welcome back',
     hereIs: "Here's what's happening with your test automation today.",
-    testScenarios: 'Test Scenarios',
+    testScenarios: 'Test Cases',
     totalExecutions: 'Total Executions',
     successRate: 'Success Rate',
     avgDuration: 'Avg Duration',
     passed: 'Passed',
     failed: 'Failed',
     quickActions: 'Quick Actions',
-    createScenario: 'Create Scenario',
+    createScenario: 'Create Case',
     startRecording: 'Create a new test case',
     runExecution: 'Run Execution',
     executeScenario: 'Execute a test scenario',
@@ -44,10 +44,10 @@ const i18n = {
     passRate: 'pass rate',
     exportJson: 'Export JSON',
     exportCsv: 'Export CSV',
-    totalScenarios: 'Total Scenarios',
-    recentScenarios: 'Recent Scenarios',
+    totalScenarios: 'Total Cases',
+    recentScenarios: 'Recent Cases',
     recentExecutions: 'Recent Executions',
-    noScenariosYet: 'No scenarios yet',
+    noScenariosYet: 'No cases yet',
     noExecutionsYet: 'No executions yet',
     steps: 'steps',
     apiTesting: 'API Testing',
@@ -352,7 +352,7 @@ export default function DashboardPage() {
                     <p className="text-2xl font-bold text-amber-500">{formatDuration(analytics.avgDuration)}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-ink-muted mb-1">Total Scenarios</p>
+                    <p className="text-xs text-ink-muted mb-1">Total Cases</p>
                     <p className="text-2xl font-bold text-teal-600">{analytics.totalScenarios}</p>
                   </div>
                 </div>

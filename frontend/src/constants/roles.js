@@ -22,13 +22,13 @@ export const ROLE_DEFINITIONS = [
     key: 'USER',
     label: 'Tester',
     description:
-      'Day-to-day QA: Scenarios, Manual/Automated runs, Test Runs, Environments, Reports, Analytics, Bugs.',
+      'Day-to-day Manual QA: Cases, Test Runs, Reports, Bugs.',
   },
   {
     key: 'VIEWER',
     label: 'Viewer',
     description:
-      'Read-focused: Dashboard, Scenarios, Test Runs, Reports, Analytics, Bugs — follow progress without tools menus.',
+      'Read-focused: Dashboard, Cases, Test Runs, Reports, Bugs — follow progress without Tools.',
   },
 ]
 
@@ -40,14 +40,14 @@ export const ROLE_MENU_PRESETS = {
   ADMIN: [...ALL_MENU_KEYS],
   LEAD: [...ALL_MENU_KEYS],
   USER: [...DEFAULT_USER_MENU_KEYS],
-  VIEWER: ['dashboard', 'scenarios', 'test-runs', 'reports', 'analytics', 'issues'],
+  VIEWER: ['dashboard', 'scenarios', 'test-runs', 'reports', 'issues'],
 }
 
 export const ROLE_MENU_SUMMARY = {
   ADMIN: 'All menus + Settings admin tabs',
   LEAD: 'All testing menus (Main + Tools) — runs, matrix, smoke/stress/security',
-  USER: 'Dashboard, Scenarios, Test Runs, Execution, Environments, Reports, Analytics, Bugs',
-  VIEWER: 'Dashboard, Scenarios, Test Runs, Reports, Analytics, Bugs (no Execution/Tools)',
+  USER: 'Dashboard, Cases, Test Runs, Reports, Bugs',
+  VIEWER: 'Dashboard, Cases, Test Runs, Reports, Bugs (no Tools)',
 }
 
 export function getRoleMenuPreset(role) {

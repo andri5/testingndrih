@@ -8,6 +8,7 @@ import {
   Inbox,
   Layers,
   MoreHorizontal,
+  PanelLeftClose,
   Pencil,
   Trash2,
 } from 'lucide-react'
@@ -159,7 +160,7 @@ function FolderNode({ node, depth, selectedKey, expandedIds, onSelect, onToggle,
   )
 }
 
-export default function ScenarioFolderTree({ onSelectionChange, onDropScenario }) {
+export default function ScenarioFolderTree({ onSelectionChange, onDropScenario, onCollapse }) {
   const {
     tree,
     counts,
@@ -246,7 +247,7 @@ export default function ScenarioFolderTree({ onSelectionChange, onDropScenario }
   }
 
   const handleDelete = async (node) => {
-    if (!window.confirm(`Delete folder "${node.name}"? Scenarios will move to No folder.`)) return
+    if (!window.confirm(`Delete folder "${node.name}"? Cases will move to No folder.`)) return
     try {
       await deleteFolder(node.id)
       onSelectionChange?.(useFolderStore.getState().selectedKey)
@@ -301,18 +302,30 @@ export default function ScenarioFolderTree({ onSelectionChange, onDropScenario }
   return (
     <div className="h-full flex flex-col bg-surface-sidebar border-r border-surface-border">
       <div className="px-3 py-3 border-b border-surface-border flex items-center justify-between gap-2">
-        <div>
+        <div className="min-w-0">
           <p className="text-xs font-semibold text-ink uppercase tracking-wide">Feature folders</p>
           <p className="text-[10px] text-ink-subtle">1 folder = 1 fitur</p>
         </div>
-        <button
-          type="button"
-          onClick={() => handleCreate(null)}
-          className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold bg-brand text-white hover:bg-brand-hover"
-          title="New feature folder"
-        >
-          <FolderPlus size={13} /> New
-        </button>
+        <div className="flex items-center gap-1 shrink-0">
+          <button
+            type="button"
+            onClick={() => handleCreate(null)}
+            className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold bg-brand text-white hover:bg-brand-hover"
+            title="New feature folder"
+          >
+            <FolderPlus size={13} /> New
+          </button>
+          {onCollapse && (
+            <button
+              type="button"
+              onClick={onCollapse}
+              className="w-7 h-7 rounded-md flex items-center justify-center text-ink-muted hover:bg-white hover:text-ink"
+              title="Sembunyikan feature folders"
+            >
+              <PanelLeftClose size={14} />
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="px-3 py-2">
@@ -325,7 +338,7 @@ export default function ScenarioFolderTree({ onSelectionChange, onDropScenario }
       </div>
 
       <div className="flex-1 overflow-y-auto px-2 pb-3 space-y-0.5">
-        {virtualItem('all', 'All scenarios', <Layers size={15} className="text-brand" />, counts.all || 0)}
+        {virtualItem('all', 'All cases', <Layers size={15} className="text-brand" />, counts.all || 0)}
         {virtualItem(
           'unfiled',
           'No folder',

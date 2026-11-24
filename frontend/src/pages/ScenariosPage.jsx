@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ChevronDown, HelpCircle, Plus, PenLine, Zap, LayoutTemplate, FileSpreadsheet, FolderInput } from 'lucide-react'
+import { ChevronDown, HelpCircle, Plus, Zap, LayoutTemplate, FileSpreadsheet, FolderInput } from 'lucide-react'
 import Layout from '../components/Layout'
 import { Card, Button, Alert, Spinner } from '../components/ui'
 import ExportFormatButton, { SoftIconBadge } from '../components/ExportFormatButton'
@@ -17,26 +17,27 @@ import { useFolderStore } from '../store/folderStore'
 import { executionAPI, testRunAPI, scenarioAPI } from '../services/api'
 import toast from 'react-hot-toast'
 const i18n = {
-    title: 'Test Repository',
+    title: 'Cases',
     subtitle:
-      '1 folder = 1 fitur · klik case untuk detail di kanan · edit steps di halaman penuh bila perlu',
-    createScenarioBtn: 'Create',
-    selectedCount: (n) => `${n} scenario${n !== 1 ? 's' : ''} selected`,
+      '1 folder = 1 fitur · klik case untuk detail di kanan · edit steps di panel atau halaman penuh',
+    createScenarioBtn: 'Create Manual',
+    createMoreBtn: 'Lainnya',
+    selectedCount: (n) => `${n} case${n !== 1 ? 's' : ''} selected`,
     runningBulk: 'Running executions sequentially (headless)...',
     close: 'Close',
     cancel: 'Cancel',
     quickRecordTitle: 'Enter URL → Start. One window records; steps appear in the modal.',
-    templatesTitle: 'Create scenario from ready-made template',
-    // Menu items
+    templatesTitle: 'Create case from ready-made template',
+    // Secondary create options
     createManual: 'Create Manual',
     createManualDesc: 'Form-based creation',
-    createManualTooltip: 'Create a new scenario using the form. Fill in name, URL, and add steps manually.',
+    createManualTooltip: 'Create a new case using the form. Fill in name, URL, and add steps manually.',
     quickRecord: 'Quick Record',
     quickRecordDesc: '1 window · steps in modal',
-    quickRecordTooltip: 'One click starts recording in a single target window. Live steps show in the modal — Stop & Save when done.',
+    quickRecordTooltip: 'Automation capture: one window records; live steps in the modal — Stop & Save when done.',
     templates: 'Templates',
     templatesDesc: 'Pre-made templates',
-    templatesMenuTooltip: 'Choose from ready-made scenario templates (Login, E-Commerce, Navigation, Form Testing).',
+    templatesMenuTooltip: 'Choose from ready-made case templates (Login, E-Commerce, Navigation, Form Testing).',
     importExcel: 'Import Excel',
     importExcelDesc: 'Bulk import',
     importExcelTooltip:
@@ -594,7 +595,7 @@ export default function ScenariosPage() {
 
   const folderLabel =
     selectedFolderKey === 'all'
-      ? 'All scenarios'
+      ? 'All cases'
       : selectedFolderKey === 'unfiled'
         ? 'No folder'
         : folderOptions.find((f) => f.id === selectedFolderKey)?.label || 'Folder'
@@ -658,68 +659,51 @@ export default function ScenariosPage() {
             {selectedFolderKey !== 'all' ? (
               <p className="text-xs text-ink-subtle mt-1">
                 Urutan case: drag <span className="font-semibold">⋮⋮</span> ke baris atas/bawah.
-                (Di “All scenarios” urutan ikut tanggal — buka feature folder untuk sort manual.)
+                (Di “All cases” urutan ikut tanggal — buka feature folder untuk sort manual.)
               </p>
             ) : null}
           </div>
           {!showCreateForm && !editingScenario && (
             <div className="flex flex-wrap gap-2 self-start" ref={menuRef}>
-              {/* Create Scenario Dropdown Menu */}
+              <input
+                type="file"
+                id="excel-upload"
+                accept=".xlsx,.xls"
+                onChange={(e) => {
+                  if (e.target.files?.[0]) {
+                    handleFileUpload(e.target.files[0])
+                    setShowImportModal(true)
+                    setShowCreateMenu(false)
+                  }
+                }}
+                className="hidden"
+              />
+              <ExportFormatButton
+                format="primary"
+                icon={Plus}
+                onClick={() => setShowCreateForm(true)}
+                className="text-sm !px-3 !py-2"
+                iconSize={16}
+                data-testid="create-scenario-btn"
+                title={t.createManualTooltip}
+              >
+                {t.createScenarioBtn}
+              </ExportFormatButton>
+
               <div className="relative">
-                <input
-                  type="file"
-                  id="excel-upload"
-                  accept=".xlsx,.xls"
-                  onChange={(e) => {
-                    if (e.target.files?.[0]) {
-                      handleFileUpload(e.target.files[0])
-                      setShowImportModal(true)
-                      setShowCreateMenu(false)
-                    }
-                  }}
-                  className="hidden"
-                />
                 <ExportFormatButton
-                  format="primary"
-                  icon={Plus}
+                  format="html"
+                  icon={ChevronDown}
                   onClick={() => setShowCreateMenu(!showCreateMenu)}
                   className="text-sm !px-3 !py-2"
                   iconSize={16}
-                  data-testid="create-scenario-btn"
-                  trailing={
-                    <ChevronDown
-                      size={16}
-                      className={`transition-transform ${showCreateMenu ? 'rotate-180' : ''}`}
-                    />
-                  }
+                  data-testid="create-more-btn"
                 >
-                  {t.createScenarioBtn}
+                  {t.createMoreBtn}
                 </ExportFormatButton>
 
-                {/* Dropdown Menu */}
                 {showCreateMenu && (
                   <div className="absolute top-full right-0 mt-2 w-60 bg-white dark:bg-[#1F1E22] html.theme-light:bg-white border border-[#DDDDE0] dark:border-[rgba(255,255,255,0.12)] html.theme-light:border-[#DDDDE0] rounded-xl shadow-lg z-10 overflow-hidden p-1.5">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowCreateForm(true)
-                        setShowCreateMenu(false)
-                      }}
-                      title={t.createManualTooltip}
-                      className="w-full px-2.5 py-2 text-left rounded-lg text-[#1A1A1C] dark:text-[#E0E0E2] html.theme-light:text-[#1A1A1C] hover:bg-[#F5F5F7] dark:hover:bg-[#2A2A2D] html.theme-light:hover:bg-[#F5F5F7] transition-colors flex items-center gap-2.5 group"
-                    >
-                      <SoftIconBadge variant="json" icon={PenLine} />
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium flex items-center gap-1">
-                          {t.createManual}
-                          <Tooltip text={t.createManualTooltip} position="right">
-                            <HelpCircle size={13} className="text-[#999] opacity-0 group-hover:opacity-100 transition-opacity" />
-                          </Tooltip>
-                        </div>
-                        <div className="text-xs text-[#666] dark:text-[#A0A0A4]">{t.createManualDesc}</div>
-                      </div>
-                    </button>
-
                     <button
                       type="button"
                       onClick={() => {
@@ -727,7 +711,7 @@ export default function ScenariosPage() {
                         setShowCreateMenu(false)
                       }}
                       title={t.quickRecordTooltip}
-                      className="w-full px-2.5 py-2 text-left rounded-lg text-[#1A1A1C] dark:text-[#E0E0E2] hover:bg-[#F5F5F7] dark:hover:bg-[#2A2A2D] html.theme-light:hover:bg-[#F5F5F7] transition-colors flex items-center gap-2.5 group mt-0.5"
+                      className="w-full px-2.5 py-2 text-left rounded-lg text-[#1A1A1C] dark:text-[#E0E0E2] hover:bg-[#F5F5F7] dark:hover:bg-[#2A2A2D] html.theme-light:hover:bg-[#F5F5F7] transition-colors flex items-center gap-2.5 group"
                     >
                       <SoftIconBadge variant="csv" icon={Zap} />
                       <div className="flex-1 min-w-0">
@@ -803,7 +787,7 @@ export default function ScenariosPage() {
           <Card>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
               <h2 className="text-xl font-bold text-[#E0E0E2]">
-                {editingScenario ? 'Edit Scenario' : 'Create New Scenario'}
+                {editingScenario ? 'Edit Case' : 'Create Manual Case'}
               </h2>
               <div className="flex items-center gap-2">
                 <button

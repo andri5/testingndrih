@@ -20,7 +20,7 @@ export const welcomeSplashContent = {
     {
       emoji: '1',
       title: 'Create a scenario',
-      desc: 'Use Create Manual, Templates, or Import Excel (Quick Record is admin-only).',
+      desc: 'Use Create Manual. Templates / Import Excel / Quick Record are under Lainnya.',
     },
     {
       emoji: '2',

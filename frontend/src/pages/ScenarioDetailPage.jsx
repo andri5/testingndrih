@@ -8,7 +8,7 @@ import StepResultCard, { StepResultsSummary } from '../components/StepResultCard
 import TestStepList from '../components/TestStepList'
 import { scenarioAPI, executionAPI, recorderAPI, agentAPI } from '../services/api'
 import ExportFormatButton from '../components/ExportFormatButton'
-import { CheckCircle2, XCircle, ClipboardList, Clock, HelpCircle, Globe, Play, Circle, Square, ChevronDown, ListTree, Plus, Copy, Trash2, Save, Loader2, Zap, Link2, ImagePlus, Upload } from 'lucide-react'
+import { CheckCircle2, XCircle, ClipboardList, Clock, HelpCircle, Globe, Play, Circle, Square, ChevronDown, ListTree, Plus, Copy, Trash2, Save, Loader2, Zap, Link2, ImagePlus } from 'lucide-react'
 import ShareRunModal from '../components/ShareRunModal'
 import TargetKindBanner, { defaultTargetKindLabels } from '../components/TargetKindBanner'
 import ManualRunPanel from '../components/ManualRunPanel'
@@ -17,6 +17,7 @@ import AttachmentPreviewModal from '../components/AttachmentPreviewModal'
 import CaseRunsPanel from '../components/CaseRunsPanel'
 import CaseHistoryPanel from '../components/CaseHistoryPanel'
 import { useFolderStore } from '../store/folderStore'
+import { filesFromClipboardOrDrop } from '../utils/clipboardFiles'
 import toast from 'react-hot-toast'
 
 const RecordIcon = (props) => <Circle {...props} className="text-red-500 fill-red-500" />
@@ -84,8 +85,8 @@ const i18n = {
     stepsSaved: (c) => `${c} steps saved`,
     saveRecordingError: 'Failed to save recorded steps',
     confirmDiscardRecording: (c) => `Discard ${c} recorded steps?`,
-    scenarioNotFound: 'Scenario not found',
-    backToScenarios: '← Back to Scenarios',
+    scenarioNotFound: 'Case not found',
+    backToScenarios: '← Back to Cases',
     running: 'Running...',
     runScenario: 'Jalankan',
     runOnThisPc: 'Jalankan di PC ini',
@@ -166,7 +167,9 @@ const i18n = {
       ASSERTION: '💡 Pastikan elemen ada di halaman, opsional cek teks',
       API_CALL: '💡 Isi endpoint URL dan metadata (JSON)',
     },
-    goBackToScenarios: 'Kembali ke Scenarios',
+    goBackToScenarios: 'Kembali ke Cases',
+    advancedAutomated: 'Advanced · Automated',
+    backToManualMode: '← Manual checklist',
     fieldType: 'Type',
     fieldDescription: 'Description',
     fieldExpectedResult: 'Expected result',
@@ -313,7 +316,10 @@ export default function ScenarioDetailPage() {
   const [uploadingExpectedImage, setUploadingExpectedImage] = useState(false)
   const [deletingExpectedImageId, setDeletingExpectedImageId] = useState(null)
   const [previewAttachment, setPreviewAttachment] = useState(null)
+  const [expectedPasteActive, setExpectedPasteActive] = useState(false)
+  const [expectedDragOver, setExpectedDragOver] = useState(false)
   const expectedImageInputRef = useRef(null)
+  const expectedPasteZoneRef = useRef(null)
   /** Testiny-style case tabs */
   const [caseTab, setCaseTab] = useState('details') // details | attachments | runs | history
   const [caseAttachments, setCaseAttachments] = useState([])
@@ -611,6 +617,14 @@ export default function ScenarioDetailPage() {
       setUploadingExpectedImage(false)
       if (expectedImageInputRef.current) expectedImageInputRef.current.value = ''
     }
+  }
+
+  const handleExpectedPasteOrDrop = (e) => {
+    const files = filesFromClipboardOrDrop(e)
+    if (!files.length) return
+    e.preventDefault()
+    e.stopPropagation()
+    handleUploadExpectedImages(files)
   }
 
   const handleDeleteExpectedImage = async (attachmentId) => {
@@ -1687,24 +1701,29 @@ export default function ScenarioDetailPage() {
               )
             )}
 
-            <div className="flex items-center gap-2">
-              <label className="text-xs font-semibold text-ink-muted whitespace-nowrap">Mode</label>
-              <select
-                value={runMode}
-                onChange={(e) => {
-                  const next = e.target.value
-                  setRunMode(next)
-                  if (next === 'manual') {
-                    setShowRecordingPanel(false)
-                  }
+            {runMode === 'manual' ? (
+              <button
+                type="button"
+                onClick={() => setRunMode('automated')}
+                disabled={!!manualRun || isExecuting || isRecording}
+                className="text-xs font-medium text-ink-muted hover:text-brand underline-offset-2 hover:underline disabled:opacity-50"
+                title="Playwright Record / Run — untuk automation"
+              >
+                {t.advancedAutomated}
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  setRunMode('manual')
+                  setShowRecordingPanel(false)
                 }}
                 disabled={!!manualRun || isExecuting || isRecording}
-                className="text-xs font-semibold rounded-lg border border-surface-border bg-white text-ink px-2.5 py-2 focus:outline-none focus:ring-1 focus:ring-brand"
+                className="text-xs font-medium text-ink-muted hover:text-brand underline-offset-2 hover:underline disabled:opacity-50"
               >
-                <option value="manual">Manual checklist</option>
-                <option value="automated">Automated (Playwright)</option>
-              </select>
-            </div>
+                {t.backToManualMode}
+              </button>
+            )}
             <ExportFormatButton
               format="csv"
               icon={
@@ -1921,7 +1940,7 @@ export default function ScenarioDetailPage() {
               <div>
                 <label className="block text-xs font-medium text-ink-muted">Expected result</label>
                 <p className="text-[11px] text-ink-subtle mt-0.5">
-                  Hasil yang diharapkan untuk test case ini — teks dan/atau screenshot.
+                  Hasil yang diharapkan — teks dan/atau screenshot (klik area paste lalu Ctrl+V).
                 </p>
               </div>
               <div>
@@ -1951,6 +1970,34 @@ export default function ScenarioDetailPage() {
               placeholder="Mis. User berhasil login dan diarahkan ke dashboard…"
               className="w-full text-sm rounded-lg border border-surface-border px-3 py-2 bg-white text-ink"
             />
+            <div
+              ref={expectedPasteZoneRef}
+              tabIndex={0}
+              role="button"
+              aria-label="Paste screenshot expected result"
+              onClick={() => expectedPasteZoneRef.current?.focus()}
+              onFocus={() => setExpectedPasteActive(true)}
+              onBlur={() => setExpectedPasteActive(false)}
+              onPaste={handleExpectedPasteOrDrop}
+              onDragOver={(e) => {
+                e.preventDefault()
+                setExpectedDragOver(true)
+              }}
+              onDragLeave={() => setExpectedDragOver(false)}
+              onDrop={(e) => {
+                setExpectedDragOver(false)
+                handleExpectedPasteOrDrop(e)
+              }}
+              className={`mt-3 rounded-xl border border-dashed px-4 py-5 text-center text-sm outline-none transition-colors cursor-text ${
+                expectedDragOver || expectedPasteActive
+                  ? 'border-brand bg-brand-soft/40 text-brand-ink'
+                  : 'border-surface-border bg-surface-muted/40 text-ink-muted'
+              }`}
+            >
+              {uploadingExpectedImage
+                ? 'Mengunggah…'
+                : 'Klik di sini → Ctrl+V untuk paste screenshot, atau drag gambar ke sini'}
+            </div>
             {expectedResultImages.length > 0 ? (
               <ul className="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {expectedResultImages.map((img) => (
@@ -1991,17 +2038,7 @@ export default function ScenarioDetailPage() {
                   </li>
                 ))}
               </ul>
-            ) : (
-              <button
-                type="button"
-                onClick={() => expectedImageInputRef.current?.click()}
-                disabled={uploadingExpectedImage}
-                className="mt-3 w-full rounded-xl border border-dashed border-surface-border bg-surface-muted/40 px-4 py-6 text-center hover:bg-surface-muted/70 transition-colors"
-              >
-                <Upload size={18} className="mx-auto text-ink-subtle mb-1.5" />
-                <p className="text-xs text-ink-muted">Belum ada gambar — klik untuk upload screenshot expected result</p>
-              </button>
-            )}
+            ) : null}
           </div>
 
           {/* Steps — same Details panel as Testiny */}

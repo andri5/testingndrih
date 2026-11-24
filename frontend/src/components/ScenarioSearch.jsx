@@ -5,7 +5,7 @@ import ExportFormatButton from './ExportFormatButton'
 import { Star } from 'lucide-react'
 
 const FILTER_OPTIONS = [
-  { value: 'all', label: 'All Scenarios' },
+  { value: 'all', label: 'All Cases' },
   { value: 'recent', label: 'Recently Created' },
   { value: 'active', label: 'Most Executed' },
 ]
