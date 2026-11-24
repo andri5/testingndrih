@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd'
 import {
   X,
   ChevronLeft,
@@ -10,6 +11,7 @@ import {
   ListTree,
   Plus,
   Trash2,
+  GripVertical,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { scenarioAPI } from '../services/api'
@@ -237,6 +239,38 @@ export default function CaseDetailSidePanel({
   const goNext = () => {
     if (!hasNext) return
     onSelectId?.(scenarioIds[index + 1])
+  }
+
+  const handleReorderSteps = async (fromIndex, toIndex) => {
+    if (fromIndex === toIndex) return
+    if (fromIndex < 0 || toIndex < 0 || fromIndex >= steps.length || toIndex >= steps.length) return
+
+    const newSteps = [...steps]
+    const [moved] = newSteps.splice(fromIndex, 1)
+    newSteps.splice(toIndex, 0, moved)
+
+    const stepOrders = newSteps.map((s, i) => ({
+      stepId: s.id,
+      sequenceNumber: i + 1,
+    }))
+
+    setSteps(newSteps.map((s, i) => ({ ...s, stepNumber: i + 1 })))
+
+    try {
+      await scenarioAPI.reorderSteps(scenarioId, stepOrders)
+      await reloadSteps()
+      toast.success('Urutan step disimpan')
+    } catch (err) {
+      toast.error(err.response?.data?.error || err.response?.data?.message || 'Gagal ubah urutan step')
+      await reloadSteps()
+    }
+  }
+
+  const onStepDragEnd = (result) => {
+    const { source, destination } = result
+    if (!destination) return
+    if (source.index === destination.index) return
+    handleReorderSteps(source.index, destination.index)
   }
 
   return (
@@ -478,84 +512,131 @@ export default function CaseDetailSidePanel({
                       </button>
                     </div>
                   ) : (
-                    <ol className="space-y-2">
-                      {steps.map((step, i) => (
-                        <li
-                          key={step.id || i}
-                          className="rounded-lg border border-surface-border bg-white px-2.5 py-2.5 space-y-2"
-                        >
-                          <div className="flex items-center gap-2">
-                            <span className="text-[10px] font-mono text-ink-subtle shrink-0 w-4">
-                              {step.stepNumber ?? i + 1}
-                            </span>
-                            <select
-                              value={step.type || 'CLICK'}
-                              onChange={(e) => patchStepLocal(step.id, { type: e.target.value })}
-                              className="text-[11px] font-bold rounded-md border border-teal-200 bg-teal-50 text-teal-800 px-1.5 py-1"
+                    <>
+                      <p className="text-[10px] text-ink-subtle mb-2">
+                        Drag <span className="font-semibold">⋮⋮</span> untuk ubah urutan step.
+                      </p>
+                      <DragDropContext onDragEnd={onStepDragEnd}>
+                        <Droppable droppableId="panel-steps-list">
+                          {(provided, snapshot) => (
+                            <ol
+                              ref={provided.innerRef}
+                              {...provided.droppableProps}
+                              className={`space-y-2 ${
+                                snapshot.isDraggingOver ? 'rounded-lg bg-brand-soft/30 p-1' : ''
+                              }`}
                             >
-                              {PANEL_STEP_TYPES.map((t) => (
-                                <option key={t.value} value={t.value}>
-                                  {t.label}
-                                </option>
+                              {steps.map((step, i) => (
+                                <Draggable
+                                  key={String(step.id)}
+                                  draggableId={String(step.id)}
+                                  index={i}
+                                >
+                                  {(dragProvided, dragSnapshot) => (
+                                    <li
+                                      ref={dragProvided.innerRef}
+                                      {...dragProvided.draggableProps}
+                                      className={`rounded-lg border border-surface-border bg-white px-2.5 py-2.5 space-y-2 ${
+                                        dragSnapshot.isDragging
+                                          ? 'shadow-lg ring-1 ring-brand/40'
+                                          : ''
+                                      }`}
+                                    >
+                                      <div className="flex items-center gap-1.5">
+                                        <button
+                                          type="button"
+                                          {...dragProvided.dragHandleProps}
+                                          className="p-0.5 text-ink-subtle hover:text-ink cursor-grab active:cursor-grabbing shrink-0"
+                                          title="Drag untuk ubah urutan"
+                                          aria-label="Drag step"
+                                        >
+                                          <GripVertical size={14} />
+                                        </button>
+                                        <span className="text-[10px] font-mono text-ink-subtle shrink-0 w-4">
+                                          {step.stepNumber ?? i + 1}
+                                        </span>
+                                        <select
+                                          value={step.type || 'CLICK'}
+                                          onChange={(e) =>
+                                            patchStepLocal(step.id, { type: e.target.value })
+                                          }
+                                          className="text-[11px] font-bold rounded-md border border-teal-200 bg-teal-50 text-teal-800 px-1.5 py-1"
+                                        >
+                                          {PANEL_STEP_TYPES.map((t) => (
+                                            <option key={t.value} value={t.value}>
+                                              {t.label}
+                                            </option>
+                                          ))}
+                                          {!PANEL_STEP_TYPES.some((t) => t.value === step.type) &&
+                                          step.type ? (
+                                            <option value={step.type}>{step.type}</option>
+                                          ) : null}
+                                        </select>
+                                        <button
+                                          type="button"
+                                          onClick={() => handleSaveStep(step)}
+                                          disabled={savingStepId === step.id}
+                                          className="ml-auto inline-flex items-center gap-1 text-[11px] font-semibold text-brand disabled:opacity-40"
+                                          title="Simpan step"
+                                        >
+                                          {savingStepId === step.id ? (
+                                            <Loader2 size={12} className="animate-spin" />
+                                          ) : (
+                                            <Save size={12} />
+                                          )}
+                                          Simpan
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() => handleDeleteStep(step.id)}
+                                          disabled={deletingStepId === step.id}
+                                          className="p-1 text-ink-subtle hover:text-red-600 disabled:opacity-40"
+                                          title="Hapus step"
+                                        >
+                                          {deletingStepId === step.id ? (
+                                            <Loader2 size={12} className="animate-spin" />
+                                          ) : (
+                                            <Trash2 size={12} />
+                                          )}
+                                        </button>
+                                      </div>
+                                      <textarea
+                                        value={step.description || ''}
+                                        onChange={(e) =>
+                                          patchStepLocal(step.id, { description: e.target.value })
+                                        }
+                                        rows={2}
+                                        placeholder="Deskripsi step (opsional)…"
+                                        className="w-full text-xs rounded-lg border border-surface-border px-2.5 py-2 bg-white text-ink"
+                                      />
+                                      <input
+                                        type="text"
+                                        value={step.expectedResult || ''}
+                                        onChange={(e) =>
+                                          patchStepLocal(step.id, {
+                                            expectedResult: e.target.value,
+                                          })
+                                        }
+                                        placeholder="Expected result (opsional)…"
+                                        className="w-full text-xs rounded-lg border border-surface-border px-2.5 py-1.5 bg-white text-ink"
+                                      />
+                                      <StepAttachmentsBlock
+                                        scenarioId={scenarioId}
+                                        stepId={step.id}
+                                        attachments={step.attachments || []}
+                                        onChanged={reloadSteps}
+                                        compact
+                                      />
+                                    </li>
+                                  )}
+                                </Draggable>
                               ))}
-                              {!PANEL_STEP_TYPES.some((t) => t.value === step.type) && step.type ? (
-                                <option value={step.type}>{step.type}</option>
-                              ) : null}
-                            </select>
-                            <button
-                              type="button"
-                              onClick={() => handleSaveStep(step)}
-                              disabled={savingStepId === step.id}
-                              className="ml-auto inline-flex items-center gap-1 text-[11px] font-semibold text-brand disabled:opacity-40"
-                              title="Simpan step"
-                            >
-                              {savingStepId === step.id ? (
-                                <Loader2 size={12} className="animate-spin" />
-                              ) : (
-                                <Save size={12} />
-                              )}
-                              Simpan
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteStep(step.id)}
-                              disabled={deletingStepId === step.id}
-                              className="p-1 text-ink-subtle hover:text-red-600 disabled:opacity-40"
-                              title="Hapus step"
-                            >
-                              {deletingStepId === step.id ? (
-                                <Loader2 size={12} className="animate-spin" />
-                              ) : (
-                                <Trash2 size={12} />
-                              )}
-                            </button>
-                          </div>
-                          <textarea
-                            value={step.description || ''}
-                            onChange={(e) => patchStepLocal(step.id, { description: e.target.value })}
-                            rows={2}
-                            placeholder="Deskripsi step (opsional)…"
-                            className="w-full text-xs rounded-lg border border-surface-border px-2.5 py-2 bg-white text-ink"
-                          />
-                          <input
-                            type="text"
-                            value={step.expectedResult || ''}
-                            onChange={(e) =>
-                              patchStepLocal(step.id, { expectedResult: e.target.value })
-                            }
-                            placeholder="Expected result (opsional)…"
-                            className="w-full text-xs rounded-lg border border-surface-border px-2.5 py-1.5 bg-white text-ink"
-                          />
-                          <StepAttachmentsBlock
-                            scenarioId={scenarioId}
-                            stepId={step.id}
-                            attachments={step.attachments || []}
-                            onChanged={reloadSteps}
-                            compact
-                          />
-                        </li>
-                      ))}
-                    </ol>
+                              {provided.placeholder}
+                            </ol>
+                          )}
+                        </Droppable>
+                      </DragDropContext>
+                    </>
                   )}
                 </div>
               </div>
