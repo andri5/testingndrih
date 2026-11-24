@@ -596,7 +596,9 @@ export default function ScenarioDetailPage() {
   }
 
   const handleSaveStep = async () => {
-    if (!stepForm.type || !stepForm.description.trim()) {
+    const manualSteps = runMode === 'manual'
+    const description = (stepForm.description || '').trim()
+    if (!manualSteps && (!stepForm.type || !description)) {
       setError(t.typeRequired)
       return
     }
@@ -642,7 +644,7 @@ export default function ScenarioDetailPage() {
       if (editingStep) {
         await scenarioAPI.updateStep(id, editingStep.id, {
           type: stepForm.type,
-          description: stepForm.description.trim(),
+          description,
           expectedResult: stepForm.expectedResult?.trim() || null,
           selector: stepForm.selector || null,
           value: valueToSave,
@@ -654,7 +656,7 @@ export default function ScenarioDetailPage() {
           id,
           null,
           stepForm.type,
-          stepForm.description.trim(),
+          description,
           stepForm.selector || null,
           valueToSave,
           parsedMetadata,
@@ -2026,7 +2028,12 @@ export default function ScenarioDetailPage() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                       <div>
                         <label className="block text-sm font-medium mb-1 text-gray-700">
-                          {t.fieldType} <span className="text-xs text-red-600">*{t.required}</span>
+                          {t.fieldType}{' '}
+                          {runMode === 'manual' ? (
+                            <span className="text-xs text-ink-subtle font-normal">opsional</span>
+                          ) : (
+                            <span className="text-xs text-red-600">*{t.required}</span>
+                          )}
                         </label>
                         <select
                           value={stepForm.type}
@@ -2043,7 +2050,12 @@ export default function ScenarioDetailPage() {
 
                       <div>
                         <label className="block text-sm font-medium mb-1 text-gray-700">
-                          {t.fieldDescription} <span className="text-xs text-red-600">*{t.required}</span>
+                          {t.fieldDescription}{' '}
+                          {runMode === 'manual' ? (
+                            <span className="text-xs text-ink-subtle font-normal">opsional</span>
+                          ) : (
+                            <span className="text-xs text-red-600">*{t.required}</span>
+                          )}
                         </label>
                         <input
                           type="text"

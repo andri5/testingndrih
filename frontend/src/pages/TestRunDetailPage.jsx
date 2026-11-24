@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { Card, Badge, Spinner, Alert, Button } from '../components/ui'
 import ExportFormatButton from '../components/ExportFormatButton'
-import { testRunAPI } from '../services/api'
+import { scenarioAPI, testRunAPI } from '../services/api'
 import toast from 'react-hot-toast'
 import {
   ArrowLeft,
@@ -15,6 +15,7 @@ import {
   Ban,
   SkipForward,
   Folder,
+  X,
 } from 'lucide-react'
 
 function groupItemsByFeature(items = []) {
@@ -54,6 +55,10 @@ export default function TestRunDetailPage() {
   const [notesFor, setNotesFor] = useState(null) // itemId
   const [notes, setNotes] = useState('')
   const [pendingStatus, setPendingStatus] = useState(null)
+  const [activeId, setActiveId] = useState(null)
+  const [panelOpen, setPanelOpen] = useState(false)
+  const [steps, setSteps] = useState([])
+  const [stepsLoading, setStepsLoading] = useState(false)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -142,6 +147,44 @@ export default function TestRunDetailPage() {
     [run?.items]
   )
 
+  const activeItem = useMemo(
+    () => (run?.items || []).find((item) => item.id === activeId) || null,
+    [run, activeId]
+  )
+
+  useEffect(() => {
+    const items = run?.items || []
+    if (!items.length) {
+      setActiveId(null)
+      return
+    }
+    setActiveId((prev) => (prev && items.some((item) => item.id === prev) ? prev : items[0].id))
+  }, [run])
+
+  useEffect(() => {
+    const scenarioId = activeItem?.scenarioId
+    if (!scenarioId) {
+      setSteps([])
+      return undefined
+    }
+    let cancelled = false
+    setStepsLoading(true)
+    scenarioAPI
+      .getSteps(scenarioId, 0, 200)
+      .then((res) => {
+        if (!cancelled) setSteps(res.data.steps || res.data || [])
+      })
+      .catch(() => {
+        if (!cancelled) setSteps([])
+      })
+      .finally(() => {
+        if (!cancelled) setStepsLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [activeItem?.scenarioId])
+
   if (loading && !run) {
     return (
       <Layout>
@@ -204,16 +247,18 @@ export default function TestRunDetailPage() {
 
         {error && <Alert type="error" message={error} onClose={() => setError(null)} />}
 
-        <Card>
-          <div className="mb-4">
-            <div className="h-2 rounded-full bg-surface-muted overflow-hidden">
-              <div
-                className="h-full bg-brand rounded-full transition-all"
-                style={{ width: `${p.percentComplete || 0}%` }}
-              />
-            </div>
+        <div className="mb-1">
+          <div className="h-2 rounded-full bg-surface-muted overflow-hidden">
+            <div
+              className="h-full bg-brand rounded-full transition-all"
+              style={{ width: `${p.percentComplete || 0}%` }}
+            />
           </div>
+        </div>
 
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(300px,380px)] gap-3 items-start">
+        <Card>
+          <p className="text-xs text-ink-muted mb-3">Klik case untuk hasil dan steps di panel kanan.</p>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
@@ -222,7 +267,7 @@ export default function TestRunDetailPage() {
                   <th className="py-2 pr-3">Test case</th>
                   <th className="py-2 pr-3 hidden md:table-cell">PIC</th>
                   <th className="py-2 pr-3">Result</th>
-                  <th className="py-2 text-right">Actions</th>
+                  <th className="py-2 text-right" />
                 </tr>
               </thead>
               <tbody>
@@ -240,16 +285,19 @@ export default function TestRunDetailPage() {
                       </td>
                     </tr>
                     {group.items.map((item, idx) => (
-                  <tr key={item.id} className="border-b border-surface-border/70 align-top">
+                  <tr
+                    key={item.id}
+                    className={`border-b border-surface-border/70 align-top cursor-pointer ${
+                      activeId === item.id ? 'bg-sky-50/90' : 'hover:bg-surface-muted/40'
+                    }`}
+                    onClick={() => {
+                      setActiveId(item.id)
+                      setPanelOpen(true)
+                    }}
+                  >
                     <td className="py-3 pr-3 text-ink-subtle">{idx + 1}</td>
                     <td className="py-3 pr-3">
-                      <button
-                        type="button"
-                        className="font-medium text-ink hover:text-brand text-left"
-                        onClick={() => navigate(`/scenarios/${item.scenarioId}`)}
-                      >
-                        {item.scenario?.name}
-                      </button>
+                      <p className="font-medium text-ink text-left">{item.scenario?.name}</p>
                       <p className="text-xs text-ink-subtle mt-0.5">
                         {item.scenario?.folder?.name || 'No folder'} ·{' '}
                         {item.scenario?.priority || 'MEDIUM'} · {item.scenario?.caseType || 'Functional'} ·{' '}
@@ -259,36 +307,6 @@ export default function TestRunDetailPage() {
                         <p className="text-xs text-amber-800 mt-1 bg-amber-50 rounded px-2 py-1">
                           Notes: {item.notes}
                         </p>
-                      )}
-                      {notesFor === item.id && (
-                        <div className="mt-2 space-y-2">
-                          <textarea
-                            value={notes}
-                            onChange={(e) => setNotes(e.target.value)}
-                            rows={2}
-                            placeholder="Notes wajib untuk Failed/Blocked"
-                            className="w-full text-xs rounded-lg border border-surface-border px-2 py-1.5"
-                          />
-                          <div className="flex gap-2">
-                            <ExportFormatButton
-                              format="primary"
-                              onClick={() => applyStatus(item.id, pendingStatus, notes)}
-                              disabled={!notes.trim() || busyId === item.id}
-                            >
-                              Simpan {pendingStatus}
-                            </ExportFormatButton>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                setNotesFor(null)
-                                setPendingStatus(null)
-                              }}
-                            >
-                              Batal
-                            </Button>
-                          </div>
-                        </div>
                       )}
                     </td>
                     <td className="py-3 pr-3 hidden md:table-cell text-xs text-ink-muted">
@@ -309,41 +327,7 @@ export default function TestRunDetailPage() {
                         {item.status}
                       </Badge>
                     </td>
-                    <td className="py-3 text-right">
-                      <div className="inline-flex flex-wrap justify-end gap-1">
-                        {!sealed &&
-                          RESULTS.map((r) => {
-                            const Icon = r.icon
-                            return (
-                              <button
-                                key={r.value}
-                                type="button"
-                                disabled={busyId === item.id}
-                                title={r.label}
-                                onClick={() => requestStatus(item, r.value)}
-                                className={`inline-flex items-center gap-1 px-2 py-1 rounded-md border text-[11px] font-semibold ${r.className} disabled:opacity-40`}
-                              >
-                                {Icon ? <Icon size={12} /> : null}
-                                {r.label}
-                              </button>
-                            )
-                          })}
-                        <button
-                          type="button"
-                          disabled={busyId === item.id || sealed}
-                          onClick={() => startChecklist(item)}
-                          className="inline-flex items-center gap-1 px-2 py-1 rounded-md border border-teal-200 bg-teal-50 text-teal-800 text-[11px] font-semibold disabled:opacity-40"
-                          title="Buka manual checklist (step-level)"
-                        >
-                          {busyId === item.id ? (
-                            <Loader2 size={12} className="animate-spin" />
-                          ) : (
-                            <ClipboardList size={12} />
-                          )}
-                          Checklist
-                        </button>
-                      </div>
-                    </td>
+                    <td className="py-3 text-right text-[11px] text-ink-subtle">Panel →</td>
                   </tr>
                     ))}
                   </Fragment>
@@ -352,6 +336,160 @@ export default function TestRunDetailPage() {
             </table>
           </div>
         </Card>
+
+        {activeItem && (
+          <>
+            {panelOpen && (
+              <button
+                type="button"
+                className="fixed inset-0 z-30 bg-slate-900/40 lg:hidden"
+                aria-label="Tutup panel"
+                onClick={() => setPanelOpen(false)}
+              />
+            )}
+            <aside
+              className={`${
+                panelOpen
+                  ? 'fixed inset-y-0 right-0 z-40 w-[min(100%,24rem)]'
+                  : 'hidden'
+              } lg:static lg:block lg:z-0 lg:w-auto h-[100dvh] lg:h-auto lg:max-h-[calc(100vh-6rem)] lg:sticky lg:top-3 flex flex-col bg-white border border-surface-border lg:rounded-xl shadow-xl lg:shadow-sm overflow-hidden`}
+            >
+              <div className="shrink-0 px-4 py-3 border-b border-surface-border">
+                <div className="flex items-start gap-2">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[10px] font-semibold uppercase tracking-wide text-ink-subtle">
+                      {activeItem.scenario?.folder?.name || 'No folder'}
+                    </p>
+                    <h2 className="text-sm font-semibold text-ink leading-snug line-clamp-2">
+                      {activeItem.scenario?.name}
+                    </h2>
+                    <p className="text-[11px] text-ink-muted mt-1">
+                      {activeItem.scenario?.priority || 'MEDIUM'} · {activeItem.scenario?.caseType || 'Functional'} ·{' '}
+                      {activeItem.assignee?.name || activeItem.assignee?.email || 'Tanpa PIC'}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    className="lg:hidden p-1.5 rounded-md text-ink-muted hover:bg-surface-muted"
+                    onClick={() => setPanelOpen(false)}
+                    aria-label="Tutup"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex-1 min-h-0 overflow-y-auto px-4 py-3 space-y-4">
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-ink-subtle mb-2">Result</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {!sealed &&
+                      RESULTS.map((r) => {
+                        const Icon = r.icon
+                        const on = activeItem.status === r.value
+                        return (
+                          <button
+                            key={r.value}
+                            type="button"
+                            disabled={busyId === activeItem.id}
+                            onClick={() => requestStatus(activeItem, r.value)}
+                            className={`inline-flex items-center gap-1 px-2 py-1 rounded-md border text-[11px] font-semibold disabled:opacity-40 ${r.className} ${
+                              on ? 'ring-2 ring-brand' : ''
+                            }`}
+                          >
+                            {Icon ? <Icon size={12} /> : null}
+                            {r.label}
+                          </button>
+                        )
+                      })}
+                    {sealed && <Badge>{activeItem.status}</Badge>}
+                  </div>
+                  {notesFor === activeItem.id && (
+                    <div className="mt-2 space-y-2">
+                      <textarea
+                        value={notes}
+                        onChange={(e) => setNotes(e.target.value)}
+                        rows={3}
+                        placeholder="Notes wajib untuk Failed/Blocked"
+                        className="w-full text-xs rounded-lg border border-surface-border px-2 py-1.5"
+                      />
+                      <div className="flex gap-2">
+                        <ExportFormatButton
+                          format="primary"
+                          onClick={() => applyStatus(activeItem.id, pendingStatus, notes)}
+                          disabled={!notes.trim() || busyId === activeItem.id}
+                        >
+                          Simpan {pendingStatus}
+                        </ExportFormatButton>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setNotesFor(null)
+                            setPendingStatus(null)
+                          }}
+                        >
+                          Batal
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                  {activeItem.notes && notesFor !== activeItem.id && (
+                    <p className="text-xs text-amber-800 mt-2 bg-amber-50 rounded px-2 py-1">
+                      Notes: {activeItem.notes}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-ink-subtle">
+                      Steps ({steps.length})
+                    </p>
+                    <button
+                      type="button"
+                      disabled={busyId === activeItem.id || sealed}
+                      onClick={() => startChecklist(activeItem)}
+                      className="inline-flex items-center gap-1 text-[11px] font-semibold text-teal-800 disabled:opacity-40"
+                    >
+                      {busyId === activeItem.id ? (
+                        <Loader2 size={12} className="animate-spin" />
+                      ) : (
+                        <ClipboardList size={12} />
+                      )}
+                      Checklist
+                    </button>
+                  </div>
+                  {stepsLoading ? (
+                    <div className="flex justify-center py-6">
+                      <Spinner size="sm" />
+                    </div>
+                  ) : steps.length === 0 ? (
+                    <p className="text-xs text-ink-muted">Belum ada step.</p>
+                  ) : (
+                    <ol className="space-y-1.5">
+                      {steps.map((step, i) => (
+                        <li
+                          key={step.id || i}
+                          className="rounded-lg border border-surface-border bg-surface-muted/40 px-2.5 py-2"
+                        >
+                          <span className="text-[10px] font-mono text-ink-subtle mr-1.5">
+                            {step.stepNumber ?? i + 1}
+                          </span>
+                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-teal-100 text-teal-800 mr-1.5">
+                            {step.type}
+                          </span>
+                          <span className="text-xs text-ink">{step.description}</span>
+                        </li>
+                      ))}
+                    </ol>
+                  )}
+                </div>
+              </div>
+            </aside>
+          </>
+        )}
+        </div>
       </div>
     </Layout>
   )

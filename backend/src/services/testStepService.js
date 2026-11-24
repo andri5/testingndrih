@@ -17,8 +17,8 @@ export async function createTestStep(scenarioId, userId, data) {
     }
 
     // Validate step data
-    if (!type || !description) {
-      throw new Error('Step type and description are required')
+    if (!type) {
+      throw new Error('Step type is required')
     }
 
     // Get the next step number if not provided, using a transaction to avoid
@@ -42,7 +42,7 @@ export async function createTestStep(scenarioId, userId, data) {
               scenarioId,
               stepNumber: nextStepNumber,
               type,
-              description,
+              description: description == null ? '' : String(description),
               expectedResult: expectedResult != null ? String(expectedResult) : null,
               selector: selector || null,
               value: value || null,
@@ -164,7 +164,10 @@ export async function updateTestStep(stepId, userId, data) {
       where: { id: stepId },
       data: {
         type: data.type || step.type,
-        description: data.description || step.description,
+        description:
+          data.description !== undefined && data.description !== null
+            ? String(data.description)
+            : step.description,
         selector: data.selector ?? step.selector,
         value: data.value ?? step.value,
         metadata: data.metadata || step.metadata,

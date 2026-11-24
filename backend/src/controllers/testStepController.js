@@ -19,16 +19,16 @@ export async function createTestStepHandler(req, res, next) {
     const { scenarioId } = req.params
     const { stepNumber, type, description, selector, value, metadata } = req.body
 
-    if (!type || !description) {
+    if (!type) {
       return res.status(400).json({
-        error: 'Type and description are required'
+        error: 'Type is required'
       })
     }
 
     const step = await createTestStep(scenarioId, userId, {
       stepNumber,
       type,
-      description,
+      description: description ?? '',
       selector,
       value,
       metadata
