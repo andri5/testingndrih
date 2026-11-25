@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd'
 import {
@@ -75,6 +75,8 @@ export default function CaseDetailSidePanel({
   const [savingStepId, setSavingStepId] = useState(null)
   const [addingStep, setAddingStep] = useState(false)
   const [deletingStepId, setDeletingStepId] = useState(null)
+  const stepsRef = useRef([])
+  const stepsBaselineRef = useRef([])
 
   const index = useMemo(
     () => scenarioIds.findIndex((id) => id === scenarioId),
@@ -82,6 +84,48 @@ export default function CaseDetailSidePanel({
   )
   const hasPrev = index > 0
   const hasNext = index >= 0 && index < scenarioIds.length - 1
+
+  const applyStepsFromServer = useCallback((list) => {
+    const next = Array.isArray(list) ? list : []
+    stepsRef.current = next
+    stepsBaselineRef.current = next.map((s) => ({ ...s }))
+    setSteps(next)
+  }, [])
+
+  useEffect(() => {
+    stepsRef.current = steps
+  }, [steps])
+
+  const isStepDirty = (step, baseline) => {
+    if (!step?.id || !baseline) return false
+    return (
+      String(step.type || '') !== String(baseline.type || '') ||
+      String(step.description || '') !== String(baseline.description || '') ||
+      String(step.expectedResult || '') !== String(baseline.expectedResult || '') ||
+      String(step.selector || '') !== String(baseline.selector || '') ||
+      String(step.value || '') !== String(baseline.value || '')
+    )
+  }
+
+  const flushDirtySteps = useCallback(async () => {
+    if (!scenarioId) return
+    const current = stepsRef.current || []
+    const baselineById = Object.fromEntries(
+      (stepsBaselineRef.current || []).map((s) => [s.id, s])
+    )
+    const dirty = current.filter((s) => isStepDirty(s, baselineById[s.id]))
+    for (const step of dirty) {
+      await scenarioAPI.updateStep(scenarioId, step.id, {
+        type: step.type || 'CLICK',
+        description: step.description || '',
+        expectedResult: step.expectedResult || null,
+        selector: step.selector || null,
+        value: step.value || null,
+        metadata: step.metadata || null,
+      })
+    }
+    stepsBaselineRef.current = current.map((s) => ({ ...s }))
+  }, [scenarioId])
 
   const load = useCallback(async () => {
     if (!scenarioId) return
@@ -102,7 +146,7 @@ export default function CaseDetailSidePanel({
         priority: sc.priority || 'MEDIUM',
         caseType: sc.caseType || 'Functional',
       })
-      setSteps(stepsRes.data.steps || stepsRes.data || [])
+      applyStepsFromServer(stepsRes.data.steps || stepsRes.data || [])
       setAttachments(attRes.data.attachments || [])
     } catch (err) {
       setError(err.response?.data?.message || err.message || 'Gagal memuat case')
@@ -110,7 +154,7 @@ export default function CaseDetailSidePanel({
     } finally {
       setLoading(false)
     }
-  }, [scenarioId])
+  }, [scenarioId, applyStepsFromServer])
 
   useEffect(() => {
     setTab('details')
@@ -166,27 +210,29 @@ export default function CaseDetailSidePanel({
   const reloadSteps = useCallback(async () => {
     if (!scenarioId) return
     const stepsRes = await scenarioAPI.getSteps(scenarioId, 0, 200)
-    setSteps(stepsRes.data.steps || stepsRes.data || [])
-  }, [scenarioId])
+    applyStepsFromServer(stepsRes.data.steps || stepsRes.data || [])
+  }, [scenarioId, applyStepsFromServer])
+
+  const reloadStepsPreservingEdits = useCallback(async () => {
+    await flushDirtySteps()
+    await reloadSteps()
+  }, [flushDirtySteps, reloadSteps])
 
   const patchStepLocal = (stepId, patch) => {
-    setSteps((prev) => prev.map((s) => (s.id === stepId ? { ...s, ...patch } : s)))
+    setSteps((prev) => {
+      const next = prev.map((s) => (s.id === stepId ? { ...s, ...patch } : s))
+      stepsRef.current = next
+      return next
+    })
   }
 
   const handleSaveStep = async (step) => {
     if (!scenarioId || !step?.id) return
     setSavingStepId(step.id)
     try {
-      await scenarioAPI.updateStep(scenarioId, step.id, {
-        type: step.type || 'CLICK',
-        description: step.description || '',
-        expectedResult: step.expectedResult || null,
-        selector: step.selector || null,
-        value: step.value || null,
-        metadata: step.metadata || null,
-      })
+      // Persist this step + any other unsaved edits (Tambah/reload must not wipe them)
+      await flushDirtySteps()
       toast.success('Step disimpan')
-      await reloadSteps()
     } catch (err) {
       toast.error(err.response?.data?.error || err.message || 'Gagal simpan step')
     } finally {
@@ -198,6 +244,8 @@ export default function CaseDetailSidePanel({
     if (!scenarioId) return
     setAddingStep(true)
     try {
+      // Save in-progress edits first — otherwise reload after create wipes them
+      await flushDirtySteps()
       await scenarioAPI.createStep(
         scenarioId,
         null,
@@ -222,6 +270,7 @@ export default function CaseDetailSidePanel({
     if (!window.confirm('Hapus step ini?')) return
     setDeletingStepId(stepId)
     try {
+      await flushDirtySteps()
       await scenarioAPI.deleteStep(scenarioId, stepId)
       toast.success('Step dihapus')
       await reloadSteps()
@@ -254,9 +303,12 @@ export default function CaseDetailSidePanel({
       sequenceNumber: i + 1,
     }))
 
-    setSteps(newSteps.map((s, i) => ({ ...s, stepNumber: i + 1 })))
+    const renumbered = newSteps.map((s, i) => ({ ...s, stepNumber: i + 1 }))
+    stepsRef.current = renumbered
+    setSteps(renumbered)
 
     try {
+      await flushDirtySteps()
       await scenarioAPI.reorderSteps(scenarioId, stepOrders)
       await reloadSteps()
       toast.success('Urutan step disimpan')
@@ -624,7 +676,7 @@ export default function CaseDetailSidePanel({
                                         scenarioId={scenarioId}
                                         stepId={step.id}
                                         attachments={step.attachments || []}
-                                        onChanged={reloadSteps}
+                                        onChanged={reloadStepsPreservingEdits}
                                         compact
                                       />
                                     </li>

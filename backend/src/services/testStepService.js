@@ -4,7 +4,8 @@ import { prisma } from '../lib/prisma.js'
  * Create a test step for a scenario
  */
 export async function createTestStep(scenarioId, userId, data) {
-  const { stepNumber, type, description, selector, value, metadata, expectedResult } = data
+  const { type, description, selector, value, metadata, expectedResult } = data
+  let requestedStepNumber = data.stepNumber
 
   try {
     // Verify scenario belongs to user
@@ -28,7 +29,7 @@ export async function createTestStep(scenarioId, userId, data) {
     while (retries > 0) {
       try {
         step = await prisma.$transaction(async (tx) => {
-          let nextStepNumber = stepNumber
+          let nextStepNumber = requestedStepNumber
           if (!nextStepNumber) {
             const lastStep = await tx.testStep.findFirst({
               where: { scenarioId },
@@ -55,7 +56,7 @@ export async function createTestStep(scenarioId, userId, data) {
         if (err.code === 'P2002' && retries > 1) {
           // Unique constraint on stepNumber — recalculate and retry
           retries--
-          stepNumber = null // force recalculate on next attempt
+          requestedStepNumber = null
           continue
         }
         throw err
@@ -287,14 +288,24 @@ export async function deleteTestStep(stepId, userId) {
       where: { id: stepId }
     })
 
-    // Update scenario steps count
-    const stepCount = await prisma.testStep.count({
-      where: { scenarioId: step.scenarioId }
+    // Renumber remaining steps so gaps (1,5,6) don't accumulate
+    const remainingSteps = await prisma.testStep.findMany({
+      where: { scenarioId: step.scenarioId },
+      orderBy: { stepNumber: 'asc' }
     })
+
+    for (let i = 0; i < remainingSteps.length; i++) {
+      if (remainingSteps[i].stepNumber !== i + 1) {
+        await prisma.testStep.update({
+          where: { id: remainingSteps[i].id },
+          data: { stepNumber: i + 1 }
+        })
+      }
+    }
 
     await prisma.scenario.update({
       where: { id: step.scenarioId },
-      data: { steps: stepCount }
+      data: { steps: remainingSteps.length }
     })
 
     return { message: 'Test step deleted successfully' }
