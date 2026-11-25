@@ -17,6 +17,7 @@ import {
   setProfilePicture as persistProfilePicture,
   compressProfilePicture,
 } from '../utils/profilePictureStorage'
+import { APP_VERSION } from '../constants/appVersion'
 
 const inputCls = 'w-full px-3 py-2 bg-[#0F0E11] border border-[#2D2D2F] rounded-lg text-[#E0E0E2] text-sm placeholder-[#666] focus:outline-none focus:border-[#0F766E] transition'
 const labelCls = 'block text-sm font-medium text-[#A0A0A4] mb-1.5'
@@ -411,7 +412,7 @@ export default function SettingsPage() {
                   <div className="bg-[#0F0E11] rounded-lg p-4 space-y-3">
                     {[
                       ['Application', 'Test Sambil Ngopi'],
-                      ['Version', '1.0.0'],
+                      ['Version', APP_VERSION],
                       ['Description', 'Automated Web Testing Platform'],
                     ].map(([k, v]) => (
                       <div key={k} className="flex justify-between items-center">

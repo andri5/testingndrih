@@ -2,7 +2,7 @@
 
 High-level map of the **Test Sambil Ngopi** monorepo (canonical folder layout).
 
-**Last updated:** November 2026 · **Version:** 1.19.x
+**Last updated:** November 2026 · **Version:** 1.20.x
 
 ---
 

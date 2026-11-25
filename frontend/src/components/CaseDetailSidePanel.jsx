@@ -73,10 +73,12 @@ export default function CaseDetailSidePanel({
     caseType: 'Functional',
   })
   const [savingStepId, setSavingStepId] = useState(null)
+  const [savedStepId, setSavedStepId] = useState(null)
   const [addingStep, setAddingStep] = useState(false)
   const [deletingStepId, setDeletingStepId] = useState(null)
   const stepsRef = useRef([])
   const stepsBaselineRef = useRef([])
+  const savedFlashTimerRef = useRef(null)
 
   const index = useMemo(
     () => scenarioIds.findIndex((id) => id === scenarioId),
@@ -107,14 +109,35 @@ export default function CaseDetailSidePanel({
     )
   }
 
-  const flushDirtySteps = useCallback(async () => {
-    if (!scenarioId) return
-    const current = stepsRef.current || []
-    const baselineById = Object.fromEntries(
-      (stepsBaselineRef.current || []).map((s) => [s.id, s])
-    )
-    const dirty = current.filter((s) => isStepDirty(s, baselineById[s.id]))
-    for (const step of dirty) {
+  const markStepBaseline = useCallback((step) => {
+    if (!step?.id) return
+    const list = stepsBaselineRef.current || []
+    const idx = list.findIndex((s) => s.id === step.id)
+    const next = { ...step }
+    if (idx >= 0) {
+      const copy = [...list]
+      copy[idx] = next
+      stepsBaselineRef.current = copy
+    } else {
+      stepsBaselineRef.current = [...list, next]
+    }
+  }, [])
+
+  const flashSaved = useCallback((stepId) => {
+    setSavedStepId(stepId)
+    if (savedFlashTimerRef.current) clearTimeout(savedFlashTimerRef.current)
+    savedFlashTimerRef.current = setTimeout(() => setSavedStepId(null), 1200)
+  }, [])
+
+  useEffect(() => {
+    return () => {
+      if (savedFlashTimerRef.current) clearTimeout(savedFlashTimerRef.current)
+    }
+  }, [])
+
+  const persistStep = useCallback(
+    async (step) => {
+      if (!scenarioId || !step?.id) return
       await scenarioAPI.updateStep(scenarioId, step.id, {
         type: step.type || 'CLICK',
         description: step.description || '',
@@ -123,9 +146,43 @@ export default function CaseDetailSidePanel({
         value: step.value || null,
         metadata: step.metadata || null,
       })
+      markStepBaseline(step)
+    },
+    [scenarioId, markStepBaseline]
+  )
+
+  const flushDirtySteps = useCallback(async () => {
+    if (!scenarioId) return
+    const current = stepsRef.current || []
+    const baselineById = Object.fromEntries(
+      (stepsBaselineRef.current || []).map((s) => [s.id, s])
+    )
+    const dirty = current.filter((s) => isStepDirty(s, baselineById[s.id]))
+    for (const step of dirty) {
+      await persistStep(step)
     }
-    stepsBaselineRef.current = current.map((s) => ({ ...s }))
-  }, [scenarioId])
+  }, [scenarioId, persistStep])
+
+  /** Autosave one step on blur / type change — no per-step Simpan needed */
+  const autosaveStep = useCallback(
+    async (stepId) => {
+      if (!scenarioId || !stepId) return
+      const step = (stepsRef.current || []).find((s) => s.id === stepId)
+      if (!step) return
+      const baseline = (stepsBaselineRef.current || []).find((s) => s.id === stepId)
+      if (!isStepDirty(step, baseline)) return
+      setSavingStepId(stepId)
+      try {
+        await persistStep(step)
+        flashSaved(stepId)
+      } catch (err) {
+        toast.error(err.response?.data?.error || err.message || 'Gagal autosave step')
+      } finally {
+        setSavingStepId(null)
+      }
+    },
+    [scenarioId, persistStep, flashSaved]
+  )
 
   const load = useCallback(async () => {
     if (!scenarioId) return
@@ -224,20 +281,6 @@ export default function CaseDetailSidePanel({
       stepsRef.current = next
       return next
     })
-  }
-
-  const handleSaveStep = async (step) => {
-    if (!scenarioId || !step?.id) return
-    setSavingStepId(step.id)
-    try {
-      // Persist this step + any other unsaved edits (Tambah/reload must not wipe them)
-      await flushDirtySteps()
-      toast.success('Step disimpan')
-    } catch (err) {
-      toast.error(err.response?.data?.error || err.message || 'Gagal simpan step')
-    } finally {
-      setSavingStepId(null)
-    }
   }
 
   const handleAddStep = async () => {
@@ -566,7 +609,8 @@ export default function CaseDetailSidePanel({
                   ) : (
                     <>
                       <p className="text-[10px] text-ink-subtle mb-2">
-                        Drag <span className="font-semibold">⋮⋮</span> untuk ubah urutan step.
+                        Autosave saat selesai edit · drag <span className="font-semibold">⋮⋮</span>{' '}
+                        untuk urutan.
                       </p>
                       <DragDropContext onDragEnd={onStepDragEnd}>
                         <Droppable droppableId="panel-steps-list">
@@ -609,9 +653,12 @@ export default function CaseDetailSidePanel({
                                         </span>
                                         <select
                                           value={step.type || 'CLICK'}
-                                          onChange={(e) =>
-                                            patchStepLocal(step.id, { type: e.target.value })
-                                          }
+                                          onChange={(e) => {
+                                            const type = e.target.value
+                                            patchStepLocal(step.id, { type })
+                                            // Select has no blur-save path that feels natural — save now
+                                            queueMicrotask(() => autosaveStep(step.id))
+                                          }}
                                           className="text-[11px] font-bold rounded-md border border-teal-200 bg-teal-50 text-teal-800 px-1.5 py-1"
                                         >
                                           {PANEL_STEP_TYPES.map((t) => (
@@ -624,20 +671,13 @@ export default function CaseDetailSidePanel({
                                             <option value={step.type}>{step.type}</option>
                                           ) : null}
                                         </select>
-                                        <button
-                                          type="button"
-                                          onClick={() => handleSaveStep(step)}
-                                          disabled={savingStepId === step.id}
-                                          className="ml-auto inline-flex items-center gap-1 text-[11px] font-semibold text-brand disabled:opacity-40"
-                                          title="Simpan step"
-                                        >
-                                          {savingStepId === step.id ? (
-                                            <Loader2 size={12} className="animate-spin" />
-                                          ) : (
-                                            <Save size={12} />
-                                          )}
-                                          Simpan
-                                        </button>
+                                        <span className="ml-auto text-[10px] text-ink-subtle min-w-[4.5rem] text-right">
+                                          {savingStepId === step.id
+                                            ? 'Menyimpan…'
+                                            : savedStepId === step.id
+                                              ? 'Tersimpan'
+                                              : ''}
+                                        </span>
                                         <button
                                           type="button"
                                           onClick={() => handleDeleteStep(step.id)}
@@ -657,6 +697,7 @@ export default function CaseDetailSidePanel({
                                         onChange={(e) =>
                                           patchStepLocal(step.id, { description: e.target.value })
                                         }
+                                        onBlur={() => autosaveStep(step.id)}
                                         rows={2}
                                         placeholder="Deskripsi step (opsional)…"
                                         className="w-full text-xs rounded-lg border border-surface-border px-2.5 py-2 bg-white text-ink"
@@ -669,6 +710,7 @@ export default function CaseDetailSidePanel({
                                             expectedResult: e.target.value,
                                           })
                                         }
+                                        onBlur={() => autosaveStep(step.id)}
                                         placeholder="Expected result (opsional)…"
                                         className="w-full text-xs rounded-lg border border-surface-border px-2.5 py-1.5 bg-white text-ink"
                                       />

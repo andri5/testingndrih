@@ -1,10 +1,17 @@
-# Unreleased
+# [1.20.0](https://github.com/andri5/testingndrih/compare/v1.19.0...v1.20.0) (2026-11-25)
 
 ### Features
 
-* **manual-qa:** Manual Run checklist, case Details/Attachments/Runs/History, multi-case Test Runs (Fase A–C)
-* **ui:** hide/show Dashboard reminders; Manual mode hides Record; Execution Mode Manual/Automated
-* **roles:** LEAD / USER / VIEWER menu presets including Test Runs; Viewer can see Scenarios + Test Runs
+* **manual-qa:** Manual Run checklist, case Details/Attachments/Runs/History, multi-case Test Runs
+* **ui:** Cases vocabulary, Create Manual primary, collapsible feature folders, hide Analytics/Execution
+* **ui:** side-panel step edit with autosave, drag-and-drop reorder, editable case title
+* **qa:** step attachments + paste screenshot; expected-result image paste
+* **roles:** USER Manual QA menus simplified; Environments moved under Tools
+
+### Bug Fixes
+
+* **qa:** keep unsaved step edits when adding steps in the case side panel
+* **qa:** renumber steps after single delete (no gaps like 1, 5, 6)
 
 ### Docs
 
