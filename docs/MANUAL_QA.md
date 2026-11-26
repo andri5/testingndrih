@@ -111,7 +111,7 @@ Tip: name the run after the features, e.g. `Sprint 12 · Login + Checkout`.
 | **USER (Tester)** | Dashboard, Scenarios, Test Runs, Execution, Environments, Reports, Analytics, Bugs |
 | **VIEWER** | Dashboard, Scenarios, Test Runs, Reports, Analytics, Bugs (no Execution / Tools) |
 
-Presets live in `backend/src/constants/roles.js` and `frontend/src/constants/roles.js`. Admins can still customize per user in Settings → Users / Menus.
+Presets live in `backend/src/constants/roles.js` and `frontend/src/constants/roles.js`. Admins can still customize per user in Admin → Users / Menus.
 
 ---
 

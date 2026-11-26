@@ -1,15 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Image, Save, LogOut } from 'lucide-react'
+import { Image, LogOut } from 'lucide-react'
 import Layout from '../components/Layout'
 import { Alert } from '../components/ui'
 import ExportFormatButton from '../components/ExportFormatButton'
-import IntegrationsSettings from '../components/IntegrationsSettings'
-import UserManagement from '../components/UserManagement'
-import AdminMenuAccess from '../components/AdminMenuAccess'
-import UserActivityLog from '../components/UserActivityLog'
-import SiteAnalytics from '../components/SiteAnalytics'
-import LandingFeedbackAdmin from '../components/landing/LandingFeedbackAdmin'
 import { useAuthStore } from '../store/authStore'
 import { useSettingsStore } from '../store/settingsStore'
 import {
@@ -19,112 +13,60 @@ import {
 } from '../utils/profilePictureStorage'
 import { APP_VERSION } from '../constants/appVersion'
 
-const inputCls = 'w-full px-3 py-2 bg-[#0F0E11] border border-[#2D2D2F] rounded-lg text-[#E0E0E2] text-sm placeholder-[#666] focus:outline-none focus:border-[#0F766E] transition'
+const inputCls =
+  'w-full px-3 py-2 bg-[#0F0E11] border border-[#2D2D2F] rounded-lg text-[#E0E0E2] text-sm placeholder-[#666] focus:outline-none focus:border-[#0F766E] transition'
 const labelCls = 'block text-sm font-medium text-[#A0A0A4] mb-1.5'
 const sectionTitleCls = 'text-sm font-semibold text-[#E0E0E2] uppercase tracking-wider mb-4'
 const cardCls = 'bg-[#1A1A1C] border border-[#2D2D2F] rounded-xl p-6'
-
-const i18n = {
-  en: {
-    settings: 'Settings',
-    subtitle: 'Manage your account and application settings',
-    profile: 'Profile',
-    application: 'Application',
-    about: 'About',
-    integrations: 'Integrations',
-    userProfile: 'USER PROFILE',
-    profilePicture: 'Profile Picture',
-    changePhoto: 'Change Photo',
-    uploadPhoto: 'Upload Photo',
-    name: 'Name',
-    email: 'Email',
-    saveProfile: 'Save Profile',
-    accountActions: 'ACCOUNT ACTIONS',
-    signOut: 'Sign out',
-    executionSettings: 'EXECUTION SETTINGS',
-    executionTimeout: 'Execution Timeout (seconds)',
-    timeoutHint: 'Max timeout per step in seconds (5–300)',
-    captureScreenshot: 'Capture screenshot after each step',
-    captureDesc: 'Automatically saves screenshots during execution',
-    reminderTone: 'Dashboard reminder tone',
-    reminderToneDesc: 'Casual (“Woy bro…”) or formal English copy',
-    reminderCasual: 'Santai',
-    reminderFormal: 'Formal',
-    saveSettings: 'Save Settings',
-    profileSaved: 'Profile updated successfully',
-    settingsSaved: 'Settings saved successfully',
-    photoSizeError: 'Image size must be less than 5MB',
-    photoSaveError: 'Could not save profile photo in this browser',
-    users: 'Users',
-    userManagement: 'USER MANAGEMENT',
-    userManagementDesc: 'View, add, edit, and delete registered users',
-    menus: 'Menus',
-    menuAccess: 'USER MENU ACCESS',
-    menuAccessDesc: 'Enable or disable sidebar menus for USER accounts',
-    userActivity: 'User Activity',
-    userActivityDesc: 'Monitor what USER accounts are doing and their latest actions',
-    webAnalytics: 'Web Analytics',
-    webAnalyticsDesc: 'Public site visits and landing page feedback from visitors',
-  },
-}
 
 export default function SettingsPage() {
   const navigate = useNavigate()
   const user = useAuthStore((state) => state.user)
   const logout = useAuthStore((state) => state.logout)
+  const setUser = useAuthStore((state) => state.setUser)
+  const { reminderTone, setReminderTone } = useSettingsStore()
 
-  const {
-    executionTimeout,
-    autoScreenshot,
-    setExecutionTimeout,
-    setAutoScreenshot,
-    reminderTone,
-    setReminderTone,
-  } = useSettingsStore()
-
-  const [activeTab, setActiveTab] = useState('profile')
   const [success, setSuccess] = useState(null)
   const [error, setError] = useState(null)
   const [name, setName] = useState(user?.name || '')
   const [email] = useState(user?.email || '')
   const [profilePicture, setProfilePictureState] = useState(() => getProfilePicture(user?.id))
   const fileInputRef = useRef(null)
+  const nameSaveTimer = useRef(null)
 
   useEffect(() => {
     setName(user?.name || '')
     setProfilePictureState(getProfilePicture(user?.id))
   }, [user?.id, user?.name])
 
-  const t = i18n.en
-
-  const isAdmin = user?.role === 'ADMIN'
-
-  const tabs = [
-    { id: 'profile', label: t.profile },
-    { id: 'app', label: t.application },
-    ...(isAdmin ? [
-      { id: 'integrations', label: t.integrations },
-      { id: 'users', label: t.users },
-      { id: 'menus', label: t.menus },
-      { id: 'activity', label: t.userActivity },
-      { id: 'web', label: t.webAnalytics },
-    ] : []),
-    { id: 'about', label: t.about },
-  ]
-
   useEffect(() => {
-    if (!isAdmin && ['integrations', 'users', 'menus', 'activity', 'web'].includes(activeTab)) {
-      setActiveTab('profile')
+    return () => {
+      if (nameSaveTimer.current) clearTimeout(nameSaveTimer.current)
     }
-  }, [isAdmin, activeTab])
+  }, [])
+
+  const persistName = (nextName) => {
+    if (!user) return
+    const trimmed = nextName.trim()
+    if (!trimmed || trimmed === user.name) return
+    setUser({ ...user, name: trimmed })
+    setSuccess('Profil disimpan')
+    setTimeout(() => setSuccess(null), 2500)
+  }
+
+  const handleNameChange = (e) => {
+    const next = e.target.value
+    setName(next)
+    if (nameSaveTimer.current) clearTimeout(nameSaveTimer.current)
+    nameSaveTimer.current = setTimeout(() => persistName(next), 600)
+  }
 
   const handleProfilePictureChange = async (e) => {
     const file = e.target.files?.[0]
     if (!file) return
 
-    // Validate file size (max 5MB) — we still compress before localStorage
     if (file.size > 5 * 1024 * 1024) {
-      setError(t.photoSizeError)
+      setError('Image size must be less than 5MB')
       setTimeout(() => setError(null), 3000)
       return
     }
@@ -137,7 +79,7 @@ export default function SettingsPage() {
       }
       const result = persistProfilePicture(user.id, compressed)
       if (!result.ok) {
-        setError(result.error || t.photoSaveError)
+        setError(result.error || 'Could not save profile photo in this browser')
         setTimeout(() => setError(null), 5000)
         return
       }
@@ -147,21 +89,14 @@ export default function SettingsPage() {
           detail: { userId: user.id, picture: compressed },
         })
       )
-      setSuccess(t.profileSaved)
+      setSuccess('Foto profil disimpan')
       setTimeout(() => setSuccess(null), 3000)
     } catch {
-      setError(t.photoSaveError)
+      setError('Could not save profile photo in this browser')
       setTimeout(() => setError(null), 4000)
     } finally {
       e.target.value = ''
     }
-  }
-
-  const handleSaveProfile = () => {
-    const updatedUser = { ...user, name }
-    localStorage.setItem('user', JSON.stringify(updatedUser))
-    setSuccess(t.profileSaved)
-    setTimeout(() => setSuccess(null), 3000)
   }
 
   const handleLogout = () => {
@@ -171,271 +106,139 @@ export default function SettingsPage() {
 
   return (
     <Layout>
-      <div className="space-y-6 max-w-4xl">
+      <div className="space-y-6 max-w-xl">
         <div>
-          <h1 className="text-xl font-semibold text-[#E0E0E2]">{t.settings}</h1>
-          <p className="text-sm text-[#666] mt-0.5">{t.subtitle}</p>
+          <h1 className="text-xl font-semibold text-[#E0E0E2]">Settings</h1>
+          <p className="text-sm text-[#666] mt-0.5">Akun dan preferensi pribadi Anda.</p>
         </div>
 
         {success && <Alert type="success" message={success} onClose={() => setSuccess(null)} />}
         {error && <Alert type="error" message={error} onClose={() => setError(null)} />}
 
-        <div className="flex flex-col md:flex-row gap-6">
-          {/* Sidebar Tabs */}
-          <div className="w-full md:w-44 md:shrink-0">
-            <div className="flex md:flex-col gap-1 flex-wrap">
-              {tabs.map(tab => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`w-full text-left px-3 py-2 rounded-md text-sm transition ${
-                    activeTab === tab.id
-                      ? 'bg-[#0F766E]/15 text-[#0F766E] font-medium'
-                      : 'text-[#A0A0A4] hover:text-[#E0E0E2] hover:bg-[#1A1A1C]'
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
+        <div className={cardCls}>
+          <p className={sectionTitleCls}>Profil</p>
+          <div className="space-y-5">
+            <div>
+              <label className={labelCls}>Foto</label>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                <div className="w-20 h-20 rounded-lg flex items-center justify-center border-2 border-dashed border-[#2D2D2F] bg-[#0F0E11] overflow-hidden shrink-0">
+                  {profilePicture ? (
+                    <img src={profilePicture} alt="Profile" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="text-2xl font-bold text-[#4A4A52]">
+                      {user?.name?.charAt(0)?.toUpperCase() || 'U'}
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1">
+                  <ExportFormatButton
+                    format="primary"
+                    icon={Image}
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-full sm:w-auto justify-center"
+                  >
+                    {profilePicture ? 'Ganti foto' : 'Upload foto'}
+                  </ExportFormatButton>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleProfilePictureChange}
+                    className="hidden"
+                  />
+                  <p className="text-xs mt-2 text-[#555]">JPG, PNG atau GIF (maks. 5MB)</p>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label className={labelCls}>Nama</label>
+              <input
+                className={inputCls}
+                value={name}
+                onChange={handleNameChange}
+                onBlur={() => persistName(name)}
+                placeholder="Nama"
+              />
+              <p className="text-[11px] text-[#555] mt-1">Autosave saat selesai ketik.</p>
+            </div>
+
+            <div>
+              <label className={labelCls}>Email</label>
+              <input className={`${inputCls} opacity-50 cursor-not-allowed`} value={email} disabled />
+            </div>
+
+            <div>
+              <label className={labelCls}>Role</label>
+              <span
+                className={`inline-flex px-2.5 py-1 rounded text-xs font-semibold border ${
+                  user?.role === 'ADMIN'
+                    ? 'bg-[#0F766E]/15 text-[#0F766E] border-[#0F766E]/25'
+                    : 'bg-[#2D2D2F] text-[#A0A0A4] border-[#3D3D3F]'
+                }`}
+              >
+                {user?.role === 'USER' ? 'TESTER' : user?.role || 'USER'}
+              </span>
             </div>
           </div>
-
-          {/* Content */}
-          <div className="flex-1 space-y-4">
-
-            {/* Profile Tab */}
-            {activeTab === 'profile' && (
-              <>
-                <div className={cardCls}>
-                  <p className={sectionTitleCls}>{t.userProfile}</p>
-                  <div className="space-y-6 max-w-md">
-                    {/* Profile Picture Section */}
-                    <div>
-                      <label className={labelCls}>{t.profilePicture}</label>
-                      <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-                        <div className="w-24 h-24 rounded-lg flex items-center justify-center border-2 border-dashed border-[#2D2D2F] bg-[#0F0E11] overflow-hidden shrink-0">
-                          {profilePicture ? (
-                            <img 
-                              src={profilePicture} 
-                              alt="Profile" 
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <div className="text-3xl font-bold text-[#4A4A52]">
-                              {user?.name?.charAt(0)?.toUpperCase() || 'U'}
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex-1">
-                          <ExportFormatButton
-                            format="primary"
-                            icon={Image}
-                            onClick={() => fileInputRef.current?.click()}
-                            className="w-full justify-center"
-                          >
-                            {profilePicture ? t.changePhoto : t.uploadPhoto}
-                          </ExportFormatButton>
-                          <input
-                            ref={fileInputRef}
-                            id="profile-picture-input"
-                            type="file"
-                            accept="image/*"
-                            onChange={handleProfilePictureChange}
-                            className="hidden"
-                          />
-                          <p className="text-xs mt-2 text-[#555]">JPG, PNG or GIF (Max 5MB)</p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Name Field */}
-                    <div>
-                      <label className={labelCls}>{t.name}</label>
-                      <input className={inputCls} value={name} onChange={(e) => setName(e.target.value)} placeholder={t.name} />
-                    </div>
-
-                    {/* Email Field */}
-                    <div>
-                      <label className={labelCls}>{t.email}</label>
-                      <input className={inputCls + ' opacity-50 cursor-not-allowed'} value={email} disabled />
-                    </div>
-
-                    <div>
-                      <label className={labelCls}>Role</label>
-                      <span
-                        className={`inline-flex px-2.5 py-1 rounded text-xs font-semibold border ${
-                          user?.role === 'ADMIN'
-                            ? 'bg-[#0F766E]/15 text-[#0F766E] border-[#0F766E]/25'
-                            : 'bg-[#2D2D2F] text-[#A0A0A4] border-[#3D3D3F]'
-                        }`}
-                      >
-                        {user?.role === 'USER' ? 'TESTER' : user?.role || 'USER'}
-                      </span>
-                    </div>
-
-                    {/* Save Button */}
-                    <ExportFormatButton format="primary" icon={Save} onClick={handleSaveProfile}>
-                      {t.saveProfile}
-                    </ExportFormatButton>
-                  </div>
-                </div>
-
-                <div className={cardCls}>
-                  <p className={sectionTitleCls}>{t.accountActions}</p>
-                  <ExportFormatButton format="pdf" icon={LogOut} onClick={handleLogout}>
-                    {t.signOut}
-                  </ExportFormatButton>
-                </div>
-              </>
-            )}
-
-            {/* Application Tab */}
-            {activeTab === 'app' && (
-              <>
-                <div className={cardCls}>
-                  <p className={sectionTitleCls}>{t.executionSettings}</p>
-                  <div className="space-y-5 max-w-md">
-                    <div>
-                      <label className={labelCls}>{t.executionTimeout}</label>
-                      <input
-                        type="number"
-                        min="5"
-                        max="300"
-                        value={executionTimeout}
-                        onChange={(e) => setExecutionTimeout(e.target.value)}
-                        className={inputCls}
-                      />
-                      <p className="text-xs text-[#555] mt-1.5">{t.timeoutHint}</p>
-                    </div>
-
-                    <div className="flex items-center justify-between py-1">
-                      <div>
-                        <p className="text-sm font-medium text-[#E0E0E2]">{t.captureScreenshot}</p>
-                        <p className="text-xs text-[#666] mt-0.5">{t.captureDesc}</p>
-                      </div>
-                      <button
-                        onClick={() => setAutoScreenshot(!autoScreenshot)}
-                        className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-                          autoScreenshot ? 'bg-[#0F766E]' : 'bg-[#2D2D2F]'
-                        }`}
-                      >
-                        <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
-                          autoScreenshot ? 'translate-x-4' : 'translate-x-0.5'
-                        }`} />
-                      </button>
-                    </div>
-
-                    <div>
-                      <p className="text-sm font-medium text-[#E0E0E2]">{t.reminderTone}</p>
-                      <p className="text-xs text-[#666] mt-0.5 mb-2">{t.reminderToneDesc}</p>
-                      <div className="inline-flex rounded-lg border border-[#2D2D2F] overflow-hidden">
-                        <button
-                          type="button"
-                          onClick={() => setReminderTone('casual')}
-                          className={`px-3 py-1.5 text-xs font-medium transition ${
-                            reminderTone !== 'formal'
-                              ? 'bg-[#0F766E] text-white'
-                              : 'bg-[#0F0E11] text-[#A0A0A4] hover:text-[#E0E0E2]'
-                          }`}
-                        >
-                          {t.reminderCasual}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setReminderTone('formal')}
-                          className={`px-3 py-1.5 text-xs font-medium transition ${
-                            reminderTone === 'formal'
-                              ? 'bg-[#0F766E] text-white'
-                              : 'bg-[#0F0E11] text-[#A0A0A4] hover:text-[#E0E0E2]'
-                          }`}
-                        >
-                          {t.reminderFormal}
-                        </button>
-                      </div>
-                    </div>
-
-                    <p className="text-xs text-[#555] flex items-center gap-1.5">
-                      <span className="inline-block w-1.5 h-1.5 bg-[#0F766E] rounded-full"></span>
-                      Auto-saved
-                    </p>
-                  </div>
-                </div>
-              </>
-            )}
-
-            {activeTab === 'integrations' && isAdmin && (
-              <IntegrationsSettings />
-            )}
-
-            {activeTab === 'users' && isAdmin && (
-              <div className={cardCls}>
-                <p className={sectionTitleCls}>{t.userManagement}</p>
-                <p className="text-sm text-[#666] mb-4">{t.userManagementDesc}</p>
-                <UserManagement />
-              </div>
-            )}
-
-            {activeTab === 'menus' && isAdmin && (
-              <div className={cardCls}>
-                <p className={sectionTitleCls}>{t.menuAccess}</p>
-                <p className="text-sm text-[#666] mb-4">{t.menuAccessDesc}</p>
-                <AdminMenuAccess />
-              </div>
-            )}
-
-            {activeTab === 'activity' && isAdmin && (
-              <div className={cardCls}>
-                <p className={sectionTitleCls}>{t.userActivity}</p>
-                <p className="text-sm text-[#666] mb-4">{t.userActivityDesc}</p>
-                <UserActivityLog />
-              </div>
-            )}
-
-            {activeTab === 'web' && isAdmin && (
-              <div className="space-y-4">
-                <div className={cardCls}>
-                  <p className={sectionTitleCls}>{t.webAnalytics}</p>
-                  <p className="text-sm text-[#666] mb-4">{t.webAnalyticsDesc}</p>
-                  <SiteAnalytics />
-                </div>
-                <div className={cardCls}>
-                  <LandingFeedbackAdmin />
-                </div>
-              </div>
-            )}
-
-            {/* About Tab */}
-            {activeTab === 'about' && (
-              <div className={cardCls}>
-                <p className={sectionTitleCls}>About Test Sambil Ngopi</p>
-                <div className="space-y-4">
-                  <div className="bg-[#0F0E11] rounded-lg p-4 space-y-3">
-                    {[
-                      ['Application', 'Test Sambil Ngopi'],
-                      ['Version', APP_VERSION],
-                      ['Description', 'Automated Web Testing Platform'],
-                    ].map(([k, v]) => (
-                      <div key={k} className="flex justify-between items-center">
-                        <span className="text-sm text-[#666]">{k}</span>
-                        <span className="text-sm text-[#E0E0E2] font-medium">{v}</span>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="bg-[#0F0E11] rounded-lg p-4 space-y-3">
-                    <p className="text-xs font-semibold text-[#A0A0A4] uppercase tracking-wider">Supported Step Types</p>
-                    <div className="flex flex-wrap gap-2">
-                      {['NAVIGATE', 'CLICK', 'FILL', 'WAIT', 'ASSERTION', 'SCREENSHOT', 'API_CALL'].map(t => (
-                        <span key={t} className="px-2 py-1 bg-[#0F766E]/15 text-[#0F766E] rounded text-xs font-mono border border-[#0F766E]/20">{t}</span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-          </div>
         </div>
+
+        <div className={cardCls}>
+          <p className={sectionTitleCls}>Preferensi</p>
+          <p className="text-sm font-medium text-[#E0E0E2]">Tone reminder dashboard</p>
+          <p className="text-xs text-[#666] mt-0.5 mb-2">Santai atau formal.</p>
+          <div className="inline-flex rounded-lg border border-[#2D2D2F] overflow-hidden">
+            <button
+              type="button"
+              onClick={() => setReminderTone('casual')}
+              className={`px-3 py-1.5 text-xs font-medium transition ${
+                reminderTone !== 'formal'
+                  ? 'bg-[#0F766E] text-white'
+                  : 'bg-[#0F0E11] text-[#A0A0A4] hover:text-[#E0E0E2]'
+              }`}
+            >
+              Santai
+            </button>
+            <button
+              type="button"
+              onClick={() => setReminderTone('formal')}
+              className={`px-3 py-1.5 text-xs font-medium transition ${
+                reminderTone === 'formal'
+                  ? 'bg-[#0F766E] text-white'
+                  : 'bg-[#0F0E11] text-[#A0A0A4] hover:text-[#E0E0E2]'
+              }`}
+            >
+              Formal
+            </button>
+          </div>
+          <p className="text-xs text-[#555] mt-3 flex items-center gap-1.5">
+            <span className="inline-block w-1.5 h-1.5 bg-[#0F766E] rounded-full" />
+            Auto-saved
+          </p>
+        </div>
+
+        <div className={cardCls}>
+          <p className={sectionTitleCls}>Akun</p>
+          <ExportFormatButton format="pdf" icon={LogOut} onClick={handleLogout}>
+            Sign out
+          </ExportFormatButton>
+        </div>
+
+        <p className="text-xs text-[#555] px-1">
+          Test Sambil Ngopi · v{APP_VERSION}
+          {user?.role === 'ADMIN' ? (
+            <>
+              {' · '}
+              <button
+                type="button"
+                onClick={() => navigate('/admin')}
+                className="text-[#0F766E] hover:underline"
+              >
+                Buka Admin
+              </button>
+            </>
+          ) : null}
+        </p>
       </div>
     </Layout>
   )

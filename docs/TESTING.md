@@ -180,7 +180,7 @@ Workflow dev aktif: `.github/workflows/ci.yml` (backend test + lint pada PR)
 
 Contoh remote run: `docs/examples/ci-run-scenario.example.yml`
 
-1. Generate API token di Settings → Integrations
+1. Generate API token di Admin → Integrations
 2. Trigger `POST /api/ci/run` dengan token
 3. Poll status execution
 

@@ -17,6 +17,7 @@ import TestRunDetailPage from './pages/TestRunDetailPage'
 import ReportsPage from './pages/ReportsPage'
 import IssuesPage from './pages/IssuesPage'
 import SettingsPage from './pages/SettingsPage'
+import AdminPage from './pages/AdminPage'
 import ChainsPage from './pages/ChainsPage'
 import ChainBuilderPage from './pages/ChainBuilderPage'
 import ChainExecutorPage from './pages/ChainExecutorPage'
@@ -226,6 +227,14 @@ export default function App() {
             <ProtectedRoute>
               <SettingsPage />
             </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin"
+          element={
+            <AdminRoute>
+              <AdminPage />
+            </AdminRoute>
           }
         />
         <Route path="/chains" element={<AdminRoute><ChainsPage /></AdminRoute>} />

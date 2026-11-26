@@ -118,7 +118,7 @@ export default function UserMenuAssignment({ user, onClose, onSaved }) {
   return (
     <Modal title={`Assign menus — ${user?.email}`} onClose={onClose}>
       <p className="text-sm text-[#A0A0A4] mb-4">
-        Choose which sidebar menus this user can access. Only menus enabled in Settings → Menus are listed.
+        Choose which sidebar menus this user can access. Only menus enabled in Admin → Menus are listed.
         Settings remains available to all users.
       </p>
 
@@ -198,7 +198,7 @@ export default function UserMenuAssignment({ user, onClose, onSaved }) {
 
             {available.length === 0 && (
               <p className="text-sm text-amber-400/90">
-                No menus are enabled globally. Open Settings → Menus first.
+                No menus are enabled globally. Open Admin → Menus first.
               </p>
             )}
           </div>

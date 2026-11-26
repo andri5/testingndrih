@@ -159,7 +159,7 @@ const content = {
           {
             num: 2,
             title: 'Public vs internal URLs',
-            desc: 'Cloud Run works for public URLs. For LAN/VPN staging, use local backend or Queue local agent (Settings → API Tokens) on a VPN PC.',
+            desc: 'Cloud Run works for public URLs. For LAN/VPN staging, use local backend or Queue local agent (Admin → Integrations / API Tokens) on a VPN PC.',
           },
           {
             num: 3,

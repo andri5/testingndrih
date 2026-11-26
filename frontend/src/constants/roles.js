@@ -10,7 +10,7 @@ export const ROLE_DEFINITIONS = [
     key: 'ADMIN',
     label: 'Admin',
     description:
-      'Full platform access: all menus, user management, integrations, and settings.',
+      'Full platform access: all menus, plus Admin (/admin) for users, menus, integrations.',
   },
   {
     key: 'LEAD',

@@ -55,7 +55,8 @@ Lalu approve **Review deployments**.
 | Environments | `/environments` | Variabel `{{var}}` |
 | Reports / Analytics | `/reports`, `/analytics` | Laporan |
 | Tools | wrench flyout | Smoke, stress, chains, API, visual, … |
-| Settings | `/settings` | Profile, users, AI |
+| Settings | `/settings` | Akun & preferensi pribadi |
+| Admin | `/admin` | Users, menus, integrations (ADMIN only) |
 
 Create di repository: Manual / Quick Record / Templates / Excel / AI — assign ke **feature folder** aktif.
 

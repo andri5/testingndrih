@@ -105,7 +105,7 @@ export default function Layout({ children, showFolderPane = false, onFolderSelec
   useEffect(() => {
     if (!user || user.role === 'ADMIN') return
     const pathname = location.pathname
-    if (pathname.startsWith('/settings')) return
+    if (pathname.startsWith('/settings') || pathname.startsWith('/admin')) return
     const menuKey = pathToMenuKey(pathname)
     if (!menuKey) return
     if (!allowedMenuKeys.has(menuKey)) {
@@ -229,7 +229,11 @@ export default function Layout({ children, showFolderPane = false, onFolderSelec
   ].filter((item) => allowedMenuKeys.has(item.key))
 
   const pageTitle =
-    [...mainItems, ...toolItems].find((m) => location.pathname.startsWith(m.path))?.name ?? ''
+    location.pathname.startsWith('/admin')
+      ? 'Admin'
+      : location.pathname.startsWith('/settings')
+        ? 'Settings'
+        : ([...mainItems, ...toolItems].find((m) => location.pathname.startsWith(m.path))?.name ?? '')
 
   const toolsActive = toolItems.some((t) => location.pathname.startsWith(t.path))
 
@@ -395,6 +399,23 @@ export default function Layout({ children, showFolderPane = false, onFolderSelec
             <HelpCircle size={18} className="shrink-0" />
             {labels && <span className="text-sm font-medium">How to use</span>}
           </button>
+          {user?.role === 'ADMIN' && (
+            <Link
+              to="/admin"
+              title={labels ? undefined : 'Admin'}
+              onClick={() => onNavigate?.()}
+              className={[
+                'rounded-lg flex items-center transition-colors',
+                labels ? 'w-full h-10 px-2.5 gap-2.5' : 'w-10 h-10 justify-center',
+                location.pathname.startsWith('/admin')
+                  ? 'bg-brand text-white'
+                  : 'text-white/70 hover:bg-white/10 hover:text-white',
+              ].join(' ')}
+            >
+              <Shield size={18} className="shrink-0" />
+              {labels && <span className="text-sm font-medium">Admin</span>}
+            </Link>
+          )}
           <Link
             to="/settings"
             title={labels ? undefined : 'Settings'}
@@ -485,6 +506,19 @@ export default function Layout({ children, showFolderPane = false, onFolderSelec
                 >
                   <HelpCircle size={18} />
                 </button>
+                {user?.role === 'ADMIN' && (
+                  <Link
+                    to="/admin"
+                    title="Admin"
+                    className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                      location.pathname.startsWith('/admin')
+                        ? 'bg-brand text-white'
+                        : 'text-white/70 hover:bg-white/10 hover:text-white'
+                    }`}
+                  >
+                    <Shield size={18} />
+                  </Link>
+                )}
                 <Link
                   to="/settings"
                   title="Settings"
@@ -612,8 +646,18 @@ export default function Layout({ children, showFolderPane = false, onFolderSelec
                       className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-sm text-ink-muted hover:text-ink hover:bg-surface-muted"
                     >
                       <User size={13} />
-                      Profile & Settings
+                      Settings
                     </Link>
+                    {user?.role === 'ADMIN' && (
+                      <Link
+                        to="/admin"
+                        onClick={() => setUserMenuOpen(false)}
+                        className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-sm text-ink-muted hover:text-ink hover:bg-surface-muted"
+                      >
+                        <Shield size={13} />
+                        Admin
+                      </Link>
+                    )}
                     <button
                       onClick={() => { setUserMenuOpen(false); handleLogout() }}
                       className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-sm text-ink-muted hover:text-red-600 hover:bg-red-50"

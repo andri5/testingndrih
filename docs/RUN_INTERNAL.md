@@ -31,7 +31,7 @@ Only use this when the runner machine can actually reach the private hosts.
 
 One PC on VPN runs the agent as a Windows Scheduled Task. QA only uses the cloud UI.
 
-1. Create an API token (**Settings → Integrations → CI/CD API Tokens**).
+1. Create an API token (**Admin → Integrations → CI/CD API Tokens**).
 2. On the shared VPN PC: copy `scripts/local-agent/agent.env.example` → `agent.env`, set `AGENT_TOKEN`, then:
 
 ```powershell
