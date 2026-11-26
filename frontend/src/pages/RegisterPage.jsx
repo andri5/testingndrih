@@ -97,7 +97,7 @@ export default function RegisterPage() {
     const passed = passwordRules.filter((r) => r.test(password)).length
     if (passed <= 2) return { score: passed, label: t.passwordStrengthWeak,        color: 'bg-[#F87171]' }
     if (passed <= 4) return { score: passed, label: t.passwordStrengthFair,        color: 'bg-[#FBBF24]' }
-    if (passed <= 5) return { score: passed, label: t.passwordStrengthStrong,      color: 'bg-[#0F766E]' }
+    if (passed <= 5) return { score: passed, label: t.passwordStrengthStrong,      color: 'bg-brand' }
     return             { score: passed, label: t.passwordStrengthVeryStrong, color: 'bg-[#34D399]' }
   }
 

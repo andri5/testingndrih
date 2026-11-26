@@ -1,12 +1,13 @@
 import { Download } from 'lucide-react'
 
 export const SOFT_VARIANT_STYLES = {
-  json: 'bg-[#0F766E]/10 hover:bg-[#0F766E]/20 text-[#0F766E] html.theme-light:text-[#0F766E]',
+  json: 'bg-brand/10 hover:bg-brand/20 text-brand',
   csv: 'bg-[#4EC9B0]/10 hover:bg-[#4EC9B0]/20 text-[#4EC9B0]',
   excel: 'bg-[#16A34A]/10 hover:bg-[#16A34A]/20 text-[#16A34A]',
-  html: 'bg-[#FBBF24]/10 hover:bg-[#FBBF24]/20 text-[#FBBF24] html.theme-light:text-[#B45309]',
+  html: 'bg-accent/10 hover:bg-accent/20 text-accent-ink',
   pdf: 'bg-[#F87171]/10 hover:bg-[#F87171]/20 text-[#F87171] html.theme-light:text-[#DC2626]',
-  primary: 'bg-[#0F766E]/10 hover:bg-[#0F766E]/20 text-[#0F766E] html.theme-light:text-[#0F766E]',
+  /* Solid lab cyan CTA for primary actions */
+  primary: 'bg-brand hover:bg-brand-hover text-white shadow-sm shadow-brand/20',
 }
 
 const BASE_CLASS =

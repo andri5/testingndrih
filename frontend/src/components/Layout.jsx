@@ -450,11 +450,11 @@ export default function Layout({ children, showFolderPane = false, onFolderSelec
   }
 
   return (
-    <div className="flex h-screen bg-surface-muted overflow-hidden">
+    <div className="flex h-screen bg-transparent overflow-hidden">
       {/* In-flow rail: icons only on compact; expanded width only on xl+ */}
       <aside
         className={[
-          'shrink-0 flex flex-col py-3 gap-1 bg-[#0E2F30] text-white z-30 transition-[width] duration-200 ease-out',
+          'shrink-0 flex flex-col py-3 gap-1 bg-brand-hero text-white z-30 transition-[width] duration-200 ease-out',
           inFlowExpanded ? 'w-52 px-2' : 'w-14 items-center',
         ].join(' ')}
       >
@@ -557,7 +557,7 @@ export default function Layout({ children, showFolderPane = false, onFolderSelec
             aria-label="Close sidebar"
             onClick={() => setSidebarExpanded(false)}
           />
-          <aside className="fixed inset-y-0 left-14 z-50 w-52 flex flex-col py-3 px-2 gap-1 bg-[#0E2F30] text-white shadow-2xl">
+          <aside className="fixed inset-y-0 left-14 z-50 w-52 flex flex-col py-3 px-2 gap-1 bg-brand-hero text-white shadow-2xl">
             <div className="flex items-center justify-between px-1 mb-2">
               <span className="text-xs font-semibold tracking-wide truncate text-white/90 pl-1">
                 Menu
@@ -643,7 +643,7 @@ export default function Layout({ children, showFolderPane = false, onFolderSelec
                         user.role === 'ADMIN'
                           ? 'bg-brand-soft text-brand'
                           : user.role === 'LEAD'
-                            ? 'bg-[#0F766E]/15 text-[#5EEAD4]'
+                            ? 'bg-brand/15 text-cyan-300'
                             : user.role === 'VIEWER'
                               ? 'bg-surface-muted text-ink-muted'
                               : 'bg-surface-muted text-ink-muted'
@@ -685,7 +685,7 @@ export default function Layout({ children, showFolderPane = false, onFolderSelec
           </div>
         </header>
 
-        <main className="app-main flex-1 overflow-auto overflow-x-hidden p-3 sm:p-4 md:p-5 bg-surface-muted">
+        <main className="app-main flex-1 overflow-auto overflow-x-hidden p-3 sm:p-4 md:p-5 bg-transparent">
           <div className={`app-page mx-auto w-full min-w-0 ${folderPaneVisible ? 'max-w-none' : 'max-w-[1600px]'}`}>
             {children}
           </div>

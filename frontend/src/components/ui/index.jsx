@@ -14,11 +14,11 @@ export function Button({
 
   const variants = {
     primary:   'bg-brand hover:bg-brand-hover text-white focus:ring-brand shadow-sm shadow-brand/20',
-    secondary: 'bg-white hover:bg-surface-muted text-ink border border-surface-border focus:ring-brand',
+    secondary: 'bg-surface hover:bg-surface-muted text-ink border border-surface-border focus:ring-brand',
     danger:    'bg-[#C24B4B] hover:bg-[#D45555] text-white focus:ring-[#C24B4B]',
     ghost:     'bg-transparent hover:bg-surface-muted text-ink-muted hover:text-ink focus:ring-brand',
-    success:   'bg-[#3DAF7A] hover:bg-[#44C287] text-white focus:ring-[#3DAF7A]',
-    cyan:      'bg-brand-hover hover:bg-brand text-white focus:ring-brand',
+    success:   'bg-[#0D9488] hover:bg-[#14B8A6] text-white focus:ring-[#0D9488]',
+    cyan:      'bg-accent hover:bg-accent-hover text-white focus:ring-accent',
   }
 
   const sizes = {

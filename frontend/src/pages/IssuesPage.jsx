@@ -22,7 +22,7 @@ function AttachmentThumbs({ attachments = [], onDelete, onPreview }) {
       {attachments.map((a) => (
         <div
           key={a.id}
-          className="relative group rounded-lg border border-slate-200 overflow-hidden bg-slate-50"
+          className="relative group rounded-lg border border-surface-border overflow-hidden bg-surface-muted"
         >
           {isImageMime(a.mimeType) ? (
             <button type="button" onClick={() => onPreview?.(a.url)} title={a.originalName}>
@@ -37,7 +37,7 @@ function AttachmentThumbs({ attachments = [], onDelete, onPreview }) {
               href={a.url}
               target="_blank"
               rel="noreferrer"
-              className="w-16 h-16 flex flex-col items-center justify-center text-[10px] text-slate-600 px-1"
+              className="w-16 h-16 flex flex-col items-center justify-center text-[10px] text-ink-muted px-1"
               title={a.originalName}
             >
               <FileText size={16} />
@@ -212,7 +212,7 @@ export default function IssuesPage() {
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h1 className="text-2xl font-bold text-ink flex items-center gap-2">
-              <Bug size={22} className="text-amber-600" />
+              <Bug size={22} className="text-brand" />
               Bug Management
             </h1>
             <p className="text-sm text-ink-muted mt-1">
@@ -222,7 +222,7 @@ export default function IssuesPage() {
           <button
             type="button"
             onClick={load}
-            className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm border border-slate-200 bg-white hover:bg-slate-50"
+            className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm border border-surface-border bg-surface hover:bg-surface-muted text-ink"
           >
             <RefreshCw size={14} /> Refresh
           </button>
@@ -231,37 +231,37 @@ export default function IssuesPage() {
         <div className="grid lg:grid-cols-5 gap-4">
           <form
             onSubmit={handleCreate}
-            className="lg:col-span-2 rounded-xl border border-slate-200 bg-white p-4 space-y-3 shadow-sm"
+            className="lg:col-span-2 linear-card p-4 space-y-3"
           >
             <h2 className="text-sm font-semibold text-ink flex items-center gap-2">
-              <Plus size={16} /> Catat bug manual
+              <Plus size={16} className="text-brand" /> Catat bug manual
             </h2>
             <div>
-              <label className="text-xs font-medium text-slate-600">Judul *</label>
+              <label className="text-xs font-medium text-ink-muted">Judul *</label>
               <input
                 value={form.title}
                 onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-                className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                className="mt-1 w-full rounded-lg border border-surface-border bg-surface px-3 py-2 text-sm text-ink focus:ring-1 focus:ring-brand focus:border-brand outline-none"
                 placeholder="Contoh: Tombol Bayar tidak responsif di mobile"
               />
             </div>
             <div>
-              <label className="text-xs font-medium text-slate-600">Deskripsi</label>
+              <label className="text-xs font-medium text-ink-muted">Deskripsi</label>
               <textarea
                 value={form.description}
                 onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
                 rows={3}
-                className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                className="mt-1 w-full rounded-lg border border-surface-border bg-surface px-3 py-2 text-sm text-ink focus:ring-1 focus:ring-brand focus:border-brand outline-none"
                 placeholder="Langkah reproduce, expected vs actual…"
               />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <div>
-                <label className="text-xs font-medium text-slate-600">Severity</label>
+                <label className="text-xs font-medium text-ink-muted">Severity</label>
                 <select
                   value={form.severity}
                   onChange={(e) => setForm((f) => ({ ...f, severity: e.target.value }))}
-                  className="mt-1 w-full rounded-lg border border-slate-200 px-2 py-2 text-sm"
+                  className="mt-1 w-full rounded-lg border border-surface-border bg-surface px-2 py-2 text-sm text-ink focus:ring-1 focus:ring-brand focus:border-brand outline-none"
                 >
                   {SEVERITY_OPTIONS.map((s) => (
                     <option key={s} value={s}>{s}</option>
@@ -269,23 +269,23 @@ export default function IssuesPage() {
                 </select>
               </div>
               <div>
-                <label className="text-xs font-medium text-slate-600">Step #</label>
+                <label className="text-xs font-medium text-ink-muted">Step #</label>
                 <input
                   type="number"
                   min="1"
                   value={form.stepNumber}
                   onChange={(e) => setForm((f) => ({ ...f, stepNumber: e.target.value }))}
-                  className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                  className="mt-1 w-full rounded-lg border border-surface-border bg-surface px-3 py-2 text-sm text-ink focus:ring-1 focus:ring-brand focus:border-brand outline-none"
                   placeholder="Opsional"
                 />
               </div>
             </div>
             <div>
-              <label className="text-xs font-medium text-slate-600">Case (opsional)</label>
+              <label className="text-xs font-medium text-ink-muted">Case (opsional)</label>
               <select
                 value={form.scenarioId}
                 onChange={(e) => setForm((f) => ({ ...f, scenarioId: e.target.value }))}
-                className="mt-1 w-full rounded-lg border border-slate-200 px-2 py-2 text-sm"
+                className="mt-1 w-full rounded-lg border border-surface-border bg-surface px-2 py-2 text-sm text-ink focus:ring-1 focus:ring-brand focus:border-brand outline-none"
               >
                 <option value="">— Tidak dilink —</option>
                 {scenarios.map((s) => (
@@ -294,7 +294,7 @@ export default function IssuesPage() {
               </select>
             </div>
             <div>
-              <label className="text-xs font-medium text-slate-600 flex items-center gap-1">
+              <label className="text-xs font-medium text-ink-muted flex items-center gap-1">
                 <Paperclip size={12} /> Attachment (PNG/JPG/WEBP/GIF/PDF, max 8MB)
               </label>
               <input
@@ -303,7 +303,7 @@ export default function IssuesPage() {
                 accept="image/png,image/jpeg,image/webp,image/gif,application/pdf"
                 multiple
                 onChange={(e) => setPendingFiles((prev) => [...prev, ...(e.target.files || [])])}
-                className="mt-1 block w-full text-xs text-slate-600"
+                className="mt-1 block w-full text-xs text-ink-muted"
               />
               <div
                 ref={createPasteZoneRef}
@@ -325,14 +325,14 @@ export default function IssuesPage() {
                 }}
                 className={`mt-2 rounded-lg border border-dashed px-3 py-3 text-center text-[11px] outline-none transition-colors cursor-text ${
                   createDragOver || createPasteActive
-                    ? 'border-amber-500 bg-amber-50 text-amber-900'
-                    : 'border-slate-200 bg-slate-50 text-slate-500'
+                    ? 'border-brand bg-brand-soft text-brand-ink'
+                    : 'border-surface-border bg-surface-muted text-ink-subtle'
                 }`}
               >
                 Klik di sini → Ctrl+V paste screenshot, atau drag gambar
               </div>
               {pendingFiles.length > 0 && (
-                <p className="text-[11px] text-slate-500 mt-1">
+                <p className="text-[11px] text-ink-subtle mt-1">
                   {pendingFiles.length} file dipilih: {pendingFiles.map((f) => f.name).join(', ')}
                 </p>
               )}
@@ -340,21 +340,21 @@ export default function IssuesPage() {
             <button
               type="submit"
               disabled={saving}
-              className="w-full rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold py-2.5 disabled:opacity-50"
+              className="w-full rounded-lg bg-brand hover:bg-brand-hover text-white text-sm font-semibold py-2.5 disabled:opacity-50 shadow-sm shadow-brand/20"
             >
               {saving ? 'Menyimpan…' : 'Simpan bug'}
             </button>
-            <p className="text-[11px] text-slate-500 leading-relaxed">
+            <p className="text-[11px] text-ink-subtle leading-relaxed">
               Otomatis: Run FAILED → issue AUTO. Manual: form ini + lampiran (ikut di Share bug).
             </p>
           </form>
 
-          <div className="lg:col-span-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="lg:col-span-3 linear-card p-4">
             <div className="flex flex-wrap gap-2 mb-3">
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="rounded-lg border border-slate-200 px-2 py-1.5 text-xs"
+                className="rounded-lg border border-surface-border bg-surface px-2 py-1.5 text-xs text-ink"
               >
                 <option value="ALL">Semua status</option>
                 {STATUS_OPTIONS.map((s) => (
@@ -364,7 +364,7 @@ export default function IssuesPage() {
               <select
                 value={filterSource}
                 onChange={(e) => setFilterSource(e.target.value)}
-                className="rounded-lg border border-slate-200 px-2 py-1.5 text-xs"
+                className="rounded-lg border border-surface-border bg-surface px-2 py-1.5 text-xs text-ink"
               >
                 <option value="ALL">Semua sumber</option>
                 <option value="MANUAL">Manual</option>
@@ -373,9 +373,9 @@ export default function IssuesPage() {
             </div>
 
             {loading ? (
-              <p className="text-sm text-slate-500 py-8 text-center">Memuat…</p>
+              <p className="text-sm text-ink-muted py-8 text-center">Memuat…</p>
             ) : issues.length === 0 ? (
-              <p className="text-sm text-slate-500 py-8 text-center">Belum ada issue.</p>
+              <p className="text-sm text-ink-muted py-8 text-center">Belum ada issue.</p>
             ) : (
               <div
                 className="space-y-2 max-h-[70vh] overflow-y-auto"
@@ -389,7 +389,7 @@ export default function IssuesPage() {
                   return (
                     <div
                       key={issue.id}
-                      className="rounded-lg border border-slate-200 p-3 hover:border-amber-300 transition-colors"
+                      className="rounded-lg border border-surface-border bg-surface p-3 hover:border-brand/40 hover:bg-brand-soft/30 transition-colors"
                     >
                       <div className="flex flex-wrap items-start justify-between gap-2">
                         <div className="min-w-0 flex-1">
@@ -398,20 +398,20 @@ export default function IssuesPage() {
                             <span
                               className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded ${
                                 issue.source === 'MANUAL'
-                                  ? 'bg-sky-100 text-sky-800'
-                                  : 'bg-violet-100 text-violet-800'
+                                  ? 'bg-brand-soft text-brand-ink'
+                                  : 'bg-accent-soft text-accent-ink'
                               }`}
                             >
                               {issue.source === 'MANUAL' ? 'Manual' : 'Auto'}
                             </span>
-                            <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-slate-100 text-slate-700">
+                            <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-surface-muted text-ink-muted border border-surface-border">
                               {issue.severity}
                             </span>
                           </div>
                           {issue.description && (
-                            <p className="text-xs text-slate-600 line-clamp-2">{issue.description}</p>
+                            <p className="text-xs text-ink-muted line-clamp-2">{issue.description}</p>
                           )}
-                          <p className="text-xs text-slate-500 mt-1">
+                          <p className="text-xs text-ink-subtle mt-1">
                             {scenarioName || 'Tanpa skenario'}
                             {issue.stepNumber != null ? ` · Step ${issue.stepNumber}` : ''}
                             {' · '}
@@ -421,7 +421,7 @@ export default function IssuesPage() {
                             <button
                               type="button"
                               onClick={() => navigate(`/scenarios/${scenarioId}`)}
-                              className="text-xs text-teal-700 hover:underline mt-1 font-medium"
+                              className="text-xs text-brand hover:text-brand-hover hover:underline mt-1 font-medium"
                             >
                               Buka skenario →
                             </button>
@@ -440,7 +440,7 @@ export default function IssuesPage() {
                               extraFileRef.current?.click()
                             }}
                             onFocus={() => setUploadForIssueId(issue.id)}
-                            className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                            className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded border border-surface-border bg-surface text-ink-muted hover:bg-surface-muted hover:text-ink"
                             title="Tambah attachment (klik lalu Ctrl+V untuk paste)"
                           >
                             <Paperclip size={12} />
@@ -448,7 +448,7 @@ export default function IssuesPage() {
                           <button
                             type="button"
                             onClick={() => setShareIssueId(issue.id)}
-                            className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded border border-amber-200 bg-amber-50 text-amber-800 hover:bg-amber-100"
+                            className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded border border-brand/25 bg-brand-soft text-brand-ink hover:bg-brand/15"
                             title="Share ke developer"
                           >
                             <Link2 size={12} /> Share
@@ -456,7 +456,7 @@ export default function IssuesPage() {
                           <select
                             value={issue.status}
                             onChange={(e) => handleStatusChange(issue.id, e.target.value)}
-                            className="text-xs px-2 py-1 rounded border border-slate-200 bg-white"
+                            className="text-xs px-2 py-1 rounded border border-surface-border bg-surface text-ink"
                           >
                             {STATUS_OPTIONS.map((s) => (
                               <option key={s} value={s}>{s.replace('_', ' ')}</option>

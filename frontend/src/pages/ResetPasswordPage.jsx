@@ -6,7 +6,7 @@ import TurnstileWidget from '../components/TurnstileWidget'
 import { useTurnstileSiteKey } from '../hooks/useTurnstileSiteKey'
 import AuthPageHeader from '../components/AuthPageHeader'
 
-const translations = {
+const translations = {
     title: 'Reset Password',
     subtitle: 'Enter your new password below.',
     emailLabel: 'Email',
@@ -171,7 +171,7 @@ export default function ResetPasswordPage() {
           <p className="text-[#8A8A8F] mb-6">{error}</p>
           <Link
             to="/forgot-password"
-            className="inline-block px-6 py-2 bg-[#0F766E] hover:bg-[#0D9488] text-white rounded-md transition font-medium text-sm"
+            className="inline-block px-6 py-2 bg-brand hover:bg-brand-hover text-white rounded-md transition font-medium text-sm"
           >
             {t.requestNew}
           </Link>
@@ -276,7 +276,7 @@ export default function ResetPasswordPage() {
               !isPasswordValid ||
               (turnstileSiteKey && !captchaToken)
             }
-            className="w-full py-2 px-4 rounded-md font-medium text-sm text-white bg-[#0F766E] hover:bg-[#0D9488] transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-[#0F766E] focus:ring-offset-2 focus:ring-offset-[#161618] disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-2 px-4 rounded-md font-medium text-sm text-white bg-brand hover:bg-brand-hover transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 focus:ring-offset-[#161618] disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? (
               <span className="flex items-center justify-center gap-2">

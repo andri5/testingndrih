@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import toast from 'react-hot-toast'
 import { authAPI } from '../services/api'
 import { WELCOME_SPLASH_STORAGE_KEY } from '../constants/welcomeSplash'
 import {

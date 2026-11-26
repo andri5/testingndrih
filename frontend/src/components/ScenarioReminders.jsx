@@ -179,7 +179,7 @@ export default function ScenarioReminders() {
 
   if (panelHidden) {
     return (
-      <div className="linear-card px-4 py-3 border border-amber-200/70 bg-amber-50/50 flex flex-wrap items-center justify-between gap-2">
+      <div className="linear-card px-4 py-3 border border-brand/20 bg-brand-soft/70 flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0 text-sm text-ink">
           <EyeOff size={16} className="text-amber-700 shrink-0" />
           <span className="font-medium truncate">{t.hiddenBar(visible.length)}</span>
@@ -198,10 +198,10 @@ export default function ScenarioReminders() {
   }
 
   return (
-    <div className="linear-card p-5 border border-amber-200/80 bg-gradient-to-br from-amber-50/80 to-orange-50/40">
+    <div className="linear-card p-5 border border-accent/30 bg-gradient-to-br from-accent-soft/90 to-brand-soft/40">
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="min-w-0 flex items-start gap-3">
-          <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center shrink-0">
+          <div className="w-10 h-10 rounded-xl bg-brand-soft text-brand-ink flex items-center justify-center shrink-0">
             <Coffee size={18} />
           </div>
           <div className="min-w-0">

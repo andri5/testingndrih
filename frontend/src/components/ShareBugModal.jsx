@@ -77,22 +77,22 @@ export default function ShareBugModal({ issueId, open, onClose }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop" onClick={onClose}>
       <div
-        className="w-full max-w-lg rounded-xl bg-white shadow-xl border border-slate-200 p-5"
+        className="w-full max-w-lg rounded-xl bg-surface shadow-xl border border-surface-border p-5"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-3 mb-4">
           <div>
-            <h3 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
-              <Link2 size={18} className="text-amber-600" />
+            <h3 className="text-lg font-semibold text-ink flex items-center gap-2">
+              <Link2 size={18} className="text-brand" />
               Share bug ke developer
             </h3>
-            <p className="text-sm text-slate-500 mt-1">
+            <p className="text-sm text-ink-muted mt-1">
               Link publik (tanpa login) berisi detail bug + screenshot step gagal.
             </p>
           </div>
-          <button type="button" onClick={onClose} className="text-slate-400 hover:text-slate-700 p-1" aria-label="Close">
+          <button type="button" onClick={onClose} className="text-ink-subtle hover:text-ink p-1" aria-label="Close">
             <X size={18} />
           </button>
         </div>
@@ -101,11 +101,11 @@ export default function ShareBugModal({ issueId, open, onClose }) {
 
         <div className="flex flex-wrap items-end gap-2 mb-4">
           <div>
-            <label className="text-xs font-medium text-slate-600">Berlaku (hari)</label>
+            <label className="text-xs font-medium text-ink-muted">Berlaku (hari)</label>
             <select
               value={expiresInDays}
               onChange={(e) => setExpiresInDays(Number(e.target.value))}
-              className="mt-1 block rounded-lg border border-slate-200 px-2 py-2 text-sm"
+              className="mt-1 block rounded-lg border border-surface-border bg-surface px-2 py-2 text-sm text-ink"
             >
               {[7, 14, 30, 60, 90].map((d) => (
                 <option key={d} value={d}>{d} hari</option>
@@ -116,27 +116,27 @@ export default function ShareBugModal({ issueId, open, onClose }) {
             type="button"
             onClick={handleCreate}
             disabled={creating}
-            className="rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold px-4 py-2 disabled:opacity-50"
+            className="rounded-lg bg-brand hover:bg-brand-hover text-white text-sm font-semibold px-4 py-2 disabled:opacity-50 shadow-sm shadow-brand/20"
           >
             {creating ? 'Membuat…' : 'Buat link share'}
           </button>
         </div>
 
         {freshUrl && (
-          <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3">
-            <p className="text-xs font-semibold text-emerald-800 mb-1">
+          <div className="mb-4 rounded-lg border border-brand/25 bg-brand-soft p-3">
+            <p className="text-xs font-semibold text-brand-ink mb-1">
               Salin sekarang — token penuh hanya ditampilkan sekali
             </p>
             <div className="flex gap-2">
               <input
                 readOnly
                 value={freshUrl}
-                className="flex-1 text-xs font-mono rounded border border-emerald-200 px-2 py-1.5 bg-white"
+                className="flex-1 text-xs font-mono rounded border border-brand/20 px-2 py-1.5 bg-surface text-ink"
               />
               <button
                 type="button"
                 onClick={handleCopy}
-                className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 text-white px-3 py-1.5 text-xs font-semibold"
+                className="inline-flex items-center gap-1 rounded-lg bg-brand text-white px-3 py-1.5 text-xs font-semibold hover:bg-brand-hover"
               >
                 {copied ? <Check size={14} /> : <Copy size={14} />}
                 {copied ? 'Copied' : 'Copy'}
@@ -146,21 +146,21 @@ export default function ShareBugModal({ issueId, open, onClose }) {
         )}
 
         <div>
-          <p className="text-xs font-semibold text-slate-600 mb-2">Link aktif / riwayat</p>
+          <p className="text-xs font-semibold text-ink-muted mb-2">Link aktif / riwayat</p>
           {loading ? (
             <div className="flex justify-center py-6"><Spinner size="sm" /></div>
           ) : shares.length === 0 ? (
-            <p className="text-sm text-slate-500 py-4 text-center">Belum ada share link.</p>
+            <p className="text-sm text-ink-muted py-4 text-center">Belum ada share link.</p>
           ) : (
             <ul className="space-y-2 max-h-48 overflow-y-auto">
               {shares.map((s) => (
                 <li
                   key={s.id}
-                  className="flex items-center justify-between gap-2 text-xs border border-slate-200 rounded-lg px-3 py-2"
+                  className="flex items-center justify-between gap-2 text-xs border border-surface-border rounded-lg px-3 py-2 bg-surface"
                 >
                   <div>
-                    <p className="font-mono text-slate-700">{s.prefix}</p>
-                    <p className="text-slate-500">
+                    <p className="font-mono text-ink">{s.prefix}</p>
+                    <p className="text-ink-subtle">
                       {s.revokedAt
                         ? 'Revoked'
                         : s.expiresAt

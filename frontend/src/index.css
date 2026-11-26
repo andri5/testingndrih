@@ -5,22 +5,34 @@
 @tailwind utilities;
 
 :root {
-  --brand: #0F766E;
-  --brand-hover: #0D9488;
-  --brand-soft: #CCFBF1;
-  --brand-ink: #134E4A;
-  --hero: #0E2F30;
-  --hero-mid: #143D3E;
+  /* Lab QA cool — professional / enterprise */
+  /* Primary: cool lab cyan */
+  --brand: #0E7490;
+  --brand-hover: #0891B2;
+  --brand-soft: #E0F2F5;
+  --brand-ink: #155E75;
+  /* Secondary: cool steel slate */
+  --accent: #1E3A5F;
+  --accent-hover: #152C48;
+  --accent-soft: #E8EEF4;
+  --accent-ink: #1E3A5F;
+  --hero: #0B1F2A;
+  --hero-mid: #123044;
   --surface: #FFFFFF;
-  --surface-muted: #F4F7F7;
-  --surface-sidebar: #F7FAFA;
-  --ink: #12202A;
-  --ink-muted: #5B6B73;
-  --ink-subtle: #8A9AA2;
-  --border: #D5E0E0;
-  --pass: #059669;
+  --surface-muted: #F4F7FA;
+  --surface-sidebar: #EEF2F6;
+  --ink: #0F1C2E;
+  --ink-muted: #5A6B7D;
+  --ink-subtle: #8494A7;
+  --border: #D5DEE7;
+  --pass: #0D9488;
   --fail: #DC2626;
-  --warn: #D97706;
+  --warn: #B45309;
+  --tone-cool: rgba(14, 116, 144, 0.11);
+  --tone-steel: rgba(30, 58, 95, 0.08);
+  --tone-grid: rgba(14, 116, 144, 0.045);
+  /* Soft noise film (Lab QA cool) */
+  --noise-film: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
 }
 
 * {
@@ -50,6 +62,15 @@ html {
 
 body {
   background-color: var(--surface-muted);
+  background-image:
+    var(--noise-film),
+    radial-gradient(ellipse 110% 75% at -8% -12%, var(--tone-cool), transparent 58%),
+    radial-gradient(ellipse 90% 60% at 108% -5%, var(--tone-steel), transparent 52%),
+    radial-gradient(ellipse 70% 50% at 50% 110%, rgba(14, 116, 144, 0.05), transparent 55%),
+    linear-gradient(180deg, #F7FAFC 0%, #F4F7FA 55%, #F3F6F9 100%);
+  background-size: 180px 180px, auto, auto, auto, auto;
+  background-repeat: repeat, no-repeat, no-repeat, no-repeat, no-repeat;
+  background-attachment: fixed;
   color: var(--ink);
 }
 
@@ -79,14 +100,22 @@ body {
 
 /* ─── Dark Theme ─── */
 html.theme-dark body {
-  background-color: #0F0E11;
-  color: #E0E0E2;
+  background-color: #0A1218;
+  background-image:
+    var(--noise-film),
+    radial-gradient(ellipse 110% 75% at -8% -12%, rgba(14, 116, 144, 0.18), transparent 58%),
+    radial-gradient(ellipse 90% 60% at 108% -5%, rgba(30, 58, 95, 0.16), transparent 52%),
+    linear-gradient(180deg, #0A1218 0%, #0C1520 100%);
+  background-size: 180px 180px, auto, auto, auto;
+  background-repeat: repeat, no-repeat, no-repeat, no-repeat;
+  background-attachment: fixed;
+  color: #E2E8F0;
 }
 
 /* ─── Light Theme ─── */
 html.theme-light body {
-  background-color: #F5F5F7;
-  color: #1A1A1C;
+  background-color: var(--surface-muted);
+  color: var(--ink);
 }
 html.theme-light .bg-\[\#0F0E11\] { background-color: #FFFFFF !important; }
 html.theme-light .bg-\[\#161618\] { background-color: #F0F0F2 !important; }
@@ -97,7 +126,7 @@ html.theme-light .text-\[\#666\]    { color: #888 !important; }
 html.theme-light .border-\[\#2D2D2F\] { border-color: #DDDDE0 !important; }
 html.theme-light ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); }
 
-/* ─── Layout panels — Testiny-like light QA shell ─── */
+/* ─── Layout panels — Lab QA cool shell ─── */
 .sidebar-panel {
   background: var(--surface-sidebar);
   border-right: 1px solid var(--border);
@@ -405,9 +434,32 @@ html.theme-light input:-webkit-autofill:active {
   transition: background-color 5000s ease-in-out 0s;
 }
 
-/* ─── Auth page – light theme ─── */
-/* Login/Register full-page bg should be surface gray, not pure white */
-html.theme-light .auth-page-bg { background-color: #F5F5F7 !important; }
+/* ─── Auth page – Lab QA cool (mesh + blueprint grid + noise) ─── */
+.auth-page-bg {
+  background-color: var(--surface-muted) !important;
+  background-image:
+    var(--noise-film),
+    linear-gradient(var(--tone-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--tone-grid) 1px, transparent 1px),
+    radial-gradient(ellipse 90% 65% at 0% 0%, rgba(14, 116, 144, 0.14), transparent 55%),
+    radial-gradient(ellipse 75% 55% at 100% 100%, rgba(30, 58, 95, 0.1), transparent 50%),
+    linear-gradient(180deg, #F7FAFC 0%, #F4F7FA 100%) !important;
+  background-size: 180px 180px, 28px 28px, 28px 28px, auto, auto, auto;
+  background-repeat: repeat, repeat, repeat, no-repeat, no-repeat, no-repeat;
+  background-attachment: fixed;
+}
+html.theme-light .auth-page-bg {
+  background-color: var(--surface-muted) !important;
+  background-image:
+    var(--noise-film),
+    linear-gradient(var(--tone-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--tone-grid) 1px, transparent 1px),
+    radial-gradient(ellipse 90% 65% at 0% 0%, rgba(14, 116, 144, 0.14), transparent 55%),
+    radial-gradient(ellipse 75% 55% at 100% 100%, rgba(30, 58, 95, 0.1), transparent 50%),
+    linear-gradient(180deg, #F7FAFC 0%, #F4F7FA 100%) !important;
+  background-size: 180px 180px, 28px 28px, 28px 28px, auto, auto, auto;
+  background-repeat: repeat, repeat, repeat, no-repeat, no-repeat, no-repeat;
+}
 
 /* Cloudflare Turnstile widget — keep iframe visible on auth forms */
 .turnstile-widget iframe {
@@ -416,14 +468,21 @@ html.theme-light .auth-page-bg { background-color: #F5F5F7 !important; }
   width: 100%;
   max-width: 304px;
 }
+.auth-card {
+  background: var(--surface) !important;
+  border-color: var(--border) !important;
+  box-shadow:
+    0 1px 2px rgba(15, 28, 46, 0.04),
+    0 16px 36px rgba(14, 116, 144, 0.06);
+}
 html.theme-light .auth-card {
-  background: #FFFFFF !important;
-  border-color: #DDDDE0 !important;
+  background: var(--surface) !important;
+  border-color: var(--border) !important;
 }
 html.theme-light .auth-input {
-  background: #FAFAFA !important;
-  border-color: #DDDDE0 !important;
-  color: #1A1A1C !important;
+  background: #F8FAFC !important;
+  border-color: var(--border) !important;
+  color: var(--ink) !important;
 }
 
 /* ─── Modal backdrop ─── */
@@ -458,7 +517,7 @@ html.theme-light .modal-backdrop {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 10px;
-  box-shadow: 0 1px 2px rgba(18, 32, 42, 0.04);
+  box-shadow: 0 1px 2px rgba(15, 28, 46, 0.04);
 }
 
 /* Legacy alias kept for compatibility */
@@ -482,23 +541,36 @@ html.theme-light .modal-backdrop {
 
 /* ─── Stat card accent tops ─── */
 .stat-violet { border-top: 2px solid var(--brand); }
-.stat-cyan   { border-top: 2px solid #14B8A6; }
-.stat-green  { border-top: 2px solid #34D399; }
-.stat-amber  { border-top: 2px solid #FBBF24; }
-.stat-rose   { border-top: 2px solid #F87171; }
+.stat-cyan   { border-top: 2px solid #22D3EE; }
+.stat-green  { border-top: 2px solid var(--pass); }
+.stat-amber  { border-top: 2px solid var(--warn); }
+.stat-rose   { border-top: 2px solid var(--fail); }
 
 /* ─── Quick action button ─── */
 .action-btn {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: 8px;
   transition: all 0.15s ease;
 }
 
 .action-btn:hover {
-  border-color: #99e6de;
+  border-color: color-mix(in srgb, var(--brand) 40%, var(--border));
   background: var(--brand-soft);
-  box-shadow: 0 4px 14px rgba(15, 118, 110, 0.08);
+  box-shadow: 0 4px 12px rgba(14, 116, 144, 0.08);
+}
+
+/* Primary cool CTA */
+.btn-accent {
+  background: var(--brand);
+  color: #fff;
+}
+.btn-accent:hover {
+  background: var(--brand-hover);
+}
+.chip-accent {
+  background: var(--accent-soft);
+  color: var(--accent-ink);
 }
 /* ─── DARK THEME COLOR OVERRIDES (html.theme-dark) ─── */
 /* Convert white cards to dark theme colors */
@@ -680,25 +752,35 @@ html.theme-light .test-btn-disabled {
   }
 }
 
-/* ─── Landing page (Testiny-inspired) ─── */
+/* ─── Landing page — Lab QA cool ─── */
 .landing-page {
-  --lp-bg: #f4f7f7;
-  --lp-bg-alt: #e8f2f1;
+  --lp-bg: #f4f7fa;
+  --lp-bg-alt: #eef3f7;
   --lp-surface: #ffffff;
-  --lp-surface-2: #f1f5f5;
-  --lp-border: #d5e0e0;
-  --lp-text: #12202a;
-  --lp-text-muted: #5b6b73;
-  --lp-text-subtle: #8a9aa2;
-  --lp-accent: #0f766e;
-  --lp-accent-hover: #0d9488;
-  --lp-teal: #0d9488;
-  --lp-indigo-soft: #ccfbf1;
-  --lp-teal-soft: #ccfbf1;
-  --lp-hero: #0e2f30;
-  --lp-hero-mid: #143d3e;
-  --lp-hero-text: #f4fbfb;
+  --lp-surface-2: #f0f4f8;
+  --lp-border: #d5dee7;
+  --lp-text: #0f1c2e;
+  --lp-text-muted: #5a6b7d;
+  --lp-text-subtle: #8494a7;
+  --lp-accent: #0e7490;
+  --lp-accent-hover: #0891b2;
+  --lp-teal: #0891b2;
+  --lp-indigo-soft: #e0f2f5;
+  --lp-teal-soft: #e0f2f5;
+  --lp-warm-soft: #e8eef4;
+  --lp-hero: #0b1f2a;
+  --lp-hero-mid: #123044;
+  --lp-hero-text: #f0f9fb;
   background-color: var(--lp-bg);
+  background-image:
+    var(--noise-film),
+    linear-gradient(var(--tone-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--tone-grid) 1px, transparent 1px),
+    radial-gradient(ellipse 110% 75% at -5% -10%, rgba(14, 116, 144, 0.11), transparent 56%),
+    radial-gradient(ellipse 85% 60% at 105% 0%, rgba(30, 58, 95, 0.08), transparent 52%);
+  background-size: 180px 180px, 32px 32px, 32px 32px, auto, auto;
+  background-repeat: repeat, repeat, repeat, no-repeat, no-repeat;
+  background-attachment: fixed;
   color: var(--lp-text);
   font-family: 'Plus Jakarta Sans', 'DM Sans', system-ui, sans-serif;
   font-size: 1rem;
@@ -753,10 +835,10 @@ html.theme-light .test-btn-disabled {
   max-width: 40rem;
   margin-inline: auto;
   padding: clamp(1.25rem, 4vw, 2rem);
-  border-radius: 1rem;
-  background: linear-gradient(135deg, #e6f7f5 0%, #ffffff 45%, #ecfdf5 100%);
-  border: 1px solid #99e6de;
-  box-shadow: 0 16px 48px rgba(15, 118, 110, 0.1);
+  border-radius: 0.75rem;
+  background: linear-gradient(135deg, #e0f2f5 0%, #ffffff 50%, #e8eef4 100%);
+  border: 1px solid #b6d4de;
+  box-shadow: 0 12px 32px rgba(14, 116, 144, 0.08);
 }
 
 .landing-page .lp-live-panel__link {
@@ -790,9 +872,9 @@ html.theme-light .test-btn-disabled {
 
 .landing-page .lp-glow {
   background:
-    radial-gradient(ellipse 70% 55% at 15% -5%, rgba(20, 184, 166, 0.16), transparent 55%),
-    radial-gradient(ellipse 55% 45% at 95% 15%, rgba(15, 118, 110, 0.12), transparent 50%),
-    radial-gradient(ellipse 50% 40% at 50% 100%, rgba(13, 148, 136, 0.08), transparent 55%);
+    radial-gradient(ellipse 70% 55% at 15% -5%, rgba(14, 116, 144, 0.16), transparent 55%),
+    radial-gradient(ellipse 55% 45% at 95% 15%, rgba(30, 58, 95, 0.1), transparent 50%),
+    radial-gradient(ellipse 50% 40% at 50% 100%, rgba(8, 145, 178, 0.08), transparent 55%);
   animation: lp-glow-shift 14s ease-in-out infinite alternate;
 }
 
@@ -909,7 +991,7 @@ html.theme-light .test-btn-disabled {
 
 .landing-page .lp-nav-brand__logo {
   flex-shrink: 0;
-  box-shadow: 0 4px 14px rgba(15, 118, 110, 0.35);
+  box-shadow: 0 4px 14px rgba(14, 116, 144, 0.3);
 }
 
 .landing-page .lp-nav-brand__text {
@@ -1226,8 +1308,9 @@ html.theme-light .test-btn-disabled {
 .landing-page .lp-hero-band {
   position: relative;
   background:
-    radial-gradient(ellipse 80% 60% at 70% 20%, rgba(20, 184, 166, 0.18), transparent 55%),
-    linear-gradient(160deg, var(--lp-hero) 0%, var(--lp-hero-mid) 55%, #0a2425 100%);
+    radial-gradient(ellipse 70% 50% at 15% 20%, rgba(14, 116, 144, 0.32), transparent 55%),
+    radial-gradient(ellipse 60% 45% at 90% 80%, rgba(34, 211, 238, 0.1), transparent 50%),
+    linear-gradient(160deg, var(--lp-hero) 0%, var(--lp-hero-mid) 55%, #07151c 100%);
   color: var(--lp-hero-text);
   overflow: hidden;
 }
@@ -1243,7 +1326,7 @@ html.theme-light .test-btn-disabled {
 }
 
 .landing-page .lp-gradient-text {
-  color: #5eead4;
+  color: #67e8f9;
 }
 
 .landing-page .lp-hero-band .lp-muted {
@@ -1264,16 +1347,16 @@ html.theme-light .test-btn-disabled {
 }
 
 .landing-page .lp-btn-primary {
-  background: #14b8a6;
-  color: #042f2e;
+  background: var(--brand);
+  color: #ffffff;
   font-weight: 600;
-  box-shadow: 0 8px 24px rgba(20, 184, 166, 0.28);
+  box-shadow: 0 8px 22px rgba(14, 116, 144, 0.25);
   transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
 }
 .landing-page .lp-btn-primary:hover {
-  background: #2dd4bf;
+  background: var(--brand-hover);
   transform: translateY(-1px);
-  box-shadow: 0 12px 28px rgba(20, 184, 166, 0.35);
+  box-shadow: 0 12px 26px rgba(14, 116, 144, 0.3);
 }
 
 .landing-page .lp-btn-secondary {
@@ -1288,36 +1371,36 @@ html.theme-light .test-btn-disabled {
   background: rgba(255, 255, 255, 0.04);
 }
 .landing-page .lp-btn-secondary:hover {
-  border-color: #99e6de;
-  background: #f0fdfa;
+  border-color: #7dd3e0;
+  background: #eef8fb;
 }
 .landing-page .lp-hero-band .lp-btn-secondary:hover {
-  border-color: rgba(94, 234, 212, 0.55);
+  border-color: rgba(103, 232, 249, 0.45);
   background: rgba(255, 255, 255, 0.08);
 }
 
 .landing-page .lp-card {
   background: var(--lp-surface);
   border: 1px solid var(--lp-border);
-  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.04);
+  box-shadow: 0 2px 12px rgba(15, 28, 46, 0.04);
   transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
 }
 .landing-page .lp-card:hover {
-  transform: translateY(-3px);
-  border-color: #99e6de;
-  box-shadow: 0 12px 32px rgba(15, 118, 110, 0.12);
+  transform: translateY(-2px);
+  border-color: #7dd3e0;
+  box-shadow: 0 10px 28px rgba(14, 116, 144, 0.1);
 }
 
-.landing-page .lp-icon-indigo { background: #ccfbf1; color: #0f766e; }
-.landing-page .lp-icon-teal { background: #ccfbf1; color: #0d9488; }
-.landing-page .lp-icon-emerald { background: #d1fae5; color: #059669; }
-.landing-page .lp-icon-violet { background: #ede9fe; color: #7c3aed; }
-.landing-page .lp-icon-amber { background: #fef3c7; color: #d97706; }
-.landing-page .lp-icon-rose { background: #ffe4e6; color: #e11d48; }
-.landing-page .lp-icon-sky { background: #e0f2fe; color: #0284c7; }
+.landing-page .lp-icon-indigo { background: var(--lp-teal-soft); color: #0e7490; }
+.landing-page .lp-icon-teal { background: var(--lp-teal-soft); color: #0891b2; }
+.landing-page .lp-icon-emerald { background: #d5f0eb; color: #0d9488; }
+.landing-page .lp-icon-violet { background: var(--lp-warm-soft); color: #1e3a5f; }
+.landing-page .lp-icon-amber { background: #f3ebe0; color: #b45309; }
+.landing-page .lp-icon-rose { background: #f3e8e9; color: #b44a5a; }
+.landing-page .lp-icon-sky { background: #e0f2f5; color: #0e7490; }
 
 .landing-page .lp-section-alt {
-  background: linear-gradient(180deg, var(--lp-bg-alt) 0%, var(--lp-bg) 100%);
+  background: linear-gradient(180deg, var(--lp-bg-alt) 0%, var(--lp-surface-2) 55%, var(--lp-bg) 100%);
   border-top: 1px solid var(--lp-border);
   border-bottom: 1px solid var(--lp-border);
 }
@@ -1479,9 +1562,9 @@ html.theme-light .test-btn-disabled {
 }
 
 .landing-page .lp-ai-panel {
-  background: linear-gradient(135deg, #e6f7f5 0%, #ffffff 45%, #ecfdf5 100%);
-  border: 1px solid #99e6de;
-  box-shadow: 0 16px 48px rgba(15, 118, 110, 0.1);
+  background: linear-gradient(135deg, #e0f2f5 0%, #ffffff 50%, #e8eef4 100%);
+  border: 1px solid #b6d4de;
+  box-shadow: 0 12px 32px rgba(14, 116, 144, 0.08);
 }
 
 .landing-page .lp-code {
