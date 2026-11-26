@@ -79,20 +79,20 @@ export default function ShareBugModal({ issueId, open, onClose }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop" onClick={onClose}>
       <div
-        className="w-full max-w-lg rounded-xl bg-surface shadow-xl border border-surface-border p-5"
+        className="w-full max-w-lg max-h-[min(90dvh,40rem)] overflow-y-auto rounded-xl bg-surface shadow-xl border border-surface-border p-5"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-3 mb-4">
-          <div>
+          <div className="min-w-0">
             <h3 className="text-lg font-semibold text-ink flex items-center gap-2">
-              <Link2 size={18} className="text-brand" />
+              <Link2 size={18} className="text-brand shrink-0" />
               Share bug ke developer
             </h3>
             <p className="text-sm text-ink-muted mt-1">
               Link publik (tanpa login) berisi detail bug + screenshot step gagal.
             </p>
           </div>
-          <button type="button" onClick={onClose} className="text-ink-subtle hover:text-ink p-1" aria-label="Close">
+          <button type="button" onClick={onClose} className="text-ink-subtle hover:text-ink min-h-10 min-w-10 inline-flex items-center justify-center rounded-md" aria-label="Close">
             <X size={18} />
           </button>
         </div>
@@ -116,7 +116,7 @@ export default function ShareBugModal({ issueId, open, onClose }) {
             type="button"
             onClick={handleCreate}
             disabled={creating}
-            className="rounded-lg bg-brand hover:bg-brand-hover text-white text-sm font-semibold px-4 py-2 disabled:opacity-50 shadow-sm shadow-brand/20"
+            className="min-h-10 rounded-lg bg-brand hover:bg-brand-hover text-white text-sm font-semibold px-4 py-2 disabled:opacity-50 shadow-sm shadow-brand/20"
           >
             {creating ? 'Membuat…' : 'Buat link share'}
           </button>
@@ -127,16 +127,16 @@ export default function ShareBugModal({ issueId, open, onClose }) {
             <p className="text-xs font-semibold text-brand-ink mb-1">
               Salin sekarang — token penuh hanya ditampilkan sekali
             </p>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2 min-w-0">
               <input
                 readOnly
                 value={freshUrl}
-                className="flex-1 text-xs font-mono rounded border border-brand/20 px-2 py-1.5 bg-surface text-ink"
+                className="min-w-0 flex-1 text-xs font-mono rounded border border-brand/20 px-2 py-1.5 bg-surface text-ink"
               />
               <button
                 type="button"
                 onClick={handleCopy}
-                className="inline-flex items-center gap-1 rounded-lg bg-brand text-white px-3 py-1.5 text-xs font-semibold hover:bg-brand-hover"
+                className="inline-flex items-center gap-1 min-h-10 rounded-lg bg-brand text-white px-3 py-1.5 text-xs font-semibold hover:bg-brand-hover"
               >
                 {copied ? <Check size={14} /> : <Copy size={14} />}
                 {copied ? 'Copied' : 'Copy'}

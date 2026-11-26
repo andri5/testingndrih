@@ -1,15 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { AlertTriangle, Clock, Image as ImageIcon, Bug } from 'lucide-react'
+import SeverityBadge from '../components/SeverityBadge'
 
 const API_BASE = '/api'
-
-const SEVERITY_CLASS = {
-  LOW: 'bg-surface-muted text-ink-muted border-surface-border',
-  MEDIUM: 'bg-brand-soft text-brand-ink border-brand/20',
-  HIGH: 'bg-orange-50 text-orange-900 border-orange-200',
-  CRITICAL: 'bg-red-50 text-red-900 border-red-200',
-}
 
 export default function SharedBugPage() {
   const { token } = useParams()
@@ -97,9 +91,7 @@ export default function SharedBugPage() {
                   )}
                 </div>
                 <div className="flex flex-wrap gap-1.5">
-                  <span className={`text-[11px] font-bold px-2 py-0.5 rounded border ${SEVERITY_CLASS[issue.severity] || SEVERITY_CLASS.MEDIUM}`}>
-                    {issue.severity}
-                  </span>
+                  <SeverityBadge severity={issue.severity} className="text-[11px] px-2 py-0.5" />
                   <span className="text-[11px] font-semibold px-2 py-0.5 rounded border bg-surface-muted text-ink-muted border-surface-border">
                     {issue.status?.replace('_', ' ')}
                   </span>

@@ -19,6 +19,7 @@ import CaseHistoryPanel from '../components/CaseHistoryPanel'
 import { useFolderStore } from '../store/folderStore'
 import { filesFromClipboardOrDrop } from '../utils/clipboardFiles'
 import toast from 'react-hot-toast'
+import { SEVERITY_LEVELS, severitySelectClass } from '../constants/severity'
 
 const RecordIcon = (props) => <Circle {...props} className="text-red-500 fill-red-500" />
 
@@ -227,12 +228,6 @@ const emptyManualStep = {
   metadata: '',
 }
 
-const PRIORITY_SELECT_COLORS = {
-  LOW: 'border-sky-300 bg-sky-50 text-sky-800',
-  MEDIUM: 'border-amber-300 bg-amber-50 text-amber-900',
-  HIGH: 'border-orange-400 bg-orange-50 text-orange-900',
-  CRITICAL: 'border-red-400 bg-red-50 text-red-800',
-}
 
 const CASE_TYPE_SELECT_COLORS = {
   Functional: 'border-indigo-300 bg-indigo-50 text-indigo-900',
@@ -1890,15 +1885,11 @@ export default function ScenarioDetailPage() {
               <select
                 value={caseMeta.priority}
                 onChange={(e) => setCaseMeta((m) => ({ ...m, priority: e.target.value }))}
-                className={`w-full text-sm font-semibold rounded-lg border px-3 py-2 transition-colors ${
-                  PRIORITY_SELECT_COLORS[caseMeta.priority] ||
-                  'border-surface-border bg-white text-ink'
-                }`}
+                className={`severity-select w-full text-sm font-semibold rounded-lg border px-3 py-2 outline-none focus:ring-1 transition-colors ${severitySelectClass(caseMeta.priority)}`}
               >
-                <option value="LOW">LOW</option>
-                <option value="MEDIUM">MEDIUM</option>
-                <option value="HIGH">HIGH</option>
-                <option value="CRITICAL">CRITICAL</option>
+                {SEVERITY_LEVELS.map((p) => (
+                  <option key={p} value={p}>{p}</option>
+                ))}
               </select>
             </div>
             <div>

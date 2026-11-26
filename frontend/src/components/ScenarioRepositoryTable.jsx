@@ -13,6 +13,7 @@ import {
   Folder,
   MoreHorizontal,
 } from 'lucide-react'
+import SeverityBadge from './SeverityBadge'
 
 function MoveFolderSelect({ s, folderOptions, onMoveRequest, className = '' }) {
   return (
@@ -167,25 +168,6 @@ function RowActions({ s, folderOptions, onOpen, onEdit, onDuplicate, onDelete, o
   )
 }
 
-const SEVERITY_BADGE = {
-  LOW: 'border-sky-300 bg-sky-50 text-sky-800',
-  MEDIUM: 'border-amber-300 bg-amber-50 text-amber-900',
-  HIGH: 'border-orange-400 bg-orange-50 text-orange-900',
-  CRITICAL: 'border-red-400 bg-red-50 text-red-800',
-}
-
-function SeverityBadge({ priority }) {
-  const level = String(priority || 'MEDIUM').toUpperCase()
-  const cls = SEVERITY_BADGE[level] || SEVERITY_BADGE.MEDIUM
-  return (
-    <span
-      className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wide border ${cls}`}
-      title={`Severity / Priority: ${level}`}
-    >
-      {level}
-    </span>
-  )
-}
 
 function LastResultBadge({ result }) {
   if (!result) {

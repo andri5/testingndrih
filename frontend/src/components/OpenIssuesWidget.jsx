@@ -50,12 +50,12 @@ export default function OpenIssuesWidget() {
 
   return (
     <div className="linear-card p-5">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-sm font-semibold text-ink flex items-center gap-2">
-          <AlertTriangle size={16} className="text-brand" />
-          Open Issues
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+        <h2 className="text-sm font-semibold text-ink flex items-center gap-2 min-w-0">
+          <AlertTriangle size={16} className="text-brand shrink-0" />
+          <span className="truncate">Open Issues</span>
         </h2>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           {!loading && issues.length > 0 && (
             <span className="text-xs font-semibold text-brand-ink bg-brand-soft border border-brand/20 px-2 py-0.5 rounded-full">
               {issues.length} open

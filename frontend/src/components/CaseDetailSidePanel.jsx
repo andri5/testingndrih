@@ -22,12 +22,7 @@ import StepAttachmentsBlock from './StepAttachmentsBlock'
 import ExportFormatButton from './ExportFormatButton'
 import { Spinner } from './ui'
 
-const PRIORITY_COLORS = {
-  LOW: 'border-sky-300 bg-sky-50 text-sky-800',
-  MEDIUM: 'border-amber-300 bg-amber-50 text-amber-900',
-  HIGH: 'border-orange-400 bg-orange-50 text-orange-900',
-  CRITICAL: 'border-red-400 bg-red-50 text-red-800',
-}
+import { SEVERITY_LEVELS, severitySelectClass } from '../constants/severity'
 
 const TABS = [
   { id: 'details', label: 'Details' },
@@ -466,11 +461,9 @@ export default function CaseDetailSidePanel({
                     <select
                       value={meta.priority}
                       onChange={(e) => setMeta((m) => ({ ...m, priority: e.target.value }))}
-                      className={`w-full text-xs rounded-lg border px-2 py-2 font-semibold ${
-                        PRIORITY_COLORS[meta.priority] || PRIORITY_COLORS.MEDIUM
-                      }`}
+                      className={`severity-select w-full text-xs rounded-lg border px-2.5 py-2 font-semibold outline-none focus:ring-1 transition-colors ${severitySelectClass(meta.priority)}`}
                     >
-                      {['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'].map((p) => (
+                      {SEVERITY_LEVELS.map((p) => (
                         <option key={p} value={p}>
                           {p}
                         </option>

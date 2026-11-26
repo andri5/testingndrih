@@ -572,6 +572,21 @@ html.theme-light .modal-backdrop {
   background: var(--accent-soft);
   color: var(--accent-ink);
 }
+
+/* Severity / priority select — Lab QA cool */
+.severity-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235A6B7D' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.65rem center;
+  padding-right: 2rem;
+  cursor: pointer;
+}
+.severity-select option {
+  background-color: #ffffff;
+  color: #0f1c2e;
+  font-weight: 600;
+}
 /* ─── DARK THEME COLOR OVERRIDES (html.theme-dark) ─── */
 /* Convert white cards to dark theme colors */
 html.theme-dark .bg-white { background-color: #1A1A1C !important; }
@@ -747,7 +762,9 @@ html.theme-light .test-btn-disabled {
   .lp-nav-cta,
   .lp-nav-mobile-secondary,
   .lp-nav-mobile-cta,
-  .lp-nav-mobile-link {
+  .lp-nav-mobile-link,
+  .app-header-bar button,
+  .app-header-bar a {
     min-height: 40px;
   }
 }

@@ -7,9 +7,11 @@ import { Bug, Plus, RefreshCw, Link2, Paperclip, Trash2, FileText } from 'lucide
 import ShareBugModal from '../components/ShareBugModal'
 import { filesFromClipboardOrDrop } from '../utils/clipboardFiles'
 import { findSqlInjectionInForm, SQLI_REJECT_MESSAGE } from '../utils/sqlInjectionGuard'
+import SeverityBadge from '../components/SeverityBadge'
+import { SEVERITY_LEVELS, severitySelectClass } from '../constants/severity'
 
 const STATUS_OPTIONS = ['OPEN', 'IN_PROGRESS', 'CLOSED']
-const SEVERITY_OPTIONS = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']
+const SEVERITY_OPTIONS = SEVERITY_LEVELS
 
 function isImageMime(mime) {
   return String(mime || '').startsWith('image/')
@@ -48,10 +50,11 @@ function AttachmentThumbs({ attachments = [], onDelete, onPreview }) {
             <button
               type="button"
               onClick={() => onDelete(a.id)}
-              className="absolute top-0.5 right-0.5 p-0.5 rounded bg-black/60 text-white opacity-0 group-hover:opacity-100"
+              className="absolute top-0.5 right-0.5 min-w-7 min-h-7 inline-flex items-center justify-center rounded bg-black/65 text-white"
               title="Hapus"
+              aria-label="Hapus attachment"
             >
-              <Trash2 size={10} />
+              <Trash2 size={12} />
             </button>
           )}
         </div>
@@ -231,7 +234,7 @@ export default function IssuesPage() {
         <div className="grid lg:grid-cols-5 gap-4">
           <form
             onSubmit={handleCreate}
-            className="lg:col-span-2 linear-card p-4 space-y-3"
+            className="order-2 lg:order-1 lg:col-span-2 linear-card p-4 space-y-3"
           >
             <h2 className="text-sm font-semibold text-ink flex items-center gap-2">
               <Plus size={16} className="text-brand" /> Catat bug manual
@@ -261,7 +264,7 @@ export default function IssuesPage() {
                 <select
                   value={form.severity}
                   onChange={(e) => setForm((f) => ({ ...f, severity: e.target.value }))}
-                  className="mt-1 w-full rounded-lg border border-surface-border bg-surface px-2 py-2 text-sm text-ink focus:ring-1 focus:ring-brand focus:border-brand outline-none"
+                  className={`severity-select mt-1 w-full rounded-lg border px-2.5 py-2 text-sm font-semibold outline-none focus:ring-1 transition-colors ${severitySelectClass(form.severity)}`}
                 >
                   {SEVERITY_OPTIONS.map((s) => (
                     <option key={s} value={s}>{s}</option>
@@ -329,10 +332,10 @@ export default function IssuesPage() {
                     : 'border-surface-border bg-surface-muted text-ink-subtle'
                 }`}
               >
-                Klik di sini → Ctrl+V paste screenshot, atau drag gambar
+                Tempel screenshot (Ctrl+V / paste), atau drag gambar ke sini
               </div>
               {pendingFiles.length > 0 && (
-                <p className="text-[11px] text-ink-subtle mt-1">
+                <p className="text-[11px] text-ink-subtle mt-1 break-all line-clamp-2">
                   {pendingFiles.length} file dipilih: {pendingFiles.map((f) => f.name).join(', ')}
                 </p>
               )}
@@ -340,7 +343,7 @@ export default function IssuesPage() {
             <button
               type="submit"
               disabled={saving}
-              className="w-full rounded-lg bg-brand hover:bg-brand-hover text-white text-sm font-semibold py-2.5 disabled:opacity-50 shadow-sm shadow-brand/20"
+              className="w-full min-h-10 rounded-lg bg-brand hover:bg-brand-hover text-white text-sm font-semibold py-2.5 disabled:opacity-50 shadow-sm shadow-brand/20"
             >
               {saving ? 'Menyimpan…' : 'Simpan bug'}
             </button>
@@ -349,12 +352,12 @@ export default function IssuesPage() {
             </p>
           </form>
 
-          <div className="lg:col-span-3 linear-card p-4">
+          <div className="order-1 lg:order-2 lg:col-span-3 linear-card p-4">
             <div className="flex flex-wrap gap-2 mb-3">
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="rounded-lg border border-surface-border bg-surface px-2 py-1.5 text-xs text-ink"
+                className="min-h-10 rounded-lg border border-surface-border bg-surface px-2.5 py-2 text-xs text-ink"
               >
                 <option value="ALL">Semua status</option>
                 {STATUS_OPTIONS.map((s) => (
@@ -364,7 +367,7 @@ export default function IssuesPage() {
               <select
                 value={filterSource}
                 onChange={(e) => setFilterSource(e.target.value)}
-                className="rounded-lg border border-surface-border bg-surface px-2 py-1.5 text-xs text-ink"
+                className="min-h-10 rounded-lg border border-surface-border bg-surface px-2.5 py-2 text-xs text-ink"
               >
                 <option value="ALL">Semua sumber</option>
                 <option value="MANUAL">Manual</option>
@@ -404,9 +407,7 @@ export default function IssuesPage() {
                             >
                               {issue.source === 'MANUAL' ? 'Manual' : 'Auto'}
                             </span>
-                            <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-surface-muted text-ink-muted border border-surface-border">
-                              {issue.severity}
-                            </span>
+                            <SeverityBadge severity={issue.severity} />
                           </div>
                           {issue.description && (
                             <p className="text-xs text-ink-muted line-clamp-2">{issue.description}</p>
@@ -432,7 +433,7 @@ export default function IssuesPage() {
                             onDelete={(attachmentId) => handleDeleteAttachment(issue.id, attachmentId)}
                           />
                         </div>
-                        <div className="flex items-center gap-1.5 shrink-0">
+                        <div className="flex flex-wrap items-center gap-2 shrink-0">
                           <button
                             type="button"
                             onClick={() => {
@@ -440,23 +441,24 @@ export default function IssuesPage() {
                               extraFileRef.current?.click()
                             }}
                             onFocus={() => setUploadForIssueId(issue.id)}
-                            className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded border border-surface-border bg-surface text-ink-muted hover:bg-surface-muted hover:text-ink"
-                            title="Tambah attachment (klik lalu Ctrl+V untuk paste)"
+                            className="inline-flex items-center justify-center min-h-10 min-w-10 text-xs font-semibold rounded border border-surface-border bg-surface text-ink-muted hover:bg-surface-muted hover:text-ink"
+                            title="Tambah attachment (klik lalu paste)"
+                            aria-label="Tambah attachment"
                           >
-                            <Paperclip size={12} />
+                            <Paperclip size={14} />
                           </button>
                           <button
                             type="button"
                             onClick={() => setShareIssueId(issue.id)}
-                            className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded border border-brand/25 bg-brand-soft text-brand-ink hover:bg-brand/15"
+                            className="inline-flex items-center gap-1.5 min-h-10 text-xs font-semibold px-3 rounded border border-brand/25 bg-brand-soft text-brand-ink hover:bg-brand/15"
                             title="Share ke developer"
                           >
-                            <Link2 size={12} /> Share
+                            <Link2 size={14} /> Share
                           </button>
                           <select
                             value={issue.status}
                             onChange={(e) => handleStatusChange(issue.id, e.target.value)}
-                            className="text-xs px-2 py-1 rounded border border-surface-border bg-surface text-ink"
+                            className="min-h-10 text-xs px-2.5 py-2 rounded border border-surface-border bg-surface text-ink"
                           >
                             {STATUS_OPTIONS.map((s) => (
                               <option key={s} value={s}>{s.replace('_', ' ')}</option>

@@ -94,6 +94,9 @@ export default function Layout({ children, showFolderPane = false, onFolderSelec
   /** On compact screens, expanded nav is an overlay — in-flow rail stays icon-only. */
   const inFlowExpanded = sidebarExpanded && !isCompact
   const overlayNavOpen = sidebarExpanded && isCompact
+  /** Folder pane: overlay on compact (don't crush main); push layout on xl+. */
+  const overlayFolderOpen = folderPaneVisible && folderPaneOpen && isCompact
+  const inFlowFolderOpen = folderPaneVisible && folderPaneOpen && !isCompact
   const showNavLabels = sidebarExpanded
 
   useEffect(() => {
@@ -360,10 +363,11 @@ export default function Layout({ children, showFolderPane = false, onFolderSelec
           ) : (
             <div
               role="menu"
-              className="fixed z-[80] w-56 max-h-[min(70vh,24rem)] overflow-y-auto rounded-lg border border-surface-border bg-white shadow-xl py-1"
+              className="fixed z-[80] w-56 overflow-y-auto rounded-lg border border-surface-border bg-white shadow-xl py-1"
               style={{
                 left: '3.75rem',
-                bottom: '5.5rem',
+                bottom: 'max(1rem, env(safe-area-inset-bottom, 0px))',
+                maxHeight: 'min(70vh, calc(100dvh - 2rem))',
               }}
             >
               {renderToolLinks({ onNavigate, labels: false })}
@@ -480,7 +484,7 @@ export default function Layout({ children, showFolderPane = false, onFolderSelec
             aria-label={sidebarExpanded ? 'Collapse sidebar' : 'Expand sidebar'}
             aria-expanded={sidebarExpanded}
             onClick={toggleSidebar}
-            className="w-8 h-8 rounded-md flex items-center justify-center text-white/60 hover:bg-white/10 hover:text-white shrink-0"
+            className="w-10 h-10 rounded-md flex items-center justify-center text-white/60 hover:bg-white/10 hover:text-white shrink-0"
           >
             {sidebarExpanded ? <PanelLeftClose size={16} /> : <PanelLeftOpen size={16} />}
           </button>
@@ -566,7 +570,7 @@ export default function Layout({ children, showFolderPane = false, onFolderSelec
                 type="button"
                 title="Collapse sidebar"
                 onClick={() => setSidebarExpanded(false)}
-                className="w-8 h-8 rounded-md flex items-center justify-center text-white/60 hover:bg-white/10 hover:text-white"
+                className="w-10 h-10 rounded-md flex items-center justify-center text-white/60 hover:bg-white/10 hover:text-white"
               >
                 <PanelLeftClose size={16} />
               </button>
@@ -579,21 +583,45 @@ export default function Layout({ children, showFolderPane = false, onFolderSelec
         </>
       )}
 
-      {/* Folder pane: push layout — collapsible on all breakpoints */}
-      {folderPaneVisible && (
+      {/* Folder pane overlay on compact — does not crush main content */}
+      {overlayFolderOpen && (
+        <>
+          <button
+            type="button"
+            className="fixed inset-0 z-40 bg-ink/40 border-0 cursor-default"
+            aria-label="Close folders"
+            onClick={() => setFolderPaneOpen(false)}
+          />
+          <aside
+            className="folder-pane fixed inset-y-0 left-14 z-50 w-[min(16rem,calc(100vw-3.5rem))] bg-surface-sidebar border-r border-surface-border shadow-2xl overflow-y-auto"
+            data-folder-pane
+          >
+            <ScenarioFolderTree
+              onSelectionChange={(key) => {
+                onFolderSelectionChange?.(key)
+                setFolderPaneOpen(false)
+              }}
+              onDropScenario={handleFolderDrop}
+              onCollapse={() => setFolderPaneOpen(false)}
+            />
+          </aside>
+        </>
+      )}
+
+      {/* Folder pane: in-flow push on desktop only */}
+      {folderPaneVisible && !isCompact && (
         <aside
           className={[
             'folder-pane shrink-0 z-20 bg-surface-sidebar border-r border-surface-border overflow-hidden',
             'transition-[width] duration-200 ease-out',
-            folderPaneOpen ? 'w-[min(16rem,75vw)] xl:w-64' : 'w-0',
+            inFlowFolderOpen ? 'w-64' : 'w-0',
           ].join(' ')}
           data-folder-pane
         >
-          <div className="w-[min(16rem,75vw)] xl:w-64 h-full overflow-y-auto">
+          <div className="w-64 h-full overflow-y-auto">
             <ScenarioFolderTree
               onSelectionChange={(key) => {
                 onFolderSelectionChange?.(key)
-                if (isCompact) setFolderPaneOpen(false)
               }}
               onDropScenario={handleFolderDrop}
               onCollapse={() => setFolderPaneOpen(false)}
@@ -604,16 +632,16 @@ export default function Layout({ children, showFolderPane = false, onFolderSelec
 
       {/* Main */}
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
-        <header className="flex items-center justify-between px-3 sm:px-4 py-2.5 shrink-0 app-header-bar gap-2">
+        <header className="flex items-center justify-between px-3 sm:px-4 py-2.5 shrink-0 app-header-bar gap-2 pt-[max(0.625rem,env(safe-area-inset-top,0px))]">
           <div className="flex items-center gap-2 min-w-0">
             {folderPaneVisible && (
               <button
                 type="button"
-                className="inline-flex items-center gap-1.5 px-2 py-1 text-xs rounded-md border border-surface-border text-ink-muted hover:text-ink hover:bg-surface-muted shrink-0"
+                className="inline-flex items-center justify-center gap-1.5 min-h-10 min-w-10 sm:min-w-0 sm:px-3 px-2 text-xs rounded-md border border-surface-border text-ink-muted hover:text-ink hover:bg-surface-muted shrink-0"
                 onClick={toggleFolderPane}
                 title={folderPaneOpen ? 'Sembunyikan feature folders' : 'Tampilkan feature folders'}
               >
-                {folderPaneOpen ? <PanelLeftClose size={14} /> : <PanelLeftOpen size={14} />}
+                {folderPaneOpen ? <PanelLeftClose size={16} /> : <PanelLeftOpen size={16} />}
                 <span className="hidden sm:inline">{folderPaneOpen ? 'Hide folders' : 'Folders'}</span>
               </button>
             )}
@@ -624,7 +652,7 @@ export default function Layout({ children, showFolderPane = false, onFolderSelec
             <div className="relative">
               <button
                 onClick={() => setUserMenuOpen(!userMenuOpen)}
-                className="w-8 h-8 rounded-full bg-brand flex items-center justify-center text-white text-[11px] font-bold hover:bg-brand-hover overflow-hidden"
+                className="w-10 h-10 rounded-full bg-brand flex items-center justify-center text-white text-xs font-bold hover:bg-brand-hover overflow-hidden"
                 title={user?.name || 'User'}
               >
                 {profilePicture ? (
