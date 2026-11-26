@@ -209,7 +209,7 @@ const translations = {
       { number: 1, title: 'Navigate to Security Test', description: 'Tools → Suites → Security Test (Admin)' },
       { number: 2, title: 'Select Case', description: 'Choose a case marked for security testing' },
       { number: 3, title: 'Choose Scan Type', description: 'Full scan covers OWASP A01–A10; Custom picks checks' },
-      { number: 4, title: 'For Custom Scan', description: 'Select OWASP-aligned checks (injection, headers, SSRF, etc.)' }
+      { number: 4, title: 'For Custom Scan', description: 'Select OWASP-aligned checks (injection, headers, SSRF, etc.)' },
       { number: 5, title: 'Configure Scan Settings', description: 'Adjust timeout, request rate, and other parameters if needed' },
       { number: 6, title: 'Start Security Scan', description: 'Click "Mulai Scanning" button. Scan will run and test for vulnerabilities' },
       { number: 7, title: 'Monitor Scan Progress', description: 'Watch as scan runs through different check categories and endpoints' },
