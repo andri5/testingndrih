@@ -1,6 +1,7 @@
 import express from 'express'
 import { registerUser, loginUser, getCurrentUser, forgotPassword, validateResetToken, resetPassword } from '../controllers/authController.js'
 import { authenticateToken } from '../middleware/auth.js'
+import { rejectSqlInjection } from '../middleware/sqlInjectionGuard.js'
 
 const router = express.Router()
 
@@ -28,7 +29,7 @@ const router = express.Router()
  *       400:
  *         description: Validation error or email already exists
  */
-router.post('/register', registerUser)
+router.post('/register', rejectSqlInjection({ body: ['email', 'name'] }), registerUser)
 
 /**
  * @swagger
@@ -65,7 +66,7 @@ router.post('/register', registerUser)
  *       401:
  *         description: Invalid credentials
  */
-router.post('/login', loginUser)
+router.post('/login', rejectSqlInjection({ body: ['email'] }), loginUser)
 
 /**
  * @swagger
@@ -103,7 +104,7 @@ router.get('/me', authenticateToken, getCurrentUser)
  *       400:
  *         description: Email is required
  */
-router.post('/forgot-password', forgotPassword)
+router.post('/forgot-password', rejectSqlInjection({ body: ['email'] }), forgotPassword)
 
 /**
  * @swagger

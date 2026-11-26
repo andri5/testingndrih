@@ -5,6 +5,7 @@ import { AlertCircle, Eye, EyeOff, Loader2 } from 'lucide-react'
 import TurnstileWidget from '../components/TurnstileWidget'
 import { useTurnstileSiteKey } from '../hooks/useTurnstileSiteKey'
 import { validateEmail, validateFullName, NAME_MAX_LENGTH } from '../utils/validation'
+import { findSqlInjectionInForm, SQLI_REJECT_MESSAGE } from '../utils/sqlInjectionGuard'
 import AuthPageHeader from '../components/AuthPageHeader'
 
 const translations = {
@@ -113,6 +114,9 @@ export default function RegisterPage() {
 
     const emailError = validateEmail(email, validationMessages)
     if (emailError) { setLocalError(emailError); return }
+
+    const sqliHit = findSqlInjectionInForm({ name, email })
+    if (sqliHit) { setLocalError(SQLI_REJECT_MESSAGE); return }
 
     if (!password || !confirmPassword) { setLocalError(t.fieldRequired); return }
     if (!allRulesPassed) { setLocalError(t.passwordNotMeet); return }

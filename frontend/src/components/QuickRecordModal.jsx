@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Button, Spinner } from './ui'
 import { scenarioAPI, recorderAPI } from '../services/api'
+import { findSqlInjectionInForm, SQLI_REJECT_MESSAGE } from '../utils/sqlInjectionGuard'
 
 const PHASE = {
   FORM: 'form',
@@ -161,6 +162,11 @@ export function QuickRecordModal({ onClose, onFinished, folderId = null }) {
     const trimmedUrl = url.trim()
     if (!trimmedUrl) {
       setError('URL is required')
+      return
+    }
+
+    if (findSqlInjectionInForm({ url: trimmedUrl, name: customName })) {
+      setError(SQLI_REJECT_MESSAGE)
       return
     }
 

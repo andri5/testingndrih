@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom'
 import { MessageSquare, Send, CheckCircle2 } from 'lucide-react'
 import { siteAPI } from '../../services/api'
 import { getPublicLang } from '../../utils/landingRoutes'
+import { findSqlInjectionInForm, SQLI_REJECT_MESSAGE } from '../../utils/sqlInjectionGuard'
 
 export default function LandingFeedbackSection({ t, lang: langProp }) {
   const { pathname } = useLocation()
@@ -17,6 +18,11 @@ export default function LandingFeedbackSection({ t, lang: langProp }) {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError(null)
+    const sqli = findSqlInjectionInForm({ name, email, message })
+    if (sqli) {
+      setError(SQLI_REJECT_MESSAGE)
+      return
+    }
     setSubmitting(true)
     try {
       await siteAPI.submitFeedback({

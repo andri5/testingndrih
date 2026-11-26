@@ -6,6 +6,7 @@ import toast from 'react-hot-toast'
 import { Bug, Plus, RefreshCw, Link2, Paperclip, Trash2, FileText } from 'lucide-react'
 import ShareBugModal from '../components/ShareBugModal'
 import { filesFromClipboardOrDrop } from '../utils/clipboardFiles'
+import { findSqlInjectionInForm, SQLI_REJECT_MESSAGE } from '../utils/sqlInjectionGuard'
 
 const STATUS_OPTIONS = ['OPEN', 'IN_PROGRESS', 'CLOSED']
 const SEVERITY_OPTIONS = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']
@@ -114,6 +115,10 @@ export default function IssuesPage() {
     e.preventDefault()
     if (!form.title.trim()) {
       toast.error('Judul bug wajib diisi')
+      return
+    }
+    if (findSqlInjectionInForm({ title: form.title, description: form.description })) {
+      toast.error(SQLI_REJECT_MESSAGE)
       return
     }
     try {

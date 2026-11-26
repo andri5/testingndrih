@@ -1,5 +1,6 @@
 import express from 'express'
 import { authenticateToken } from '../middleware/auth.js'
+import { rejectSqlInjection } from '../middleware/sqlInjectionGuard.js'
 import {
   searchScenariosHandler,
   getScenariosByDateHandler,
@@ -17,7 +18,7 @@ router.use(authenticateToken)
  * Search scenarios with filters
  * GET /api/search?query=test&orderBy=name&orderDirection=asc&skip=0&take=20&startDate=2024-01-01&endDate=2024-12-31
  */
-router.get('/', searchScenariosHandler)
+router.get('/', rejectSqlInjection({ query: ['query', 'q', 'search'] }), searchScenariosHandler)
 
 /**
  * Get scenarios grouped by date
@@ -41,6 +42,6 @@ router.get('/most-executed', getMostExecutedScenariosHandler)
  * Advanced filter scenarios
  * GET /api/search/filter?minSteps=1&maxSteps=10&minExecutions=5&searchText=login&skip=0&take=20
  */
-router.get('/filter', filterScenariosHandler)
+router.get('/filter', rejectSqlInjection({ query: ['searchText', 'query', 'q'] }), filterScenariosHandler)
 
 export default router

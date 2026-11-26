@@ -5,6 +5,7 @@ import { userAPI } from '../services/api'
 import { useAuthStore } from '../store/authStore'
 import UserMenuAssignment, { MenuAssignButton } from './UserMenuAssignment'
 import { ROLE_DEFINITIONS, ROLE_MENU_SUMMARY, roleLabel } from '../constants/roles'
+import { findSqlInjectionInForm, SQLI_REJECT_MESSAGE } from '../utils/sqlInjectionGuard'
 
 const emptyForm = {
   name: '',
@@ -148,6 +149,12 @@ export default function UserManagement() {
     setSaving(true)
     setError(null)
     setSuccess(null)
+
+    if (findSqlInjectionInForm({ name: formData.name, email: formData.email })) {
+      setError(SQLI_REJECT_MESSAGE)
+      setSaving(false)
+      return
+    }
 
     try {
       if (formMode === 'create') {

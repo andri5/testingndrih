@@ -5,6 +5,7 @@ import { scenarioAPI, apiTestAPI, environmentAPI } from '../services/api'
 import { useSettingsStore } from '../store/settingsStore'
 import toast from 'react-hot-toast'
 import { Play, Plus, Trash2, Globe } from 'lucide-react'
+import { findSqlInjectionInForm, SQLI_REJECT_MESSAGE } from '../utils/sqlInjectionGuard'
 
 const METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD']
 
@@ -87,6 +88,10 @@ export default function ApiTestingPage() {
 
   const handleCreate = async (e) => {
     e.preventDefault()
+    if (findSqlInjectionInForm({ name: form.name, url: form.url })) {
+      toast.error(SQLI_REJECT_MESSAGE)
+      return
+    }
     try {
       const payload = {
         name: form.name,

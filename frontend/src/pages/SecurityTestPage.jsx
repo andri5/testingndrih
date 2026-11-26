@@ -4,9 +4,10 @@ import SecurityScanRunner from '../components/security/SecurityScanRunner'
 import SecurityFindings from '../components/security/SecurityFindings'
 import SecuritySummary from '../components/security/SecuritySummary'
 import SecurityHistory from '../components/security/SecurityHistory'
+import OwaspCoveragePanel from '../components/security/OwaspCoveragePanel'
 import ExportButtons from '../components/ExportButtons'
 import Layout from '../components/Layout'
-import { Shield, AlertCircle, Loader, Lock, Bug, Code, Zap, Key } from 'lucide-react'
+import { Shield, AlertCircle, Loader } from 'lucide-react'
 import { analyzeSecurityTestResults } from '../utils/testAnalysis'
 
 const i18n = {
@@ -15,9 +16,9 @@ const i18n = {
     selectScenario: 'Select Scenario',
     noScenarios: 'No scenarios marked for security testing',
     aboutTitle: '🔐 About Security Tests',
-    feature1: 'Test for SQL Injection, XSS, Command Injection vulnerabilities',
-    feature2: 'Validate authentication and authorization mechanisms',
-    feature3: 'Check security headers and SSL/TLS configuration',
+    feature1: 'OWASP Top 10:2021 coverage (A01–A10) mapped on every scan',
+    feature2: 'Injection, XSS, auth failures, SSRF, misconfig, and more',
+    feature3: 'Live security-header probe + SSL/TLS checks',
     feature4: 'CVSS scoring for risk assessment',
     feature5: 'Detailed remediation recommendations',
     feature6: 'Track findings and remediation status',
@@ -264,12 +265,15 @@ export default function SecurityTestPage() {
           )}
         </div>
 
-        {/* History Sidebar */}
-        {selectedScenario && (
-          <div className="lg:col-span-1">
-            <SecurityHistory scenario={selectedScenario} />
-          </div>
-        )}
+        {/* History + OWASP Sidebar */}
+        <div className="lg:col-span-1 space-y-4">
+          <OwaspCoveragePanel
+            findings={findings}
+            categoryCounts={!findings.length ? summaryData?.owaspByCategory : null}
+            title="OWASP Top 10:2021"
+          />
+          {selectedScenario && <SecurityHistory scenario={selectedScenario} />}
+        </div>
       </div>
       </div>
     </Layout>

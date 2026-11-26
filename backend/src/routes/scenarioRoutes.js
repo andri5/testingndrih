@@ -21,6 +21,7 @@ import {
   bulkAssignOwnerHandler,
 } from '../controllers/scenarioController.js'
 import { authenticateToken } from '../middleware/auth.js'
+import { rejectSqlInjection } from '../middleware/sqlInjectionGuard.js'
 import { MAX_FILE_BYTES } from '../services/scenarioAttachmentService.js'
 import testStepRoutes from './testStepRoutes.js'
 
@@ -37,13 +38,13 @@ router.use(authenticateToken)
  * POST /api/scenarios
  * Create a new scenario
  */
-router.post('/', createScenarioHandler)
+router.post('/', rejectSqlInjection({ body: ['name', 'description', 'url'] }), createScenarioHandler)
 
 /**
  * GET /api/scenarios
  * Get all scenarios for authenticated user
  */
-router.get('/', getScenarioListHandler)
+router.get('/', rejectSqlInjection({ query: ['search', 'query', 'q', 'tag'] }), getScenarioListHandler)
 
 /**
  * POST /api/scenarios/move
@@ -94,7 +95,7 @@ router.get('/:id/history', getScenarioHistoryHandler)
  * PUT /api/scenarios/:id
  * Update a scenario
  */
-router.put('/:id', updateScenarioHandler)
+router.put('/:id', rejectSqlInjection({ body: ['name', 'description', 'url'] }), updateScenarioHandler)
 
 router.patch('/:id/favorite', toggleFavoriteHandler)
 router.patch('/:id/tags', updateTagsHandler)

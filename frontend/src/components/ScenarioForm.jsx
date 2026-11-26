@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Button, Input, Alert } from './ui'
+import { findSqlInjectionInForm, SQLI_REJECT_MESSAGE } from '../utils/sqlInjectionGuard'
 
 function normalizeUrlInput(value) {
   const trimmed = String(value || '').trim()
@@ -51,6 +52,14 @@ export function ScenarioForm({ onSubmit, initialScenario = null, isLoading = fal
       if (!isValidUrl(normalized)) {
         newErrors.url = 'Please enter a valid URL (e.g. https://example.com)'
       }
+    }
+    const sqli = findSqlInjectionInForm({
+      name: formData.name,
+      description: formData.description,
+      url: formData.url,
+    })
+    if (sqli) {
+      newErrors[sqli.field] = SQLI_REJECT_MESSAGE
     }
     return newErrors
   }

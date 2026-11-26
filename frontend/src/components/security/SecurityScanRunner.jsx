@@ -22,12 +22,18 @@ export default function SecurityScanRunner({ scenario, onScanComplete }) {
   const [progress, setProgress] = useState(0)  const t = i18n
 
   const vulnerabilityTypes = [
-    { id: 'SQL_INJECTION', name: 'SQL Injection', severity: 'CRITICAL' },
-    { id: 'XSS', name: 'Cross-Site Scripting', severity: 'MEDIUM' },
-    { id: 'COMMAND_INJECTION', name: 'Command Injection', severity: 'CRITICAL' },
-    { id: 'WEAK_AUTHENTICATION', name: 'Weak Authentication', severity: 'HIGH' },
-    { id: 'MISSING_SECURITY_HEADERS', name: 'Missing Headers', severity: 'MEDIUM' },
-    { id: 'SSL_TLS_MISCONFIGURATION', name: 'SSL/TLS Issues', severity: 'HIGH' }
+    { id: 'BROKEN_ACCESS_CONTROL', name: 'Broken Access Control (A01)', severity: 'HIGH' },
+    { id: 'SSL_TLS_MISCONFIGURATION', name: 'Crypto / SSL-TLS (A02)', severity: 'HIGH' },
+    { id: 'SQL_INJECTION', name: 'SQL Injection (A03)', severity: 'CRITICAL' },
+    { id: 'XSS', name: 'Cross-Site Scripting (A03)', severity: 'MEDIUM' },
+    { id: 'COMMAND_INJECTION', name: 'Command Injection (A03)', severity: 'CRITICAL' },
+    { id: 'INSECURE_DESIGN', name: 'Insecure Design (A04)', severity: 'MEDIUM' },
+    { id: 'MISSING_SECURITY_HEADERS', name: 'Misconfiguration / Headers (A05)', severity: 'MEDIUM' },
+    { id: 'OUTDATED_COMPONENT', name: 'Outdated Components (A06)', severity: 'MEDIUM' },
+    { id: 'WEAK_AUTHENTICATION', name: 'Auth Failures (A07)', severity: 'HIGH' },
+    { id: 'INSECURE_DESERIALIZATION', name: 'Integrity Failures (A08)', severity: 'CRITICAL' },
+    { id: 'LOGGING_FAILURE', name: 'Logging Failures (A09)', severity: 'LOW' },
+    { id: 'SSRF', name: 'SSRF (A10)', severity: 'HIGH' },
   ]
 
   const handleRunScan = async () => {

@@ -80,19 +80,28 @@ cd backend && npm run test:all
 
 ---
 
-## 2. In-app security scanner (Admin)
+## 2. In-app security scanner (OWASP Top 10:2021)
 
-Fitur produk untuk scan kerentanan umum pada **target URL** scenario.
+Fitur produk untuk scan kerentanan umum pada **target URL** scenario, dengan mapping **OWASP Top 10:2021 (A01–A10)**.
 
 1. Login sebagai **ADMIN**
-2. Buka **Security Test** (`/security-test`)
-3. Pilih scenario → **Start Security Scan**
-4. Review findings (kategori OWASP Top 10)
+2. Buka **Security Test** (`/security-test`) — panel coverage OWASP di sidebar
+3. Atau **Admin → Security** (`/admin?tab=security`) untuk katalog coverage + breakdown finding
+4. Pilih scenario → **Start Security Scan** (Full = semua kategori)
+5. Review findings (tag `owasp10Category` + matriks A01–A10)
 
-**API:** `POST /api/security/scan` (admin-only)  
-**Backend:** `backend/src/services/securityTestService.js`
+**API:** `POST /api/security/scan` · `GET /api/security/summary` (termasuk `owaspByCategory`)  
+**Backend:** `backend/src/services/securityTestService.js`  
+**UI catalog:** `frontend/src/constants/owaspTop10.js`
 
-Scan mencakup simulasi: SQLi, XSS, auth bypass, command injection, security headers, SSL/TLS.
+Scan mencakup: A01 access control, A02 crypto/TLS, A03 injection/XSS, A04 design, A05 headers (live probe), A06 components, A07 auth, A08 integrity, A09 logging, A10 SSRF.
+
+**SQL injection (A03) — tiap form:**
+- Scanner menembak payload ke **setiap field FILL / form-like step** + query param URL target
+- Guard submit: `backend/src/utils/sqlInjectionGuard.js` + middleware di auth, search, feedback, scenarios, issues, users, environments, API tests
+- Frontend mirror: `frontend/src/utils/sqlInjectionGuard.js` di form login/register/search/dll.
+- Nilai step tes (`TestStep.value`) **tidak** di-block agar payload security case tetap bisa disimpan
+- Unit test guard: `backend/src/utils/__tests__/sqlInjectionGuard.test.js`
 
 ---
 

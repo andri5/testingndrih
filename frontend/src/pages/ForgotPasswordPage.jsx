@@ -3,9 +3,10 @@ import { Link } from 'react-router-dom'
 import { AlertCircle, Mail, Loader2, CheckCircle2 } from 'lucide-react'
 import api from '../services/api'
 import { validateEmail } from '../utils/validation'
+import { findSqlInjectionInForm, SQLI_REJECT_MESSAGE } from '../utils/sqlInjectionGuard'
 import AuthPageHeader from '../components/AuthPageHeader'
 
-const translations = {
+const translations = {
     title: 'Forgot Password?',
     subtitle: 'Enter your email to receive a password reset link.',
     emailLabel: 'Email Address',
@@ -67,6 +68,12 @@ export default function ForgotPasswordPage() {
     const emailError = validateEmail(email, validationMessages)
     if (emailError) {
       setError(emailError)
+      setLoading(false)
+      return
+    }
+
+    if (findSqlInjectionInForm({ email })) {
+      setError(SQLI_REJECT_MESSAGE)
       setLoading(false)
       return
     }

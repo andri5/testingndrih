@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Shield, ChevronDown, ChevronUp } from 'lucide-react'
-import Layout from '../components/Layout'
+import Layout from '../components/Layout'
 
 export default function SecurityTestHelpPage() {
   const [expandedSections, setExpandedSections] = useState({})  
@@ -179,23 +179,23 @@ export default function SecurityTestHelpPage() {
   )
 }
 
-const translations = {
+const translations = {
     title: '🔐 Security Testing Guide',
     description: 'Learn how to scan your application for security vulnerabilities and protect against threats',
     whatIs: 'What is a Security Test?',
-    whatIsDesc: `A Security Test scans your application for potential vulnerabilities and security weaknesses. It automatically detects common security issues like SQL injection, cross-site scripting (XSS), authentication flaws, and configuration issues. This helps you identify and fix security problems before attackers can exploit them.`,
+    whatIsDesc: `A Security Test scans your application for potential vulnerabilities mapped to the OWASP Top 10:2021 (A01–A10). It looks for injection, XSS, auth failures, misconfiguration, SSRF, and related issues so you can remediate before attackers exploit them.`,
     whatIsTips: [
-      'Detects common vulnerability types (SQL injection, XSS, etc.)',
-      'Identifies authentication and authorization flaws',
-      'Checks for insecure configurations',
+      'OWASP Top 10:2021 coverage matrix on every scan',
+      'Injection, XSS, access control, SSRF, headers, auth',
+      'Findings tagged with OWASP category + CVSS',
       'Reports severity levels (Critical, High, Medium, Low)'
     ],
     scanTypes: 'Scan Types Available',
     scanTypeDetails: [
-      { name: '🟢 Quick Scan', coverage: 'Coverage: Basic vulnerability checks', time: 'Duration: ~2-5 minutes' },
-      { name: '🟡 Standard Scan', coverage: 'Coverage: Common vulnerabilities + deep checks', time: 'Duration: ~10-15 minutes' },
-      { name: '🔴 Full Scan', coverage: 'Coverage: All vulnerability types + performance checks', time: 'Duration: ~30+ minutes' },
-      { name: '⚙️ Custom Scan', coverage: 'Coverage: Select specific checks', time: 'Duration: Depends on selection' }
+      { name: '🟢 Quick Scan', coverage: 'Coverage: Core OWASP checks', time: 'Duration: ~2-5 minutes' },
+      { name: '🟡 Standard Scan', coverage: 'Coverage: Common OWASP categories', time: 'Duration: ~10-15 minutes' },
+      { name: '🔴 Full Scan', coverage: 'Coverage: Full A01–A10 oriented checks', time: 'Duration: ~30+ minutes' },
+      { name: '⚙️ Custom Scan', coverage: 'Coverage: Pick OWASP-aligned checks', time: 'Duration: Depends on selection' }
     ],
     vulnLevels: 'Vulnerability Severity Levels',
     vulnDetails: [
@@ -220,6 +220,7 @@ const translations = {
     results: 'Understanding Scan Results',
     resultDetails: [
       { label: 'Vulnerability Name', description: 'The type of vulnerability found (e.g., SQL Injection, XSS, Missing Authentication)' },
+      { label: 'OWASP Category', description: 'Mapped OWASP Top 10:2021 category (A01–A10)' },
       { label: 'Severity Level', description: 'Critical, High, Medium, or Low - indicates how serious the issue is' },
       { label: 'CVSS Score', description: 'Common Vulnerability Scoring System score (0-10) - higher means more severe' },
       { label: 'Affected Endpoint', description: 'Which API endpoint or page is vulnerable' },

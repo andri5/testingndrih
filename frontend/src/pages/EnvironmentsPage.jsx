@@ -5,6 +5,7 @@ import { environmentAPI } from '../services/api'
 import { useSettingsStore } from '../store/settingsStore'
 import toast from 'react-hot-toast'
 import { Layers, Plus, Trash2, Key, Star } from 'lucide-react'
+import { findSqlInjectionInForm, SQLI_REJECT_MESSAGE } from '../utils/sqlInjectionGuard'
 
 const inputCls = 'w-full px-3 py-2 bg-[#0F0E11] border border-[#2D2D2F] rounded-lg text-[#E0E0E2] text-sm focus:outline-none focus:border-[#0F766E]'
 
@@ -78,6 +79,14 @@ export default function EnvironmentsPage() {
 
   const handleCreateEnv = async (e) => {
     e.preventDefault()
+    if (findSqlInjectionInForm({
+      name: envForm.name,
+      description: envForm.description,
+      baseUrl: envForm.baseUrl,
+    })) {
+      toast.error(SQLI_REJECT_MESSAGE)
+      return
+    }
     try {
       await environmentAPI.create(envForm)
       setEnvForm(emptyEnv)
@@ -114,6 +123,10 @@ export default function EnvironmentsPage() {
   const handleSaveVar = async (e) => {
     e.preventDefault()
     if (!selectedId) return
+    if (findSqlInjectionInForm({ key: varForm.key, value: varForm.value })) {
+      toast.error(SQLI_REJECT_MESSAGE)
+      return
+    }
     try {
       await environmentAPI.upsertVariable(selectedId, varForm)
       setVarForm(emptyVar)

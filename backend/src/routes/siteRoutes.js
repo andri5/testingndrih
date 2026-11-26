@@ -2,6 +2,7 @@ import { Router } from 'express'
 import rateLimit from 'express-rate-limit'
 import * as siteController from '../controllers/siteController.js'
 import { adminAuth } from '../middleware/adminAuth.js'
+import { rejectSqlInjection } from '../middleware/sqlInjectionGuard.js'
 
 const router = Router()
 
@@ -22,7 +23,12 @@ const feedbackLimiter = rateLimit({
 })
 
 router.post('/track', publicLimiter, siteController.trackPageView)
-router.post('/feedback', feedbackLimiter, siteController.submitFeedback)
+router.post(
+  '/feedback',
+  feedbackLimiter,
+  rejectSqlInjection({ body: ['name', 'email', 'message', 'page'] }),
+  siteController.submitFeedback
+)
 
 router.get('/feedback', ...adminAuth, siteController.listFeedback)
 router.get('/analytics', ...adminAuth, siteController.getAnalytics)

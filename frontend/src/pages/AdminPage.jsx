@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import Layout from '../components/Layout'
 import IntegrationsSettings from '../components/IntegrationsSettings'
 import UserManagement from '../components/UserManagement'
@@ -7,6 +7,8 @@ import AdminMenuAccess from '../components/AdminMenuAccess'
 import UserActivityLog from '../components/UserActivityLog'
 import SiteAnalytics from '../components/SiteAnalytics'
 import LandingFeedbackAdmin from '../components/landing/LandingFeedbackAdmin'
+import OwaspCoveragePanel from '../components/security/OwaspCoveragePanel'
+import apiClient from '../services/api'
 
 const cardCls = 'bg-[#1A1A1C] border border-[#2D2D2F] rounded-xl p-6'
 const sectionTitleCls = 'text-sm font-semibold text-[#E0E0E2] uppercase tracking-wider mb-4'
@@ -16,6 +18,7 @@ const TABS = [
   { id: 'menus', label: 'Menus' },
   { id: 'integrations', label: 'Integrations' },
   { id: 'activity', label: 'Activity' },
+  { id: 'security', label: 'Security' },
   { id: 'site', label: 'Site' },
 ]
 
@@ -24,11 +27,28 @@ export default function AdminPage() {
   const tabFromUrl = searchParams.get('tab')
   const initial = TABS.some((t) => t.id === tabFromUrl) ? tabFromUrl : 'users'
   const [activeTab, setActiveTab] = useState(initial)
+  const [securitySummary, setSecuritySummary] = useState(null)
 
   useEffect(() => {
     const next = TABS.some((t) => t.id === tabFromUrl) ? tabFromUrl : 'users'
     setActiveTab(next)
   }, [tabFromUrl])
+
+  useEffect(() => {
+    if (activeTab !== 'security') return
+    let cancelled = false
+    ;(async () => {
+      try {
+        const res = await apiClient.get('/security/summary')
+        if (!cancelled) setSecuritySummary(res.data.data)
+      } catch {
+        if (!cancelled) setSecuritySummary(null)
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [activeTab])
 
   const selectTab = (id) => {
     setActiveTab(id)
@@ -41,7 +61,7 @@ export default function AdminPage() {
         <div>
           <h1 className="text-xl font-semibold text-[#E0E0E2]">Admin</h1>
           <p className="text-sm text-[#666] mt-0.5">
-            Users, menus, integrations, and site tools — separate from personal Settings.
+            Users, menus, integrations, OWASP security, and site tools — separate from personal Settings.
           </p>
         </div>
 
@@ -95,6 +115,47 @@ export default function AdminPage() {
                   Monitor what USER accounts are doing and their latest actions.
                 </p>
                 <UserActivityLog />
+              </div>
+            )}
+
+            {activeTab === 'security' && (
+              <div className="space-y-4">
+                <div className={cardCls}>
+                  <p className={sectionTitleCls}>OWASP Top 10</p>
+                  <p className="text-sm text-[#666] mb-4">
+                    Security Test maps findings ke OWASP Top 10:2021. Full scan
+                    menjalankan cek A01–A10 (simulasi + header probe). Suite
+                    Jest: <code className="text-[#A0A0A4]">npm run test:security</code>.
+                  </p>
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    <Link
+                      to="/security-test"
+                      className="inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium bg-[#0F766E]/15 text-[#0F766E] hover:bg-[#0F766E]/25"
+                    >
+                      Buka Security Test
+                    </Link>
+                    <a
+                      href="https://owasp.org/Top10/"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium text-[#A0A0A4] border border-[#2D2D2F] hover:text-[#E0E0E2]"
+                    >
+                      owasp.org/Top10
+                    </a>
+                  </div>
+                  {securitySummary ? (
+                    <p className="text-xs text-[#666] mb-3">
+                      Scans selesai: {securitySummary.totalScans || 0} · Critical:{' '}
+                      {securitySummary.criticalFindings || 0} · High:{' '}
+                      {securitySummary.highFindings || 0}
+                    </p>
+                  ) : null}
+                </div>
+                <OwaspCoveragePanel mode="catalog" title="Scanner coverage (A01–A10)" />
+                <OwaspCoveragePanel
+                  categoryCounts={securitySummary?.owaspByCategory}
+                  title="Finding breakdown (akun ini)"
+                />
               </div>
             )}
 

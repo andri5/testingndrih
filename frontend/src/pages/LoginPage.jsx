@@ -5,6 +5,7 @@ import { CheckCircle2, AlertCircle, Eye, EyeOff, Loader2 } from 'lucide-react'
 import TurnstileWidget from '../components/TurnstileWidget'
 import { useTurnstileSiteKey } from '../hooks/useTurnstileSiteKey'
 import { validateEmail } from '../utils/validation'
+import { findSqlInjectionInForm, SQLI_REJECT_MESSAGE } from '../utils/sqlInjectionGuard'
 import AuthPageHeader from '../components/AuthPageHeader'
 
 const translations = {
@@ -73,6 +74,12 @@ export default function LoginPage() {
     const emailError = validateEmail(email, validationMessages)
     if (emailError) {
       setLocalError(emailError)
+      return
+    }
+
+    const sqli = findSqlInjectionInForm({ email })
+    if (sqli) {
+      setLocalError(SQLI_REJECT_MESSAGE)
       return
     }
 

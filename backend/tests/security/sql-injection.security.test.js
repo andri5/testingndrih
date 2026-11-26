@@ -73,10 +73,15 @@ describe('SQL Injection Security Tests', () => {
         }
       )
 
-      expect(response.status).toBe(200)
-      const data = await response.json()
-      // Should return array safely
-      expect(Array.isArray(data) || data.scenarios !== undefined).toBe(true)
+      // 200 = handled safely via parameterized query; 400 = rejected by SQLi guard
+      expect([200, 400]).toContain(response.status)
+      if (response.status === 200) {
+        const data = await response.json()
+        expect(Array.isArray(data) || data.scenarios !== undefined).toBe(true)
+      } else {
+        const data = await response.json()
+        expect(data.code === 'SQL_INJECTION_REJECTED' || data.success === false).toBe(true)
+      }
     })
 
     test('should prevent SQL injection in ID parameter', async () => {

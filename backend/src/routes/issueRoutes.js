@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import multer from 'multer'
 import { authenticateToken } from '../middleware/auth.js'
+import { rejectSqlInjection } from '../middleware/sqlInjectionGuard.js'
 import {
   listHandler,
   getHandler,
@@ -21,9 +22,9 @@ const upload = multer({
 router.use(authenticateToken)
 
 router.get('/', listHandler)
-router.post('/', createHandler)
+router.post('/', rejectSqlInjection({ body: ['title', 'description'] }), createHandler)
 router.get('/:issueId', getHandler)
-router.patch('/:issueId', updateHandler)
+router.patch('/:issueId', rejectSqlInjection({ body: ['title', 'description'] }), updateHandler)
 
 router.post(
   '/:issueId/attachments',

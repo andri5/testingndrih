@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import { adminAuth } from '../middleware/adminAuth.js'
+import { rejectSqlInjection } from '../middleware/sqlInjectionGuard.js'
 import {
   listUsers,
   getUser,
@@ -23,10 +24,10 @@ router.get('/', listUsers)
 router.get('/activity/summary', getUserActivitySummary)
 router.get('/menus/defaults', getMenuDefaults)
 router.put('/menus/defaults', updateMenuDefaults)
-router.post('/', createUser)
+router.post('/', rejectSqlInjection({ body: ['email', 'name'] }), createUser)
 router.get('/:userId/activity', getUserActivityLog)
 router.get('/:userId', getUser)
-router.patch('/:userId', updateUser)
+router.patch('/:userId', rejectSqlInjection({ body: ['email', 'name'] }), updateUser)
 router.patch('/:userId/role', updateUserRole)
 router.patch('/:userId/active', setUserActive)
 router.patch('/:userId/menus', updateUserMenus)

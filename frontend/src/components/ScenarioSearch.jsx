@@ -3,6 +3,7 @@ import { Input } from './ui'
 import SoftSelect from './SoftSelect'
 import ExportFormatButton from './ExportFormatButton'
 import { Star } from 'lucide-react'
+import { looksLikeSqlInjection } from '../utils/sqlInjectionGuard'
 
 const FILTER_OPTIONS = [
   { value: 'all', label: 'All Cases' },
@@ -25,6 +26,8 @@ export function ScenarioSearch({
 
   const handleSearch = (value) => {
     setSearchText(value)
+    // Block obvious SQLi payloads from hitting the search API
+    if (looksLikeSqlInjection(value)) return
     onSearch(value)
   }
 
