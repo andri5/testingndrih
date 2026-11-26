@@ -19,29 +19,28 @@ import toast from 'react-hot-toast'
 const i18n = {
     title: 'Cases',
     subtitle:
-      '1 folder = 1 fitur · klik case untuk detail di kanan · edit steps di panel atau halaman penuh',
-    createScenarioBtn: 'Create Manual',
-    createMoreBtn: 'Lainnya',
+      '1 folder = 1 fitur · klik case → edit di panel kanan · buka halaman case untuk jalankan',
+    createScenarioBtn: 'New case',
+    createMoreBtn: 'New case',
     selectedCount: (n) => `${n} case${n !== 1 ? 's' : ''} selected`,
-    runningBulk: 'Running executions sequentially (headless)...',
+    runningBulk: 'Running cases sequentially (headless)...',
     close: 'Close',
     cancel: 'Cancel',
     quickRecordTitle: 'Enter URL → Start. One window records; steps appear in the modal.',
     templatesTitle: 'Create case from ready-made template',
-    // Secondary create options
-    createManual: 'Create Manual',
-    createManualDesc: 'Form-based creation',
-    createManualTooltip: 'Create a new case using the form. Fill in name, URL, and add steps manually.',
+    createBlank: 'Blank case',
+    createBlankDesc: 'Form name + URL, steps later',
+    createBlankTooltip: 'Create an empty case. Edit steps in the side panel after.',
     quickRecord: 'Quick Record',
     quickRecordDesc: '1 window · steps in modal',
-    quickRecordTooltip: 'Automation capture: one window records; live steps in the modal — Stop & Save when done.',
+    quickRecordTooltip: 'Capture steps from a real browser window — Stop & Save when done.',
     templates: 'Templates',
     templatesDesc: 'Pre-made templates',
-    templatesMenuTooltip: 'Choose from ready-made case templates (Login, E-Commerce, Navigation, Form Testing).',
+    templatesMenuTooltip: 'Ready-made case templates (Login, E-Commerce, Navigation, Form).',
     importExcel: 'Import Excel',
     importExcelDesc: 'Bulk import',
     importExcelTooltip:
-      'Upload Excel (.xlsx). Template mengikuti Manual QA: Feature Folder, Case Name, Precondition, Expected Result, Priority, steps. Ctrl+Click unduh template.',
+      'Upload Excel (.xlsx). Ctrl+Click to download the Manual QA template.',
 }
 
 export default function ScenariosPage() {
@@ -346,7 +345,7 @@ export default function ScenariosPage() {
 
   const handleDeleteScenario = async (scenarioOrId) => {
     const scenarioId = typeof scenarioOrId === 'object' ? scenarioOrId.id : scenarioOrId
-    if (!window.confirm('Delete this scenario?')) return
+    if (!window.confirm('Delete this case?')) return
     try {
       await deleteScenario(scenarioId)
       setSelectedIds(prev => { const n = new Set(prev); n.delete(scenarioId); return n })
@@ -604,16 +603,16 @@ export default function ScenariosPage() {
     selectedFolderKey === 'all'
       ? {
           title: 'Belum ada test case',
-          hint: 'Buat feature folder di sidebar (1 folder = 1 fitur), lalu Create Manual di dalamnya.',
+          hint: 'Buat feature folder di sidebar (1 folder = 1 fitur), lalu New case di dalamnya.',
         }
       : selectedFolderKey === 'unfiled'
         ? {
             title: 'Tidak ada case tanpa folder',
-            hint: 'Case di sini belum digabung ke fitur. Pindahkan ke feature folder, atau Create Manual.',
+            hint: 'Case di sini belum digabung ke fitur. Pindahkan ke feature folder, atau New case.',
           }
         : {
             title: `Belum ada test case di fitur “${folderLabel}”`,
-            hint: 'Create Manual akan menaruh case baru di fitur ini. Satu case = satu flow.',
+            hint: 'New case akan menaruh case baru di fitur ini. Satu case = satu flow.',
           }
 
   // ── Bulk Execute ─────────────────────────────────────────────────────────────
@@ -678,50 +677,40 @@ export default function ScenariosPage() {
                 }}
                 className="hidden"
               />
-              <ExportFormatButton
-                format="primary"
-                icon={Plus}
-                onClick={() => setShowCreateForm(true)}
-                className="text-sm !px-3 !py-2"
-                iconSize={16}
-                data-testid="create-scenario-btn"
-                title={t.createManualTooltip}
-              >
-                {t.createScenarioBtn}
-              </ExportFormatButton>
-
               <div className="relative">
                 <ExportFormatButton
-                  format="html"
-                  icon={ChevronDown}
+                  format="primary"
+                  icon={Plus}
                   onClick={() => setShowCreateMenu(!showCreateMenu)}
                   className="text-sm !px-3 !py-2"
                   iconSize={16}
-                  data-testid="create-more-btn"
+                  data-testid="create-scenario-btn"
+                  title="New case — blank, template, import, or record"
                 >
-                  {t.createMoreBtn}
+                  {t.createScenarioBtn}
+                  <ChevronDown size={14} className="ml-1 opacity-80" />
                 </ExportFormatButton>
 
                 {showCreateMenu && (
-                  <div className="absolute top-full right-0 mt-2 w-60 bg-white dark:bg-[#1F1E22] html.theme-light:bg-white border border-[#DDDDE0] dark:border-[rgba(255,255,255,0.12)] html.theme-light:border-[#DDDDE0] rounded-xl shadow-lg z-10 overflow-hidden p-1.5">
+                  <div className="absolute top-full right-0 mt-2 w-64 bg-white dark:bg-[#1F1E22] html.theme-light:bg-white border border-[#DDDDE0] dark:border-[rgba(255,255,255,0.12)] html.theme-light:border-[#DDDDE0] rounded-xl shadow-lg z-10 overflow-hidden p-1.5">
                     <button
                       type="button"
                       onClick={() => {
-                        setShowQuickRecord(true)
+                        setShowCreateForm(true)
                         setShowCreateMenu(false)
                       }}
-                      title={t.quickRecordTooltip}
+                      title={t.createBlankTooltip}
                       className="w-full px-2.5 py-2 text-left rounded-lg text-[#1A1A1C] dark:text-[#E0E0E2] hover:bg-[#F5F5F7] dark:hover:bg-[#2A2A2D] html.theme-light:hover:bg-[#F5F5F7] transition-colors flex items-center gap-2.5 group"
                     >
-                      <SoftIconBadge variant="csv" icon={Zap} />
+                      <SoftIconBadge variant="html" icon={Plus} />
                       <div className="flex-1 min-w-0">
                         <div className="text-sm font-medium flex items-center gap-1">
-                          {t.quickRecord}
-                          <Tooltip text={t.quickRecordTooltip} position="right">
+                          {t.createBlank}
+                          <Tooltip text={t.createBlankTooltip} position="right">
                             <HelpCircle size={13} className="text-[#999] opacity-0 group-hover:opacity-100 transition-opacity" />
                           </Tooltip>
                         </div>
-                        <div className="text-xs text-[#666] dark:text-[#A0A0A4]">{t.quickRecordDesc}</div>
+                        <div className="text-xs text-[#666] dark:text-[#A0A0A4]">{t.createBlankDesc}</div>
                       </div>
                     </button>
 
@@ -770,6 +759,27 @@ export default function ScenariosPage() {
                         <div className="text-xs text-[#666] dark:text-[#A0A0A4]">{t.importExcelDesc}</div>
                       </div>
                     </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowQuickRecord(true)
+                        setShowCreateMenu(false)
+                      }}
+                      title={t.quickRecordTooltip}
+                      className="w-full px-2.5 py-2 text-left rounded-lg text-[#1A1A1C] dark:text-[#E0E0E2] hover:bg-[#F5F5F7] dark:hover:bg-[#2A2A2D] html.theme-light:hover:bg-[#F5F5F7] transition-colors flex items-center gap-2.5 group mt-0.5"
+                    >
+                      <SoftIconBadge variant="csv" icon={Zap} />
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium flex items-center gap-1">
+                          {t.quickRecord}
+                          <Tooltip text={t.quickRecordTooltip} position="right">
+                            <HelpCircle size={13} className="text-[#999] opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </Tooltip>
+                        </div>
+                        <div className="text-xs text-[#666] dark:text-[#A0A0A4]">{t.quickRecordDesc}</div>
+                      </div>
+                    </button>
                   </div>
                 )}
               </div>
@@ -787,7 +797,7 @@ export default function ScenariosPage() {
           <Card>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
               <h2 className="text-xl font-bold text-[#E0E0E2]">
-                {editingScenario ? 'Edit Case' : 'Create Manual Case'}
+                {editingScenario ? 'Edit Case' : 'New blank case'}
               </h2>
               <div className="flex items-center gap-2">
                 <button
@@ -799,11 +809,11 @@ export default function ScenariosPage() {
             </div>
             {editingScenario ? (
               <p className="text-sm text-[#8A8A8F] mb-4 -mt-2">
-                Ubah <strong className="text-[#E0E0E2]">nama</strong>, deskripsi, dan URL target. Step tetap di halaman detail.
+                Ubah <strong className="text-[#E0E0E2]">nama</strong>, deskripsi, dan URL. Steps diedit di panel kanan.
               </p>
             ) : (
               <p className="text-sm text-[#8A8A8F] mb-4 -mt-2">
-                Isi nama skenario. URL boleh dikosongkan dulu — steps bisa ditambah manual di detail.
+                Isi nama case. URL boleh dikosongkan — tambah steps di panel setelah case dibuat.
               </p>
             )}
 
@@ -873,7 +883,7 @@ export default function ScenariosPage() {
                     disabled={bulkExecuteStatus === 'running'}
                     className="flex-1 sm:flex-none"
                   >
-                    ▶ Auto Run
+                    ▶ Run automated
                   </Button>
                   <Button variant="secondary" size="sm" onClick={handleBulkMove}>
                     <FolderInput size={14} className="inline mr-1" />

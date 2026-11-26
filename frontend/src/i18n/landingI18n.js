@@ -133,7 +133,7 @@ export const landingCopy = {
       { title: 'Analytics & CI', desc: 'Report, compare runs, API token pipeline, webhook & email saat gagal.' },
     ],
     steps: [
-      { title: 'Buat feature & case', text: 'Folder baru (mis. Login) → Create Manual di dalamnya. Atau template / import Excel.' },
+      { title: 'Buat feature & case', text: 'Folder baru (mis. Login) → New case di dalamnya. Atau template / import Excel.' },
       { title: 'Isi steps & expected', text: 'Tambah steps, expected result (+ gambar), precondition, priority, dan PIC.' },
       { title: 'Manual Run / Test Run', text: 'Checklist satu case, atau buat Test Run multi-case per fitur lalu seal hasilnya.' },
       { title: 'Otomasi & analisis', text: 'Switch Automated untuk Record/playback. Lihat report, compare runs, perbaiki locator.' },
@@ -229,7 +229,7 @@ export const landingCopy = {
       { title: 'Analytics & CI', desc: 'Reports, compare runs, pipeline API tokens, webhooks & email on failure.' },
     ],
     steps: [
-      { title: 'Create feature & case', text: 'New folder (e.g. Login) → Create Manual inside it. Or templates / Excel import.' },
+      { title: 'Create feature & case', text: 'New folder (e.g. Login) → New case inside it. Or templates / Excel import.' },
       { title: 'Add steps & expected', text: 'Write steps, expected result (+ images), precondition, priority, and PIC.' },
       { title: 'Manual Run / Test Run', text: 'Checklist one case, or start a multi-case Test Run by feature and seal results.' },
       { title: 'Automate & analyze', text: 'Switch Automated for Record/playback. View reports, compare runs, fix locators.' },

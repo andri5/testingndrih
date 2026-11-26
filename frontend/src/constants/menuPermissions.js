@@ -8,16 +8,23 @@ export const MENU_DEFINITIONS = [
   { key: 'reports', path: '/reports', group: 'main', labelId: 'Laporan', labelEn: 'Reports' },
   { key: 'analytics', path: '/analytics', group: 'main', labelId: 'Analytics', labelEn: 'Analytics' },
   { key: 'issues', path: '/issues', group: 'main', labelId: 'Bugs', labelEn: 'Bugs' },
-  { key: 'environments', path: '/environments', group: 'tools', labelId: 'Environment', labelEn: 'Environments' },
-  { key: 'visual-regression', path: '/visual-regression', group: 'tools', labelId: 'Visual Regression', labelEn: 'Visual Regression' },
-  { key: 'chains', path: '/chains', group: 'tools', labelId: 'Chains', labelEn: 'Chains' },
-  { key: 'api-testing', path: '/api-testing', group: 'tools', labelId: 'API Testing', labelEn: 'API Testing' },
-  { key: 'scheduler', path: '/scheduler', group: 'tools', labelId: 'Scheduler', labelEn: 'Scheduler' },
-  { key: 'parallel', path: '/parallel', group: 'tools', labelId: 'Parallel', labelEn: 'Parallel' },
-  { key: 'smoke-test', path: '/smoke-test', group: 'tools', labelId: 'Smoke Test', labelEn: 'Smoke Test' },
-  { key: 'stress-test', path: '/stress-test', group: 'tools', labelId: 'Stress Test', labelEn: 'Stress Test' },
-  { key: 'security-test', path: '/security-test', group: 'tools', labelId: 'Security Test', labelEn: 'Security Test' },
-  { key: 'browser-matrix', path: '/browser-matrix', group: 'tools', labelId: 'Browser Test', labelEn: 'Browser Test' },
+  { key: 'environments', path: '/environments', group: 'tools', toolsGroup: 'setup', labelId: 'Environment', labelEn: 'Environments' },
+  { key: 'visual-regression', path: '/visual-regression', group: 'tools', toolsGroup: 'automation', labelId: 'Visual Regression', labelEn: 'Visual Regression' },
+  { key: 'chains', path: '/chains', group: 'tools', toolsGroup: 'automation', labelId: 'Chains', labelEn: 'Chains' },
+  { key: 'api-testing', path: '/api-testing', group: 'tools', toolsGroup: 'automation', labelId: 'API Testing', labelEn: 'API Testing' },
+  { key: 'scheduler', path: '/scheduler', group: 'tools', toolsGroup: 'automation', labelId: 'Scheduler', labelEn: 'Scheduler' },
+  { key: 'parallel', path: '/parallel', group: 'tools', toolsGroup: 'automation', labelId: 'Parallel', labelEn: 'Parallel' },
+  { key: 'smoke-test', path: '/smoke-test', group: 'tools', toolsGroup: 'suites', labelId: 'Smoke Test', labelEn: 'Smoke Test' },
+  { key: 'stress-test', path: '/stress-test', group: 'tools', toolsGroup: 'suites', labelId: 'Stress Test', labelEn: 'Stress Test' },
+  { key: 'security-test', path: '/security-test', group: 'tools', toolsGroup: 'suites', labelId: 'Security Test', labelEn: 'Security Test' },
+  { key: 'browser-matrix', path: '/browser-matrix', group: 'tools', toolsGroup: 'automation', labelId: 'Browser Test', labelEn: 'Browser Test' },
+]
+
+/** Tools flyout section order */
+export const TOOLS_MENU_GROUPS = [
+  { id: 'setup', label: 'Setup' },
+  { id: 'suites', label: 'Suites' },
+  { id: 'automation', label: 'Automation' },
 ]
 
 export const ALL_MENU_KEYS = MENU_DEFINITIONS.map((m) => m.key)
@@ -25,7 +32,7 @@ export const ALL_MENU_KEYS = MENU_DEFINITIONS.map((m) => m.key)
 /** Menus temporarily hidden from the product (keep definition for later). */
 export const HIDDEN_MENU_KEYS = ['analytics', 'execution']
 
-/** Manual QA core path — Tools stay for ADMIN/LEAD */
+/** Manual QA core path — advanced Tools stay ADMIN-only (routes) */
 export const DEFAULT_USER_MENU_KEYS = [
   'dashboard',
   'scenarios',
@@ -34,10 +41,14 @@ export const DEFAULT_USER_MENU_KEYS = [
   'issues',
 ]
 
+export function toolsGroupForKey(key) {
+  return MENU_DEFINITIONS.find((m) => m.key === key)?.toolsGroup || 'automation'
+}
+
 const PATH_BY_KEY = Object.fromEntries(MENU_DEFINITIONS.map((m) => [m.key, m.path]))
 
 const ROLE_FALLBACK_BY_ROLE = {
-  LEAD: ALL_MENU_KEYS,
+  LEAD: [...DEFAULT_USER_MENU_KEYS, 'environments'],
   USER: DEFAULT_USER_MENU_KEYS,
   VIEWER: ['dashboard', 'scenarios', 'test-runs', 'reports', 'issues'],
 }

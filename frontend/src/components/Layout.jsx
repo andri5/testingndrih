@@ -5,6 +5,8 @@ import {
   resolveUserMenuKeys,
   pathToMenuKey,
   menuKeyToPath,
+  TOOLS_MENU_GROUPS,
+  toolsGroupForKey,
 } from '../constants/menuPermissions'
 import HelpModal from './HelpModal'
 import BrandLogo from './BrandLogo'
@@ -265,6 +267,57 @@ export default function Layout({ children, showFolderPane = false, onFolderSelec
     )
   }
 
+  const groupedToolItems = useMemo(() => {
+    return TOOLS_MENU_GROUPS.map((group) => ({
+      ...group,
+      items: toolItems.filter((item) => toolsGroupForKey(item.key) === group.id),
+    })).filter((g) => g.items.length > 0)
+  }, [toolItems])
+
+  const renderToolLinks = ({ onNavigate, labels }) =>
+    groupedToolItems.map((group) => (
+      <div key={group.id} className={labels ? 'space-y-0.5' : ''}>
+        <p
+          className={
+            labels
+              ? 'px-2.5 pt-2 pb-0.5 text-[10px] uppercase tracking-wider text-white/35'
+              : 'px-3 pt-2 pb-1 text-[10px] uppercase tracking-wider text-ink-subtle'
+          }
+        >
+          {group.label}
+        </p>
+        {group.items.map((item) => {
+          const Icon = item.icon
+          const isActive =
+            location.pathname === item.path || location.pathname.startsWith(item.path + '/')
+          return (
+            <Link
+              key={item.path}
+              role="menuitem"
+              to={item.path}
+              onClick={() => {
+                setToolsOpen(false)
+                onNavigate?.()
+              }}
+              className={
+                labels
+                  ? [
+                      'flex items-center gap-2 px-2.5 py-2 rounded-md text-sm transition-colors',
+                      isActive
+                        ? 'bg-brand/80 text-white'
+                        : 'text-white/65 hover:bg-white/10 hover:text-white',
+                    ].join(' ')
+                  : 'flex items-center gap-2.5 px-3 py-2 text-sm text-ink-muted hover:bg-surface-muted hover:text-ink'
+              }
+            >
+              <Icon size={labels ? 14 : 15} className={`shrink-0 ${labels ? '' : 'text-brand'}`} />
+              <span className="truncate">{item.name}</span>
+            </Link>
+          )
+        })}
+      </div>
+    ))
+
   const renderToolsMenu = ({ onNavigate, labels = false } = {}) => {
     if (toolItems.length === 0) return null
     return (
@@ -301,31 +354,8 @@ export default function Layout({ children, showFolderPane = false, onFolderSelec
         </button>
         {toolsOpen && (
           labels ? (
-            <div className="mt-1 ml-2 pl-2 border-l border-white/15 space-y-0.5 max-h-[min(40vh,16rem)] overflow-y-auto">
-              {toolItems.map((item) => {
-                const Icon = item.icon
-                const isActive =
-                  location.pathname === item.path || location.pathname.startsWith(item.path + '/')
-                return (
-                  <Link
-                    key={item.path}
-                    to={item.path}
-                    onClick={() => {
-                      setToolsOpen(false)
-                      onNavigate?.()
-                    }}
-                    className={[
-                      'flex items-center gap-2 px-2.5 py-2 rounded-md text-sm transition-colors',
-                      isActive
-                        ? 'bg-brand/80 text-white'
-                        : 'text-white/65 hover:bg-white/10 hover:text-white',
-                    ].join(' ')}
-                  >
-                    <Icon size={14} className="shrink-0" />
-                    <span className="truncate">{item.name}</span>
-                  </Link>
-                )
-              })}
+            <div className="mt-1 ml-2 pl-2 border-l border-white/15 space-y-1 max-h-[min(40vh,16rem)] overflow-y-auto">
+              {renderToolLinks({ onNavigate, labels: true })}
             </div>
           ) : (
             <div
@@ -336,24 +366,7 @@ export default function Layout({ children, showFolderPane = false, onFolderSelec
                 bottom: '5.5rem',
               }}
             >
-              {toolItems.map((item) => {
-                const Icon = item.icon
-                return (
-                  <Link
-                    key={item.path}
-                    role="menuitem"
-                    to={item.path}
-                    onClick={() => {
-                      setToolsOpen(false)
-                      onNavigate?.()
-                    }}
-                    className="flex items-center gap-2.5 px-3 py-2 text-sm text-ink-muted hover:bg-surface-muted hover:text-ink"
-                  >
-                    <Icon size={15} className="shrink-0 text-brand" />
-                    <span className="truncate">{item.name}</span>
-                  </Link>
-                )
-              })}
+              {renderToolLinks({ onNavigate, labels: false })}
             </div>
           )
         )}

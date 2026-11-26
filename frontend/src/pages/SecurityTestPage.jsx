@@ -13,8 +13,8 @@ import { analyzeSecurityTestResults } from '../utils/testAnalysis'
 const i18n = {
     title: 'Security Testing',
     description: 'Identify vulnerabilities through comprehensive security scanning',
-    selectScenario: 'Select Scenario',
-    noScenarios: 'No scenarios marked for security testing',
+    selectScenario: 'Select Case',
+    noScenarios: 'No cases marked for security testing',
     aboutTitle: '🔐 About Security Tests',
     feature1: 'OWASP Top 10:2021 coverage (A01–A10) mapped on every scan',
     feature2: 'Injection, XSS, auth failures, SSRF, misconfig, and more',
@@ -23,7 +23,7 @@ const i18n = {
     feature5: 'Detailed remediation recommendations',
     feature6: 'Track findings and remediation status',
     all: 'All',
-    loading: 'Loading scenarios...',
+    loading: 'Loading cases...',
     error: 'Error',
   
 }

@@ -260,7 +260,7 @@ export default function ScenarioRepositoryTable({
   emptyTitle = 'Belum ada test case',
   emptyHint = 'Buat case baru untuk fitur ini, lalu isi steps di detail.',
   onCreateEmpty,
-  createEmptyLabel = 'Create Manual',
+  createEmptyLabel = 'New case',
   reorderEnabled = false,
   compact = false,
 }) {

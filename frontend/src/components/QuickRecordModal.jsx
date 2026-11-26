@@ -413,7 +413,7 @@ export function QuickRecordModal({ onClose, onFinished, folderId = null }) {
 
             <div>
               <label className="block text-xs font-medium text-[#8A8A8F] mb-1.5 uppercase tracking-wider">
-                Nama Scenario <span className="text-[#444] normal-case">(opsional)</span>
+                Nama Case <span className="text-[#444] normal-case">(opsional)</span>
               </label>
               <input
                 type="text"

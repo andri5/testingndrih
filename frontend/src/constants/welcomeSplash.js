@@ -19,26 +19,26 @@ export const welcomeSplashContent = {
   tips: [
     {
       emoji: '1',
-      title: 'Create a scenario',
-      desc: 'Use Create Manual. Templates / Import Excel / Quick Record are under Lainnya.',
+      title: 'Create a case',
+      desc: 'Click New case → Blank, Template, Import, or Quick Record.',
     },
     {
       emoji: '2',
-      title: 'Add steps or Record',
-      desc: 'Open the scenario → Add Step or Record on the real site (client-direct).',
+      title: 'Edit steps in the panel',
+      desc: 'Click a case in the list → edit meta & steps in the right panel. Open full page to run.',
     },
     {
       emoji: '3',
       title: 'Run the right way',
-      desc: 'Public URLs: Run in the cloud. Internal/VPN staging: local backend or Queue local agent.',
+      desc: 'Manual checklist or automated run on the case page. Use Test Runs for multi-case cycles.',
     },
     {
       emoji: '4',
       title: 'Find your way around',
-      desc: 'Expand/collapse the left sidebar for labels. Open How to use anytime from the sidebar help icon.',
+      desc: 'Expand the left sidebar for labels. How to use is always in the help icon.',
     },
   ],
-  ctaPrimary: 'Create my first scenario',
+  ctaPrimary: 'Create my first case',
   ctaSecondary: 'Explore dashboard',
   footnote: 'Tip: internal staging cannot Run from a public VPS — see docs/RUN_INTERNAL.md.',
 }

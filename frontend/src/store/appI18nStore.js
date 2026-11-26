@@ -13,9 +13,9 @@ const dictionaries = {
     'nav.analytics': 'Analytics',
     'nav.settings': 'Settings',
     'onboarding.title': 'Getting started',
-    'onboarding.create': 'Create a case',
-    'onboarding.steps': 'Add steps (Manual checklist)',
-    'onboarding.run': 'Manual Run or Test Run cycle',
+    'onboarding.create': 'New case (blank / template / import)',
+    'onboarding.steps': 'Edit steps in the side panel',
+    'onboarding.run': 'Jalankan case or New Test Run',
   },
   id: {
     'nav.dashboard': 'Dashboard',
@@ -25,9 +25,9 @@ const dictionaries = {
     'nav.analytics': 'Analitik',
     'nav.settings': 'Pengaturan',
     'onboarding.title': 'Mulai di sini',
-    'onboarding.create': 'Buat case',
-    'onboarding.steps': 'Tambah step (checklist manual)',
-    'onboarding.run': 'Manual Run atau siklus Test Run',
+    'onboarding.create': 'New case (blank / template / import)',
+    'onboarding.steps': 'Edit steps di panel kanan',
+    'onboarding.run': 'Jalankan case atau New Test Run',
   },
 }
 

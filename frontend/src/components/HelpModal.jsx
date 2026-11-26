@@ -37,19 +37,19 @@ const content = {
           {
             num: 2,
             title: 'Main menu & Tools',
-            desc: 'Main: Dashboard, Cases, Test Runs, Reports, Bugs. Environments & automation suites live under Tools. Menus depend on your role.',
+            desc: 'Main: Dashboard, Cases, Test Runs, Reports, Bugs. Tools (Admin): Setup / Suites / Automation groups. LEAD gets Environments; advanced suites stay Admin.',
             adminOnly: false,
           },
           {
             num: 3,
             title: 'Feature folders',
-            desc: 'On Cases, 1 folder = 1 fitur. Drag the grip (⋮⋮) on a case onto a feature folder (or No folder). Click a folder to list cases, then Open for steps. Bulk: Create Test Run / Move / Set PIC.',
+            desc: 'On Cases, 1 folder = 1 fitur. Click a case → edit in the right panel. Open “Jalankan” for the full case page. Bulk: New Test Run / Run automated / Move.',
             adminOnly: false,
           },
           {
             num: 4,
             title: 'Dashboard reminders',
-            desc: 'Unfinished scenarios show as reminders. Use Sembunyikan / Hide to collapse the panel, Tampilkan to show again. Nanti aja dismisses items for today.',
+            desc: 'Unfinished cases show as reminders. Hide collapses the panel; Nanti aja dismisses items for today.',
             adminOnly: false,
           },
           {
@@ -68,13 +68,13 @@ const content = {
           {
             num: 1,
             title: 'Create a test case',
-            desc: 'Prefer: New feature folder (e.g. Login) → Create Manual. Templates / Import Excel / Quick Record ada di Lainnya (Quick Record = automation).',
+            desc: 'Feature folder → New case → Blank / Template / Import / Quick Record.',
             adminOnly: false,
           },
           {
             num: 2,
-            title: 'Details tab',
-            desc: 'Open a case → Details: Priority, Type, Precondition, Expected result (+ images), PIC, and Steps. Click Simpan detail. Breadcrumb folder returns to that feature.',
+            title: 'Edit in the panel',
+            desc: 'Click a case → right panel: Details, steps (autosave), Attachments, Runs. Use Jalankan to open the full page for manual/automated run.',
             adminOnly: false,
           },
           {
@@ -99,7 +99,7 @@ const content = {
       },
       {
         id: 'manual',
-        label: 'Manual Run',
+        label: 'Jalankan case',
         icon: <ClipboardList size={14} />,
         steps: [
           {
@@ -109,8 +109,8 @@ const content = {
           },
           {
             num: 2,
-            title: 'Start Manual Run',
-            desc: 'Click Manual Run. Mark each step: Passed / Failed / Blocked / Skipped. Failed & Blocked require notes; you can create a Bug.',
+            title: 'Jalankan (manual)',
+            desc: 'On the case page, click Jalankan (manual). Mark each step: Passed / Failed / Blocked / Skipped. Failed & Blocked require notes; you can create a Bug.',
           },
           {
             num: 3,
@@ -168,7 +168,7 @@ const content = {
           },
           {
             num: 4,
-            title: 'Bulk Auto Run',
+            title: 'Run automated (bulk)',
             desc: 'Cases → select rows → Auto Run (headless sequential). Prefer Create Test Run for structured Manual QA cycles.',
           },
           {

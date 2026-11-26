@@ -25,7 +25,7 @@ export const ALL_MENU_KEYS = MENU_DEFINITIONS.map((m) => m.key)
 /** Temporarily hidden from product UI (definition kept for later). */
 export const HIDDEN_MENU_KEYS = ['analytics', 'execution']
 
-/** Manual QA core path — Tools stay for ADMIN/LEAD */
+/** Manual QA core path — advanced Tools stay ADMIN-only (routes) */
 export const DEFAULT_USER_MENU_KEYS = [
   'dashboard',
   'scenarios',
@@ -43,7 +43,7 @@ export function isValidMenuKey(key) {
 
 // Local fallbacks to avoid circular import with roles.js
 const ROLE_FALLBACK_BY_ROLE = {
-  LEAD: ALL_MENU_KEYS,
+  LEAD: [...DEFAULT_USER_MENU_KEYS, 'environments'],
   USER: DEFAULT_USER_MENU_KEYS,
   VIEWER: ['dashboard', 'scenarios', 'test-runs', 'reports', 'issues'],
 }

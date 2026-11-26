@@ -1,71 +1,60 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import Layout from '../components/Layout'
-import { executionAPI, analyticsAPI } from '../services/api'
+import { executionAPI } from '../services/api'
 import apiClient from '../services/api'
 import {
   ClipboardList,
   PlayCircle,
   CheckCircle2,
-  Clock,
   Check,
   X,
-  TrendingUp,
 } from 'lucide-react'
-import toast from 'react-hot-toast'
 import { getQuickActionsForRole } from '../constants/quickActions'
 import OnboardingChecklist from '../components/OnboardingChecklist'
 import OpenIssuesWidget from '../components/OpenIssuesWidget'
 import WelcomeSplashModal from '../components/WelcomeSplashModal'
 import ScenarioReminders from '../components/ScenarioReminders'
-import ExportFormatButton from '../components/ExportFormatButton'
 import { WELCOME_SPLASH_STORAGE_KEY } from '../constants/welcomeSplash'
 
-// i18n translations
 const i18n = {
-    welcome: 'Welcome back',
-    hereIs: "Here's what's happening with your test automation today.",
-    testScenarios: 'Test Cases',
-    totalExecutions: 'Total Executions',
-    successRate: 'Success Rate',
-    avgDuration: 'Avg Duration',
-    passed: 'Passed',
-    failed: 'Failed',
-    quickActions: 'Quick Actions',
-    createScenario: 'Create Case',
-    startRecording: 'Create a new test case',
-    runExecution: 'Run Execution',
-    executeScenario: 'Execute a test scenario',
-    viewAnalytics: 'View Analytics',
-    detailedMetrics: 'Detailed test performance metrics',
-    analyticsSummary: 'Analytics Summary',
-    last7Days: 'Last 7 days',
-    passRate: 'pass rate',
-    exportJson: 'Export JSON',
-    exportCsv: 'Export CSV',
-    totalScenarios: 'Total Cases',
-    recentScenarios: 'Recent Cases',
-    recentExecutions: 'Recent Executions',
-    noScenariosYet: 'No cases yet',
-    noExecutionsYet: 'No executions yet',
-    steps: 'steps',
-    apiTesting: 'API Testing',
-    apiTestingDesc: 'Run HTTP request tests',
-    environments: 'Environments',
-    environmentsDesc: 'Manage test variables per environment',
-    scheduler: 'Scheduler',
-    schedulerDesc: 'Schedule automated test runs',
-    parallel: 'Parallel Execution',
-    parallelDesc: 'Run scenarios in parallel',
-    smokeTest: 'Smoke Test',
-    smokeTestDesc: 'Quick health-check test suite',
-    stressTest: 'Stress Test',
-    stressTestDesc: 'Load and performance testing',
-    securityTest: 'Security Test',
-    securityTestDesc: 'Scan for security vulnerabilities',
-    browserMatrix: 'Browser Matrix',
-    browserMatrixDesc: 'Cross-browser compatibility tests',
+  welcome: 'Welcome back',
+  hereIs: 'What needs your attention in Manual QA today.',
+  testScenarios: 'Cases',
+  totalExecutions: 'Runs',
+  successRate: 'Success Rate',
+  passed: 'Passed',
+  failed: 'Failed',
+  quickActions: 'Quick Actions',
+  createScenario: 'New case',
+  startRecording: 'Open Cases and create a blank / template / import',
+  testRuns: 'Test Runs',
+  testRunsDesc: 'Multi-case cycles per feature',
+  bugs: 'Bugs',
+  bugsDesc: 'Open and track defects',
+  environments: 'Environments',
+  environmentsDesc: 'Variables per environment',
+  scheduler: 'Scheduler',
+  schedulerDesc: 'Schedule automated runs',
+  parallel: 'Parallel',
+  parallelDesc: 'Run cases in parallel',
+  smokeTest: 'Smoke Test',
+  smokeTestDesc: 'Quick health-check suite',
+  stressTest: 'Stress Test',
+  stressTestDesc: 'Load and performance',
+  securityTest: 'Security Test',
+  securityTestDesc: 'OWASP-oriented scans',
+  apiTesting: 'API Testing',
+  apiTestingDesc: 'HTTP request tests',
+  browserMatrix: 'Browser Test',
+  browserMatrixDesc: 'Cross-browser checks',
+  recentScenarios: 'Recent Cases',
+  recentExecutions: 'Recent runs',
+  noScenariosYet: 'No cases yet',
+  noExecutionsYet: 'No runs yet',
+  steps: 'steps',
+  reportsLink: 'Full history & trends → Reports',
 }
 
 export default function DashboardPage() {
@@ -73,12 +62,16 @@ export default function DashboardPage() {
   const user = useAuthStore((state) => state.user)
   const t = i18n
   const locale = 'en-US'
-  const [stats, setStats] = useState({ scenarios: 0, executions: 0, successRate: 0, passed: 0, failed: 0, avgDuration: 0 })
-  const [analytics, setAnalytics] = useState(null)
+  const [stats, setStats] = useState({
+    scenarios: 0,
+    executions: 0,
+    successRate: 0,
+    passed: 0,
+    failed: 0,
+  })
   const [recentScenarios, setRecentScenarios] = useState([])
   const [recentExecutions, setRecentExecutions] = useState([])
   const [loading, setLoading] = useState(true)
-  const [exporting, setExporting] = useState(false)
   const [showWelcomeSplash, setShowWelcomeSplash] = useState(false)
   const quickActions = getQuickActionsForRole(user)
 
@@ -100,29 +93,34 @@ export default function DashboardPage() {
   const loadDashboardData = async () => {
     setLoading(true)
     try {
-      const [execStatsRes, scenariosRes, recentRes, execHistoryRes, analyticsRes] = await Promise.allSettled([
+      const [execStatsRes, scenariosRes, recentRes, execHistoryRes] = await Promise.allSettled([
         executionAPI.getStats(),
         apiClient.get('/scenarios', { params: { skip: 0, take: 1 } }),
         apiClient.get('/search/recent', { params: { limit: 5 } }),
         executionAPI.getHistory(null, 5, 0),
-        analyticsAPI.getSummary()
       ])
 
       if (execStatsRes.status === 'fulfilled') {
         const s = execStatsRes.value.data.stats
-        setStats(prev => ({ ...prev, executions: s.total, successRate: s.successRate, passed: s.passed, failed: s.failed, avgDuration: s.averageDuration }))
+        setStats((prev) => ({
+          ...prev,
+          executions: s.total,
+          successRate: s.successRate,
+          passed: s.passed,
+          failed: s.failed,
+        }))
       }
       if (scenariosRes.status === 'fulfilled') {
-        setStats(prev => ({ ...prev, scenarios: scenariosRes.value.data.pagination?.total || 0 }))
+        setStats((prev) => ({
+          ...prev,
+          scenarios: scenariosRes.value.data.pagination?.total || 0,
+        }))
       }
       if (recentRes.status === 'fulfilled') {
         setRecentScenarios(recentRes.value.data.scenarios || [])
       }
       if (execHistoryRes.status === 'fulfilled') {
         setRecentExecutions(execHistoryRes.value.data.executions || [])
-      }
-      if (analyticsRes.status === 'fulfilled') {
-        setAnalytics(analyticsRes.value.data)
       }
     } catch (err) {
       console.error('Dashboard load error:', err)
@@ -131,49 +129,15 @@ export default function DashboardPage() {
     }
   }
 
-  const formatDuration = (ms) => {
-    if (!ms) return '-'
-    if (ms < 1000) return `${ms}ms`
-    return `${(ms / 1000).toFixed(1)}s`
-  }
-
   const formatDate = (date) => {
     if (!date) return '-'
-    return new Date(date).toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
-  }
-
-  const handleExport = async (format) => {
-    try {
-      setExporting(true)
-      const response = await analyticsAPI.exportData(format)
-      
-      if (format === 'csv') {
-        const url = window.URL.createObjectURL(new Blob([response.data]))
-        const link = document.createElement('a')
-        link.href = url
-        link.setAttribute('download', `analytics-${Date.now()}.csv`)
-        document.body.appendChild(link)
-        link.click()
-        link.parentNode.removeChild(link)
-      } else {
-        const dataStr = JSON.stringify(response.data, null, 2)
-        const dataBlob = new Blob([dataStr], { type: 'application/json' })
-        const url = window.URL.createObjectURL(dataBlob)
-        const link = document.createElement('a')
-        link.href = url
-        link.setAttribute('download', `analytics-${Date.now()}.json`)
-        document.body.appendChild(link)
-        link.click()
-        link.parentNode.removeChild(link)
-      }
-      
-      toast.success(`✅ Exported as ${format.toUpperCase()}`)
-    } catch (error) {
-      console.error('Export error:', error)
-      toast.error('Failed to export analytics')
-    } finally {
-      setExporting(false)
-    }
+    return new Date(date).toLocaleDateString(locale, {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
   }
 
   return (
@@ -182,14 +146,11 @@ export default function DashboardPage() {
         <WelcomeSplashModal userName={user?.name} onClose={dismissWelcomeSplash} />
       )}
       <div className="space-y-6 animate-fade-in">
-        {/* Welcome */}
         <div>
           <h1 className="text-xl font-semibold text-ink">
             {t.welcome}, <span className="text-brand">{user?.name || 'User'}</span>
           </h1>
-          <p className="text-ink-muted mt-1 text-sm">
-            {t.hereIs}
-          </p>
+          <p className="text-ink-muted mt-1 text-sm">{t.hereIs}</p>
         </div>
 
         <ScenarioReminders />
@@ -202,12 +163,13 @@ export default function DashboardPage() {
           </div>
         ) : (
           <>
-            {/* Stats Grid */}
-            <div className="grid grid-cols-1 xs:grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
               <div className="linear-card stat-violet p-5">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs text-ink-muted font-medium uppercase tracking-wider">{t.testScenarios}</p>
+                    <p className="text-xs text-ink-muted font-medium uppercase tracking-wider">
+                      {t.testScenarios}
+                    </p>
                     <p className="text-3xl font-bold text-ink mt-1">{stats.scenarios}</p>
                   </div>
                   <div className="w-10 h-10 rounded-lg bg-brand-soft flex items-center justify-center">
@@ -219,7 +181,9 @@ export default function DashboardPage() {
               <div className="linear-card stat-cyan p-5">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs text-ink-muted font-medium uppercase tracking-wider">{t.totalExecutions}</p>
+                    <p className="text-xs text-ink-muted font-medium uppercase tracking-wider">
+                      {t.totalExecutions}
+                    </p>
                     <p className="text-3xl font-bold text-ink mt-1">{stats.executions}</p>
                   </div>
                   <div className="w-10 h-10 rounded-lg bg-teal-50 flex items-center justify-center">
@@ -231,7 +195,9 @@ export default function DashboardPage() {
               <div className="linear-card stat-green p-5">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs text-ink-muted font-medium uppercase tracking-wider">{t.successRate}</p>
+                    <p className="text-xs text-ink-muted font-medium uppercase tracking-wider">
+                      {t.successRate}
+                    </p>
                     <p className="text-3xl font-bold text-ink mt-1">{stats.successRate}%</p>
                   </div>
                   <div className="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center">
@@ -239,21 +205,8 @@ export default function DashboardPage() {
                   </div>
                 </div>
               </div>
-
-              <div className="linear-card stat-amber p-5">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-ink-muted font-medium uppercase tracking-wider">{t.avgDuration}</p>
-                    <p className="text-3xl font-bold text-ink mt-1">{formatDuration(stats.avgDuration)}</p>
-                  </div>
-                  <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center">
-                    <Clock size={18} className="text-amber-500" />
-                  </div>
-                </div>
-              </div>
             </div>
 
-            {/* Pass/Fail Summary */}
             {stats.executions > 0 && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="linear-card p-5 border-l-2 border-l-[#34D399]">
@@ -281,10 +234,14 @@ export default function DashboardPage() {
               </div>
             )}
 
-            {/* Quick Actions — filtered by role (USER vs ADMIN) */}
             <div className="linear-card p-5">
-              <h2 className="text-sm font-semibold text-ink mb-4">{t.quickActions}</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3">
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+                <h2 className="text-sm font-semibold text-ink">{t.quickActions}</h2>
+                <Link to="/reports" className="text-xs font-medium text-brand hover:underline">
+                  {t.reportsLink}
+                </Link>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 {quickActions.map((action) => {
                   const Icon = action.icon
                   return (
@@ -295,7 +252,9 @@ export default function DashboardPage() {
                       className="action-btn p-4 text-left"
                     >
                       <div className="flex items-center gap-3 mb-2">
-                        <div className={`w-8 h-8 rounded-lg ${action.iconBg} flex items-center justify-center`}>
+                        <div
+                          className={`w-8 h-8 rounded-lg ${action.iconBg} flex items-center justify-center`}
+                        >
                           <Icon size={15} className={action.iconColor} />
                         </div>
                         <p className="font-medium text-ink text-sm">{t[action.titleKey]}</p>
@@ -307,77 +266,26 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* Analytics Section */}
-            {analytics && (
-              <div className="linear-card p-6 border-l-2 border-l-brand">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-5">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-10 h-10 rounded-lg bg-brand-soft flex items-center justify-center shrink-0">
-                      <TrendingUp size={18} className="text-brand" />
-                    </div>
-                    <div className="min-w-0">
-                      <h2 className="text-sm font-semibold text-ink">{t.analyticsSummary}</h2>
-                      <p className="text-xs text-ink-muted mt-0.5">{t.last7Days}: {analytics.last7Days?.passRate || 0}% {t.passRate}</p>
-                    </div>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <ExportFormatButton
-                      format="json"
-                      onClick={() => handleExport('json')}
-                      disabled={exporting}
-                    >
-                      {t.exportJson}
-                    </ExportFormatButton>
-                    <ExportFormatButton
-                      format="csv"
-                      onClick={() => handleExport('csv')}
-                      disabled={exporting}
-                    >
-                      {t.exportCsv}
-                    </ExportFormatButton>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div>
-                    <p className="text-xs text-ink-muted mb-1">Total Executions</p>
-                    <p className="text-2xl font-bold text-ink">{analytics.totalExecutions}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-ink-muted mb-1">Pass Rate</p>
-                    <p className="text-2xl font-bold text-emerald-600">{analytics.passRate}%</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-ink-muted mb-1">Avg Duration</p>
-                    <p className="text-2xl font-bold text-amber-500">{formatDuration(analytics.avgDuration)}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-ink-muted mb-1">Total Cases</p>
-                    <p className="text-2xl font-bold text-teal-600">{analytics.totalScenarios}</p>
-                  </div>
-                </div>
-              </div>
-            )}
-
             <OpenIssuesWidget />
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-              {/* Recent Scenarios */}
               <div className="linear-card p-5">
                 <h2 className="text-sm font-semibold text-ink mb-4">{t.recentScenarios}</h2>
                 {recentScenarios.length === 0 ? (
                   <p className="text-center py-6 text-ink-muted text-sm">{t.noScenariosYet}</p>
                 ) : (
                   <div className="space-y-2">
-                    {recentScenarios.map(s => (
+                    {recentScenarios.map((s) => (
                       <div
                         key={s.id}
-                        onClick={() => navigate(`/scenarios/${s.id}`)}
+                        onClick={() => navigate('/scenarios')}
                         className="flex items-center justify-between p-3 rounded-md bg-surface-muted hover:bg-brand-soft/40 cursor-pointer transition-all border border-transparent hover:border-surface-border"
                       >
                         <div className="min-w-0">
                           <p className="font-medium text-ink text-sm truncate">{s.name}</p>
-                          <p className="text-xs text-ink-muted mt-0.5">{formatDate(s.updatedAt || s.createdAt)}</p>
+                          <p className="text-xs text-ink-muted mt-0.5">
+                            {formatDate(s.updatedAt || s.createdAt)}
+                          </p>
                         </div>
                         <span className="text-xs text-ink-muted ml-3 shrink-0 bg-white border border-surface-border px-2 py-0.5 rounded">
                           {s._count?.testSteps ?? s.testSteps?.length ?? s.steps ?? 0} {t.steps}
@@ -388,40 +296,42 @@ export default function DashboardPage() {
                 )}
               </div>
 
-              {/* Recent Executions */}
               <div className="linear-card p-5">
                 <h2 className="text-sm font-semibold text-ink mb-4">{t.recentExecutions}</h2>
                 {recentExecutions.length === 0 ? (
                   <p className="text-center py-6 text-ink-muted text-sm">{t.noExecutionsYet}</p>
                 ) : (
                   <div className="space-y-2">
-                    {recentExecutions.map(e => (
+                    {recentExecutions.map((e) => (
                       <div
                         key={e.id}
-                        onClick={() => navigate('/execution')}
+                        onClick={() => navigate('/test-runs')}
                         className="flex items-center justify-between p-3 rounded-md bg-surface-muted hover:bg-brand-soft/40 cursor-pointer transition-all border border-transparent hover:border-surface-border"
                       >
                         <div className="min-w-0">
-                          <p className="font-medium text-ink text-sm truncate">{e.scenario?.name || 'Scenario'}</p>
-                          <div className="flex items-center gap-2 mt-1">
-                            <p className="text-xs text-[#8A8A8F]">{formatDate(e.startTime)}</p>
-                            {e.browser && (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 text-xs font-medium">
-                                🌐 {e.browser}
-                              </span>
-                            )}
-                          </div>
+                          <p className="font-medium text-ink text-sm truncate">
+                            {e.scenario?.name || 'Case'}
+                          </p>
+                          <p className="text-xs text-[#8A8A8F] mt-1">{formatDate(e.startTime)}</p>
                         </div>
-                        <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${
-                          e.status === 'PASSED' ? 'text-[#34D399]' :
-                          e.status === 'FAILED' ? 'text-[#F87171]' :
-                          'text-[#FBBF24]'
-                        }`}>
-                          <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                            e.status === 'PASSED' ? 'bg-[#34D399]' :
-                            e.status === 'FAILED' ? 'bg-[#F87171]' :
-                            'bg-[#FBBF24]'
-                          }`} />
+                        <span
+                          className={`inline-flex items-center gap-1.5 text-xs font-medium ${
+                            e.status === 'PASSED'
+                              ? 'text-[#34D399]'
+                              : e.status === 'FAILED'
+                                ? 'text-[#F87171]'
+                                : 'text-[#FBBF24]'
+                          }`}
+                        >
+                          <span
+                            className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                              e.status === 'PASSED'
+                                ? 'bg-[#34D399]'
+                                : e.status === 'FAILED'
+                                  ? 'bg-[#F87171]'
+                                  : 'bg-[#FBBF24]'
+                            }`}
+                          />
                           {e.status}
                         </span>
                       </div>

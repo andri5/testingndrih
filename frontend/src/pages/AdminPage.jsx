@@ -7,7 +7,6 @@ import AdminMenuAccess from '../components/AdminMenuAccess'
 import UserActivityLog from '../components/UserActivityLog'
 import SiteAnalytics from '../components/SiteAnalytics'
 import LandingFeedbackAdmin from '../components/landing/LandingFeedbackAdmin'
-import OwaspCoveragePanel from '../components/security/OwaspCoveragePanel'
 import apiClient from '../services/api'
 
 const cardCls = 'bg-[#1A1A1C] border border-[#2D2D2F] rounded-xl p-6'
@@ -119,43 +118,37 @@ export default function AdminPage() {
             )}
 
             {activeTab === 'security' && (
-              <div className="space-y-4">
-                <div className={cardCls}>
-                  <p className={sectionTitleCls}>OWASP Top 10</p>
-                  <p className="text-sm text-[#666] mb-4">
-                    Security Test maps findings ke OWASP Top 10:2021. Full scan
-                    menjalankan cek A01–A10 (simulasi + header probe). Suite
-                    Jest: <code className="text-[#A0A0A4]">npm run test:security</code>.
+              <div className={cardCls}>
+                <p className={sectionTitleCls}>Security</p>
+                <p className="text-sm text-[#666] mb-4">
+                  OWASP Top 10 scans and findings live under Tools → Security Test.
+                  Tab ini hanya ringkasan cepat.
+                </p>
+                {securitySummary ? (
+                  <p className="text-sm text-[#A0A0A4] mb-4">
+                    Scans: {securitySummary.totalScans || 0} · Critical:{' '}
+                    {securitySummary.criticalFindings || 0} · High:{' '}
+                    {securitySummary.highFindings || 0}
                   </p>
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    <Link
-                      to="/security-test"
-                      className="inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium bg-[#0F766E]/15 text-[#0F766E] hover:bg-[#0F766E]/25"
-                    >
-                      Buka Security Test
-                    </Link>
-                    <a
-                      href="https://owasp.org/Top10/"
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium text-[#A0A0A4] border border-[#2D2D2F] hover:text-[#E0E0E2]"
-                    >
-                      owasp.org/Top10
-                    </a>
-                  </div>
-                  {securitySummary ? (
-                    <p className="text-xs text-[#666] mb-3">
-                      Scans selesai: {securitySummary.totalScans || 0} · Critical:{' '}
-                      {securitySummary.criticalFindings || 0} · High:{' '}
-                      {securitySummary.highFindings || 0}
-                    </p>
-                  ) : null}
+                ) : (
+                  <p className="text-sm text-[#666] mb-4">Belum ada scan untuk akun ini.</p>
+                )}
+                <div className="flex flex-wrap gap-2">
+                  <Link
+                    to="/security-test"
+                    className="inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium bg-[#0F766E]/15 text-[#0F766E] hover:bg-[#0F766E]/25"
+                  >
+                    Buka Security Test
+                  </Link>
+                  <a
+                    href="https://owasp.org/Top10/"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium text-[#A0A0A4] border border-[#2D2D2F] hover:text-[#E0E0E2]"
+                  >
+                    owasp.org/Top10
+                  </a>
                 </div>
-                <OwaspCoveragePanel mode="catalog" title="Scanner coverage (A01–A10)" />
-                <OwaspCoveragePanel
-                  categoryCounts={securitySummary?.owaspByCategory}
-                  title="Finding breakdown (akun ini)"
-                />
               </div>
             )}
 

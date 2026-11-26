@@ -152,7 +152,7 @@ export default function TestRunsPage() {
           <div>
             <h1 className="text-3xl font-bold text-ink">Test Runs</h1>
             <p className="text-ink-muted mt-1 text-sm">
-              Jalankan beberapa case per fitur — pilih feature folder, set Pass/Fail, lalu seal.
+              Test Run = siklus multi-case per fitur — pilih folder, set Pass/Fail, lalu seal.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -166,7 +166,7 @@ export default function TestRunsPage() {
               Refresh
             </ExportFormatButton>
             <ExportFormatButton format="primary" icon={Plus} onClick={openCreate}>
-              Create Run
+              New Test Run
             </ExportFormatButton>
           </div>
         </div>

@@ -16,7 +16,7 @@ export const ROLE_DEFINITIONS = [
     key: 'LEAD',
     label: 'QA Lead',
     description:
-      'All testing menus (core + tools). Owns Test Runs cycles and advanced suites; no admin/user settings.',
+      'Manual QA lead: Cases, Test Runs, Reports, Bugs, Environments. Advanced Tools stay Admin-only.',
   },
   {
     key: 'USER',
@@ -32,20 +32,23 @@ export const ROLE_DEFINITIONS = [
   },
 ]
 
+/** LEAD = Manual QA core + Environments (Tools suites remain ADMIN-only in routes). */
+const LEAD_MENU_KEYS = [...DEFAULT_USER_MENU_KEYS, 'environments']
+
 /**
  * Recommended sidebar menus per role (Settings remains available to everyone).
  * Keep in sync with backend/src/constants/roles.js
  */
 export const ROLE_MENU_PRESETS = {
   ADMIN: [...ALL_MENU_KEYS],
-  LEAD: [...ALL_MENU_KEYS],
+  LEAD: [...LEAD_MENU_KEYS],
   USER: [...DEFAULT_USER_MENU_KEYS],
   VIEWER: ['dashboard', 'scenarios', 'test-runs', 'reports', 'issues'],
 }
 
 export const ROLE_MENU_SUMMARY = {
-  ADMIN: 'All menus + Settings admin tabs',
-  LEAD: 'All testing menus (Main + Tools) — runs, matrix, smoke/stress/security',
+  ADMIN: 'All menus + Admin (/admin)',
+  LEAD: 'Dashboard, Cases, Test Runs, Reports, Bugs, Environments',
   USER: 'Dashboard, Cases, Test Runs, Reports, Bugs',
   VIEWER: 'Dashboard, Cases, Test Runs, Reports, Bugs (no Tools)',
 }

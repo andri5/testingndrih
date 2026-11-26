@@ -11,8 +11,8 @@ const METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD']
 
 const i18n = {
     title: 'API Testing',
-    subtitle: 'HTTP request tests linked to scenarios',
-    selectScenario: 'Select scenario',
+    subtitle: 'HTTP request tests linked to cases',
+    selectScenario: 'Select case',
     addTest: 'Add API Test',
     run: 'Run',
     noTests: 'No API tests yet',

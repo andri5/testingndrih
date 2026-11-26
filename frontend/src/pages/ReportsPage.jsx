@@ -9,7 +9,7 @@ import { PlayCircle, CheckCircle2, XCircle, TrendingUp } from 'lucide-react'
 
 const i18n = {
     title: '📈 Reports',
-    subtitle: 'Execution reports and analytics',
+    subtitle: 'Run history, trends, and export — live counters stay on Dashboard',
     exportExcel: 'Export Excel',
     loadError: 'Failed to load report data',
     trendTitle: '📊 Pass/Fail Trend (last 14 days)',
@@ -298,7 +298,7 @@ export default function ReportsPage() {
             {/* Most Executed Scenarios */}
             {mostExecuted.length > 0 && (
               <Card>
-                <h3 className="font-semibold text-[#E0E0E2] mb-4">🏆 Most Executed Scenarios</h3>
+                <h3 className="font-semibold text-[#E0E0E2] mb-4">Most run cases</h3>
                 <div className="space-y-3">
                   {mostExecuted.map((s, idx) => (
                     <div
@@ -333,7 +333,7 @@ export default function ReportsPage() {
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="border-b border-[#2D2D2F]">
-                          <th className="text-left py-3 px-2 font-semibold text-[#A0A0A4]">Scenario</th>
+                          <th className="text-left py-3 px-2 font-semibold text-[#A0A0A4]">Case</th>
                           <th className="text-left py-3 px-2 font-semibold text-[#A0A0A4]">Status</th>
                           <th className="text-left py-3 px-2 font-semibold text-[#A0A0A4] hidden sm:table-cell">Duration</th>
                           <th className="text-left py-3 px-2 font-semibold text-[#A0A0A4] hidden md:table-cell">Steps (P/F)</th>

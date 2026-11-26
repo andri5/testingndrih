@@ -44,7 +44,7 @@ export function ScenarioForm({ onSubmit, initialScenario = null, isLoading = fal
   const validate = () => {
     const newErrors = {}
     if (!formData.name.trim()) {
-      newErrors.name = 'Scenario name is required'
+      newErrors.name = 'Case name is required'
     }
     const url = formData.url.trim()
     if (url) {
@@ -103,9 +103,9 @@ export function ScenarioForm({ onSubmit, initialScenario = null, isLoading = fal
       )}
 
       <Input
-        label="Scenario Name"
+        label="Case Name"
         name="name"
-        placeholder="Enter scenario name"
+        placeholder="Enter case name"
         value={formData.name}
         onChange={handleChange}
         error={errors.name}
@@ -132,7 +132,7 @@ export function ScenarioForm({ onSubmit, initialScenario = null, isLoading = fal
         </label>
         <textarea
           name="description"
-          placeholder="Describe what this scenario tests"
+          placeholder="Describe what this case tests"
           value={formData.description}
           onChange={handleChange}
           disabled={isLoading}
@@ -146,7 +146,7 @@ export function ScenarioForm({ onSubmit, initialScenario = null, isLoading = fal
         variant="primary"
         disabled={isLoading}
       >
-        {isLoading ? 'Saving...' : initialScenario ? 'Update Scenario' : 'Create Scenario'}
+        {isLoading ? 'Saving...' : initialScenario ? 'Update Case' : 'Create Case'}
       </Button>
     </form>
   )

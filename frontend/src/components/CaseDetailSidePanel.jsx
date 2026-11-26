@@ -405,11 +405,12 @@ export default function CaseDetailSidePanel({
           <div className="flex items-center gap-0.5 shrink-0">
             <button
               type="button"
-              title="Buka halaman penuh"
+              title="Jalankan di halaman case"
               onClick={() => scenarioId && navigate(`/scenarios/${scenarioId}`)}
-              className="p-2 rounded-lg text-ink-muted hover:bg-white hover:text-brand border border-transparent hover:border-surface-border"
+              className="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-medium text-brand hover:bg-brand-soft border border-transparent hover:border-brand/20"
             >
-              <ExternalLink size={15} />
+              Jalankan
+              <ExternalLink size={13} />
             </button>
             <button
               type="button"
@@ -588,9 +589,9 @@ export default function CaseDetailSidePanel({
                         type="button"
                         onClick={() => navigate(`/scenarios/${scenarioId}`)}
                         className="text-[11px] font-medium text-ink-muted hover:text-brand"
-                        title="Advanced edit di halaman penuh"
+                        title="Buka halaman case untuk jalankan / automation"
                       >
-                        Full →
+                        Jalankan →
                       </button>
                     </div>
                   </div>
