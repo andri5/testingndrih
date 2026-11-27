@@ -80,6 +80,19 @@ export default function TestRunDetailPage() {
 
   const sealed = run?.status === 'CLOSED'
 
+  const advanceToNextCase = (items, currentItemId) => {
+    const flat = groupItemsByFeature(items || []).flatMap((g) => g.items)
+    const idx = flat.findIndex((item) => item.id === currentItemId)
+    if (idx < 0) return
+    const next = flat[idx + 1]
+    if (next) {
+      setActiveId(next.id)
+      setPanelOpen(true)
+      return
+    }
+    toast.success('Case terakhir di run ini — tidak ada berikutnya')
+  }
+
   const applyStatus = async (itemId, status, notesValue = '') => {
     setBusyId(itemId)
     setError(null)
@@ -93,6 +106,10 @@ export default function TestRunDetailPage() {
       setNotes('')
       setPendingStatus(null)
       toast.success(`Status diubah: ${status}`)
+      // Pass / Fail / Blocked / Skip → lanjut case berikutnya (seperti Testiny)
+      if (status !== 'NOT_RUN') {
+        advanceToNextCase(res.data.run?.items, itemId)
+      }
     } catch (err) {
       const msg = err.response?.data?.message || 'Gagal update result'
       setError(msg)

@@ -83,7 +83,7 @@ const content = {
           {
             num: 2,
             title: 'Set results',
-            desc: 'Pass / Fail / Blocked / Skip per case. Use Checklist for step-level Manual Run. Close / Seal when done.',
+            desc: 'Pass / Fail / Blocked / Skip per case — panel auto-continues to the next case. Use Checklist for step-level Manual Run. Close / Seal when done.',
           },
         ],
       },
