@@ -2,6 +2,7 @@ import { Router } from 'express'
 import rateLimit from 'express-rate-limit'
 import { executionShareController } from '../controllers/executionShareController.js'
 import { issueShareController } from '../controllers/issueShareController.js'
+import { testRunShareController } from '../controllers/testRunShareController.js'
 
 const publicShareRoutes = Router()
 
@@ -25,4 +26,11 @@ publicShareRoutes.get(
   issueShareController.publicGet
 )
 
+publicShareRoutes.get(
+  '/shared-test-runs/:token',
+  shareLimiter,
+  testRunShareController.publicGet
+)
+
 export default publicShareRoutes
+

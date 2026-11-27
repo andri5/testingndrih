@@ -9,6 +9,7 @@ import ForgotPasswordPage from './pages/ForgotPasswordPage'
 import ResetPasswordPage from './pages/ResetPasswordPage'
 import SharedRunPage from './pages/SharedRunPage'
 import SharedBugPage from './pages/SharedBugPage'
+import SharedTestRunPage from './pages/SharedTestRunPage'
 import DashboardPage from './pages/DashboardPage'
 import ScenariosPage from './pages/ScenariosPage'
 import ScenarioDetailPage from './pages/ScenarioDetailPage'
@@ -167,6 +168,7 @@ export default function App() {
         />
         <Route path="/share/runs/:token" element={<SharedRunPage />} />
         <Route path="/share/bugs/:token" element={<SharedBugPage />} />
+        <Route path="/share/test-runs/:token" element={<SharedTestRunPage />} />
 
         {/* Protected Routes */}
         <Route

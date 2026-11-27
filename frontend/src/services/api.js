@@ -334,6 +334,15 @@ export const testRunAPI = {
   updateItem: (id, itemId, data) => apiClient.patch(`/test-runs/${id}/items/${itemId}`, data),
   removeItem: (id, itemId) => apiClient.delete(`/test-runs/${id}/items/${itemId}`),
   startManual: (id, itemId) => apiClient.post(`/test-runs/${id}/items/${itemId}/start-manual`),
+  exportReport: (id, format = 'pdf') =>
+    apiClient.get(`/test-runs/${id}/export`, {
+      params: { format },
+      responseType: 'blob',
+      timeout: 120000,
+    }),
+  createShare: (id, data = {}) => apiClient.post(`/test-runs/${id}/share`, data),
+  listShares: (id) => apiClient.get(`/test-runs/${id}/shares`),
+  revokeShare: (id, shareId) => apiClient.delete(`/test-runs/${id}/shares/${shareId}`),
 }
 
 export const recorderAPI = {

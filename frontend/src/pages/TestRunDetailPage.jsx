@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { Card, Badge, Spinner, Alert, Button } from '../components/ui'
 import ExportFormatButton from '../components/ExportFormatButton'
+import ShareTestRunModal from '../components/ShareTestRunModal'
 import { scenarioAPI, testRunAPI } from '../services/api'
 import StepAttachmentsBlock from '../components/StepAttachmentsBlock'
 import toast from 'react-hot-toast'
@@ -17,6 +18,9 @@ import {
   SkipForward,
   Folder,
   X,
+  Share2,
+  FileSpreadsheet,
+  FileText,
 } from 'lucide-react'
 
 function groupItemsByFeature(items = []) {
@@ -60,6 +64,8 @@ export default function TestRunDetailPage() {
   const [panelOpen, setPanelOpen] = useState(false)
   const [steps, setSteps] = useState([])
   const [stepsLoading, setStepsLoading] = useState(false)
+  const [shareOpen, setShareOpen] = useState(false)
+  const [exporting, setExporting] = useState(null)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -143,6 +149,50 @@ export default function TestRunDetailPage() {
       toast.error(msg)
     } finally {
       setClosing(false)
+    }
+  }
+
+  const handleExport = async (format) => {
+    setExporting(format)
+    try {
+      const res = await testRunAPI.exportReport(id, format)
+      const blob = new Blob([res.data], {
+        type:
+          format === 'excel'
+            ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            : 'application/pdf',
+      })
+      const disposition = res.headers?.['content-disposition'] || ''
+      const match = /filename="?([^"]+)"?/i.exec(disposition)
+      const fallback = `test-run-${id.slice(0, 8)}.${format === 'excel' ? 'xlsx' : 'pdf'}`
+      const filename = match?.[1] || fallback
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = filename
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      URL.revokeObjectURL(url)
+      toast.success(format === 'excel' ? 'Excel diunduh' : 'PDF diunduh')
+    } catch (err) {
+      let msg = 'Gagal export report'
+      const data = err.response?.data
+      if (data instanceof Blob) {
+        try {
+          const text = await data.text()
+          const parsed = JSON.parse(text)
+          msg = parsed.message || msg
+        } catch {
+          /* keep default */
+        }
+      } else if (err.response?.data?.message) {
+        msg = err.response.data.message
+      }
+      setError(msg)
+      toast.error(msg)
+    } finally {
+      setExporting(null)
     }
   }
 
@@ -250,17 +300,47 @@ export default function TestRunDetailPage() {
               </span>
             </div>
           </div>
-          {!sealed && (
+          <div className="flex flex-wrap items-center gap-2">
+            <ExportFormatButton
+              format="primary"
+              icon={Share2}
+              onClick={() => setShareOpen(true)}
+              title="Share report link"
+            >
+              Share
+            </ExportFormatButton>
+            <ExportFormatButton
+              format="excel"
+              icon={exporting === 'excel' ? Loader2 : FileSpreadsheet}
+              onClick={() => handleExport('excel')}
+              disabled={!!exporting}
+              className={exporting === 'excel' ? '[&_svg]:animate-spin' : ''}
+              title="Download Excel"
+            >
+              Excel
+            </ExportFormatButton>
             <ExportFormatButton
               format="pdf"
-              icon={closing ? Loader2 : Lock}
-              onClick={handleClose}
-              disabled={closing}
-              className={closing ? '[&_svg]:animate-spin' : ''}
+              icon={exporting === 'pdf' ? Loader2 : FileText}
+              onClick={() => handleExport('pdf')}
+              disabled={!!exporting}
+              className={exporting === 'pdf' ? '[&_svg]:animate-spin' : ''}
+              title="Download PDF"
             >
-              Close / Seal
+              PDF
             </ExportFormatButton>
-          )}
+            {!sealed && (
+              <ExportFormatButton
+                format="html"
+                icon={closing ? Loader2 : Lock}
+                onClick={handleClose}
+                disabled={closing || !!exporting}
+                className={closing ? '[&_svg]:animate-spin' : ''}
+              >
+                Close / Seal
+              </ExportFormatButton>
+            )}
+          </div>
         </div>
 
         {error && <Alert type="error" message={error} onClose={() => setError(null)} />}
@@ -525,6 +605,8 @@ export default function TestRunDetailPage() {
         )}
         </div>
       </div>
+
+      <ShareTestRunModal runId={id} open={shareOpen} onClose={() => setShareOpen(false)} />
     </Layout>
   )
 }

@@ -1,4 +1,5 @@
 import * as testRunService from '../services/testRunService.js'
+import * as testRunExportService from '../services/testRunExportService.js'
 
 export async function createHandler(req, res, next) {
   try {
@@ -88,6 +89,41 @@ export async function startManualHandler(req, res, next) {
       req.params.itemId
     )
     res.json({ success: true, ...result })
+  } catch (error) {
+    next(error)
+  }
+}
+
+/** GET /api/test-runs/:id/export?format=pdf|excel */
+export async function exportHandler(req, res, next) {
+  try {
+    const format = String(req.query.format || 'pdf').toLowerCase()
+    if (format === 'excel' || format === 'xlsx') {
+      const { buffer, filename } = await testRunExportService.buildTestRunExcel(
+        req.user.id,
+        req.params.id
+      )
+      res.setHeader(
+        'Content-Type',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      )
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`)
+      return res.send(Buffer.from(buffer))
+    }
+
+    if (format === 'pdf') {
+      const { buffer, filename } = await testRunExportService.buildTestRunPdf(
+        req.user.id,
+        req.params.id
+      )
+      res.setHeader('Content-Type', 'application/pdf')
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`)
+      return res.send(Buffer.from(buffer))
+    }
+
+    const err = new Error('Unsupported format. Use format=pdf or format=excel')
+    err.status = 400
+    throw err
   } catch (error) {
     next(error)
   }

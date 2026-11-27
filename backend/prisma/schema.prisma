@@ -130,6 +130,7 @@ model User {
   agentJobs              AgentJob[]
   executionShareLinks    ExecutionShareLink[]
   issueShareLinks        IssueShareLink[]
+  testRunShareLinks      TestRunShareLink[]
   issues                 Issue[]
   testRunsCreated        TestRun[]           @relation("TestRunCreator")
   testRunAssignments     TestRunItem[]       @relation("TestRunItemAssignee")
@@ -318,8 +319,9 @@ model TestRun {
   updatedAt   DateTime      @updatedAt
   createdById String
 
-  createdBy User          @relation("TestRunCreator", fields: [createdById], references: [id], onDelete: Cascade)
-  items     TestRunItem[]
+  createdBy  User               @relation("TestRunCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  items      TestRunItem[]
+  shareLinks TestRunShareLink[]
 
   @@index([createdById, status])
   @@index([createdAt])
@@ -550,6 +552,26 @@ model IssueShareLink {
   @@index([issueId])
   @@index([createdByUserId])
   @@map("issue_share_links")
+}
+
+/// Public share links for Test Run reports (open or closed)
+model TestRunShareLink {
+  id              String    @id @default(cuid())
+  tokenHash       String    @unique
+  prefix          String
+  expiresAt       DateTime?
+  revokedAt       DateTime?
+  lastAccessedAt  DateTime?
+  createdAt       DateTime  @default(now())
+  testRunId       String
+  createdByUserId String
+
+  testRun   TestRun @relation(fields: [testRunId], references: [id], onDelete: Cascade)
+  createdBy User    @relation(fields: [createdByUserId], references: [id], onDelete: Cascade)
+
+  @@index([testRunId])
+  @@index([createdByUserId])
+  @@map("test_run_share_links")
 }
 
 /// Hybrid local-agent queue (P2) — durable jobs for private/VPN targets
