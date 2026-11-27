@@ -112,7 +112,7 @@ function FolderNode({ node, depth, selectedKey, expandedIds, onSelect, onToggle,
                   onCreateChild(node.id)
                 }}
               >
-                <FolderPlus size={12} /> New subfolder
+                <FolderPlus size={12} /> New fitur
               </button>
               <button
                 type="button"
@@ -223,8 +223,8 @@ export default function ScenarioFolderTree({ onSelectionChange, onDropScenario, 
   const handleCreate = async (parentId = null) => {
     const name = window.prompt(
       parentId
-        ? 'Subfolder name (e.g. Login / Forgot password)'
-        : 'Feature / folder name (e.g. Login)'
+        ? 'Nama fitur / sub-alur (contoh: Login, Buat Proposal)'
+        : 'Nama modul (contoh: Auth & Access, Penerima Manfaat)'
     )
     if (!name?.trim()) return
     try {
@@ -303,15 +303,15 @@ export default function ScenarioFolderTree({ onSelectionChange, onDropScenario, 
     <div className="h-full flex flex-col bg-surface-sidebar border-r border-surface-border">
       <div className="px-3 py-3 border-b border-surface-border flex items-center justify-between gap-2">
         <div className="min-w-0">
-          <p className="text-xs font-semibold text-ink uppercase tracking-wide">Feature folders</p>
-          <p className="text-[10px] text-ink-subtle">1 folder = 1 fitur</p>
+          <p className="text-xs font-semibold text-ink uppercase tracking-wide">Case folders</p>
+          <p className="text-[10px] text-ink-subtle">Modul → fitur (ala Testiny)</p>
         </div>
         <div className="flex items-center gap-1 shrink-0">
           <button
             type="button"
             onClick={() => handleCreate(null)}
             className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold bg-brand text-white hover:bg-brand-hover"
-            title="New feature folder"
+            title="New module folder"
           >
             <FolderPlus size={13} /> New
           </button>
@@ -332,7 +332,7 @@ export default function ScenarioFolderTree({ onSelectionChange, onDropScenario, 
         <input
           value={filterQuery}
           onChange={(e) => setFilterQuery(e.target.value)}
-          placeholder="Filter features..."
+          placeholder="Filter modul / fitur..."
           className="w-full px-2.5 py-1.5 text-xs rounded-md border border-surface-border bg-white text-ink placeholder-ink-subtle focus:outline-none focus:ring-1 focus:ring-brand"
         />
       </div>
@@ -348,25 +348,25 @@ export default function ScenarioFolderTree({ onSelectionChange, onDropScenario, 
         )}
 
         <div className="pt-2 pb-1 px-2.5 text-[10px] font-semibold uppercase tracking-widest text-ink-subtle">
-          Features
+          Modules
         </div>
         <p className="px-2.5 pb-1.5 text-[10px] text-ink-subtle leading-snug">
-          Drag ⋮⋮ pada case → drop ke fitur di sini
+          Modul → fitur. Drag ⋮⋮ case ke folder leaf (fitur). ⋯ → New subfolder.
         </p>
 
         {isLoading && <p className="px-2.5 text-xs text-ink-subtle">Loading...</p>}
         {!isLoading && filteredTree.length === 0 && (
           <div className="mx-1 mt-1 rounded-lg border border-dashed border-surface-border bg-white/60 px-2.5 py-3">
-            <p className="text-xs font-medium text-ink">Belum ada feature folder</p>
+            <p className="text-xs font-medium text-ink">Belum ada folder</p>
             <p className="text-[11px] text-ink-subtle mt-1 leading-snug">
-              Buat folder fitur dulu (mis. Login). Lalu drag case dari tabel (ikon ⋮⋮) ke folder ini.
+              Buat modul dulu (mis. Auth & Access), lalu ⋯ → New subfolder untuk fitur (Login). Taruh case di folder fitur.
             </p>
             <button
               type="button"
               onClick={() => handleCreate(null)}
               className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold text-brand hover:text-brand-hover"
             >
-              <FolderPlus size={12} /> New feature folder
+              <FolderPlus size={12} /> New module
             </button>
           </div>
         )}

@@ -39,8 +39,8 @@ const content = {
           },
           {
             num: 3,
-            title: 'Feature folders',
-            desc: 'On Cases, open Folders (1 folder ≈ 1 fitur). On mobile, folders open as a drawer overlay.',
+            title: 'Case folders',
+            desc: 'On Cases, open Folders: Modul → fitur (Testiny-style). Put cases in the leaf fitur folder. On mobile, folders open as a drawer overlay.',
             adminOnly: false,
           },
         ],

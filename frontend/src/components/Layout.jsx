@@ -639,7 +639,7 @@ export default function Layout({ children, showFolderPane = false, onFolderSelec
                 type="button"
                 className="inline-flex items-center justify-center gap-1.5 min-h-10 min-w-10 sm:min-w-0 sm:px-3 px-2 text-xs rounded-md border border-surface-border text-ink-muted hover:text-ink hover:bg-surface-muted shrink-0"
                 onClick={toggleFolderPane}
-                title={folderPaneOpen ? 'Sembunyikan feature folders' : 'Tampilkan feature folders'}
+                title={folderPaneOpen ? 'Sembunyikan case folders' : 'Tampilkan case folders (modul → fitur)'}
               >
                 {folderPaneOpen ? <PanelLeftClose size={16} /> : <PanelLeftOpen size={16} />}
                 <span className="hidden sm:inline">{folderPaneOpen ? 'Hide folders' : 'Folders'}</span>
